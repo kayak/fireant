@@ -11,6 +11,9 @@ class Database(ABC):
     def connect(self):
         raise NotImplementedError
 
+    def round_date(self, field, interval):
+        raise NotImplementedError
+
     def fetch(self, query):
         with self.connect() as connection:
             cursor = connection.cursor()

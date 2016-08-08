@@ -4,9 +4,10 @@ from collections import OrderedDict
 from datetime import date
 
 from pypika import Tables, functions as fn, JoinType
-# TODO need to remove Vertica dependency
-from fireant.database.vertica import Round
+
+from fireant import settings
 from fireant.slicer.queries import QueryManager
+from fireant.tests.database.mock_database import TestDatabase
 
 
 class QueryTests(unittest.TestCase):
@@ -14,6 +15,10 @@ class QueryTests(unittest.TestCase):
     maxDiff = None
 
     test_table, test_join1, test_join2 = Tables('test_table', 'test_join1', 'test_join2')
+
+    @classmethod
+    def setUpClass(cls):
+        settings.database = TestDatabase()
 
 
 class ExampleTests(QueryTests):
@@ -78,7 +83,7 @@ class ExampleTests(QueryTests):
             ]),
             dimensions=OrderedDict([
                 # Example of using a continuous datetime dimension, where the values are rounded up to the nearest day
-                ('dt', Round(self.test_table.dt, 'DD')),
+                ('dt', settings.database.round_date(self.test_table.dt, 'DD')),
 
                 # Example of using a categorical dimension from a joined table
                 ('fiz', self.test_join2.fiz),
@@ -241,7 +246,7 @@ class MetricsTests(QueryTests):
 
 class DimensionTests(QueryTests):
     def _test_rounded_timeseries(self, increment):
-        rounded_dt = Round(self.test_table.dt, increment)
+        rounded_dt = settings.database.round_date(self.test_table.dt, increment)
 
         return self.dao._build_query(
             table=self.test_table,
@@ -339,7 +344,7 @@ class DimensionTests(QueryTests):
             'ORDER BY "device_type","locale"', str(query))
 
     def test_multidimension_timeseries_categorical(self):
-        rounded_dt = Round(self.test_table.dt, 'DD')
+        rounded_dt = settings.database.round_date(self.test_table.dt, 'DD')
         device_type = self.test_table.device_type
 
         query = self.dao._build_query(
@@ -367,7 +372,7 @@ class DimensionTests(QueryTests):
             'ORDER BY ROUND("dt",\'DD\'),"device_type"', str(query))
 
     def test_metrics_with_joins(self):
-        rounded_dt = Round(self.test_table.dt, 'DD')
+        rounded_dt = settings.database.round_date(self.test_table.dt, 'DD')
         locale = self.test_table.locale
 
         query = self.dao._build_query(
@@ -528,7 +533,7 @@ class FilterTests(QueryTests):
 
 class ComparisonTests(QueryTests):
     def _get_compare_query(self, compare_type):
-        rounded_dt = Round(self.test_table.dt, 'DD')
+        rounded_dt = settings.database.round_date(self.test_table.dt, 'DD')
         device_type = self.test_table.device_type
         query = self.dao._build_query(
             table=self.test_table,
@@ -843,7 +848,7 @@ class ComparisonTests(QueryTests):
 
 class TotalsQueryTests(QueryTests):
     def test_add_rollup_one_dimension(self):
-        rounded_dt = Round(self.test_table.dt, 'DD')
+        rounded_dt = settings.database.round_date(self.test_table.dt, 'DD')
         locale = self.test_table.locale
 
         query = self.dao._build_query(
@@ -871,7 +876,7 @@ class TotalsQueryTests(QueryTests):
                          'ORDER BY ROUND("dt",\'DD\'),"locale"', str(query))
 
     def test_add_rollup_two_dimensions(self):
-        rounded_dt = Round(self.test_table.dt, 'DD')
+        rounded_dt = settings.database.round_date(self.test_table.dt, 'DD')
         locale = self.test_table.locale
         device_type = self.test_table.device_type
 
@@ -903,7 +908,7 @@ class TotalsQueryTests(QueryTests):
                          'ORDER BY ROUND("dt",\'DD\'),"locale","device_type"', str(query))
 
     def test_add_rollup_two_dimensions_partial(self):
-        rounded_dt = Round(self.test_table.dt, 'DD')
+        rounded_dt = settings.database.round_date(self.test_table.dt, 'DD')
         locale = self.test_table.locale
         device_type = self.test_table.device_type
 

@@ -71,6 +71,10 @@ class SlicerManager(QueryManager):
         :return:
             A transformed response that is queried based on the slicer and the format.
         """
+        from fireant import settings
+        if settings.database is None:
+            raise SlicerException('Unable to execute queries until a database is configured.  Please import '
+                                  '`fireant.settings` and set some value to `settings.database`.')
 
         query_schema = self.get_query_schema(metrics=metrics, dimensions=dimensions,
                                              metric_filters=metric_filters, dimension_filters=dimension_filters,

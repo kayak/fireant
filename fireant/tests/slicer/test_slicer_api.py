@@ -2,10 +2,13 @@
 from datetime import date
 from unittest import TestCase, skip
 
+from pypika import functions as fn, Table, Case
+
+from fireant import settings
 from fireant.slicer import (EqualityOperator, EqualityFilter, RangeFilter, WildcardFilter, ContainsFilter, Metric,
                             DatetimeDimension, Slicer, CategoricalDimension, DimensionValue, UniqueDimension,
                             ContinuousDimension, Rollup, WoW, MoM, QoQ, YoY, Delta, DeltaPercentage, SlicerException)
-from pypika import functions as fn, Table, Case
+from fireant.tests.database.mock_database import TestDatabase
 
 QUERY_BUILDER_PARAMS = {'table', 'joins', 'metrics', 'dimensions', 'mfilters', 'dfilters', 'references', 'rollup'}
 
@@ -15,6 +18,7 @@ class SlicerSchemaTests(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        settings.database = TestDatabase()
         cls.test_table = Table('test_table')
 
         cls.test_slicer = Slicer(

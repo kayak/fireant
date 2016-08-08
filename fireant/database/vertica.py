@@ -5,6 +5,21 @@ try:
     from hostage.database.database import Database
     from pypika import terms
 
+
+    class Round(terms.Function):
+        # Wrapper for Vertica ROUND function for rounding dates.
+
+        def __init__(self, field, date_format, alias=None):
+            super(Round, self).__init__('ROUND', field, date_format, alias=alias)
+
+
+    class SumFloat(terms.Function):
+        # Wrapper for Vertica ROUND function for rounding dates.
+
+        def __init__(self, field, alias=None):
+            super(SumFloat, self).__init__('SUM_FLOAT', field, alias=alias)
+
+
     class Vertica(Database):
         # Vertica client that uses the vertica_python driver.
 
@@ -29,20 +44,8 @@ try:
             )
 
 
-    class Round(terms.Function):
-        # Wrapper for Vertica ROUND function for rounding dates.
-
-        def __init__(self, field, date_format, alias=None):
-            super(Round, self).__init__('ROUND', field, date_format, alias=alias)
-
-
-    class SumFloat(terms.Function):
-        # Wrapper for Vertica ROUND function for rounding dates.
-
-        def __init__(self, field, alias=None):
-            super(SumFloat, self).__init__('SUM_FLOAT', field, alias=alias)
-
-
+    def round_date(self, field, interval):
+        return Round(field, interval)
 
 except ImportError:
     # Vertica not available

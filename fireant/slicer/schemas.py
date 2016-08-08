@@ -2,7 +2,7 @@
 from pypika import functions as fn, Field
 from pypika.terms import Mod
 
-from fireant.database.vertica import Round
+from fireant import settings
 from fireant.slicer.managers import SlicerManager
 
 
@@ -104,7 +104,7 @@ class DatetimeDimension(ContinuousDimension):
     def schemas(self, *args):
         interval = args[0] if args else self.default_interval
         # TODO fix this to work for different databases
-        return [(self.key, Round(self.definition, interval.size))]
+        return [(self.key, settings.database.round_date(self.definition, interval.size))]
 
 
 class CategoricalDimension(Dimension):
