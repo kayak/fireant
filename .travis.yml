@@ -1,0 +1,18 @@
+language: python
+
+python:
+    - "2.7"
+    - "3.3"
+    - "3.4"
+    - "3.5"
+
+install:
+    - "python setup.py install"
+    - "pip install coverage"
+    - "pip install coveralls"
+
+script:
+    - "coverage run --source=fireant setup.py test"
+
+after_success:
+    coveralls
