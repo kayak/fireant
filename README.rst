@@ -1,9 +1,24 @@
 Installation
 ------------
 
+.. _intro_start:
+
+|BuildStatus|  |CoverageStatus|  |Codacy|  |Docs|  |PyPi|  |License|
+
+Abstract
+========
+
+|Brand| is a a data analysis tool used for quickly building charts, tables, reports, and dashboards.  It provides a
+schema for configuring data access, for example which metrics can be queried and which dimensions can be grouped on.
+An API is provided to making requests with this schema which enables filtering, comparisons, and post-processing
+operations.  The Dashboards feature provides an extra level of abstraction and empowers the assembly of reports
+containing multiple charts, tables, and widgets and facilitates quickly viewing your data from every angle.
+
+.. _intro_end:
+
 .. _installation_start:
 
-The preferred method for installing |Brand| is via *pip*.
+To install |Brand|, run the following command in the terminal:
 
 .. code-block:: bash
 
@@ -12,7 +27,22 @@ The preferred method for installing |Brand| is via *pip*.
 
 .. _installation_end:
 
+.. _available_badges_start:
 
+.. |BuildStatus| image:: https://travis-ci.org/kayak/fireant.svg?branch=master
+   :target: https://travis-ci.org/kayak/fireant
+.. |CoverageStatus| image:: https://coveralls.io/repos/kayak/fireant/badge.svg?branch=master&service=github
+   :target: https://coveralls.io/github/kayak/fireant?branch=master
+.. |Codacy| image:: https://api.codacy.com/project/badge/Grade/832b5a7dda8949c3b2ede28deada4569
+   :target: https://www.codacy.com/app/twheys/fireant
+.. |Docs| image:: https://readthedocs.org/projects/fireant/badge/?version=latest
+   :target: http://fireant.readthedocs.io/en/latest/
+.. |PyPi| image:: https://img.shields.io/pypi/v/fireant.svg?style=flat
+   :target: https://pypi.python.org/pypi/fireant
+.. |License| image:: https://img.shields.io/hexpm/l/plug.svg?maxAge=2592000
+   :target: http://www.apache.org/licenses/LICENSE-2.0
+
+.. _available_badges_end:
 
 .. _appendix_start:
 

@@ -1,5 +1,5 @@
-fireant
-=======
+Reference
+=========
 
 .. toctree::
    :maxdepth: 4
