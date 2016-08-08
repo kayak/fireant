@@ -1,13 +1,12 @@
 # coding: utf-8
 import logging
-from abc import ABC
 
 import pandas as pd
 
 logger = logging.getLogger(__name__)
 
 
-class Database(ABC):
+class Database(object):
     def connect(self):
         raise NotImplementedError
 

@@ -1,7 +1,8 @@
 # coding: utf-8
 from datetime import date
 from unittest import TestCase
-from unittest.mock import Mock, MagicMock, patch, call
+
+from mock import Mock, MagicMock, patch, call
 
 from fireant.dashboards import *
 from fireant.slicer import *

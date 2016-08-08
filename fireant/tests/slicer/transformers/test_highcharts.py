@@ -19,7 +19,7 @@ class HighChartsLineTransformerTests(BaseTransformerTests):
         result_data = [series['data'] for series in result['series']]
 
         for data, (_, row) in zip(result_data, df.iteritems()):
-            self.assertListEqual(list(row.items()), data)
+            self.assertListEqual(list(row.iteritems()), data)
 
     def evaluate_chart_options(self, result, n_results=1, xaxis_type='linear'):
         self.assertSetEqual({'title', 'series', 'chart', 'tooltip', 'xAxis', 'yAxis'}, set(result.keys()))

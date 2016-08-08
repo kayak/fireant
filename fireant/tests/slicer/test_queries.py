@@ -3,18 +3,17 @@ import unittest
 from collections import OrderedDict
 from datetime import date
 
-from pypika import Tables, functions as fn, JoinType
-
 from fireant import settings
 from fireant.slicer.queries import QueryManager
 from fireant.tests.database.mock_database import TestDatabase
+from pypika import Tables, functions as fn, JoinType
 
 
 class QueryTests(unittest.TestCase):
     dao = QueryManager()
     maxDiff = None
 
-    test_table, test_join1, test_join2 = Tables('test_table', 'test_join1', 'test_join2')
+    mock_table, mock_join1, mock_join2 = Tables('test_table', 'test_join1', 'test_join2')
 
     @classmethod
     def setUpClass(cls):
@@ -63,40 +62,40 @@ class ExampleTests(QueryTests):
         See pypika documentation for more examples of query expressions: http://pypika.readthedocs.io/en/latest/
         """
         query = self.dao._build_query(
-            table=self.test_table,
+            table=self.mock_table,
             joins=[
-                (self.test_join1, self.test_table.join1_id == self.test_join1.id, JoinType.left),
-                (self.test_join2, self.test_table.join2_id == self.test_join2.id, JoinType.outer),
+                (self.mock_join1, self.mock_table.join1_id == self.mock_join1.id, JoinType.left),
+                (self.mock_join2, self.mock_table.join2_id == self.mock_join2.id, JoinType.outer),
             ],
             metrics=OrderedDict([
                 # Examples using a field of a table
-                ('foo', fn.Sum(self.test_table.foo)),
+                ('foo', fn.Sum(self.mock_table.foo)),
 
                 # Examples using a field of a table
-                ('bar', fn.Avg(self.test_join1.bar)),
+                ('bar', fn.Avg(self.mock_join1.bar)),
 
                 # Example using functions and Arithmetic
-                ('ratio', fn.Sum(self.test_table.numerator) / fn.Sum(self.test_table.denominator)),
+                ('ratio', fn.Sum(self.mock_table.numerator) / fn.Sum(self.mock_table.denominator)),
 
                 # Example using functions and Arithmetic
-                ('ratio', fn.Sum(self.test_table.numerator) / fn.Sum(self.test_table.denominator)),
+                ('ratio', fn.Sum(self.mock_table.numerator) / fn.Sum(self.mock_table.denominator)),
             ]),
             dimensions=OrderedDict([
                 # Example of using a continuous datetime dimension, where the values are rounded up to the nearest day
-                ('dt', settings.database.round_date(self.test_table.dt, 'DD')),
+                ('dt', settings.database.round_date(self.mock_table.dt, 'DD')),
 
                 # Example of using a categorical dimension from a joined table
-                ('fiz', self.test_join2.fiz),
+                ('fiz', self.mock_join2.fiz),
             ]),
             mfilters=[
-                fn.Sum(self.test_join2.buz) > 100
+                fn.Sum(self.mock_join2.buz) > 100
             ],
             dfilters=[
                 # Example of filtering the query to a date range
-                self.test_table.dt[date(2016, 1, 1):date(2016, 12, 31)],
+                self.mock_table.dt[date(2016, 1, 1):date(2016, 12, 31)],
 
                 # Example of filtering the query to certain categories
-                self.test_join2.fiz.isin(['a', 'b', 'c']),
+                self.mock_join2.fiz.isin(['a', 'b', 'c']),
             ],
             references=OrderedDict([
                 # Example of adding a Week-over-Week comparison to the query
@@ -147,11 +146,11 @@ class ExampleTests(QueryTests):
 class MetricsTests(QueryTests):
     def test_metrics(self):
         query = self.dao._build_query(
-            table=self.test_table,
+            table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
-                ('clicks', fn.Sum(self.test_table.clicks)),
-                ('roi', fn.Sum(self.test_table.revenue) / fn.Sum(self.test_table.cost)),
+                ('clicks', fn.Sum(self.mock_table.clicks)),
+                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions={},
             mfilters=[],
@@ -165,14 +164,14 @@ class MetricsTests(QueryTests):
 
     def test_metrics_dimensions(self):
         query = self.dao._build_query(
-            table=self.test_table,
+            table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
-                ('clicks', fn.Sum(self.test_table.clicks)),
-                ('roi', fn.Sum(self.test_table.revenue) / fn.Sum(self.test_table.cost)),
+                ('clicks', fn.Sum(self.mock_table.clicks)),
+                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions=OrderedDict([
-                ('device_type', self.test_table.device_type)
+                ('device_type', self.mock_table.device_type)
             ]),
             mfilters=[],
             dfilters=[],
@@ -188,18 +187,18 @@ class MetricsTests(QueryTests):
 
     def test_metrics_filters(self):
         query = self.dao._build_query(
-            table=self.test_table,
+            table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
-                ('clicks', fn.Sum(self.test_table.clicks)),
-                ('roi', fn.Sum(self.test_table.revenue) / fn.Sum(self.test_table.cost)),
+                ('clicks', fn.Sum(self.mock_table.clicks)),
+                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions=OrderedDict([
-                ('device_type', self.test_table.device_type)
+                ('device_type', self.mock_table.device_type)
             ]),
             mfilters=[],
             dfilters=[
-                self.test_table.dt[date(2000, 1, 1):date(2001, 1, 1)]
+                self.mock_table.dt[date(2000, 1, 1):date(2001, 1, 1)]
             ],
             references={},
             rollup=[],
@@ -214,19 +213,19 @@ class MetricsTests(QueryTests):
 
     def test_metrics_dimensions_filters(self):
         query = self.dao._build_query(
-            table=self.test_table,
+            table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
-                ('clicks', fn.Sum(self.test_table.clicks)),
-                ('roi', (fn.Sum(self.test_table.revenue) / fn.Sum(self.test_table.cost))),
+                ('clicks', fn.Sum(self.mock_table.clicks)),
+                ('roi', (fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost))),
             ]),
             dimensions=OrderedDict([
-                ('device_type', self.test_table.device_type),
-                ('locale', self.test_table.locale),
+                ('device_type', self.mock_table.device_type),
+                ('locale', self.mock_table.locale),
             ]),
             mfilters=[],
             dfilters=[
-                self.test_table.locale.isin(['US', 'CA', 'UK'])
+                self.mock_table.locale.isin(['US', 'CA', 'UK'])
             ],
             references={},
             rollup=[],
@@ -246,14 +245,14 @@ class MetricsTests(QueryTests):
 
 class DimensionTests(QueryTests):
     def _test_rounded_timeseries(self, increment):
-        rounded_dt = settings.database.round_date(self.test_table.dt, increment)
+        rounded_dt = settings.database.round_date(self.mock_table.dt, increment)
 
         return self.dao._build_query(
-            table=self.test_table,
+            table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
-                ('clicks', fn.Sum(self.test_table.clicks)),
-                ('roi', fn.Sum(self.test_table.revenue) / fn.Sum(self.test_table.cost)),
+                ('clicks', fn.Sum(self.mock_table.clicks)),
+                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions=OrderedDict([
                 ('dt', rounded_dt)
@@ -320,15 +319,15 @@ class DimensionTests(QueryTests):
 
     def test_multidimension_categorical(self):
         query = self.dao._build_query(
-            table=self.test_table,
+            table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
-                ('clicks', fn.Sum(self.test_table.clicks)),
-                ('roi', fn.Sum(self.test_table.revenue) / fn.Sum(self.test_table.cost)),
+                ('clicks', fn.Sum(self.mock_table.clicks)),
+                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions=OrderedDict([
-                ('device_type', self.test_table.device_type),
-                ('locale', self.test_table.locale),
+                ('device_type', self.mock_table.device_type),
+                ('locale', self.mock_table.locale),
             ]),
             mfilters=[],
             dfilters=[],
@@ -344,15 +343,15 @@ class DimensionTests(QueryTests):
             'ORDER BY "device_type","locale"', str(query))
 
     def test_multidimension_timeseries_categorical(self):
-        rounded_dt = settings.database.round_date(self.test_table.dt, 'DD')
-        device_type = self.test_table.device_type
+        rounded_dt = settings.database.round_date(self.mock_table.dt, 'DD')
+        device_type = self.mock_table.device_type
 
         query = self.dao._build_query(
-            table=self.test_table,
+            table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
-                ('clicks', fn.Sum(self.test_table.clicks)),
-                ('roi', fn.Sum(self.test_table.revenue) / fn.Sum(self.test_table.cost)),
+                ('clicks', fn.Sum(self.mock_table.clicks)),
+                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions=OrderedDict([
                 ('dt', rounded_dt),
@@ -372,21 +371,21 @@ class DimensionTests(QueryTests):
             'ORDER BY ROUND("dt",\'DD\'),"device_type"', str(query))
 
     def test_metrics_with_joins(self):
-        rounded_dt = settings.database.round_date(self.test_table.dt, 'DD')
-        locale = self.test_table.locale
+        rounded_dt = settings.database.round_date(self.mock_table.dt, 'DD')
+        locale = self.mock_table.locale
 
         query = self.dao._build_query(
-            table=self.test_table,
+            table=self.mock_table,
             joins=[
-                (self.test_join1, self.test_table.hotel_id == self.test_join1.hotel_id, JoinType.left),
+                (self.mock_join1, self.mock_table.hotel_id == self.mock_join1.hotel_id, JoinType.left),
             ],
             metrics=OrderedDict([
-                ('clicks', fn.Sum(self.test_table.clicks)),
-                ('roi', fn.Sum(self.test_table.revenue) / fn.Sum(self.test_table.cost)),
-                ('hotel_name', self.test_join1.hotel_name),
-                ('hotel_address', self.test_join1.address),
-                ('city_id', self.test_join1.ctid),
-                ('city_name', self.test_join1.city_name),
+                ('clicks', fn.Sum(self.mock_table.clicks)),
+                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
+                ('hotel_name', self.mock_join1.hotel_name),
+                ('hotel_address', self.mock_join1.address),
+                ('city_id', self.mock_join1.ctid),
+                ('city_name', self.mock_join1.city_name),
             ]),
             dimensions=OrderedDict([
                 ('dt', rounded_dt),
@@ -412,18 +411,18 @@ class DimensionTests(QueryTests):
 class FilterTests(QueryTests):
     def test_single_dimension_filter(self):
         query = self.dao._build_query(
-            table=self.test_table,
+            table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
-                ('clicks', fn.Sum(self.test_table.clicks)),
-                ('roi', (fn.Sum(self.test_table.revenue) / fn.Sum(self.test_table.cost))),
+                ('clicks', fn.Sum(self.mock_table.clicks)),
+                ('roi', (fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost))),
             ]),
             dimensions=OrderedDict([
-                ('locale', self.test_table.locale),
+                ('locale', self.mock_table.locale),
             ]),
             mfilters=[],
             dfilters=[
-                self.test_table.locale.isin(['US', 'CA', 'UK'])
+                self.mock_table.locale.isin(['US', 'CA', 'UK'])
             ],
             references={},
             rollup=[],
@@ -440,20 +439,20 @@ class FilterTests(QueryTests):
 
     def test_multi_dimension_filter(self):
         query = self.dao._build_query(
-            table=self.test_table,
+            table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
-                ('clicks', fn.Sum(self.test_table.clicks)),
-                ('roi', (fn.Sum(self.test_table.revenue) / fn.Sum(self.test_table.cost))),
+                ('clicks', fn.Sum(self.mock_table.clicks)),
+                ('roi', (fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost))),
             ]),
             dimensions=OrderedDict([
-                ('locale', self.test_table.locale),
+                ('locale', self.mock_table.locale),
             ]),
             mfilters=[],
             dfilters=[
-                self.test_table.locale.isin(['US', 'CA', 'UK']),
-                self.test_table.device_type == 'desktop',
-                self.test_table.dt > date(2016, 1, 1),
+                self.mock_table.locale.isin(['US', 'CA', 'UK']),
+                self.mock_table.device_type == 'desktop',
+                self.mock_table.dt > date(2016, 1, 1),
             ],
             references={},
             rollup=[],
@@ -472,17 +471,17 @@ class FilterTests(QueryTests):
 
     def test_single_metric_filter(self):
         query = self.dao._build_query(
-            table=self.test_table,
+            table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
-                ('clicks', fn.Sum(self.test_table.clicks)),
-                ('roi', (fn.Sum(self.test_table.revenue) / fn.Sum(self.test_table.cost))),
+                ('clicks', fn.Sum(self.mock_table.clicks)),
+                ('roi', (fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost))),
             ]),
             dimensions=OrderedDict([
-                ('locale', self.test_table.locale),
+                ('locale', self.mock_table.locale),
             ]),
             mfilters=[
-                fn.Sum(self.test_table.clicks) > 100
+                fn.Sum(self.mock_table.clicks) > 100
             ],
             dfilters=[],
             references={},
@@ -500,19 +499,19 @@ class FilterTests(QueryTests):
 
     def test_multi_metric_filter(self):
         query = self.dao._build_query(
-            table=self.test_table,
+            table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
-                ('clicks', fn.Sum(self.test_table.clicks)),
-                ('roi', (fn.Sum(self.test_table.revenue) / fn.Sum(self.test_table.cost))),
+                ('clicks', fn.Sum(self.mock_table.clicks)),
+                ('roi', (fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost))),
             ]),
             dimensions=OrderedDict([
-                ('locale', self.test_table.locale),
+                ('locale', self.mock_table.locale),
             ]),
             mfilters=[
-                fn.Sum(self.test_table.clicks) > 100,
-                (fn.Sum(self.test_table.revenue) / fn.Sum(self.test_table.cost)) < 0.7,
-                fn.Sum(self.test_table.conversions) >= 10,
+                fn.Sum(self.mock_table.clicks) > 100,
+                (fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)) < 0.7,
+                fn.Sum(self.mock_table.conversions) >= 10,
             ],
             dfilters=[],
             references={},
@@ -533,14 +532,14 @@ class FilterTests(QueryTests):
 
 class ComparisonTests(QueryTests):
     def _get_compare_query(self, compare_type):
-        rounded_dt = settings.database.round_date(self.test_table.dt, 'DD')
-        device_type = self.test_table.device_type
+        rounded_dt = settings.database.round_date(self.mock_table.dt, 'DD')
+        device_type = self.mock_table.device_type
         query = self.dao._build_query(
-            table=self.test_table,
+            table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
-                ('clicks', fn.Sum(self.test_table.clicks)),
-                ('roi', fn.Sum(self.test_table.revenue) / fn.Sum(self.test_table.cost)),
+                ('clicks', fn.Sum(self.mock_table.clicks)),
+                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions=OrderedDict([
                 ('dt', rounded_dt),
@@ -548,7 +547,7 @@ class ComparisonTests(QueryTests):
             ]),
             mfilters=[],
             dfilters=[
-                self.test_table.dt[date(2000, 1, 1):date(2000, 3, 1)]
+                self.mock_table.dt[date(2000, 1, 1):date(2000, 3, 1)]
             ],
             references=OrderedDict([
                 (compare_type, 'dt')
@@ -848,15 +847,15 @@ class ComparisonTests(QueryTests):
 
 class TotalsQueryTests(QueryTests):
     def test_add_rollup_one_dimension(self):
-        rounded_dt = settings.database.round_date(self.test_table.dt, 'DD')
-        locale = self.test_table.locale
+        rounded_dt = settings.database.round_date(self.mock_table.dt, 'DD')
+        locale = self.mock_table.locale
 
         query = self.dao._build_query(
-            table=self.test_table,
+            table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
-                ('clicks', fn.Sum(self.test_table.clicks)),
-                ('roi', fn.Sum(self.test_table.revenue) / fn.Sum(self.test_table.cost)),
+                ('clicks', fn.Sum(self.mock_table.clicks)),
+                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions=OrderedDict([
                 ('dt', rounded_dt),
@@ -876,16 +875,16 @@ class TotalsQueryTests(QueryTests):
                          'ORDER BY ROUND("dt",\'DD\'),"locale"', str(query))
 
     def test_add_rollup_two_dimensions(self):
-        rounded_dt = settings.database.round_date(self.test_table.dt, 'DD')
-        locale = self.test_table.locale
-        device_type = self.test_table.device_type
+        rounded_dt = settings.database.round_date(self.mock_table.dt, 'DD')
+        locale = self.mock_table.locale
+        device_type = self.mock_table.device_type
 
         query = self.dao._build_query(
-            table=self.test_table,
+            table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
-                ('clicks', fn.Sum(self.test_table.clicks)),
-                ('roi', fn.Sum(self.test_table.revenue) / fn.Sum(self.test_table.cost)),
+                ('clicks', fn.Sum(self.mock_table.clicks)),
+                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions=OrderedDict([
                 ('dt', rounded_dt),
@@ -908,16 +907,16 @@ class TotalsQueryTests(QueryTests):
                          'ORDER BY ROUND("dt",\'DD\'),"locale","device_type"', str(query))
 
     def test_add_rollup_two_dimensions_partial(self):
-        rounded_dt = settings.database.round_date(self.test_table.dt, 'DD')
-        locale = self.test_table.locale
-        device_type = self.test_table.device_type
+        rounded_dt = settings.database.round_date(self.mock_table.dt, 'DD')
+        locale = self.mock_table.locale
+        device_type = self.mock_table.device_type
 
         query = self.dao._build_query(
-            table=self.test_table,
+            table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
-                ('clicks', fn.Sum(self.test_table.clicks)),
-                ('roi', fn.Sum(self.test_table.revenue) / fn.Sum(self.test_table.cost)),
+                ('clicks', fn.Sum(self.mock_table.clicks)),
+                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions=OrderedDict([
                 ('dt', rounded_dt),

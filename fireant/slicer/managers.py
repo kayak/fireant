@@ -165,7 +165,7 @@ class SlicerManager(QueryManager):
         for dimension in keys:
             # unpack tuples for args
             if isinstance(dimension, (list, tuple)):
-                dimension, *args = dimension
+                dimension, args = dimension[0], dimension[1:]
             else:
                 args = []
 

@@ -209,7 +209,11 @@ class QueryManager(object):
             Type: Tuple
             (criterion_f, function_f)
         """
-        reference_key, *optional_parts = reference_key.split('_')
+        split_ref = reference_key.split('_')
+        if 1 < len(split_ref):
+            reference_key, optional_parts = split_ref[0], split_ref[1:]
+        else:
+            reference_key, optional_parts = split_ref[0], []
 
         # Maps function
         criterion_f = reference_criterion[reference_key]

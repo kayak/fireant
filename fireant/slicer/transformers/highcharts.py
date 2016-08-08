@@ -143,7 +143,7 @@ class HighchartsTransformer(Transformer):
             return [column]
 
         return [(key, np.round(value, 2))
-                for key, value in column.items()
+                for key, value in column.iteritems()
                 if not np.isnan(value)]
 
     def _unstack_levels(self, dimensions, dim_ordinal):

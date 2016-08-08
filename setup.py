@@ -4,7 +4,7 @@ from setuptools import setup
 
 __major_version__ = 0
 __minor_version__ = 0
-__patch_version__ = 1
+__patch_version__ = 2
 
 
 def readme():
@@ -57,8 +57,12 @@ setup(
         'pandas',
         'pypika==0.0.18'
     ],
-    extras_require = {
-        'vertica':  ["vertica-python>=0.6"],
+    tests_require=[
+        'mock',
+    ],
+    extras_require={
+        'vertica': ["vertica-python>=0.6"],
     },
+
     test_suite="fireant.tests",
 )

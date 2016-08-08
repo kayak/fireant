@@ -92,7 +92,7 @@ class DataTablesTransformer(Transformer):
                 yield display_schema['metrics'][col], row[col]
 
     def _format_series_labels(self, idx, dim_ordinal, display_schema):
-        metric, *dimensions = idx
+        metric, dimensions = idx[0], idx[1:]
 
         if not [d for d in dimensions if d is not np.nan]:
             # If all the dimensions are NaN the data frame, then do not display them.

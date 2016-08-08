@@ -22,7 +22,7 @@ class Rollup(Operation):
         dimensions = []
         for dimension in self.dimension_keys:
             if isinstance(dimension, (list, tuple)):
-                dimension, *args = dimension
+                dimension, args = dimension[0], dimension[1:]
             else:
                 args = []
 
