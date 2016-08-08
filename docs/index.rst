@@ -1,5 +1,5 @@
-Hostage for Data Analysis
-=========================
+FireAnt - Data Analysis
+=======================
 
 |Brand| is a a data analysis tool used for quickly building charts, tables, reports, and dashboards.  It provides a
 schema for configuring data access, for example which metrics can be queried and which dimensions can be grouped on.

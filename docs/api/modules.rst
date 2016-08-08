@@ -1,8 +1,8 @@
-hostage
+fireant
 =======
 
 .. toctree::
    :maxdepth: 4
 
-   hostage
+   fireant
    setup
