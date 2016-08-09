@@ -2,10 +2,10 @@ The Slicer
 ==========
 
 .. include:: ../README.rst
-    :start-after: _appendix_start:
+:start-after: _appendix_start:
     :end-before:  _appendix_end:
 
-The |FeatureSlicer| is the core component of |Brand| which defines a schema and an API. With a small amount of
+    The |FeatureSlicer| is the core component of |Brand| which defines a schema and an API. With a small amount of
 configuration, it becomes a powerful tool which can be used to quickly query data from a database and transform it into
 a chart, table, or other widget. The slicer can be used directly in python in Notebooks or in a python shell and
 provides a rich API for building quick, ad hoc queries. The |FeatureSlicer| underlies the |FeatureWidgetGroup| feature,
@@ -176,7 +176,7 @@ interval ``DatetimeDimension.day``.
 
 .. code-block:: python
 
-    def data(self, metrics, dimensions, metric_filters, filters, references, operations):
+    def data(self, metrics, dimensions, metric_filters, dimension_filters, references, operations):
         pass
 
 
@@ -346,7 +346,7 @@ Windows
     slicer.manager.column_index_table(
         metrics=['clicks', 'conversions'],
         dimensions=['date'],
-        dimension_filters=[RangeFilter('date', date.today(), date.today() - timedelta(days=60))],
+        dimension_filters=[RangeFilter('date', date.today() - timedelta(days=60), date.today())],
     )
 
 Wildcard Matching
