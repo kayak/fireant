@@ -2,10 +2,10 @@ The Slicer
 ==========
 
 .. include:: ../README.rst
-:start-after: _appendix_start:
+    :start-after: _appendix_start:
     :end-before:  _appendix_end:
 
-    The |FeatureSlicer| is the core component of |Brand| which defines a schema and an API. With a small amount of
+The |FeatureSlicer| is the core component of |Brand| which defines a schema and an API. With a small amount of
 configuration, it becomes a powerful tool which can be used to quickly query data from a database and transform it into
 a chart, table, or other widget. The slicer can be used directly in python in Notebooks or in a python shell and
 provides a rich API for building quick, ad hoc queries. The |FeatureSlicer| underlies the |FeatureWidgetGroup| feature,
@@ -140,6 +140,45 @@ Last there is a  |ClassUniqueDimension| which uses the column ``account_id`` as 
 ``account_name`` as a display label.  Both columns will be included in the query.
 
 .. _config_slicer_end:
+
+Columns from Joined Tables
+""""""""""""""""""""""""""
+
+Commonly data from a secondary table is required.  These tables can be joined in the query so that their columns become
+available for use in metric and dimension definitions.  Joins must be defined in the slicer in order to use them, and
+metrics and dimensions must also define which joins they require, so that they can be added to the query when used.
+
+A join requires three parameters, a *key*, a *table*, and a *criterion*.  The *key* is used for reference when using the
+join on a metric or dimension, the *table* is the table which is being joined.  The *criterion* is a PyPika_
+expression which defines how to join the tables, more concretely an equality condition of when to join rows of each
+table.
+
+.. code-block:: python
+
+
+    from hostage.slicer import *
+    from pypika import Tables, functions as fn
+
+    analytics, customers = Tables('analytics', 'customers')
+
+    slicer = Slicer(
+        analytics,
+
+        joins=[
+            Join('customers', customers, analytics.customer_id == customers.id),
+        ],
+
+        metrics=[
+            Metric('clicks', 'Clicks'),
+        ],
+
+        dimension=[
+            UniqueDimension('customer', id_fields=[customers.id],
+                            label_field=fn.Concat(customers.fname, ' ', customers.lname),
+                            joins=['customers'])
+        ],
+    )
+
 
 
 Using the Slicer Manager

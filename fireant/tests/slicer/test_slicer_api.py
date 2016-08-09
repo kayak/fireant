@@ -2,13 +2,10 @@
 from datetime import date
 from unittest import TestCase, skip
 
-from pypika import functions as fn, Table, Case
-
 from fireant import settings
-from fireant.slicer import (EqualityOperator, EqualityFilter, RangeFilter, WildcardFilter, ContainsFilter, Metric,
-                            DatetimeDimension, Slicer, CategoricalDimension, DimensionValue, UniqueDimension,
-                            ContinuousDimension, Rollup, WoW, MoM, QoQ, YoY, Delta, DeltaPercentage, SlicerException)
+from fireant.slicer import *
 from fireant.tests.database.mock_database import TestDatabase
+from pypika import functions as fn, Tables, Case
 
 QUERY_BUILDER_PARAMS = {'table', 'joins', 'metrics', 'dimensions', 'mfilters', 'dfilters', 'references', 'rollup'}
 
@@ -19,10 +16,16 @@ class SlicerSchemaTests(TestCase):
     @classmethod
     def setUpClass(cls):
         settings.database = TestDatabase()
-        cls.test_table = Table('test_table')
+        cls.test_table, cls.test_join_table = Tables('test_table', 'test_join_table')
+        cls.test_table.alias = 'test'
+        cls.test_join_table.alias = 'join'
 
         cls.test_slicer = Slicer(
             cls.test_table,
+
+            joins=[
+                Join('join1', cls.test_join_table, cls.test_table.join_id == cls.test_join_table.id)
+            ],
 
             metrics=[
                 # Metric with defaults
@@ -36,7 +39,13 @@ class SlicerSchemaTests(TestCase):
                        definition=(
                            Case().when(cls.test_table.case == 1, 'a')
                                .when(cls.test_table.case == 2, 'b')
-                               .else_('weird')))
+                               .else_('weird'))),
+
+                # Metric with joins
+                Metric('piddle', definition=fn.Sum(cls.test_join_table.piddle), joins=['join1']),
+
+                # Metric with custom label and definition
+                Metric('paddle', definition=fn.Sum(cls.test_join_table.paddle + cls.test_table.foo), joins=['join1']),
             ],
 
             dimensions=[
@@ -61,6 +70,10 @@ class SlicerSchemaTests(TestCase):
                                 label_field=cls.test_table.keyword_name,
                                 id_fields=[cls.test_table.keyword_id, cls.test_table.keyword_type,
                                            cls.test_table.adgroup_id, cls.test_table.engine]),
+
+                # Dimension with joined columns
+                CategoricalDimension('blah', 'Blah', definition=cls.test_join_table.blah,
+                                     joins=['join1']),
             ]
         )
 
@@ -75,7 +88,7 @@ class SlicerSchemaMetricTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
     def test_metric_with_custom_definition(self):
         query_schema = self.test_slicer.manager.get_query_schema(
@@ -86,7 +99,7 @@ class SlicerSchemaMetricTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'bar'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("fiz"+"buz")', str(query_schema['metrics']['bar']))
+        self.assertEqual('SUM("test"."fiz"+"test"."buz")', str(query_schema['metrics']['bar']))
 
 
 class SlicerSchemaDimensionTests(SlicerSchemaTests):
@@ -100,10 +113,10 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'date'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('ROUND("dt",\'DD\')', str(query_schema['dimensions']['date']))
+        self.assertEqual('ROUND("test"."dt",\'DD\')', str(query_schema['dimensions']['date']))
 
     def test_date_dimension_custom_interval(self):
         query_schema = self.test_slicer.manager.get_query_schema(
@@ -116,10 +129,10 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'date'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('ROUND("dt",\'WW\')', str(query_schema['dimensions']['date']))
+        self.assertEqual('ROUND("test"."dt",\'WW\')', str(query_schema['dimensions']['date']))
 
     def test_numeric_dimension_default_interval(self):
         query_schema = self.test_slicer.manager.get_query_schema(
@@ -131,10 +144,10 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'clicks'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('MOD("clicks"+0,1)', str(query_schema['dimensions']['clicks']))
+        self.assertEqual('MOD("test"."clicks"+0,1)', str(query_schema['dimensions']['clicks']))
 
     def test_numeric_dimension_custom_interval(self):
         query_schema = self.test_slicer.manager.get_query_schema(
@@ -147,10 +160,10 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'clicks'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('MOD("clicks"+25,100)', str(query_schema['dimensions']['clicks']))
+        self.assertEqual('MOD("test"."clicks"+25,100)', str(query_schema['dimensions']['clicks']))
 
     def test_categorical_dimension(self):
         query_schema = self.test_slicer.manager.get_query_schema(
@@ -162,10 +175,10 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'locale'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('"locale"', str(query_schema['dimensions']['locale']))
+        self.assertEqual('"test"."locale"', str(query_schema['dimensions']['locale']))
 
     def test_unique_dimension_single_id(self):
         query_schema = self.test_slicer.manager.get_query_schema(
@@ -177,11 +190,11 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'account_id0', 'account_label'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('"account_id"', str(query_schema['dimensions']['account_id0']))
-        self.assertEqual('"account_name"', str(query_schema['dimensions']['account_label']))
+        self.assertEqual('"test"."account_id"', str(query_schema['dimensions']['account_id0']))
+        self.assertEqual('"test"."account_name"', str(query_schema['dimensions']['account_label']))
 
     def test_unique_dimension_composite_id(self):
         query_schema = self.test_slicer.manager.get_query_schema(
@@ -193,15 +206,15 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'keyword_id0', 'keyword_id1', 'keyword_id2', 'keyword_id3', 'keyword_label'},
                             set(query_schema['dimensions'].keys()))
-        self.assertEqual('"keyword_id"', str(query_schema['dimensions']['keyword_id0']))
-        self.assertEqual('"keyword_type"', str(query_schema['dimensions']['keyword_id1']))
-        self.assertEqual('"adgroup_id"', str(query_schema['dimensions']['keyword_id2']))
-        self.assertEqual('"engine"', str(query_schema['dimensions']['keyword_id3']))
-        self.assertEqual('"keyword_name"', str(query_schema['dimensions']['keyword_label']))
+        self.assertEqual('"test"."keyword_id"', str(query_schema['dimensions']['keyword_id0']))
+        self.assertEqual('"test"."keyword_type"', str(query_schema['dimensions']['keyword_id1']))
+        self.assertEqual('"test"."adgroup_id"', str(query_schema['dimensions']['keyword_id2']))
+        self.assertEqual('"test"."engine"', str(query_schema['dimensions']['keyword_id3']))
+        self.assertEqual('"test"."keyword_name"', str(query_schema['dimensions']['keyword_label']))
 
     def test_multiple_metrics_and_dimensions(self):
         query_schema = self.test_slicer.manager.get_query_schema(
@@ -213,15 +226,15 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo', 'bar'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
-        self.assertEqual('SUM("fiz"+"buz")', str(query_schema['metrics']['bar']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."fiz"+"test"."buz")', str(query_schema['metrics']['bar']))
 
         self.assertSetEqual({'date', 'clicks', 'locale', 'account_id0', 'account_label'},
                             set(query_schema['dimensions'].keys()))
-        self.assertEqual('MOD("clicks"+100,50)', str(query_schema['dimensions']['clicks']))
-        self.assertEqual('"locale"', str(query_schema['dimensions']['locale']))
-        self.assertEqual('"account_id"', str(query_schema['dimensions']['account_id0']))
-        self.assertEqual('"account_name"', str(query_schema['dimensions']['account_label']))
+        self.assertEqual('MOD("test"."clicks"+100,50)', str(query_schema['dimensions']['clicks']))
+        self.assertEqual('"test"."locale"', str(query_schema['dimensions']['locale']))
+        self.assertEqual('"test"."account_id"', str(query_schema['dimensions']['account_id0']))
+        self.assertEqual('"test"."account_name"', str(query_schema['dimensions']['account_label']))
 
 
 class SlicerSchemaFilterTests(SlicerSchemaTests):
@@ -236,12 +249,12 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'locale'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('"locale"', str(query_schema['dimensions']['locale']))
+        self.assertEqual('"test"."locale"', str(query_schema['dimensions']['locale']))
 
-        self.assertListEqual(['"locale"=\'en\''], [str(f) for f in query_schema['dfilters']])
+        self.assertListEqual(['"test"."locale"=\'en\''], [str(f) for f in query_schema['dfilters']])
 
     def test_dimension_filter_ne(self):
         query_schema = self.test_slicer.manager.get_query_schema(
@@ -256,12 +269,12 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'locale'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('"locale"', str(query_schema['dimensions']['locale']))
+        self.assertEqual('"test"."locale"', str(query_schema['dimensions']['locale']))
 
-        self.assertListEqual(['"locale"<>\'en\''], [str(f) for f in query_schema['dfilters']])
+        self.assertListEqual(['"test"."locale"<>\'en\''], [str(f) for f in query_schema['dfilters']])
 
     def test_dimension_filter_in(self):
         query_schema = self.test_slicer.manager.get_query_schema(
@@ -276,12 +289,12 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'locale'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('"locale"', str(query_schema['dimensions']['locale']))
+        self.assertEqual('"test"."locale"', str(query_schema['dimensions']['locale']))
 
-        self.assertListEqual(['"locale" IN (\'en\',\'es\',\'de\')'], [str(f) for f in query_schema['dfilters']])
+        self.assertListEqual(['"test"."locale" IN (\'en\',\'es\',\'de\')'], [str(f) for f in query_schema['dfilters']])
 
     def test_dimension_filter_like(self):
         query_schema = self.test_slicer.manager.get_query_schema(
@@ -296,12 +309,12 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'locale'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('"locale"', str(query_schema['dimensions']['locale']))
+        self.assertEqual('"test"."locale"', str(query_schema['dimensions']['locale']))
 
-        self.assertListEqual(['"locale" LIKE \'e%\''], [str(f) for f in query_schema['dfilters']])
+        self.assertListEqual(['"test"."locale" LIKE \'e%\''], [str(f) for f in query_schema['dfilters']])
 
     def test_dimension_filter_gt(self):
         query_schema = self.test_slicer.manager.get_query_schema(
@@ -316,12 +329,12 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'locale'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('"locale"', str(query_schema['dimensions']['locale']))
+        self.assertEqual('"test"."locale"', str(query_schema['dimensions']['locale']))
 
-        self.assertListEqual(['"dt">\'2000-01-01\''], [str(f) for f in query_schema['dfilters']])
+        self.assertListEqual(['"test"."dt">\'2000-01-01\''], [str(f) for f in query_schema['dfilters']])
 
     def test_dimension_filter_lt(self):
         query_schema = self.test_slicer.manager.get_query_schema(
@@ -336,12 +349,12 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'locale'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('"locale"', str(query_schema['dimensions']['locale']))
+        self.assertEqual('"test"."locale"', str(query_schema['dimensions']['locale']))
 
-        self.assertListEqual(['"dt"<\'2000-01-01\''], [str(f) for f in query_schema['dfilters']])
+        self.assertListEqual(['"test"."dt"<\'2000-01-01\''], [str(f) for f in query_schema['dfilters']])
 
     def test_dimension_filter_gte(self):
         query_schema = self.test_slicer.manager.get_query_schema(
@@ -356,12 +369,12 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'locale'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('"locale"', str(query_schema['dimensions']['locale']))
+        self.assertEqual('"test"."locale"', str(query_schema['dimensions']['locale']))
 
-        self.assertListEqual(['"dt">=\'2000-01-01\''], [str(f) for f in query_schema['dfilters']])
+        self.assertListEqual(['"test"."dt">=\'2000-01-01\''], [str(f) for f in query_schema['dfilters']])
 
     def test_dimension_filter_lte(self):
         query_schema = self.test_slicer.manager.get_query_schema(
@@ -376,12 +389,12 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'locale'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('"locale"', str(query_schema['dimensions']['locale']))
+        self.assertEqual('"test"."locale"', str(query_schema['dimensions']['locale']))
 
-        self.assertListEqual(['"dt"<=\'2000-01-01\''], [str(f) for f in query_schema['dfilters']])
+        self.assertListEqual(['"test"."dt"<=\'2000-01-01\''], [str(f) for f in query_schema['dfilters']])
 
     @skip('Need to decide how this should work')
     def test_dimension_filter_numericrange(self):
@@ -397,12 +410,13 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'locale'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('"locale"', str(query_schema['dimensions']['locale']))
+        self.assertEqual('"test"."locale"', str(query_schema['dimensions']['locale']))
 
-        self.assertListEqual(['MOD("clicks"+0,1) BETWEEN 25 AND 100'], [str(f) for f in query_schema['dfilters']])
+        self.assertListEqual(['MOD("test"."clicks"+0,1) BETWEEN 25 AND 100'],
+                             [str(f) for f in query_schema['dfilters']])
 
     def test_dimension_filter_daterange(self):
         query_schema = self.test_slicer.manager.get_query_schema(
@@ -417,9 +431,9 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
-        self.assertListEqual(['"dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\''],
+        self.assertListEqual(['"test"."dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\''],
                              [str(f) for f in query_schema['dfilters']])
 
     def test_metric_filter_eq(self):
@@ -433,12 +447,12 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'locale'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('"locale"', str(query_schema['dimensions']['locale']))
+        self.assertEqual('"test"."locale"', str(query_schema['dimensions']['locale']))
 
-        self.assertListEqual(['SUM("foo")=0'], [str(f) for f in query_schema['mfilters']])
+        self.assertListEqual(['SUM("test"."foo")=0'], [str(f) for f in query_schema['mfilters']])
 
     def test_metric_filter_ne(self):
         query_schema = self.test_slicer.manager.get_query_schema(
@@ -453,12 +467,12 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'locale'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('"locale"', str(query_schema['dimensions']['locale']))
+        self.assertEqual('"test"."locale"', str(query_schema['dimensions']['locale']))
 
-        self.assertListEqual(['SUM("foo")<>0'], [str(f) for f in query_schema['mfilters']])
+        self.assertListEqual(['SUM("test"."foo")<>0'], [str(f) for f in query_schema['mfilters']])
 
     def test_metric_filter_gt(self):
         query_schema = self.test_slicer.manager.get_query_schema(
@@ -473,12 +487,12 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'locale'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('"locale"', str(query_schema['dimensions']['locale']))
+        self.assertEqual('"test"."locale"', str(query_schema['dimensions']['locale']))
 
-        self.assertListEqual(['SUM("foo")>100'], [str(f) for f in query_schema['mfilters']])
+        self.assertListEqual(['SUM("test"."foo")>100'], [str(f) for f in query_schema['mfilters']])
 
     def test_metric_filter_lt(self):
         query_schema = self.test_slicer.manager.get_query_schema(
@@ -493,12 +507,12 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'locale'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('"locale"', str(query_schema['dimensions']['locale']))
+        self.assertEqual('"test"."locale"', str(query_schema['dimensions']['locale']))
 
-        self.assertListEqual(['SUM("foo")<100'], [str(f) for f in query_schema['mfilters']])
+        self.assertListEqual(['SUM("test"."foo")<100'], [str(f) for f in query_schema['mfilters']])
 
     def test_metric_filter_gte(self):
         query_schema = self.test_slicer.manager.get_query_schema(
@@ -513,12 +527,12 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'locale'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('"locale"', str(query_schema['dimensions']['locale']))
+        self.assertEqual('"test"."locale"', str(query_schema['dimensions']['locale']))
 
-        self.assertListEqual(['SUM("foo")>=100'], [str(f) for f in query_schema['mfilters']])
+        self.assertListEqual(['SUM("test"."foo")>=100'], [str(f) for f in query_schema['mfilters']])
 
     def test_metric_filter_lte(self):
         query_schema = self.test_slicer.manager.get_query_schema(
@@ -533,12 +547,12 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'locale'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('"locale"', str(query_schema['dimensions']['locale']))
+        self.assertEqual('"test"."locale"', str(query_schema['dimensions']['locale']))
 
-        self.assertListEqual(['SUM("foo")<=100'], [str(f) for f in query_schema['mfilters']])
+        self.assertListEqual(['SUM("test"."foo")<=100'], [str(f) for f in query_schema['mfilters']])
 
     def test_invalid_dimensions_raise_exception(self):
         with self.assertRaises(SlicerException):
@@ -591,9 +605,9 @@ class SlicerSchemaReferenceTests(SlicerSchemaTests):
         self.assertTrue({'table', 'metrics', 'dimensions', 'references'}.issubset(query_schema.keys()))
         self.assertEqual(self.test_table, query_schema['table'])
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
         self.assertSetEqual({'date'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('ROUND("dt",\'DD\')', str(query_schema['dimensions']['date']))
+        self.assertEqual('ROUND("test"."dt",\'DD\')', str(query_schema['dimensions']['date']))
         self.assertListEqual([(reference.key, reference.element_key)], query_schema['references'])
 
     def test_reference_wow_with_date(self):
@@ -661,10 +675,10 @@ class SlicerSchemaReferenceTests(SlicerSchemaTests):
         self.assertEqual(self.test_table, query_schema['table'])
 
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("foo")', str(query_schema['metrics']['foo']))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'date', 'locale', 'account_id0', 'account_label'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('ROUND("dt",\'DD\')', str(query_schema['dimensions']['date']))
+        self.assertEqual('ROUND("test"."dt",\'DD\')', str(query_schema['dimensions']['date']))
 
         self.assertListEqual(['locale', 'account_id0', 'account_label'], query_schema['rollup'])
 
@@ -834,3 +848,50 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
             },
             display_schema
         )
+
+
+class SlicerSchemaJoinTests(SlicerSchemaTests):
+    def test_metric_with_join(self):
+        query_schema = self.test_slicer.manager.get_query_schema(
+            metrics=['piddle'],
+        )
+
+        self.assertTrue({'table', 'metrics', 'joins'}.issubset(query_schema.keys()))
+        self.assertEqual(self.test_table, query_schema['table'])
+
+        join1 = query_schema['joins'][0]
+        self.assertEqual(self.test_join_table, join1[0])
+        self.assertEqual('"test"."join_id"="join"."id"', str(join1[1]))
+
+        self.assertSetEqual({'piddle'}, set(query_schema['metrics'].keys()))
+        self.assertEqual('SUM("join"."piddle")', str(query_schema['metrics']['piddle']))
+
+    def test_metric_with_complex_join(self):
+        query_schema = self.test_slicer.manager.get_query_schema(
+            metrics=['paddle'],
+        )
+
+        self.assertTrue({'table', 'metrics', 'joins'}.issubset(query_schema.keys()))
+        self.assertEqual(self.test_table, query_schema['table'])
+
+        join1 = query_schema['joins'][0]
+        self.assertEqual(self.test_join_table, join1[0])
+        self.assertEqual('"test"."join_id"="join"."id"', str(join1[1]))
+
+        self.assertSetEqual({'paddle'}, set(query_schema['metrics'].keys()))
+        self.assertEqual('SUM("join"."paddle"+"test"."foo")', str(query_schema['metrics']['paddle']))
+
+    def test_dimension_with_join(self):
+        query_schema = self.test_slicer.manager.get_query_schema(
+            metrics=['foo'],
+            dimensions=['blah'],
+        )
+
+        self.assertTrue({'table', 'metrics', 'dimensions', 'joins'}.issubset(query_schema.keys()))
+        self.assertEqual(self.test_table, query_schema['table'])
+
+        self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
+
+        self.assertSetEqual({'blah'}, set(query_schema['dimensions'].keys()))
+        self.assertEqual('"join"."blah"', str(query_schema['dimensions']['blah']))

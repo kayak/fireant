@@ -2,6 +2,7 @@
 
 import functools
 
+from pypika import functions as fn
 from .queries import QueryManager
 from .transformers import (TableIndex, HighchartsTransformer, HighchartsColumnTransformer, DataTablesTransformer)
 
@@ -102,14 +103,17 @@ class SlicerManager(QueryManager):
 
         schema_metrics, metrics_joins = self._metrics_schema(metrics)
         schema_dimensions, dimensions_joins = self._dimensions_schema(dimensions or [])
+        schema_joins = self._joins_schema(metrics_joins | dimensions_joins)
 
         return {
             'table': self.slicer.table,
-            'joins': [self.slicer.joins[join] for join in (metrics_joins & dimensions_joins)],
+            'joins': schema_joins,
             'metrics': schema_metrics,
             'dimensions': schema_dimensions,
-            'mfilters': self._filters_schema(self.slicer.metrics, metric_filters or [], element_label='metric'),
-            'dfilters': self._filters_schema(self.slicer.dimensions, dimension_filters or []),
+            'mfilters': self._filters_schema(self.slicer.metrics, metric_filters or [], self._default_metric_definition,
+                                             element_label='metric'),
+            'dfilters': self._filters_schema(self.slicer.dimensions, dimension_filters or [],
+                                             self._default_dimension_definition),
             'references': self._references_schema(references, dimensions or [], schema_dimensions),
             'rollup': [dimension
                        for operation in operations or []
@@ -152,10 +156,10 @@ class SlicerManager(QueryManager):
                 raise ValueError('Invalid metric key [%s]' % metric)
 
             for key, definition in schema_metric.schemas():
-                metrics[key] = definition
+                metrics[key] = definition or self._default_metric_definition(key)
 
             if schema_metric.joins:
-                joins += set(schema_metric.joins)
+                joins |= set(schema_metric.joins)
 
         return metrics, joins
 
@@ -175,14 +179,18 @@ class SlicerManager(QueryManager):
                 raise ValueError('Invalid dimension key [%s]' % dimension)
 
             for key, definition in schema_dimension.schemas(*args):
-                dimensions[key] = definition
+                dimensions[key] = definition or self._default_dimension_definition(key)
 
             if schema_dimension.joins:
-                joins += set(schema_dimension.joins)
+                joins |= set(schema_dimension.joins)
 
         return dimensions, joins
 
-    def _filters_schema(self, elements, filters, element_label='dimension'):
+    def _joins_schema(self, keys):
+        return [(self.slicer.joins[key].table, self.slicer.joins[key].criterion)
+                for key in keys]
+
+    def _filters_schema(self, elements, filters, default_value_func, element_label='dimension'):
         filters_schema = []
         for f in filters:
             element = elements.get(f.element_key)
@@ -191,7 +199,7 @@ class SlicerManager(QueryManager):
                                       'No such {element} with key [{key}].'.format(filter=f, element=element_label,
                                                                                    key=f.element_key))
 
-            filters_schema.append(f.schemas(element.definition))
+            filters_schema.append(f.schemas(element.definition or default_value_func(element.key)))
 
         return filters_schema
 
@@ -244,3 +252,9 @@ class SlicerManager(QueryManager):
             schema_references.append((reference.key, reference.element_key))
 
         return schema_references
+
+    def _default_dimension_definition(self, key):
+        return self.slicer.table.field(key)
+
+    def _default_metric_definition(self, key):
+        return fn.Sum(self._default_dimension_definition(key))

@@ -1,9 +1,7 @@
 # coding: utf-8
-from pypika import functions as fn, Field
-from pypika.terms import Mod
-
 from fireant import settings
 from fireant.slicer.managers import SlicerManager
+from pypika.terms import Mod
 
 
 class SlicerElement(object):
@@ -38,7 +36,7 @@ class Metric(SlicerElement):
     """
 
     def __init__(self, key, label=None, definition=None, joins=None):
-        super(Metric, self).__init__(key, label, definition or fn.Sum(Field(key)), joins)
+        super(Metric, self).__init__(key, label, definition, joins)
 
 
 class Dimension(SlicerElement):
@@ -47,7 +45,7 @@ class Dimension(SlicerElement):
     """
 
     def __init__(self, key, label=None, definition=None, joins=None):
-        super(Dimension, self).__init__(key, label, definition or Field(key) or fn.Sum(Field(key)), joins)
+        super(Dimension, self).__init__(key, label, definition, joins)
 
 
 class NumericInterval(object):
@@ -66,8 +64,8 @@ class NumericInterval(object):
 
 
 class ContinuousDimension(Dimension):
-    def __init__(self, key, label=None, definition=None, default_interval=NumericInterval(1, 0)):
-        super(ContinuousDimension, self).__init__(key=key, label=label, definition=definition)
+    def __init__(self, key, label=None, definition=None, default_interval=NumericInterval(1, 0), joins=None):
+        super(ContinuousDimension, self).__init__(key=key, label=label, definition=definition, joins=joins)
         self.default_interval = default_interval
 
     def schemas(self, *args):
@@ -97,8 +95,8 @@ class DatetimeDimension(ContinuousDimension):
     quarter = DatetimeInterval('Q')
     year = DatetimeInterval('IY')
 
-    def __init__(self, key, label=None, definition=None, default_interval=day):
-        super(DatetimeDimension, self).__init__(key=key, label=label, definition=definition,
+    def __init__(self, key, label=None, definition=None, default_interval=day, joins=None):
+        super(DatetimeDimension, self).__init__(key=key, label=label, definition=definition, joins=joins,
                                                 default_interval=default_interval)
 
     def schemas(self, *args):
@@ -108,14 +106,14 @@ class DatetimeDimension(ContinuousDimension):
 
 
 class CategoricalDimension(Dimension):
-    def __init__(self, key, label=None, definition=None, options=tuple()):
-        super(CategoricalDimension, self).__init__(key=key, label=label, definition=definition)
+    def __init__(self, key, label=None, definition=None, options=tuple(), joins=None):
+        super(CategoricalDimension, self).__init__(key=key, label=label, definition=definition, joins=joins)
         self.options = options
 
 
 class UniqueDimension(Dimension):
-    def __init__(self, key, label=None, label_field=None, id_fields=None):
-        super(UniqueDimension, self).__init__(key=key, label=label, definition=label_field)
+    def __init__(self, key, label=None, label_field=None, id_fields=None, joins=None):
+        super(UniqueDimension, self).__init__(key=key, label=label, definition=label_field, joins=joins)
         # TODO label_field and definition here are redundant
         self.label_field = label_field
         self.id_fields = id_fields
@@ -127,8 +125,8 @@ class UniqueDimension(Dimension):
 
 
 class BooleanDimension(Dimension):
-    def __init__(self, key, label=None, definition=None):
-        super(BooleanDimension, self).__init__(key=key, label=label, definition=definition)
+    def __init__(self, key, label=None, definition=None, joins=None):
+        super(BooleanDimension, self).__init__(key=key, label=label, definition=definition, joins=joins)
 
 
 class DimensionValue(object):
@@ -141,13 +139,20 @@ class DimensionValue(object):
         self.label = label
 
 
-class Slicer(object):
-    def __init__(self, table, joins=tuple(), metrics=tuple(), dimensions=tuple()):
+class Join(object):
+    def __init__(self, key, table, criterion):
+        self.key = key
         self.table = table
-        self.joins = joins
+        self.criterion = criterion
+
+
+class Slicer(object):
+    def __init__(self, table, metrics=tuple(), dimensions=tuple(), joins=tuple()):
+        self.table = table
 
         self.metrics = {metric.key: metric for metric in metrics}
         self.dimensions = {dimension.key: dimension for dimension in dimensions}
+        self.joins = {join.key: join for join in joins}
 
         self.manager = SlicerManager(self)
 
