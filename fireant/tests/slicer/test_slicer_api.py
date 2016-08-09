@@ -1,6 +1,6 @@
 # coding: utf-8
 from datetime import date
-from unittest import TestCase, skip
+from unittest import TestCase
 
 from fireant import settings
 from fireant.slicer import *
@@ -68,8 +68,7 @@ class SlicerSchemaTests(TestCase):
                 # Unique Dimension with composite ID field
                 UniqueDimension('keyword', 'Keyword',
                                 label_field=cls.test_table.keyword_name,
-                                id_fields=[cls.test_table.keyword_id, cls.test_table.keyword_type,
-                                           cls.test_table.adgroup_id, cls.test_table.engine]),
+                                id_fields=[cls.test_table.keyword_id, cls.test_table.keyword_type]),
 
                 # Dimension with joined columns
                 CategoricalDimension('blah', 'Blah', definition=cls.test_join_table.blah,
@@ -208,12 +207,10 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
         self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
-        self.assertSetEqual({'keyword_id0', 'keyword_id1', 'keyword_id2', 'keyword_id3', 'keyword_label'},
+        self.assertSetEqual({'keyword_id0', 'keyword_id1', 'keyword_label'},
                             set(query_schema['dimensions'].keys()))
         self.assertEqual('"test"."keyword_id"', str(query_schema['dimensions']['keyword_id0']))
         self.assertEqual('"test"."keyword_type"', str(query_schema['dimensions']['keyword_id1']))
-        self.assertEqual('"test"."adgroup_id"', str(query_schema['dimensions']['keyword_id2']))
-        self.assertEqual('"test"."engine"', str(query_schema['dimensions']['keyword_id3']))
         self.assertEqual('"test"."keyword_name"', str(query_schema['dimensions']['keyword_label']))
 
     def test_multiple_metrics_and_dimensions(self):
@@ -396,28 +393,6 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
 
         self.assertListEqual(['"test"."dt"<=\'2000-01-01\''], [str(f) for f in query_schema['dfilters']])
 
-    @skip('Need to decide how this should work')
-    def test_dimension_filter_numericrange(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
-            metrics=['foo'],
-            dimensions=['locale'],
-            dimension_filters=[
-                RangeFilter('clicks', 25, 100),
-            ],
-        )
-
-        self.assertSetEqual(QUERY_BUILDER_PARAMS, set(query_schema.keys()))
-        self.assertEqual(self.test_table, query_schema['table'])
-
-        self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
-        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
-
-        self.assertSetEqual({'locale'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('"test"."locale"', str(query_schema['dimensions']['locale']))
-
-        self.assertListEqual(['MOD("test"."clicks"+0,1) BETWEEN 25 AND 100'],
-                             [str(f) for f in query_schema['dfilters']])
-
     def test_dimension_filter_daterange(self):
         query_schema = self.test_slicer.manager.get_query_schema(
             metrics=['foo'],
@@ -435,6 +410,65 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
 
         self.assertListEqual(['"test"."dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\''],
                              [str(f) for f in query_schema['dfilters']])
+
+    def test_unique_dimension_filter_single_id(self):
+        query_schema = self.test_slicer.manager.get_query_schema(
+            metrics=['foo'],
+            dimensions=['account'],
+            dimension_filters=[EqualityFilter('account', EqualityOperator.eq, 1)],
+        )
+
+        self.assertSetEqual(QUERY_BUILDER_PARAMS, set(query_schema.keys()))
+        self.assertEqual(self.test_table, query_schema['table'])
+
+        self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
+
+        self.assertSetEqual({'account_id0', 'account_label'}, set(query_schema['dimensions'].keys()))
+        self.assertEqual('"test"."account_id"', str(query_schema['dimensions']['account_id0']))
+        self.assertEqual('"test"."account_name"', str(query_schema['dimensions']['account_label']))
+
+        self.assertListEqual(['"test"."account_id"=1'], [str(f) for f in query_schema['dfilters']])
+
+    def test_unique_dimension_filter_composite_id(self):
+        query_schema = self.test_slicer.manager.get_query_schema(
+            metrics=['foo'],
+            dimensions=['keyword'],
+            dimension_filters=[EqualityFilter('keyword', EqualityOperator.eq, (1, 'broad'))],
+        )
+
+        self.assertSetEqual(QUERY_BUILDER_PARAMS, set(query_schema.keys()))
+        self.assertEqual(self.test_table, query_schema['table'])
+
+        self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
+
+        self.assertSetEqual({'keyword_id0', 'keyword_id1', 'keyword_label'}, set(query_schema['dimensions'].keys()))
+        self.assertEqual('"test"."keyword_id"', str(query_schema['dimensions']['keyword_id0']))
+        self.assertEqual('"test"."keyword_type"', str(query_schema['dimensions']['keyword_id1']))
+        self.assertEqual('"test"."keyword_name"', str(query_schema['dimensions']['keyword_label']))
+
+        self.assertListEqual(['"test"."keyword_id"=1 AND "test"."keyword_type"=\'broad\''],
+                             [str(f) for f in query_schema['dfilters']])
+
+    def test_unique_dimension_filter_label(self):
+        query_schema = self.test_slicer.manager.get_query_schema(
+            metrics=['foo'],
+            dimensions=['account'],
+            dimension_filters=[WildcardFilter('account.label', 'nam%')],
+        )
+
+        self.assertSetEqual(QUERY_BUILDER_PARAMS, set(query_schema.keys()))
+        self.assertEqual(self.test_table, query_schema['table'])
+
+        self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
+
+        self.assertSetEqual({'account_id0', 'account_label'}, set(query_schema['dimensions'].keys()))
+        self.assertEqual('"test"."account_id"', str(query_schema['dimensions']['account_id0']))
+        self.assertEqual('"test"."account_name"', str(query_schema['dimensions']['account_label']))
+
+        self.assertListEqual(['"test"."account_name" LIKE \'nam%\''], [str(f) for f in query_schema['dfilters']])
 
     def test_metric_filter_eq(self):
         query_schema = self.test_slicer.manager.get_query_schema(
@@ -796,7 +830,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
                 'metrics': {'foo': 'Foo'},
                 'dimensions': [
                     {'label': 'Keyword',
-                     'id_fields': ['keyword_id0', 'keyword_id1', 'keyword_id2', 'keyword_id3'],
+                     'id_fields': ['keyword_id0', 'keyword_id1'],
                      'label_field': 'keyword_label'},
                 ],
                 'references': [],

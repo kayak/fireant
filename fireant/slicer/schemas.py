@@ -1,6 +1,7 @@
 # coding: utf-8
 from fireant import settings
 from fireant.slicer.managers import SlicerManager
+from pypika import JoinType
 from pypika.terms import Mod
 
 
@@ -110,7 +111,6 @@ class DatetimeDimension(ContinuousDimension):
 
     def schemas(self, *args):
         interval = args[0] if args else self.default_interval
-        # TODO fix this to work for different databases
         return [(self.key, settings.database.round_date(self.definition, interval.size))]
 
 
@@ -122,7 +122,7 @@ class CategoricalDimension(Dimension):
 
 class UniqueDimension(Dimension):
     def __init__(self, key, label=None, label_field=None, id_fields=None, joins=None):
-        super(UniqueDimension, self).__init__(key=key, label=label, definition=label_field, joins=joins)
+        super(UniqueDimension, self).__init__(key=key, label=label, definition=id_fields, joins=joins)
         # TODO label_field and definition here are redundant
         self.label_field = label_field
         self.id_fields = id_fields
@@ -130,7 +130,7 @@ class UniqueDimension(Dimension):
     def schemas(self, *args):
         id_field_schemas = [('{key}_id{ordinal}'.format(key=self.key, ordinal=i), id_field)
                             for i, id_field in enumerate(self.id_fields)]
-        return id_field_schemas + [('{key}_label'.format(key=self.key), self.definition)]
+        return id_field_schemas + [('{key}_label'.format(key=self.key), self.label_field)]
 
 
 class BooleanDimension(Dimension):
@@ -149,10 +149,11 @@ class DimensionValue(object):
 
 
 class Join(object):
-    def __init__(self, key, table, criterion):
+    def __init__(self, key, table, criterion, join_type=JoinType.left):
         self.key = key
         self.table = table
         self.criterion = criterion
+        self.join_type = join_type
 
 
 class Slicer(object):

@@ -187,19 +187,34 @@ class SlicerManager(QueryManager):
         return dimensions, joins
 
     def _joins_schema(self, keys):
-        return [(self.slicer.joins[key].table, self.slicer.joins[key].criterion)
+        return [(self.slicer.joins[key].table, self.slicer.joins[key].criterion, self.slicer.joins[key].join_type)
                 for key in keys]
 
     def _filters_schema(self, elements, filters, default_value_func, element_label='dimension'):
         filters_schema = []
         for f in filters:
-            element = elements.get(f.element_key)
-            if not element:
-                raise SlicerException('Unable to apply filter [{filter}].  '
-                                      'No such {element} with key [{key}].'.format(filter=f, element=element_label,
-                                                                                   key=f.element_key))
+            if '.' in f.element_key:
+                element_key, modifier = f.element_key.split('.')
+            else:
+                element_key, modifier = f.element_key, None
 
-            filters_schema.append(f.schemas(element.definition or default_value_func(element.key)))
+            element = elements.get(element_key)
+            if not element:
+                raise SlicerException(
+                    'Unable to apply filter [{filter}].  '
+                    'No such {element} with key [{key}].'.format(
+                        filter=f,
+                        element=element_label,
+                        key=f.element_key
+                    ))
+
+            if 'label' == modifier:
+                definition = element.label_field
+
+            else:
+                definition = element.definition or default_value_func(element.key)
+
+            filters_schema.append(f.schemas(definition))
 
         return filters_schema
 
@@ -254,7 +269,7 @@ class SlicerManager(QueryManager):
         return schema_references
 
     def _default_dimension_definition(self, key):
-        return self.slicer.table.field(key)
+        return fn.Coalesce(self.slicer.table.field(key), 'null')
 
     def _default_metric_definition(self, key):
-        return fn.Sum(self._default_dimension_definition(key))
+        return fn.Sum(self.slicer.table.field(key))

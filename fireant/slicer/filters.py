@@ -1,6 +1,10 @@
 # coding: utf8
 
 
+def wrap_list(value):
+    return value if isinstance(value, (tuple, list)) else [value]
+
+
 class Filter(object):
     def __init__(self, element_key):
         self.element_key = element_key
@@ -22,7 +26,18 @@ class EqualityFilter(Filter):
         return hash('%s_%s_%s' % (self.element_key, self.operator, self.value))
 
     def schemas(self, element):
-        return getattr(element, self.operator)(self.value)
+        element = wrap_list(element)
+        value = wrap_list(self.value)
+
+        criterion = None
+        for el, value in zip(element, value):
+            crit = getattr(el, self.operator)(value)
+            if criterion:
+                criterion = criterion & crit
+            else:
+                criterion = crit
+
+        return criterion
 
 
 class ContainsFilter(Filter):
@@ -59,7 +74,19 @@ class RangeFilter(Filter):
         return hash('%s_%s_%s_%s' % (self.__class__, self.element_key, self.start, self.stop))
 
     def schemas(self, element):
-        return element[self.start:self.stop]
+        element = wrap_list(element)
+        starts = wrap_list(self.start)
+        stops = wrap_list(self.stop)
+
+        criterion = None
+        for el, start, stop in zip(element, starts, stops):
+            crit = el[start:stop]
+            if criterion:
+                criterion = criterion & crit
+            else:
+                criterion = crit
+
+        return criterion
 
 
 class WildcardFilter(Filter):
