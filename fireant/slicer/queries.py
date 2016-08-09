@@ -111,15 +111,14 @@ class QueryManager(object):
                                   dimensions or dict(), mfilters or dict(), dfilters or dict(),
                                   references or dict(),
                                   rollup or dict())
+        querystring = str(query)
 
-        df_idx = query.groupby_aliases()
-        df_cols = query.select_aliases()
-
-        query_str = str(query)
         if getattr(settings, 'debug', False):
-            print("Executing query:\n----START----\n{query}\n-----END-----".format(query=query_str))
+            print("Executing query:\n----START----\n{query}\n-----END-----".format(query=querystring))
 
-        return settings.database.fetch_dataframe(query_str, columns=df_cols, index=df_idx).sort_index()
+        dataframe = settings.database.fetch_dataframe(querystring)
+        dataframe.columns = query.select_aliases()
+        return dataframe.set_index(query.groupby_aliases()).sort_index()
 
     def _build_query(self, table, joins, metrics, dimensions, mfilters, dfilters, references, rollup):
         # Initialize query
