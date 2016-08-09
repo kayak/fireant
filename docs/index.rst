@@ -13,7 +13,7 @@ Contents
 --------
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 3
     :glob:
 
     1_setup

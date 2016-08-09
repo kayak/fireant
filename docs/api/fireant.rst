@@ -1,25 +1,13 @@
 fireant package
 ===============
 
-Subpackages
------------
-
 .. toctree::
 
+    fireant.slicer
     fireant.dashboards
     fireant.database
-    fireant.slicer
-    fireant.tests
+    fireant.settings
 
-Submodules
-----------
-
-.. toctree::
-
-   fireant.settings
-
-Module contents
----------------
 
 .. automodule:: fireant
     :members:

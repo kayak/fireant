@@ -205,7 +205,7 @@ Getting Raw Data
 ----------------
 
 Now it is possible to put all the pieces together and start using the |FeatureSlicer|. Each of the manager functions has
-the following signature containing ``tuple``s or ``list``s of |ClassMetric|, |ClassDimension|.  The other parameters
+the following signature containing ``tuple`` or ``list`` of |ClassMetric|, |ClassDimension|.  The other parameters
 will be introduced in a later section.  For now, only metrics and dimensions are required to start fetching data.
 
 The ``metrics`` parameter is always a list of ``str`` matching the ``key`` of the desired metrics defined in the slicer.
