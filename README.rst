@@ -8,7 +8,7 @@ Installation
 Abstract
 ========
 
-|Brand| is a a data analysis tool used for quickly building charts, tables, reports, and dashboards.  It provides a schema for configuring data access, for example which metrics can be queried and which dimensions can be grouped on. An API is provided for making requests with this schema which enables filtering, comparisons, and post-processing operations.  The Dashboards feature provides an extra level of abstraction and empowers the assembly of reports containing multiple charts, tables, and widgets and facilitates quickly viewing your data from every angle.
+|Brand| is a a data analysis tool used for quickly building charts, tables, reports, and dashboards.  It defines a schema for configuring metrics and dimensions which removes most of the leg work of writing queries and formatting charts.  |Brand| even works great with Jupyter notebooks and in the Python shell providing quick and easy access to your data.
 
 .. _intro_end:
 
@@ -77,16 +77,16 @@ To configure a slicer, instantiate a |ClassSlicer| with a list of |ClassMetric| 
                                                     DimensionValue('tablet'),
                                                     DimensionValue('mobile')]]),
 
-            # Unique dimensions are used for entities that have a primary
-            # or composite key and optionally a label.
+            # Unique dimensions are used for entities that have a primary or composite
+            # key and optionally a label.
             UniqueDimension('account', label='Account Name',
 
                             # id_fields is a list which contains one or more PKey
                             # fields.
                             id_fields=[analytics.account_id],
 
-                            # The accounts table must be joined to get more data
-                            # about the account.
+                            # The accounts table is joined to get more data about the
+                            # account.
                             label_field=accounts.name,
 
                             # Just a list of keys of the required joins is needed.
