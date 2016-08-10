@@ -1,23 +1,21 @@
-Installation
-------------
+FireAnt - Analytics and Reporting
+=================================
 
 .. _intro_start:
 
 |BuildStatus|  |CoverageStatus|  |Codacy|  |Docs|  |PyPi|  |License|
 
 Abstract
-========
+--------
 
 |Brand| is a a data analysis tool used for quickly building charts, tables, reports, and dashboards.  It defines a schema for configuring metrics and dimensions which removes most of the leg work of writing queries and formatting charts.  |Brand| even works great with Jupyter notebooks and in the Python shell providing quick and easy access to your data.
 
 .. _intro_end:
 
-Read the docs:
-
-http://fireant.readthedocs.io/en/latest/
+Read more at http://fireant.readthedocs.io/en/latest/
 
 Installation
-============
+------------
 
 .. _installation_start:
 
@@ -31,7 +29,7 @@ To install |Brand|, run the following command in the terminal:
 .. _installation_end:
 
 Slicers
-=======
+-------
 
 Slicers are the core component of |Brand|.  A Slicer is a configuration of two types of elements, metrics and dimensions, which represent what kinds of data exist and how the data can be organized.  A metric is a type of data, a measurement such as clicks and a dimension is a range over which metrics can be extended or grouped by.  Concretely, metrics represent the data *in* a chart or table and dimensions represent the rows and columns, axes, or categories.
 
@@ -105,7 +103,7 @@ To configure a slicer, instantiate a |ClassSlicer| with a list of |ClassMetric| 
 
 
 Querying Data and Rendering Charts
-==================================
+----------------------------------
 
 Once a slicer is configured, it is ready to be used.  Each slicer comes with a |ClassSlicerManager| which exposes an interface for executing queries and transforming the results.  Each function in the manager uses the same signature.  The principal function is ``data`` and all othe functions call this function first.  The additional functions provide a transformation to the data.
 
@@ -124,7 +122,7 @@ Once a slicer is configured, it is ready to be used.  Each slicer comes with a |
 .. _manager_api_end:
 
 Examples
-========
+--------
 
 Use the ``data`` function to get a Pandas_ data frame or series.  The following example will result in a data frame with 'device' as the index, containing the values 'Desktop', 'Tablet', and 'Mobile', and the columns 'Clicks' and 'ROI'.
 
