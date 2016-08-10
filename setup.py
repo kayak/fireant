@@ -4,7 +4,7 @@ from setuptools import setup
 
 __major_version__ = 0
 __minor_version__ = 0
-__patch_version__ = 6
+__patch_version__ = 7
 
 
 def readme():
@@ -55,7 +55,7 @@ setup(
     install_requires=[
         'six',
         'pandas',
-        'pypika==0.0.19'
+        'pypika==0.0.21'
     ],
     tests_require=[
         'mock',

@@ -1,5 +1,4 @@
 # coding: utf-8
-import copy
 import logging
 
 from fireant import settings
@@ -14,8 +13,8 @@ reference_criterion = {
     'wow': lambda key, join_key: key == join_key - Interval(weeks=1),
 }
 reference_field = {
-    'd': lambda field, join_field: field - join_field,
-    'p': lambda field, join_field: (field - join_field) / join_field,
+    'd': lambda field, join_field: (field - join_field).as_(join_field.name),
+    'p': lambda field, join_field: ((field - join_field) / join_field).as_(join_field.name),
 }
 
 
@@ -123,54 +122,72 @@ class QueryManager(object):
     def _build_query(self, table, joins, metrics, dimensions, mfilters, dfilters, references, rollup):
         # Initialize query
         query = Query.from_(table)
+        query = self._add_joins(joins, query)
+        query = self._select_dimensions(query, dimensions, rollup)
+        query = self._select_metrics(query, metrics)
+        query = self._add_filters(query, dfilters, mfilters)
 
-        # Add join tables
-        for join_table, criterion, join_type in joins:
-            query = query.join(join_table, how=join_type).on(criterion)
+        if references:
+            return self._build_reference_query(query, table, joins, metrics, dimensions, references, rollup)
 
-        # Select dimensions
-        dx = [dimension.as_(key)
-              for key, dimension in dimensions.items()
-              if key not in rollup]
-        rx = [dimension.as_(key)
-              for key, dimension in dimensions.items()
-              if key in rollup]
+        return query
 
-        if dx:
-            query = query.select(*dx).groupby(*dx)
-        if rx:
-            query = query.select(*rx).rollup(*rx)
+    def _build_reference_query(self, query, table, joins, metrics, dimensions, references, rollup):
+        wrapper_query = Query.from_(query).select(*[query.field(key)
+                                                    for key in dimensions.keys() + metrics.keys()])
 
-        # Select metrics
-        mx = [metric.as_(key) for key, metric in metrics.items()]
-        query = query.select(*mx)
-
-        # Add comparisons
         for reference_key, dimension_key in references.items():
+
+            reference_query = Query.from_(table)
+            reference_query = self._add_joins(joins, reference_query)
+            reference_query = self._select_dimensions(reference_query, dimensions, rollup, suffix=reference_key)
+            reference_query = self._select_metrics(reference_query, metrics, suffix=reference_key)
+
             criterion_f, field_f = self._get_reference_mappers(reference_key)
 
-            reference_query = copy.deepcopy(query)
-            cx = self._build_reference_join_criterion(reference_query, dimensions, criterion_f, dimension_key)
+            reference_criteria = criterion_f(query.field(dimension_key), reference_query.field(dimension_key))
+            for dkey in set(dimensions.keys()) - {dimension_key}:
+                reference_criteria &= query.field(dkey) == reference_query.field(
+                    self._suffix(dkey, reference_key))
 
-            query = query.join(reference_query).on(cx)
+            wrapper_query = wrapper_query.join(reference_query).on(reference_criteria).select(
+                reference_query.field(self._suffix(dimension_key, reference_key))
+            ).select(
+                *[field_f(
+                    query.field(key),
+                    reference_query.field(self._suffix(key, reference_key))
+                ) for key in metrics.keys()]
+            )
 
-            # Select all of the comparison dimensions
-            # TODO maybe just select the dimensions that is different
-            if dimensions:
-                query = query.select(*[reference_query.field(key).as_('%s_%s' % (key, reference_key))
-                                       for key, dimension in dimensions.items()])
+        return wrapper_query
 
-            # Select all of the comparison metrics
-            query = query.select(*[field_f(metric, reference_query.field(key)).as_('%s_%s' % (key, reference_key))
-                                   for key, metric in metrics.items()])
+    @staticmethod
+    def _add_joins(joins, query):
+        for join_table, criterion, join_type in joins:
+            query = query.join(join_table, how=join_type).on(criterion)
+        return query
 
-        # Add ordering
-        if dx:
-            query = query.orderby(*dx)
-        if rx:
-            query = query.orderby(*rx)
+    def _select_dimensions(self, query, dimensions, rollup, suffix=None):
+        dims = [dimension.as_(self._suffix(key, suffix))
+                for key, dimension in dimensions.items()
+                if key not in rollup]
+        if dims:
+            query = query.select(*dims).groupby(*dims).orderby(*dims)
 
-        # Add filters
+        rollup_dims = [dimension.as_(self._suffix(key, suffix))
+                       for key, dimension in dimensions.items()
+                       if key in rollup]
+        if rollup_dims:
+            query = query.select(*rollup_dims).orderby(*rollup_dims).rollup(*rollup_dims)
+
+        return query
+
+    def _select_metrics(self, query, metrics, suffix=None):
+        return query.select(*[metric.as_(self._suffix(key, suffix))
+                              for key, metric in metrics.items()])
+
+    @staticmethod
+    def _add_filters(query, dfilters, mfilters):
         if dfilters:
             for dfx in dfilters:
                 query = query.where(dfx)
@@ -180,6 +197,10 @@ class QueryManager(object):
                 query = query.having(mfx)
 
         return query
+
+    @staticmethod
+    def _suffix(key, suffix):
+        return '%s_%s' % (key, suffix) if suffix else key
 
     @staticmethod
     def _get_reference_mappers(reference_key):
