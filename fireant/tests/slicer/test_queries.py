@@ -141,7 +141,8 @@ class ExampleTests(QueryTests):
                          'OUTER JOIN "test_join2" "t2" ON "t0"."join2_id"="t2"."id" '
                          'GROUP BY ROUND("t0"."dt",\'DD\'),"t2"."fiz" '
                          'ORDER BY ROUND("t0"."dt",\'DD\'),"t2"."fiz"'
-                         ') "t1" ON "t0"."dt"="t1"."dt"-INTERVAL \'1 WEEK\' AND "t0"."fiz"="t1"."fiz_wow"', str(query))
+                         ') "t1" ON "t0"."dt"="t1"."dt_wow"-INTERVAL \'1 WEEK\' '
+                         'AND "t0"."fiz"="t1"."fiz_wow"', str(query))
 
 
 class MetricsTests(QueryTests):
@@ -581,7 +582,7 @@ class ComparisonTests(QueryTests):
                          'FROM "test_table" '
                          'GROUP BY ROUND("dt",\'DD\'),"device_type" '
                          'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt"-INTERVAL \'52 WEEK\' '
+                         ') "t1" ON "t0"."dt"="t1"."dt_yoy"-INTERVAL \'52 WEEK\' '
                          'AND "t0"."device_type"="t1"."device_type_yoy"', str(query))
 
     def test_metrics_dimensions_filters_references__qoq(self):
@@ -608,7 +609,7 @@ class ComparisonTests(QueryTests):
                          'FROM "test_table" '
                          'GROUP BY ROUND("dt",\'DD\'),"device_type" '
                          'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt"-INTERVAL \'1 QUARTER\' '
+                         ') "t1" ON "t0"."dt"="t1"."dt_qoq"-INTERVAL \'1 QUARTER\' '
                          'AND "t0"."device_type"="t1"."device_type_qoq"', str(query))
 
     def test_metrics_dimensions_filters_references__mom(self):
@@ -635,7 +636,7 @@ class ComparisonTests(QueryTests):
                          'FROM "test_table" '
                          'GROUP BY ROUND("dt",\'DD\'),"device_type" '
                          'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt"-INTERVAL \'4 WEEK\' '
+                         ') "t1" ON "t0"."dt"="t1"."dt_mom"-INTERVAL \'4 WEEK\' '
                          'AND "t0"."device_type"="t1"."device_type_mom"', str(query))
 
     def test_metrics_dimensions_filters_references__wow(self):
@@ -662,7 +663,7 @@ class ComparisonTests(QueryTests):
                          'FROM "test_table" '
                          'GROUP BY ROUND("dt",\'DD\'),"device_type" '
                          'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt"-INTERVAL \'1 WEEK\' '
+                         ') "t1" ON "t0"."dt"="t1"."dt_wow"-INTERVAL \'1 WEEK\' '
                          'AND "t0"."device_type"="t1"."device_type_wow"', str(query))
 
     def test_metrics_dimensions_filters_references__yoy_d(self):
@@ -690,7 +691,7 @@ class ComparisonTests(QueryTests):
                          'FROM "test_table" '
                          'GROUP BY ROUND("dt",\'DD\'),"device_type" '
                          'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt"-INTERVAL \'52 WEEK\' '
+                         ') "t1" ON "t0"."dt"="t1"."dt_yoy_d"-INTERVAL \'52 WEEK\' '
                          'AND "t0"."device_type"="t1"."device_type_yoy_d"', str(query))
 
     def test_metrics_dimensions_filters_references__qoq_d(self):
@@ -718,7 +719,7 @@ class ComparisonTests(QueryTests):
                          'FROM "test_table" '
                          'GROUP BY ROUND("dt",\'DD\'),"device_type" '
                          'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt"-INTERVAL \'1 QUARTER\' '
+                         ') "t1" ON "t0"."dt"="t1"."dt_qoq_d"-INTERVAL \'1 QUARTER\' '
                          'AND "t0"."device_type"="t1"."device_type_qoq_d"', str(query))
 
     def test_metrics_dimensions_filters_references__mom_d(self):
@@ -746,7 +747,7 @@ class ComparisonTests(QueryTests):
                          'FROM "test_table" '
                          'GROUP BY ROUND("dt",\'DD\'),"device_type" '
                          'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt"-INTERVAL \'4 WEEK\' '
+                         ') "t1" ON "t0"."dt"="t1"."dt_mom_d"-INTERVAL \'4 WEEK\' '
                          'AND "t0"."device_type"="t1"."device_type_mom_d"', str(query))
 
     def test_metrics_dimensions_filters_references__wow_d(self):
@@ -774,7 +775,7 @@ class ComparisonTests(QueryTests):
                          'FROM "test_table" '
                          'GROUP BY ROUND("dt",\'DD\'),"device_type" '
                          'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt"-INTERVAL \'1 WEEK\' '
+                         ') "t1" ON "t0"."dt"="t1"."dt_wow_d"-INTERVAL \'1 WEEK\' '
                          'AND "t0"."device_type"="t1"."device_type_wow_d"', str(query))
 
     def test_metrics_dimensions_filters_references__yoy_p(self):
@@ -802,7 +803,7 @@ class ComparisonTests(QueryTests):
                          'FROM "test_table" '
                          'GROUP BY ROUND("dt",\'DD\'),"device_type" '
                          'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt"-INTERVAL \'52 WEEK\' '
+                         ') "t1" ON "t0"."dt"="t1"."dt_yoy_p"-INTERVAL \'52 WEEK\' '
                          'AND "t0"."device_type"="t1"."device_type_yoy_p"', str(query))
 
     def test_metrics_dimensions_filters_references__qoq_p(self):
@@ -830,7 +831,7 @@ class ComparisonTests(QueryTests):
                          'FROM "test_table" '
                          'GROUP BY ROUND("dt",\'DD\'),"device_type" '
                          'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt"-INTERVAL \'1 QUARTER\' '
+                         ') "t1" ON "t0"."dt"="t1"."dt_qoq_p"-INTERVAL \'1 QUARTER\' '
                          'AND "t0"."device_type"="t1"."device_type_qoq_p"', str(query))
 
     def test_metrics_dimensions_filters_references__mom_p(self):
@@ -858,7 +859,7 @@ class ComparisonTests(QueryTests):
                          'FROM "test_table" '
                          'GROUP BY ROUND("dt",\'DD\'),"device_type" '
                          'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt"-INTERVAL \'4 WEEK\' '
+                         ') "t1" ON "t0"."dt"="t1"."dt_mom_p"-INTERVAL \'4 WEEK\' '
                          'AND "t0"."device_type"="t1"."device_type_mom_p"', str(query))
 
     def test_metrics_dimensions_filters_references__wow_p(self):
@@ -886,7 +887,7 @@ class ComparisonTests(QueryTests):
                          'FROM "test_table" '
                          'GROUP BY ROUND("dt",\'DD\'),"device_type" '
                          'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt"-INTERVAL \'1 WEEK\' '
+                         ') "t1" ON "t0"."dt"="t1"."dt_wow_p"-INTERVAL \'1 WEEK\' '
                          'AND "t0"."device_type"="t1"."device_type_wow_p"', str(query))
 
 

@@ -128,11 +128,14 @@ class QueryManager(object):
         query = self._add_filters(query, dfilters, mfilters)
 
         if references:
-            return self._build_reference_query(query, table, joins, metrics, dimensions, references, rollup)
+            return self._build_reference_query(query, table, joins,
+                                               metrics, dimensions,
+                                               dfilters, mfilters,
+                                               references, rollup)
 
         return query
 
-    def _build_reference_query(self, query, table, joins, metrics, dimensions, references, rollup):
+    def _build_reference_query(self, query, table, joins, metrics, dimensions, dfilters, mfilters, references, rollup):
         wrapper_query = Query.from_(query).select(*[query.field(key)
                                                     for key in list(dimensions.keys()) + list(metrics.keys())])
 
@@ -145,7 +148,10 @@ class QueryManager(object):
 
             criterion_f, field_f = self._get_reference_mappers(reference_key)
 
-            reference_criteria = criterion_f(query.field(dimension_key), reference_query.field(dimension_key))
+            reference_criteria = criterion_f(
+                query.field(dimension_key),
+                reference_query.field(self._suffix(dimension_key, reference_key))
+            )
             for dkey in set(dimensions.keys()) - {dimension_key}:
                 reference_criteria &= query.field(dkey) == reference_query.field(
                     self._suffix(dkey, reference_key))
