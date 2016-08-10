@@ -1,12 +1,14 @@
 # coding: utf-8
 
 import functools
+from collections import OrderedDict
 
+from fireant.slicer.transformers import MatplotlibTransformer, PandasTransformer
 from pypika import functions as fn
 from .queries import QueryManager
 from .transformers import (TableIndex, HighchartsTransformer, HighchartsColumnTransformer, DataTablesTransformer)
 
-_default_transformers = {
+web_transformers = {
     'line_chart': HighchartsTransformer(),
     'column_chart': HighchartsColumnTransformer(HighchartsColumnTransformer.column),
     'bar_chart': HighchartsColumnTransformer(HighchartsColumnTransformer.bar),
@@ -28,7 +30,7 @@ class SlicerManager(QueryManager):
         self.slicer = slicer
 
         # Creates a function on the slicer for each transformer
-        for tx_key, tx in (transformers or _default_transformers).items():
+        for tx_key, tx in (transformers or web_transformers).items():
             setattr(self, tx_key, functools.partial(self._get_and_transform_data, tx))
 
     def _get_and_transform_data(self, tx, metrics=tuple(), dimensions=tuple(),
@@ -249,7 +251,7 @@ class SlicerManager(QueryManager):
         dimension_keys = {dimension[0] if isinstance(dimension, (list, tuple, set)) else dimension
                           for dimension in dimensions}
 
-        schema_references = []
+        schema_references = OrderedDict()
         for reference in references or []:
             if reference.element_key not in dimension_keys:
                 raise SlicerException(
@@ -264,7 +266,7 @@ class SlicerManager(QueryManager):
                     'Dimension [{dimension}] must be a DatetimeDimension.'.format(reference=str(reference),
                                                                                   dimension=reference.element_key))
 
-            schema_references.append((reference.key, reference.element_key))
+            schema_references[reference.key] = reference.element_key
 
         return schema_references
 

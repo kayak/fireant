@@ -642,7 +642,7 @@ class SlicerSchemaReferenceTests(SlicerSchemaTests):
         self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
         self.assertSetEqual({'date'}, set(query_schema['dimensions'].keys()))
         self.assertEqual('ROUND("test"."dt",\'DD\')', str(query_schema['dimensions']['date']))
-        self.assertListEqual([(reference.key, reference.element_key)], query_schema['references'])
+        self.assertDictEqual({reference.key: reference.element_key}, query_schema['references'])
 
     def test_reference_wow_with_date(self):
         self._reference_test_with_date(WoW('date'))
