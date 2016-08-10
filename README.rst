@@ -12,6 +12,13 @@ Abstract
 
 .. _intro_end:
 
+Read the docs:
+
+http://fireant.readthedocs.io/en/latest/
+
+Installation
+============
+
 .. _installation_start:
 
 To install |Brand|, run the following command in the terminal:
