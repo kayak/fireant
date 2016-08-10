@@ -90,40 +90,9 @@ Here is a concrete example of a |FeatureSlicer| configuration. It includes a par
 |ClassMetric|.  Below that is the list of |ClassDimension| with a |ClassDateDimension|, |ClassCatDimension| and
 |ClassUniqueDimension|.
 
-.. code-block:: python
-
-    from fireant.slicer import *
-    from pypika import Table, functions as fn
-
-    analytics = Table('analytics')
-
-    slicer = Slicer(
-        analytics,
-
-        metrics=[
-            Metric("impressions", "Impressions"),
-            Metric('clicks', 'Clicks'),
-            Metric("conversions", "Conversions"),
-            Metric("cost", "Cost"),
-            Metric("revenue", "Revenue"),
-
-            Metric("cpc", "CPC",
-                   definition=fn.Sum(analytics.cost) / fn.Sum(analytics.clicks)),
-            Metric("rpc", "RPC",
-                   definition=fn.Sum(analytics.revenue) / fn.Sum(analytics.clicks)),
-            Metric("roi", "ROI",
-                   definition=fn.Sum(analytics.revenue) / fn.Sum(analytics.cost)),
-        ],
-
-        dimensions=[
-            DatetimeDimension('date', 'Date', definition=analytics.dt),
-            CategoricalDimension('device', 'Device'),
-            UniqueDimension('account',
-                            label='Account',
-                            id_fields=[analytics.account_id],
-                            label_field=analytics.account_name),
-        ],
-    )
+.. include:: ../README.rst
+    :start-after: _slicer_example_start:
+    :end-before:  _slicer_example_end:
 
 
 In our example, the first couple of metrics pass ``key`` and ``label`` parameters.  The key is a unique identifier for
@@ -191,14 +160,11 @@ custom output formats.  When requesting data, a transformer must be selected.  R
 transformers but that will be covered in a later section.
 
 The slicer contains a manager class, |ClassSlicerManager| which offers a method for each transformer and a ``data`` method
-which foregoes transformation and returns a Pandas_ data frame.  The default transformers included in |Brand| include
-the following:
+which forgoes transformation and returns a Pandas_ data frame.
 
-* ``slicer.manager.data`` - A Pandas_ dataframe indexed by the selected dimensions.
-* ``slicer.manager.line_chart`` - A Highcharts_ line chart.
-* ``slicer.manager.bar_chart`` - A Highcharts_ bar chart.
-* ``slicer.manager.row_index_table`` - A Datatables_ row-indexed table.
-* ``slicer.manager.column_index_table`` - A Datatables_ column-indexed table.
+.. include:: ../README.rst
+    :start-after: _manager_api_start:
+    :end-before:  _manager_api_end:
 
 
 Getting Raw Data
@@ -212,11 +178,6 @@ The ``metrics`` parameter is always a list of ``str`` matching the ``key`` of th
 The ``dimensions`` parameter is a list of mixed types but most often a ``str`` referencing the keys of the desired
 dimensions.  Continuous dimensions can also optionally specify an interval.  DateDimensions by default use the
 interval ``DatetimeDimension.day``.
-
-.. code-block:: python
-
-    def data(self, metrics, dimensions, metric_filters, dimension_filters, references, operations):
-        pass
 
 
 When calling a |ClassSlicerManager| function, the ``tuple`` of metrics should contain string values matching the

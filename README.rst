@@ -8,11 +8,7 @@ Installation
 Abstract
 ========
 
-|Brand| is a a data analysis tool used for quickly building charts, tables, reports, and dashboards.  It provides a
-schema for configuring data access, for example which metrics can be queried and which dimensions can be grouped on.
-An API is provided for making requests with this schema which enables filtering, comparisons, and post-processing
-operations.  The Dashboards feature provides an extra level of abstraction and empowers the assembly of reports
-containing multiple charts, tables, and widgets and facilitates quickly viewing your data from every angle.
+|Brand| is a a data analysis tool used for quickly building charts, tables, reports, and dashboards.  It provides a schema for configuring data access, for example which metrics can be queried and which dimensions can be grouped on. An API is provided for making requests with this schema which enables filtering, comparisons, and post-processing operations.  The Dashboards feature provides an extra level of abstraction and empowers the assembly of reports containing multiple charts, tables, and widgets and facilitates quickly viewing your data from every angle.
 
 .. _intro_end:
 
@@ -26,6 +22,147 @@ To install |Brand|, run the following command in the terminal:
 
 
 .. _installation_end:
+
+Slicers
+=======
+
+Slicers are the core component of |Brand|.  A Slicer is a configuration of two types of elements, metrics and dimensions, which represent what kinds of data exist and how the data can be organized.  A metric is a type of data, a measurement such as clicks and a dimension is a range over which metrics can be extended or grouped by.  Concretely, metrics represent the data *in* a chart or table and dimensions represent the rows and columns, axes, or categories.
+
+To configure a slicer, instantiate a |ClassSlicer| with a list of |ClassMetric| and |ClassDimension|.
+
+.. _slicer_example_start:
+
+.. code-block:: python
+
+    from fireant.slicer import *
+    from pypika import Table, functions as fn
+
+    analytics, accounts = Table('analytics', 'accounts')
+
+    my_slicer = Slicer(
+        # This is the primary database table that our slicer uses
+        table=analytics,
+
+        joins=[
+            # Metrics and dimensions can use columns from joined tables by
+            # configuring the join here.  Joins will only be used when necessary.
+            Join('accounts', accounts, analytics.account_id == accounts.id),
+        ],
+
+        metrics=[
+            # A unique key is required for each metric
+            Metric('impressions'),
+            Metric('clicks'),
+            Metric('conversions'),
+            Metric('cost'),
+            Metric('revenue'),
+
+            # By default, a metric maps one-to-one with a column in the database
+            # but it can also be given a more complex definition.
+            Metric('cpc', label='CPC',
+                   definition=fn.Sum(analytics.cost) / fn.Sum(analytics.clicks)),
+            Metric('rpc', label='RPC',
+                   definition=fn.Sum(analytics.revenue) / fn.Sum(analytics.clicks)),
+            Metric('roi', label='ROI',
+                   definition=fn.Sum(analytics.revenue) / fn.Sum(analytics.cost)),
+        ],
+
+        dimensions=[
+            # Datetime Dimensions are continuous and must be rounded to an interval
+            # like hour, day, week. Day is the default.
+            DatetimeDimension('date', definition=analytics.dt),
+
+            # Categorical dimensions are ones with a fixed number of options.
+            CategoricalDimension('device', options=[DimensionValue('desktop'),
+                                                    DimensionValue('tablet'),
+                                                    DimensionValue('mobile')]]),
+
+            # Unique dimensions are used for entities that have a primary
+            # or composite key and optionally a label.
+            UniqueDimension('account', label='Account Name',
+
+                            # id_fields is a list which contains one or more PKey
+                            # fields.
+                            id_fields=[analytics.account_id],
+
+                            # The accounts table must be joined to get more data
+                            # about the account.
+                            label_field=accounts.name,
+
+                            # Just a list of keys of the required joins is needed.
+                            joins=['accounts']),
+        ],
+    )
+
+.. _slicer_example_end:
+
+
+Querying Data and Rendering Charts
+==================================
+
+Once a slicer is configured, it is ready to be used.  Each slicer comes with a |ClassSlicerManager| which exposes an interface for executing queries and transforming the results.  Each function in the manager uses the same signature.  The principal function is ``data`` and all othe functions call this function first.  The additional functions provide a transformation to the data.
+
+.. _manager_api_start:
+
+* ``my_slicer.manager.data`` - A Pandas_ data frame indexed by the selected dimensions.
+* ``my_slicer.manager.line_chart`` - A Highcharts_ line chart.
+* ``my_slicer.manager.bar_chart`` - A Highcharts_ bar chart.
+* ``my_slicer.manager.row_index_table`` - A Datatables_ row-indexed table.
+* ``my_slicer.manager.column_index_table`` - A Datatables_ column-indexed table.
+
+.. code-block:: python
+
+    def data(self, metrics, dimensions, metric_filters, dimension_filters, references, operations):
+
+.. _manager_api_end:
+
+Examples
+========
+
+Use the ``data`` function to get a Pandas_ data frame or series.  The following example will result in a data frame with 'device' as the index, containing the values 'Desktop', 'Tablet', and 'Mobile', and the columns 'Clicks' and 'ROI'.
+
+.. code-block:: python
+
+    df = my_slicer.manager.data(
+        metrics=['clicks', 'roi'],
+        dimensions=['device']
+    )
+
+Removing the dimension will yield a similar result except as a Pandas_ series containing 'Clicks' and 'ROI'.  These are the aggregated values over the entire data base table.
+
+.. code-block:: python
+
+    df = my_slicer.manager.data(
+        metrics=['clicks', 'roi'],
+    )
+
+The transformer functions us the data function but then apply a transformation to convert the data into formats for Highcharts_ or Datatables_.  The results for these can be serialized directly into json objects.
+
+
+.. code-block:: python
+
+    import json
+
+    result = my_slicer.manager.line_chart(
+        metrics=['clicks', 'roi'],
+        dimensions=['date', 'device'],
+    )
+
+    json.dumps(result)
+
+
+.. code-block:: python
+
+    import json
+
+    result = my_slicer.manager.row_index_table(
+        metrics=['clicks', 'revenue', 'cost', 'roi'],
+        dimensions=['account', 'device'],
+    )
+
+    json.dumps(result)
+
+
 
 .. _available_badges_start:
 

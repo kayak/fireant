@@ -5,10 +5,6 @@ FireAnt - Data Analysis Package
    :start-after: _intro_start:
    :end-before:  _intro_end:
 
-.. include:: ../README.rst
-    :start-after: _installation_start:
-    :end-before:  _installation_end:
-
 Contents
 --------
 

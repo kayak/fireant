@@ -145,7 +145,7 @@ class DimensionValue(object):
 
     def __init__(self, key, label=None):
         self.key = key
-        self.label = label
+        self.label = label or ' '.join(key.capitalize().split('_'))
 
 
 class Join(object):
