@@ -134,7 +134,7 @@ class QueryManager(object):
 
     def _build_reference_query(self, query, table, joins, metrics, dimensions, references, rollup):
         wrapper_query = Query.from_(query).select(*[query.field(key)
-                                                    for key in dimensions.keys() + metrics.keys()])
+                                                    for key in list(dimensions.keys()) + list(metrics.keys())])
 
         for reference_key, dimension_key in references.items():
 

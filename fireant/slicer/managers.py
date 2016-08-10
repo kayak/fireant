@@ -3,7 +3,6 @@
 import functools
 from collections import OrderedDict
 
-from fireant.slicer.transformers import MatplotlibTransformer, PandasTransformer
 from pypika import functions as fn
 from .queries import QueryManager
 from .transformers import (TableIndex, HighchartsTransformer, HighchartsColumnTransformer, DataTablesTransformer)
