@@ -10,7 +10,7 @@ Abstract
 
 |Brand| is a a data analysis tool used for quickly building charts, tables, reports, and dashboards.  It provides a
 schema for configuring data access, for example which metrics can be queried and which dimensions can be grouped on.
-An API is provided to making requests with this schema which enables filtering, comparisons, and post-processing
+An API is provided for making requests with this schema which enables filtering, comparisons, and post-processing
 operations.  The Dashboards feature provides an extra level of abstraction and empowers the assembly of reports
 containing multiple charts, tables, and widgets and facilitates quickly viewing your data from every angle.
 

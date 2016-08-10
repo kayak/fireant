@@ -11,7 +11,7 @@ Once you have added |Brand| to your project, you must provide some additional se
 required in order to execute queries.  Currently, only Vertica is supported via ``vertica_python``, however future plans
 include support for various other databases such as MySQL and Oracle.
 
-To configure a database, instantiate a subclass of |ClassDatabase| and set it in ``hostage.settings``.  This
+To configure a database, instantiate a subclass of |ClassDatabase| and set it in ``fireant.settings``.  This
 must be only set once.  At the present, only one database connection is supported.
 
 Vertica
@@ -19,10 +19,10 @@ Vertica
 
 .. code-block:: python
 
-    import hostage.settings
-    from hostage.database import Vertica
+    import fireant.settings
+    from fireant.database import Vertica
 
-    hostage.settings = Vertica(
+    fireant.settings = Vertica(
         host='example.com',
         port=5433,
         database='example',
