@@ -5,8 +5,6 @@ FireAnt - Analytics and Reporting
 
 |BuildStatus|  |CoverageStatus|  |Codacy|  |Docs|  |PyPi|  |License|
 
-Abstract
---------
 
 |Brand| is a a data analysis tool used for quickly building charts, tables, reports, and dashboards.  It defines a schema for configuring metrics and dimensions which removes most of the leg work of writing queries and formatting charts.  |Brand| even works great with Jupyter notebooks and in the Python shell providing quick and easy access to your data.
 
