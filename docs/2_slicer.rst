@@ -24,7 +24,7 @@ definitions are expressed using PyPika_.
 
 .. note::
 
-    When defining a |ClassMetric|, it is important to note that all queries executed by hostage are aggregated over
+    When defining a |ClassMetric|, it is important to note that all queries executed by fireant are aggregated over
     the dimensions (via a ``GROUP BY`` clause in the SQL query) and therefore are required to use aggregation functions.
     By default, a |ClassMetric| will use the ``SUM`` function and it's ``key``. A custom definition is commonly required
     and must use a SQL aggregate function over any columns.
@@ -92,7 +92,7 @@ Here is a concrete example of a |FeatureSlicer| configuration. It includes a par
 
 .. code-block:: python
 
-    from hostage.slicer import *
+    from fireant.slicer import *
     from pypika import Table, functions as fn
 
     analytics = Table('analytics')
@@ -156,7 +156,7 @@ table.
 .. code-block:: python
 
 
-    from hostage.slicer import *
+    from fireant.slicer import *
     from pypika import Tables, functions as fn
 
     analytics, customers = Tables('analytics', 'customers')
@@ -336,7 +336,7 @@ The most basic type of filtering uses a equality/inequality expression such as `
 
 .. code-block:: python
 
-    from hostage.slicer import EqualityFilter, EqualityOperator
+    from fireant.slicer import EqualityFilter, EqualityOperator
 
     # Only desktop data
     slicer.manager.column_index_table(
@@ -347,7 +347,7 @@ The most basic type of filtering uses a equality/inequality expression such as `
 
 .. code-block:: python
 
-    from hostage.slicer import EqualityFilter, EqualityOperator
+    from fireant.slicer import EqualityFilter, EqualityOperator
 
     # Only data for days where clicks were greater than 100
     slicer.manager.column_index_table(
@@ -364,7 +364,7 @@ When a column should be equal to one of a set of values, a `Contains` filter can
 
 .. code-block:: python
 
-    from hostage.slicer import ContainsFilter
+    from fireant.slicer import ContainsFilter
 
     slicer.manager.column_index_table(
         metrics=['clicks', 'conversions'],
@@ -380,7 +380,7 @@ Windows
 
 .. code-block:: python
 
-    from hostage.slicer import RangeFilter
+    from fireant.slicer import RangeFilter
 
     slicer.manager.column_index_table(
         metrics=['clicks', 'conversions'],
@@ -395,7 +395,7 @@ For pattern matching a `Fuzzy` can be used which parallels ``LIKE`` expressions 
 
 .. code-block:: python
 
-    from hostage.slicer import WildcardFilter
+    from fireant.slicer import WildcardFilter
 
     slicer.manager.column_index_table(
         metrics=['clicks', 'conversions'],
@@ -427,7 +427,7 @@ For each |FeatureReference|, there are the following variations:
 
 .. code-block:: python
 
-    from hostage.slicer import WoW, DeltaMoM, DeltaQoQ
+    from fireant.slicer import WoW, DeltaMoM, DeltaQoQ
 
     slicer.manager.column_index_table(
         metrics=['clicks', 'conversions'],

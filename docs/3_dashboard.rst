@@ -44,8 +44,8 @@ in the |ClassWidgetGroup| schema as they do in the |ClassSlicerManager| as well 
 
 .. code-block:: python
 
-    from hostage.slicer import *
-    from hostage.dashboards import *
+    from fireant.slicer import *
+    from fireant.dashboards import *
 
     my_widget_group = WidgetGroup(
         my_slicer,
