@@ -1,5 +1,5 @@
-FireAnt - Data Analysis Package
-===============================
+FireAnt - Data Analysis and Reporting Tool
+==========================================
 
 .. include:: ../README.rst
    :start-after: _intro_start:
