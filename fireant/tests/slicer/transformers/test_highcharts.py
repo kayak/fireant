@@ -68,6 +68,23 @@ class HighChartsLineTransformerTests(BaseTransformerTests):
 
     def test_time_series_date_to_millis(self):
         # Tests transformation of a single-metric, single-dimension result
+        df = self.time_dim_single_metric_df
+
+        result = self.hc_tx.transform(df, self.time_dim_single_metric_schema)
+
+        self.evaluate_chart_options(result, xaxis_type='datetime')
+
+        self.assertSetEqual(
+            {'One'},
+            {series['name'] for series in result['series']}
+        )
+
+        df2 = df
+        df2.index = df2.index.astype(int) // int(1e6)
+        self.evaluate_result(df2, result)
+
+    def test_time_series_date_with_ref(self):
+        # Tests transformation of a single-metric, single-dimension result using a WoW reference
         df = self.time_dim_single_metric_ref_df
 
         result = self.hc_tx.transform(df, self.time_dim_single_metric_ref_schema)
