@@ -21,9 +21,9 @@ class HighChartsLineTransformerTests(BaseTransformerTests):
         for data, (_, row) in zip(result_data, df.iteritems()):
             self.assertListEqual(list(row.iteritems()), data)
 
-    def evaluate_chart_options(self, result, n_results=1, xaxis_type='linear'):
+    def evaluate_chart_options(self, result, num_series=1, xaxis_type='linear', dash_style='Solid'):
         self.assertSetEqual({'title', 'series', 'chart', 'tooltip', 'xAxis', 'yAxis'}, set(result.keys()))
-        self.assertEqual(n_results, len(result['series']))
+        self.assertEqual(num_series, len(result['series']))
 
         self.assertSetEqual({'text'}, set(result['title'].keys()))
         self.assertIsNone(result['title']['text'])
@@ -34,7 +34,7 @@ class HighChartsLineTransformerTests(BaseTransformerTests):
         self.assertEqual(xaxis_type, result['xAxis']['type'])
 
         for series in result['series']:
-            self.assertSetEqual({'name', 'data', 'yAxis'}, set(series.keys()))
+            self.assertSetEqual({'name', 'data', 'yAxis', 'dashStyle'}, set(series.keys()))
 
     def test_series_single_metric(self):
         # Tests transformation of a single-metric, single-dimension result
@@ -57,7 +57,7 @@ class HighChartsLineTransformerTests(BaseTransformerTests):
 
         result = self.hc_tx.transform(df, self.cont_dim_multi_metric_schema)
 
-        self.evaluate_chart_options(result, n_results=2)
+        self.evaluate_chart_options(result, num_series=2)
 
         self.assertSetEqual(
             {'One', 'Two'},
@@ -80,7 +80,24 @@ class HighChartsLineTransformerTests(BaseTransformerTests):
         )
 
         df2 = df
-        df2.index = df2.index.astype(int) // 1e6
+        df2.index = df2.index.astype(int) // int(1e6)
+        self.evaluate_result(df2, result)
+
+    def test_time_series_date_with_ref(self):
+        # Tests transformation of a single-metric, single-dimension result using a WoW reference
+        df = self.time_dim_single_metric_ref_df
+
+        result = self.hc_tx.transform(df, self.time_dim_single_metric_ref_schema)
+
+        self.evaluate_chart_options(result, num_series=2, xaxis_type='datetime')
+
+        self.assertSetEqual(
+            {'One', 'One WoW'},
+            {series['name'] for series in result['series']}
+        )
+
+        df2 = df
+        df2.index = df2.index.astype(int) // int(1e6)
         self.evaluate_result(df2, result)
 
     def test_cont_uni_dim_single_metric(self):
@@ -89,7 +106,7 @@ class HighChartsLineTransformerTests(BaseTransformerTests):
 
         result = self.hc_tx.transform(df, self.cont_uni_dims_single_metric_schema)
 
-        self.evaluate_chart_options(result, n_results=4)
+        self.evaluate_chart_options(result, num_series=4)
 
         self.assertSetEqual(
             {'One (Uni2_1)', 'One (Uni2_2)', 'One (Uni2_3)', 'One (Uni2_4)'},
@@ -104,7 +121,7 @@ class HighChartsLineTransformerTests(BaseTransformerTests):
 
         result = self.hc_tx.transform(df, self.cont_uni_dims_multi_metric_schema)
 
-        self.evaluate_chart_options(result, n_results=8)
+        self.evaluate_chart_options(result, num_series=8)
 
         self.assertSetEqual(
             {'One (Uni2_1)', 'One (Uni2_2)', 'One (Uni2_3)', 'One (Uni2_4)',
@@ -120,7 +137,7 @@ class HighChartsLineTransformerTests(BaseTransformerTests):
 
         result = self.hc_tx.transform(df, self.cont_cat_dims_single_metric_schema)
 
-        self.evaluate_chart_options(result, n_results=2)
+        self.evaluate_chart_options(result, num_series=2)
 
         self.assertSetEqual(
             {'One (A)', 'One (B)'},
@@ -135,7 +152,7 @@ class HighChartsLineTransformerTests(BaseTransformerTests):
 
         result = self.hc_tx.transform(df, self.cont_cat_dims_multi_metric_schema)
 
-        self.evaluate_chart_options(result, n_results=4)
+        self.evaluate_chart_options(result, num_series=4)
 
         self.assertSetEqual(
             {'One (A)', 'One (B)', 'Two (A)', 'Two (B)'},
@@ -150,7 +167,7 @@ class HighChartsLineTransformerTests(BaseTransformerTests):
 
         result = self.hc_tx.transform(df, self.cont_cat_cat_dims_multi_metric_schema)
 
-        self.evaluate_chart_options(result, n_results=8)
+        self.evaluate_chart_options(result, num_series=8)
 
         self.assertSetEqual(
             {'One (A, Y)', 'One (A, Z)', 'One (B, Y)', 'One (B, Z)',
@@ -166,7 +183,7 @@ class HighChartsLineTransformerTests(BaseTransformerTests):
 
         result = self.hc_tx.transform(df, self.cont_cat_uni_dims_multi_metric_schema)
 
-        self.evaluate_chart_options(result, n_results=16)
+        self.evaluate_chart_options(result, num_series=16)
 
         self.assertSetEqual(
             {'One (A, Uni2_1)', 'One (A, Uni2_2)', 'One (A, Uni2_3)', 'One (A, Uni2_4)',
@@ -184,7 +201,7 @@ class HighChartsLineTransformerTests(BaseTransformerTests):
 
         result = self.hc_tx.transform(df, self.rollup_cont_cat_cat_dims_multi_metric_schema)
 
-        self.evaluate_chart_options(result, n_results=14)
+        self.evaluate_chart_options(result, num_series=14)
 
         self.assertSetEqual(
             {'One', 'One (A)', 'One (A, Y)', 'One (A, Z)', 'One (B)', 'One (B, Y)', 'One (B, Z)',

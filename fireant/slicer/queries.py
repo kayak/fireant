@@ -1,25 +1,27 @@
 # coding: utf-8
 import logging
 
+import pandas as pd
+
 from fireant import settings
-from pypika import Query, Interval
+from pypika import Query, Interval, JoinType
 
 logger = logging.getLogger(__name__)
 
-reference_criterion = {
-    'yoy': lambda key, join_key: key == join_key - Interval(weeks=52),
-    'qoq': lambda key, join_key: key == join_key - Interval(quarters=1),
-    'mom': lambda key, join_key: key == join_key - Interval(weeks=4),
-    'wow': lambda key, join_key: key == join_key - Interval(weeks=1),
+reference_dimension_mappers = {
+    'yoy': lambda join_key: join_key + Interval(weeks=52),
+    'qoq': lambda join_key: join_key + Interval(quarters=1),
+    'mom': lambda join_key: join_key + Interval(weeks=4),
+    'wow': lambda join_key: join_key + Interval(weeks=1),
 }
-reference_field = {
-    'd': lambda field, join_field: (field - join_field).as_(join_field.name),
-    'p': lambda field, join_field: ((field - join_field) / join_field).as_(join_field.name),
+reference_metric_mappers = {
+    'd': lambda field, join_field: (field - join_field),
+    'p': lambda field, join_field: ((field - join_field) / join_field),
 }
 
 
 class QueryManager(object):
-    def _query_data(self, table=None, joins=None,
+    def _query_data(self, table, joins=None,
                     metrics=None, dimensions=None,
                     mfilters=None, dfilters=None,
                     references=None, rollup=None):
@@ -106,66 +108,69 @@ class QueryManager(object):
         :return:
             A pd.DataFrame indexed by the provided dimensions paramaters containing columns for each metrics parameter.
         """
-        query = self._build_query(table, joins or dict(), metrics or dict(),
-                                  dimensions or dict(), mfilters or dict(), dfilters or dict(),
-                                  references or dict(),
-                                  rollup or dict())
+        query = self._build_query(table, joins or dict(), metrics or dict(), dimensions or dict(),
+                                  dfilters or dict(), mfilters or dict(), references or dict(), rollup or dict())
+
         querystring = str(query)
 
         if getattr(settings, 'debug', False):
             print("Executing query:\n----START----\n{query}\n-----END-----".format(query=querystring))
 
-        dataframe = settings.database.fetch_dataframe(querystring)
-        dataframe.columns = query.select_aliases()
-        return dataframe.set_index(query.groupby_aliases()).sort_index()
+        dataframe = settings.database.fetch_dataframe(querystring).set_index(
+            # Removed the reference keys for now
+            list(dimensions.keys())  # + ['{1}_{0}'.format(*ref) for ref in references.items()]
+        ).sort_index()
 
-    def _build_query(self, table, joins, metrics, dimensions, mfilters, dfilters, references, rollup):
-        # Initialize query
+        if references:
+            dataframe.columns = pd.MultiIndex.from_product([[''] + list(references.keys()), list(metrics.keys())])
+
+        return dataframe
+
+    def _build_query(self, table, joins, metrics, dimensions, dfilters, mfilters, references, rollup):
+        args = (table, joins, metrics, dimensions, dfilters, mfilters, rollup)
+        query = self._build_query_inner(*args)
+
+        if references:
+            return self._build_reference_query(query, references, *args)
+
+        return self._add_sorting(query, list(dimensions.values()))
+
+    def _build_reference_query(self, query, references, table, joins, metrics, dimensions, dfilters, mfilters, rollup):
+        wrapper_query = Query.from_(query).select(*[query.field(key).as_(key)
+                                                    for key in list(dimensions.keys()) + list(metrics.keys())])
+
+        for reference_key, dimension_key in references.items():
+            dimension_f, metric_f = self._get_reference_mappers(reference_key)
+
+            dfilters = self._hack_dfilters(dfilters, dimension_key, dimension_f)
+            ref_query = self._build_query_inner(table, joins, metrics, dimensions,
+                                                dfilters, mfilters, rollup)
+
+            ref_dimension = ref_query.field(dimension_key)
+            ref_criteria = query.field(dimension_key) == dimension_f(ref_dimension)
+            for dkey in set(dimensions.keys()) - {dimension_key}:
+                ref_criteria &= query.field(dkey) == ref_query.field(dkey)
+
+            # Join the reference query and select the reference dimension and all metrics
+            # This ignores additional dimensions since they are identical to the primary results
+            wrapper_query = (
+                wrapper_query.join(ref_query, JoinType.left)
+                    .on(ref_criteria)
+                    # Don't select this for now
+                    # .select(ref_dimension.as_(self._suffix(dimension_key, reference_key)))
+                    .select(
+                    *[metric_f(query.field(key), ref_query.field(key)).as_(self._suffix(key, reference_key))
+                      for key in metrics.keys()])
+            )
+
+        return self._add_sorting(wrapper_query, [query.field(dkey) for dkey in dimensions.keys()])
+
+    def _build_query_inner(self, table, joins, metrics, dimensions, dfilters, mfilters, rollup):
         query = Query.from_(table)
         query = self._add_joins(joins, query)
         query = self._select_dimensions(query, dimensions, rollup)
         query = self._select_metrics(query, metrics)
-        query = self._add_filters(query, dfilters, mfilters)
-
-        if references:
-            return self._build_reference_query(query, table, joins,
-                                               metrics, dimensions,
-                                               dfilters, mfilters,
-                                               references, rollup)
-
-        return query
-
-    def _build_reference_query(self, query, table, joins, metrics, dimensions, dfilters, mfilters, references, rollup):
-        wrapper_query = Query.from_(query).select(*[query.field(key)
-                                                    for key in list(dimensions.keys()) + list(metrics.keys())])
-
-        for reference_key, dimension_key in references.items():
-
-            reference_query = Query.from_(table)
-            reference_query = self._add_joins(joins, reference_query)
-            reference_query = self._select_dimensions(reference_query, dimensions, rollup, suffix=reference_key)
-            reference_query = self._select_metrics(reference_query, metrics, suffix=reference_key)
-
-            criterion_f, field_f = self._get_reference_mappers(reference_key)
-
-            reference_criteria = criterion_f(
-                query.field(dimension_key),
-                reference_query.field(self._suffix(dimension_key, reference_key))
-            )
-            for dkey in set(dimensions.keys()) - {dimension_key}:
-                reference_criteria &= query.field(dkey) == reference_query.field(
-                    self._suffix(dkey, reference_key))
-
-            wrapper_query = wrapper_query.join(reference_query).on(reference_criteria).select(
-                reference_query.field(self._suffix(dimension_key, reference_key))
-            ).select(
-                *[field_f(
-                    query.field(key),
-                    reference_query.field(self._suffix(key, reference_key))
-                ) for key in metrics.keys()]
-            )
-
-        return wrapper_query
+        return self._add_filters(query, dfilters, mfilters)
 
     @staticmethod
     def _add_joins(joins, query):
@@ -173,23 +178,25 @@ class QueryManager(object):
             query = query.join(join_table, how=join_type).on(criterion)
         return query
 
-    def _select_dimensions(self, query, dimensions, rollup, suffix=None):
-        dims = [dimension.as_(self._suffix(key, suffix))
+    @staticmethod
+    def _select_dimensions(query, dimensions, rollup):
+        dims = [dimension.as_(key)
                 for key, dimension in dimensions.items()
                 if key not in rollup]
         if dims:
-            query = query.select(*dims).groupby(*dims).orderby(*dims)
+            query = query.select(*dims).groupby(*dims)
 
-        rollup_dims = [dimension.as_(self._suffix(key, suffix))
+        rollup_dims = [dimension.as_(key)
                        for key, dimension in dimensions.items()
                        if key in rollup]
         if rollup_dims:
-            query = query.select(*rollup_dims).orderby(*rollup_dims).rollup(*rollup_dims)
+            query = query.select(*rollup_dims).rollup(*rollup_dims)
 
         return query
 
-    def _select_metrics(self, query, metrics, suffix=None):
-        return query.select(*[metric.as_(self._suffix(key, suffix))
+    @staticmethod
+    def _select_metrics(query, metrics):
+        return query.select(*[metric.as_(key)
                               for key, metric in metrics.items()])
 
     @staticmethod
@@ -202,6 +209,12 @@ class QueryManager(object):
             for mfx in mfilters:
                 query = query.having(mfx)
 
+        return query
+
+    @staticmethod
+    def _add_sorting(query, dimensions):
+        if dimensions:
+            return query.orderby(*dimensions)
         return query
 
     @staticmethod
@@ -224,27 +237,27 @@ class QueryManager(object):
             week.
 
             The reference field is an optional part that modifies the selected field in the final results.  For example,
-            in wow-p (Week over Week change as a Percentage), the final field is the query field minus the comparison
+            in wow_p (Week over Week change as a Percentage), the final field is the query field minus the comparison
             field as a ratio of the join field.  This gives the change in value over the last week as a percentage of
             the current value.  If the reference key does not contain two parts (no '_' character), then a function will
-            still be returned for field_f, however it will not modify the final field.
+            still be returned for metric_mapper, however it will not modify the final field.
 
             Concretely, if the field is clicks and current value is 105 and the wow value is 100, then the change is
             (105 - 100) = 5 clicks, then the wow-p value is (105 - 100) / 100 = 0.05.
         :return:
             Type: Tuple
-            (criterion_f, function_f)
+            (dimension_mapper, metric_mapper)
         """
         split_ref = reference_key.split('_')
         if 1 < len(split_ref):
-            reference_key, optional_parts = split_ref[0], split_ref[1:]
+            reference_key, opt_parts = split_ref[0], split_ref[1]
         else:
-            reference_key, optional_parts = split_ref[0], []
+            reference_key, opt_parts = split_ref[0], None
 
-        # Maps function
-        criterion_f = reference_criterion[reference_key]
-        field_f = reference_field[optional_parts[0]] if optional_parts else lambda field, join_field: join_field
-        return criterion_f, field_f
+        return (
+            reference_dimension_mappers.get(reference_key, lambda join_key: join_key),
+            reference_metric_mappers.get(opt_parts, lambda field, join_field: join_field)
+        )
 
     @staticmethod
     def _build_reference_join_criterion(query, dimensions, criterion_f, dimension_key):
@@ -268,3 +281,13 @@ class QueryManager(object):
             if dimension is not compared_dimension:
                 cx &= dimension == dimension.for_(query)
         return cx
+
+    def _hack_dfilters(self, dfilters, dimension_key, dimension_f):
+        # FIXME Hacky solution for replacing reference filters with shifted values
+        for dfilter in dfilters:
+            if not getattr(dfilter, 'term') or not dfilter.term.name == dimension_key:
+                continue
+
+            dfilter.term = dimension_f(dfilter.term)
+
+        return dfilters

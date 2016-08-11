@@ -727,7 +727,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
             {
                 'metrics': {'foo': 'Foo'},
                 'dimensions': [],
-                'references': [],
+                'references': {},
             },
             display_schema
         )
@@ -741,7 +741,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
             {
                 'metrics': {'bar': 'FizBuz'},
                 'dimensions': [],
-                'references': [],
+                'references': {},
             },
             display_schema
         )
@@ -759,7 +759,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
                     {'label': 'Date',
                      'id_fields': ['date']},
                 ],
-                'references': [],
+                'references': {},
             },
             display_schema
         )
@@ -777,7 +777,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
                     {'label': 'Clicks CUSTOM LABEL',
                      'id_fields': ['clicks']},
                 ],
-                'references': [],
+                'references': {},
             },
             display_schema
         )
@@ -796,7 +796,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
                      'label_options': {'us': 'United States',
                                        'de': 'Germany'}},
                 ],
-                'references': [],
+                'references': {},
             },
             display_schema
         )
@@ -814,7 +814,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
                      'id_fields': ['account_id0'],
                      'label_field': 'account_label'},
                 ],
-                'references': [],
+                'references': {},
             },
             display_schema
         )
@@ -833,7 +833,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
                      'id_fields': ['keyword_id0', 'keyword_id1'],
                      'label_field': 'keyword_label'},
                 ],
-                'references': [],
+                'references': {},
             },
             display_schema
         )
@@ -859,7 +859,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
                      'id_fields': ['account_id0'],
                      'label_field': 'account_label'},
                 ],
-                'references': [],
+                'references': {},
             },
             display_schema
         )
@@ -878,7 +878,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
                     {'label': 'Date',
                      'id_fields': ['date']},
                 ],
-                'references': ['wow'],
+                'references': {'wow': 'WoW'},
             },
             display_schema
         )

@@ -149,7 +149,7 @@ class DimensionValue(object):
 
 
 class Join(object):
-    def __init__(self, key, table, criterion, join_type=JoinType.left):
+    def __init__(self, key, table, criterion, join_type=JoinType.inner):
         self.key = key
         self.table = table
         self.criterion = criterion
