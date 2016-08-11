@@ -67,10 +67,7 @@ class DataTablesTransformer(Transformer):
             key = dimension['label']
 
             if not isinstance(idx, tuple):
-                value = idx
-
-                if isinstance(value, pd.Timestamp):
-                    value = value.isoformat()
+                value = self._format_data_point(idx)
 
             elif 1 < len(dimension['id_fields']) or 'label_field' in dimension:
                 fields = dimension['id_fields'] + [dimension.get('label_field')]
@@ -80,12 +77,9 @@ class DataTablesTransformer(Transformer):
 
             else:
                 id_field = dimension['id_fields'][0]
-                value = idx[dim_ordinal[id_field]]
+                value = self._format_data_point(idx[dim_ordinal[id_field]])
 
-                if isinstance(value, pd.Timestamp):
-                    value = value.isoformat()
-
-                if value is np.nan:
+                if value is None:
                     value = 'Total'
 
                 if 'label_options' in dimension:
@@ -99,14 +93,14 @@ class DataTablesTransformer(Transformer):
             for idx, value in row.iteritems():
                 label = self._format_series_labels(idx, dim_ordinal, display_schema)
                 label = self._format_reference_label(display_schema, label, reference_key)
-                yield label, value
+                yield label, self._format_data_point(value)
 
         else:
             # Single level columns
             for col in row.index:
                 label = display_schema['metrics'][col]
                 label = self._format_reference_label(display_schema, label, reference_key)
-                yield label, row[col]
+                yield label, self._format_data_point(row[col])
 
     def _format_series_labels(self, idx, dim_ordinal, display_schema):
         metric, dimensions = idx[0], idx[1:]
@@ -154,6 +148,16 @@ class DataTablesTransformer(Transformer):
             dimension_label = dimension['label_options'].get(dimension_label, dimension_label)
 
         return dimension_label
+
+    def _format_data_point(self, value):
+        if value is np.nan:
+            value = None
+        if isinstance(value, pd.Timestamp):
+            return value.isoformat()
+        if isinstance(value, np.int64):
+            # Cannot transform np.int64 to json
+            return int(value)
+        return value
 
 
 class CSVTransformer(DataTablesTransformer):
