@@ -145,6 +145,16 @@ class BaseTransformerTests(unittest.TestCase):
         'metrics': {'one': 'One'},
         'dimensions': [time_dim]
     }
+    time_dim_single_metric_ref_df = pd.DataFrame(
+        np.random.randint(0, 10, size=(8, 2)),
+        columns=[['', 'wow'], ['one', 'one']],
+        index=datetime_idx
+    )
+    time_dim_single_metric_ref_schema = {
+        'metrics': {'one': 'One'},
+        'dimensions': [time_dim],
+        'references': {'wow': 'WoW'}
+    }
 
     # Test DF with continuous and categorical dimensions and one metric column
     cont_cat_dims_single_metric_df = pd.DataFrame(

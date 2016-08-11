@@ -75,10 +75,6 @@ class HighchartsTransformer(Transformer):
         return reordered
 
     def _make_series(self, data_frame, dim_ordinal, display_schema, reference=None):
-        # Convert dates to millis
-        # if isinstance(data_frame.index, pd.DatetimeIndex):
-        #     data_frame.index = data_frame.index.astype(int) // 1e6
-
         # This value represents how many iterations over data_frame items per yAxis we have.  It's the product of
         # non-metric levels of the data_frame's columns. We want metrics to share the same yAxis for all dimensions.
         yaxis_span = (np.product([len(l) for l in data_frame.columns.levels[1:]])
@@ -169,8 +165,8 @@ class HighchartsTransformer(Transformer):
 
     @staticmethod
     def _format_point(x, y):
-        # return {'x': x, 'y': y}
         return (
+            # Convert dates to milliseconds
             int(x.asm8) // int(1e6) if isinstance(x, pd.Timestamp) else x,
             # FIXME make this configurable
             round(y, 2)
@@ -225,14 +221,19 @@ class HighchartsColumnTransformer(HighchartsTransformer):
             unstack_levels = list(self._unstack_levels(dimensions[1:], dim_ordinal))
             data_frame = data_frame.unstack(level=unstack_levels)
 
-        if isinstance(data_frame.index, pd.DatetimeIndex):
-            # We need to unstack the second dimension here, which could be one or more levels
-            data_frame.index = data_frame.index.astype(str)
-
         return data_frame
 
     def _format_data(self, column):
         return list(column)
+
+    @staticmethod
+    def _format_point(x, y):
+        return (
+            # Convert dates to iso-format strings
+            x.isoformat() if isinstance(x, pd.Timestamp) else x,
+            # FIXME make this configurable
+            round(y, 2)
+        )
 
     @staticmethod
     def _make_categories(data_frame, dim_ordinal, display_schema):
