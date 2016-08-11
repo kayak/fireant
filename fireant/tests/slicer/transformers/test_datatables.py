@@ -9,6 +9,13 @@ from fireant.tests.slicer.transformers.base import BaseTransformerTests
 class DataTablesRowIndexTransformerTests(BaseTransformerTests):
     dt_tx = DataTablesTransformer(TableIndex.row_index)
 
+    def _evaluate_table(self, result, num_rows=1):
+        self.assertSetEqual({'draw', 'recordsTotal', 'recordsFiltered', 'data'}, set(result.keys()))
+
+        self.assertEqual(num_rows, result['recordsTotal'])
+        self.assertEqual(num_rows, result['recordsFiltered'])
+        self.assertEqual(num_rows, len(result['data']))
+
     def test_no_dims_single_metric(self):
         # Tests transformation of a single metric with a single continuous dimension
         df = self.no_dims_multi_metric_df
@@ -42,11 +49,7 @@ class DataTablesRowIndexTransformerTests(BaseTransformerTests):
 
         result = self.dt_tx.transform(df, self.cont_dim_single_metric_schema)
 
-        self.assertSetEqual({'draw', 'recordsTotal', 'recordsFiltered', 'data'}, set(result.keys()))
-
-        self.assertEqual(8, result['recordsTotal'])
-        self.assertEqual(8, result['recordsFiltered'])
-        self.assertEqual(8, len(result['data']))
+        self._evaluate_table(result, num_rows=8)
 
         for i, (data, (cont, row)) in enumerate(zip(result['data'], df.iterrows())):
             self.assertSetEqual({'DT_RowId', 'Cont', 'One'}, set(data.keys()))
@@ -61,11 +64,7 @@ class DataTablesRowIndexTransformerTests(BaseTransformerTests):
 
         result = self.dt_tx.transform(df, self.cont_dim_multi_metric_schema)
 
-        self.assertSetEqual({'draw', 'recordsTotal', 'recordsFiltered', 'data'}, set(result.keys()))
-
-        self.assertEqual(8, result['recordsTotal'])
-        self.assertEqual(8, result['recordsFiltered'])
-        self.assertEqual(8, len(result['data']))
+        self._evaluate_table(result, num_rows=8)
 
         for i, (data, (cont, row)) in enumerate(zip(result['data'], df.iterrows())):
             self.assertSetEqual({'DT_RowId', 'Cont', 'One', 'Two'}, set(data.keys()))
@@ -75,17 +74,44 @@ class DataTablesRowIndexTransformerTests(BaseTransformerTests):
             self.assertEqual(row['one'], data['One'])
             self.assertEqual(row['two'], data['Two'])
 
+    def test_time_series_date_to_millis(self):
+        # Tests transformation of a single-metric, single-dimension result
+        df = self.time_dim_single_metric_df
+
+        result = self.dt_tx.transform(df, self.time_dim_single_metric_schema)
+
+        self._evaluate_table(result, num_rows=8)
+
+        for i, (data, (dt, row)) in enumerate(zip(result['data'], df.iterrows())):
+            self.assertSetEqual({'DT_RowId', 'Date', 'One'}, set(data.keys()))
+
+            self.assertEqual('row_%d' % i, data['DT_RowId'])
+            self.assertEqual(dt.isoformat(), data['Date'])
+            self.assertEqual(row['one'], data['One'])
+
+    def test_time_series_date_with_ref(self):
+        # Tests transformation of a single-metric, single-dimension result using a WoW reference
+        df = self.time_dim_single_metric_ref_df
+
+        result = self.dt_tx.transform(df, self.time_dim_single_metric_ref_schema)
+
+        self._evaluate_table(result, num_rows=8)
+
+        for i, (data, (dt, row)) in enumerate(zip(result['data'], df.iterrows())):
+            self.assertSetEqual({'DT_RowId', 'Date', 'One', 'One WoW'}, set(data.keys()))
+
+            self.assertEqual('row_%d' % i, data['DT_RowId'])
+            self.assertEqual(dt.isoformat(), data['Date'])
+            self.assertEqual(row[('', 'one')], data['One'])
+            self.assertEqual(row[('wow', 'one')], data['One WoW'])
+
     def test_uni_dim_single_metric(self):
         # Tests transformation of a metric with a unique dimension with one key and label
         df = self.uni_dim_single_metric_df
 
         result = self.dt_tx.transform(df, self.uni_dim_single_metric_schema)
 
-        self.assertSetEqual({'draw', 'recordsTotal', 'recordsFiltered', 'data'}, set(result.keys()))
-
-        self.assertEqual(3, result['recordsTotal'])
-        self.assertEqual(3, result['recordsFiltered'])
-        self.assertEqual(3, len(result['data']))
+        self._evaluate_table(result, num_rows=3)
 
         for i, (data, ((df_label, df_id0), row)) in enumerate(zip(result['data'], df.iterrows())):
             self.assertSetEqual({'DT_RowId', 'Uni1', 'One'}, set(data.keys()))
@@ -100,11 +126,7 @@ class DataTablesRowIndexTransformerTests(BaseTransformerTests):
 
         result = self.dt_tx.transform(df, self.uni_dim_multi_metric_schema)
 
-        self.assertSetEqual({'draw', 'recordsTotal', 'recordsFiltered', 'data'}, set(result.keys()))
-
-        self.assertEqual(4, result['recordsTotal'])
-        self.assertEqual(4, result['recordsFiltered'])
-        self.assertEqual(4, len(result['data']))
+        self._evaluate_table(result, num_rows=4)
 
         for i, (data, ((df_label, df_id0, df_id1), row)) in enumerate(zip(result['data'], df.iterrows())):
             self.assertSetEqual({'DT_RowId', 'Uni2', 'One', 'Two'}, set(data.keys()))
@@ -119,11 +141,7 @@ class DataTablesRowIndexTransformerTests(BaseTransformerTests):
 
         result = self.dt_tx.transform(df, self.cat_cat_dims_single_metric_schema)
 
-        self.assertSetEqual({'draw', 'recordsTotal', 'recordsFiltered', 'data'}, set(result.keys()))
-
-        self.assertEqual(4, result['recordsTotal'])
-        self.assertEqual(4, result['recordsFiltered'])
-        self.assertEqual(4, len(result['data']))
+        self._evaluate_table(result, num_rows=4)
 
         for i, (data, ((cat1, cat2), row)) in enumerate(zip(result['data'], df.iterrows())):
             self.assertSetEqual({'DT_RowId', 'Cat1', 'Cat2', 'One'}, set(data.keys()))
@@ -139,11 +157,7 @@ class DataTablesRowIndexTransformerTests(BaseTransformerTests):
 
         result = self.dt_tx.transform(df, self.cat_cat_dims_multi_metric_schema)
 
-        self.assertSetEqual({'draw', 'recordsTotal', 'recordsFiltered', 'data'}, set(result.keys()))
-
-        self.assertEqual(4, result['recordsTotal'])
-        self.assertEqual(4, result['recordsFiltered'])
-        self.assertEqual(4, len(result['data']))
+        self._evaluate_table(result, num_rows=4)
 
         for i, (data, ((cat1, cat2), row)) in enumerate(zip(result['data'], df.iterrows())):
             self.assertSetEqual({'DT_RowId', 'Cat1', 'Cat2', 'One', 'Two'}, set(data.keys()))
@@ -160,11 +174,7 @@ class DataTablesRowIndexTransformerTests(BaseTransformerTests):
 
         result = self.dt_tx.transform(df, self.rollup_cont_cat_cat_dims_multi_metric_schema)
 
-        self.assertSetEqual({'draw', 'recordsTotal', 'recordsFiltered', 'data'}, set(result.keys()))
-
-        self.assertEqual(56, result['recordsTotal'])
-        self.assertEqual(56, result['recordsFiltered'])
-        self.assertEqual(56, len(result['data']))
+        self._evaluate_table(result, num_rows=56)
 
         for i, (data, ((cont, cat1, cat2), row)) in enumerate(zip(result['data'], df.iterrows())):
             self.assertSetEqual({'DT_RowId', 'Cont', 'Cat1', 'Cat2', 'One', 'Two'}, set(data.keys()))
@@ -180,17 +190,20 @@ class DataTablesRowIndexTransformerTests(BaseTransformerTests):
 class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
     dt_tx = DataTablesTransformer(TableIndex.column_index)
 
+    def _evaluate_table(self, result, num_rows=1):
+        self.assertSetEqual({'draw', 'recordsTotal', 'recordsFiltered', 'data'}, set(result.keys()))
+
+        self.assertEqual(num_rows, result['recordsTotal'])
+        self.assertEqual(num_rows, result['recordsFiltered'])
+        self.assertEqual(num_rows, len(result['data']))
+
     def test_no_dims_single_metric(self):
         # Tests transformation of a single metric with a single continuous dimension
         df = self.no_dims_multi_metric_df
 
         result = self.dt_tx.transform(df, self.no_dims_multi_metric_schema)
 
-        self.assertSetEqual({'draw', 'recordsTotal', 'recordsFiltered', 'data'}, set(result.keys()))
-
-        self.assertEqual(1, result['recordsTotal'])
-        self.assertEqual(1, result['recordsFiltered'])
-        self.assertEqual(1, len(result['data']))
+        self._evaluate_table(result)
 
         for i, (data, (cont, row)) in enumerate(zip(result['data'], df.iterrows())):
             self.assertSetEqual({'DT_RowId',
@@ -213,11 +226,7 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
 
         result = self.dt_tx.transform(df, self.cont_dim_single_metric_schema)
 
-        self.assertSetEqual({'draw', 'recordsTotal', 'recordsFiltered', 'data'}, set(result.keys()))
-
-        self.assertEqual(8, result['recordsTotal'])
-        self.assertEqual(8, result['recordsFiltered'])
-        self.assertEqual(8, len(result['data']))
+        self._evaluate_table(result, num_rows=8)
 
         for i, (data, (cont, row)) in enumerate(zip(result['data'], df.iterrows())):
             self.assertSetEqual({'DT_RowId', 'Cont', 'One'}, set(data.keys()))
@@ -232,12 +241,7 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
 
         result = self.dt_tx.transform(df, self.cont_dim_multi_metric_schema)
 
-        self.assertSetEqual({'draw', 'recordsTotal', 'recordsFiltered', 'data'}, set(result.keys()))
-
-        self.assertEqual(8, result['recordsTotal'])
-        self.assertEqual(8, result['recordsFiltered'])
-        self.assertEqual(8, len(result['data']))
-        self.assertEqual(8, len(result['data']))
+        self._evaluate_table(result, num_rows=8)
 
         for i, (data, (cont, row)) in enumerate(zip(result['data'], df.iterrows())):
             self.assertSetEqual({'DT_RowId', 'Cont', 'One', 'Two'}, set(data.keys()))
@@ -247,17 +251,44 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
             self.assertEqual(row['one'], data['One'])
             self.assertEqual(row['two'], data['Two'])
 
+    def test_time_series_date_to_millis(self):
+        # Tests transformation of a single-metric, single-dimension result
+        df = self.time_dim_single_metric_df
+
+        result = self.dt_tx.transform(df, self.time_dim_single_metric_schema)
+
+        self._evaluate_table(result, num_rows=8)
+
+        for i, (data, (dt, row)) in enumerate(zip(result['data'], df.iterrows())):
+            self.assertSetEqual({'DT_RowId', 'Date', 'One'}, set(data.keys()))
+
+            self.assertEqual('row_%d' % i, data['DT_RowId'])
+            self.assertEqual(dt.isoformat(), data['Date'])
+            self.assertEqual(row['one'], data['One'])
+
+    def test_time_series_date_with_ref(self):
+        # Tests transformation of a single-metric, single-dimension result using a WoW reference
+        df = self.time_dim_single_metric_ref_df
+
+        result = self.dt_tx.transform(df, self.time_dim_single_metric_ref_schema)
+
+        self._evaluate_table(result, num_rows=8)
+
+        for i, (data, (dt, row)) in enumerate(zip(result['data'], df.iterrows())):
+            self.assertSetEqual({'DT_RowId', 'Date', 'One', 'One WoW'}, set(data.keys()))
+
+            self.assertEqual('row_%d' % i, data['DT_RowId'])
+            self.assertEqual(dt.isoformat(), data['Date'])
+            self.assertEqual(row[('', 'one')], data['One'])
+            self.assertEqual(row[('wow', 'one')], data['One WoW'])
+
     def test_cont_cat_dim_single_metric(self):
         # Tests transformation of a single metric with a continuous and a categorical dimension
         df = self.cont_cat_dims_single_metric_df
 
         result = self.dt_tx.transform(df, self.cont_cat_dims_single_metric_schema)
 
-        self.assertSetEqual({'draw', 'recordsTotal', 'recordsFiltered', 'data'}, set(result.keys()))
-
-        self.assertEqual(8, result['recordsTotal'])
-        self.assertEqual(8, result['recordsFiltered'])
-        self.assertEqual(8, len(result['data']))
+        self._evaluate_table(result, num_rows=8)
 
         for i, (data, (cont, row)) in enumerate(zip(result['data'], df.unstack(level=[1]).iterrows())):
             self.assertSetEqual({'DT_RowId', 'Cont', 'One (A)', 'One (B)'}, set(data.keys()))
@@ -273,11 +304,7 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
 
         result = self.dt_tx.transform(df, self.cont_cat_dims_multi_metric_schema)
 
-        self.assertSetEqual({'draw', 'recordsTotal', 'recordsFiltered', 'data'}, set(result.keys()))
-
-        self.assertEqual(8, result['recordsTotal'])
-        self.assertEqual(8, result['recordsFiltered'])
-        self.assertEqual(8, len(result['data']))
+        self._evaluate_table(result, num_rows=8)
 
         for i, (data, (cont, row)) in enumerate(zip(result['data'], df.unstack(level=[1]).iterrows())):
             self.assertSetEqual({'DT_RowId', 'Cont', 'One (A)', 'One (B)', 'Two (A)', 'Two (B)'}, set(data.keys()))
@@ -298,11 +325,7 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
 
         result = self.dt_tx.transform(df, self.cont_cat_cat_dims_multi_metric_schema)
 
-        self.assertSetEqual({'draw', 'recordsTotal', 'recordsFiltered', 'data'}, set(result.keys()))
-
-        self.assertEqual(8, result['recordsTotal'])
-        self.assertEqual(8, result['recordsFiltered'])
-        self.assertEqual(8, len(result['data']))
+        self._evaluate_table(result, num_rows=8)
 
         for i, (data, (cont, row)) in enumerate(zip(result['data'], df.unstack(level=[1, 2]).iterrows())):
             self.assertSetEqual(
@@ -331,9 +354,7 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
 
         result = self.dt_tx.transform(df, self.cont_cat_uni_dims_multi_metric_schema)
 
-        self.assertEqual(8, result['recordsTotal'])
-        self.assertEqual(8, result['recordsFiltered'])
-        self.assertEqual(8, len(result['data']))
+        self._evaluate_table(result, num_rows=8)
 
         df_row_iter = df.unstack(level=[1, 2, 3, 4]).iterrows()
         for i, (data, (cont, row)) in enumerate(zip(result['data'], df_row_iter)):
@@ -367,11 +388,7 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
 
         result = self.dt_tx.transform(df, self.rollup_cont_cat_cat_dims_multi_metric_schema)
 
-        self.assertSetEqual({'draw', 'recordsTotal', 'recordsFiltered', 'data'}, set(result.keys()))
-
-        self.assertEqual(8, result['recordsTotal'])
-        self.assertEqual(8, result['recordsFiltered'])
-        self.assertEqual(8, len(result['data']))
+        self._evaluate_table(result, num_rows=8)
 
         for i, (data, (cont, row)) in enumerate(zip(result['data'], df.unstack(level=[1, 2]).iterrows())):
             self.assertSetEqual(

@@ -79,7 +79,7 @@ class HighChartsLineTransformerTests(BaseTransformerTests):
             {series['name'] for series in result['series']}
         )
 
-        df2 = df
+        df2 = df.copy()
         df2.index = df2.index.astype(int) // int(1e6)
         self.evaluate_result(df2, result)
 
@@ -96,7 +96,7 @@ class HighChartsLineTransformerTests(BaseTransformerTests):
             {series['name'] for series in result['series']}
         )
 
-        df2 = df
+        df2 = df.copy()
         df2.index = df2.index.astype(int) // int(1e6)
         self.evaluate_result(df2, result)
 

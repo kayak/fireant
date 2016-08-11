@@ -18,6 +18,7 @@ class DataTablesTransformer(Transformer):
         dim_ordinal = {name: ordinal
                        for ordinal, name in enumerate(data_frame.index.names)}
 
+        has_references = isinstance(data_frame.columns, pd.MultiIndex)
         data_frame = self._prepare_data_frame(data_frame, display_schema['dimensions'])
         records = len(data_frame)
 
@@ -28,8 +29,15 @@ class DataTablesTransformer(Transformer):
             for key, value in self._render_index_levels(idx, dim_ordinal, display_schema):
                 record[key] = value
 
-            for key, value in self._render_column_levels(row, dim_ordinal, display_schema):
-                record[key] = value
+            if has_references:
+                reference_groups = [(level, row[level]) for level in row.index.levels[0]]
+            else:
+                reference_groups = [(None, row)]
+
+            for reference_key, reference_data in reference_groups:
+                for key, value in self._render_column_levels(reference_data, dim_ordinal, display_schema,
+                                                             reference_key):
+                    record[key] = value
 
             data.append(record)
 
@@ -61,6 +69,9 @@ class DataTablesTransformer(Transformer):
             if not isinstance(idx, tuple):
                 value = idx
 
+                if isinstance(value, pd.Timestamp):
+                    value = value.isoformat()
+
             elif 1 < len(dimension['id_fields']) or 'label_field' in dimension:
                 fields = dimension['id_fields'] + [dimension.get('label_field')]
 
@@ -71,6 +82,9 @@ class DataTablesTransformer(Transformer):
                 id_field = dimension['id_fields'][0]
                 value = idx[dim_ordinal[id_field]]
 
+                if isinstance(value, pd.Timestamp):
+                    value = value.isoformat()
+
                 if value is np.nan:
                     value = 'Total'
 
@@ -79,17 +93,20 @@ class DataTablesTransformer(Transformer):
 
             yield key, value
 
-    def _render_column_levels(self, row, dim_ordinal, display_schema):
+    def _render_column_levels(self, row, dim_ordinal, display_schema, reference_key=None):
         if isinstance(row.index, pd.MultiIndex):
             # Multi level columns
             for idx, value in row.iteritems():
                 label = self._format_series_labels(idx, dim_ordinal, display_schema)
+                label = self._format_reference_label(display_schema, label, reference_key)
                 yield label, value
 
         else:
             # Single level columns
             for col in row.index:
-                yield display_schema['metrics'][col], row[col]
+                label = display_schema['metrics'][col]
+                label = self._format_reference_label(display_schema, label, reference_key)
+                yield label, row[col]
 
     def _format_series_labels(self, idx, dim_ordinal, display_schema):
         metric, dimensions = idx[0], idx[1:]
@@ -110,6 +127,15 @@ class DataTablesTransformer(Transformer):
             if dimension_labels else
             metric_label
         )
+
+    @staticmethod
+    def _format_reference_label(display_schema, label, reference_key):
+        if reference_key:
+            return '{label} {reference}'.format(
+                label=label,
+                reference=display_schema['references'][reference_key]
+            )
+        return label
 
     @staticmethod
     def _format_dimension_label(idx, dim_ordinal, dimension):
