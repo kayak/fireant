@@ -5,6 +5,15 @@ import pandas as pd
 from .base import Transformer, TransformationException
 
 
+def format_data_point(value):
+    if isinstance(value, pd.Timestamp):
+        return int(value.asm8) // int(1e6)
+    if isinstance(value, np.int64):
+        # Cannot transform np.int64 to json
+        return int(value)
+    return value
+
+
 class HighchartsTransformer(Transformer):
     """
     Transforms data frames into Highcharts format for several chart types, particularly line or bar charts.
@@ -157,7 +166,7 @@ class HighchartsTransformer(Transformer):
 
     def _format_data(self, column):
         if isinstance(column, float):
-            return [column]
+            return [format_data_point(column)]
 
         return [self._format_point(key, value)
                 for key, value in column.iteritems()
@@ -165,12 +174,7 @@ class HighchartsTransformer(Transformer):
 
     @staticmethod
     def _format_point(x, y):
-        return (
-            # Convert dates to milliseconds
-            int(x.asm8) // int(1e6) if isinstance(x, pd.Timestamp) else x,
-            # FIXME make this configurable
-            round(y, 2)
-        )
+        return (format_data_point(x), format_data_point(y))
 
     def _unstack_levels(self, dimensions, dim_ordinal):
         for dimension in dimensions:
@@ -191,7 +195,7 @@ class HighchartsColumnTransformer(HighchartsTransformer):
     def _make_series_item(self, idx, item, dim_ordinal, display_schema, y_axis, reference):
         return {
             'name': self._format_label(idx, dim_ordinal, display_schema, reference),
-            'data': self._format_data(item),
+            'data': [format_data_point(x) for x in item if x is not np.nan],
             'yAxis': y_axis
         }
 
@@ -222,18 +226,6 @@ class HighchartsColumnTransformer(HighchartsTransformer):
             data_frame = data_frame.unstack(level=unstack_levels)
 
         return data_frame
-
-    def _format_data(self, column):
-        return list(column)
-
-    @staticmethod
-    def _format_point(x, y):
-        return (
-            # Convert dates to iso-format strings
-            x.isoformat() if isinstance(x, pd.Timestamp) else x,
-            # FIXME make this configurable
-            round(y, 2)
-        )
 
     @staticmethod
     def _make_categories(data_frame, dim_ordinal, display_schema):
