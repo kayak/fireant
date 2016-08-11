@@ -64,8 +64,8 @@ class ExampleTests(QueryTests):
         query = self.dao._build_query(
             table=self.mock_table,
             joins=[
-                (self.mock_join1, self.mock_table.join1_id == self.mock_join1.id, JoinType.left),
-                (self.mock_join2, self.mock_table.join2_id == self.mock_join2.id, JoinType.outer),
+                (self.mock_join1, self.mock_table.join1_id == self.mock_join1.id, JoinType.inner),
+                (self.mock_join2, self.mock_table.join2_id == self.mock_join2.id, JoinType.left),
             ],
             metrics=OrderedDict([
                 # Examples using a field of a table
@@ -106,13 +106,14 @@ class ExampleTests(QueryTests):
 
         self.assertEqual('SELECT '
                          # Dimensions
-                         '"t0"."dt","t0"."fiz",'
+                         '"t0"."dt" "dt","t0"."fiz" "fiz",'
                          # Metrics
-                         '"t0"."foo","t0"."bar","t0"."ratio",'
+                         '"t0"."foo" "foo","t0"."bar" "bar","t0"."ratio" "ratio",'
                          # Reference Dimension
-                         '"t1"."dt_wow",'
+                         # Currently not selected
+                         # '"t1"."dt" "dt_wow",'
                          # Reference Metrics
-                         '"t1"."foo_wow","t1"."bar_wow","t1"."ratio_wow" '
+                         '"t1"."foo" "foo_wow","t1"."bar" "bar_wow","t1"."ratio" "ratio_wow" '
                          'FROM ('
                          # Main Query
                          'SELECT '
@@ -122,27 +123,29 @@ class ExampleTests(QueryTests):
                          'SUM("t0"."numerator")/SUM("t0"."denominator") "ratio" '
                          'FROM "test_table" "t0" '
                          'JOIN "test_join1" "t1" ON "t0"."join1_id"="t1"."id" '
-                         'OUTER JOIN "test_join2" "t2" ON "t0"."join2_id"="t2"."id" '
+                         'LEFT JOIN "test_join2" "t2" ON "t0"."join2_id"="t2"."id" '
                          'WHERE "t0"."dt" BETWEEN \'2016-01-01\' AND \'2016-12-31\' '
                          'AND "t2"."fiz" IN (\'a\',\'b\',\'c\') '
                          'GROUP BY ROUND("t0"."dt",\'DD\'),"t2"."fiz" '
-                         'HAVING SUM("t2"."buz")>100 '
-                         'ORDER BY ROUND("t0"."dt",\'DD\'),"t2"."fiz"'
+                         'HAVING SUM("t2"."buz")>100'
                          ') "t0" '
-                         'JOIN ('
+                         'LEFT JOIN ('
                          # Reference Query
                          'SELECT '
-                         'ROUND("t0"."dt",\'DD\') "dt_wow","t2"."fiz" "fiz_wow",'
-                         'SUM("t0"."foo") "foo_wow",'
-                         'AVG("t1"."bar") "bar_wow",'
-                         'SUM("t0"."numerator")/SUM("t0"."denominator") "ratio_wow" '
+                         'ROUND("t0"."dt",\'DD\') "dt","t2"."fiz" "fiz",'
+                         'SUM("t0"."foo") "foo",'
+                         'AVG("t1"."bar") "bar",'
+                         'SUM("t0"."numerator")/SUM("t0"."denominator") "ratio" '
                          'FROM "test_table" "t0" '
                          'JOIN "test_join1" "t1" ON "t0"."join1_id"="t1"."id" '
-                         'OUTER JOIN "test_join2" "t2" ON "t0"."join2_id"="t2"."id" '
+                         'LEFT JOIN "test_join2" "t2" ON "t0"."join2_id"="t2"."id" '
+                         'WHERE "t0"."dt"+INTERVAL \'1 WEEK\' BETWEEN \'2016-01-01\' AND \'2016-12-31\' '
+                         'AND "t2"."fiz" IN (\'a\',\'b\',\'c\') '
                          'GROUP BY ROUND("t0"."dt",\'DD\'),"t2"."fiz" '
-                         'ORDER BY ROUND("t0"."dt",\'DD\'),"t2"."fiz"'
-                         ') "t1" ON "t0"."dt"="t1"."dt_wow"-INTERVAL \'1 WEEK\' '
-                         'AND "t0"."fiz"="t1"."fiz_wow"', str(query))
+                         'HAVING SUM("t2"."buz")>100'
+                         ') "t1" ON "t0"."dt"="t1"."dt"+INTERVAL \'1 WEEK\' '
+                         'AND "t0"."fiz"="t1"."fiz" '
+                         'ORDER BY "t0"."dt","t0"."fiz"', str(query))
 
 
 class MetricsTests(QueryTests):
@@ -405,7 +408,7 @@ class DimensionTests(QueryTests):
                          '"t1"."hotel_name" "hotel_name","t1"."address" "hotel_address",'
                          '"t1"."ctid" "city_id","t1"."city_name" "city_name" '
                          'FROM "test_table" "t0" '
-                         'JOIN "test_join1" "t1" ON "t0"."hotel_id"="t1"."hotel_id" '
+                         'LEFT JOIN "test_join1" "t1" ON "t0"."hotel_id"="t1"."hotel_id" '
                          'GROUP BY ROUND("t0"."dt",\'DD\'),"t0"."locale" '
                          'ORDER BY ROUND("t0"."dt",\'DD\'),"t0"."locale"', str(query))
 
@@ -533,6 +536,13 @@ class FilterTests(QueryTests):
 
 
 class ComparisonTests(QueryTests):
+    intervals = {
+        'yoy': '52 WEEK',
+        'qoq': '1 QUARTER',
+        'mom': '4 WEEK',
+        'wow': '1 WEEK',
+    }
+
     def _get_compare_query(self, compare_type):
         rounded_dt = settings.database.round_date(self.mock_table.dt, 'DD')
         device_type = self.mock_table.device_type
@@ -558,337 +568,146 @@ class ComparisonTests(QueryTests):
         )
         return query
 
+    def assert_reference(self, query, key):
+        self.assertEqual(
+            'SELECT '
+            '"t0"."dt" "dt","t0"."device_type" "device_type",'
+            '"t0"."clicks" "clicks","t0"."roi" "roi",'
+            # '"t1"."dt" "dt_{key}",'
+            '"t1"."clicks" "clicks_{key}",'
+            '"t1"."roi" "roi_{key}" '
+            'FROM ('
+            'SELECT '
+            'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
+            'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'FROM "test_table" '
+            'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+            'GROUP BY ROUND("dt",\'DD\'),"device_type"'
+            ') "t0" '
+            'LEFT JOIN ('
+            'SELECT '
+            'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
+            'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'FROM "test_table" '
+            'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+            'GROUP BY ROUND("dt",\'DD\'),"device_type"'
+            ') "t1" ON "t0"."dt"="t1"."dt"+INTERVAL \'{expr}\' '
+            'AND "t0"."device_type"="t1"."device_type" '
+            'ORDER BY "t0"."dt","t0"."device_type"'.format(
+                key=key,
+                expr=self.intervals[key]
+            ), str(query)
+        )
+
+    def assert_reference_d(self, query, key):
+        self.assertEqual(
+            'SELECT '
+            '"t0"."dt" "dt","t0"."device_type" "device_type",'
+            '"t0"."clicks" "clicks","t0"."roi" "roi",'
+            # '"t1"."dt" "dt_{key}_d",'
+            '"t0"."clicks"-"t1"."clicks" "clicks_{key}_d",'
+            '"t0"."roi"-"t1"."roi" "roi_{key}_d" '
+            'FROM ('
+            'SELECT '
+            'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
+            'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'FROM "test_table" '
+            'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+            'GROUP BY ROUND("dt",\'DD\'),"device_type"'
+            ') "t0" '
+            'LEFT JOIN ('
+            'SELECT '
+            'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
+            'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'FROM "test_table" '
+            'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+            'GROUP BY ROUND("dt",\'DD\'),"device_type"'
+            ') "t1" ON "t0"."dt"="t1"."dt"+INTERVAL \'{expr}\' '
+            'AND "t0"."device_type"="t1"."device_type" '
+            'ORDER BY "t0"."dt","t0"."device_type"'.format(
+                key=key,
+                expr=self.intervals[key]
+            ), str(query)
+        )
+
+    def assert_reference_p(self, query, key):
+        self.assertEqual(
+            'SELECT '
+            '"t0"."dt" "dt","t0"."device_type" "device_type",'
+            '"t0"."clicks" "clicks","t0"."roi" "roi",'
+            # '"t1"."dt" "dt_{key}_p",'
+            '("t0"."clicks"-"t1"."clicks")/"t1"."clicks" "clicks_{key}_p",'
+            '("t0"."roi"-"t1"."roi")/"t1"."roi" "roi_{key}_p" '
+            'FROM ('
+            'SELECT '
+            'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
+            'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'FROM "test_table" '
+            'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+            'GROUP BY ROUND("dt",\'DD\'),"device_type"'
+            ') "t0" '
+            'LEFT JOIN ('
+            'SELECT '
+            'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
+            'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'FROM "test_table" '
+            'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+            'GROUP BY ROUND("dt",\'DD\'),"device_type"'
+            ') "t1" ON "t0"."dt"="t1"."dt"+INTERVAL \'{expr}\' '
+            'AND "t0"."device_type"="t1"."device_type" '
+            'ORDER BY "t0"."dt","t0"."device_type"'.format(
+                key=key,
+                expr=self.intervals[key]
+            ), str(query)
+        )
+
     def test_metrics_dimensions_filters_references__yoy(self):
         query = self._get_compare_query('yoy')
-
-        self.assertEqual('SELECT '
-                         '"t0"."dt","t0"."device_type",'
-                         '"t0"."clicks","t0"."roi",'
-                         '"t1"."dt_yoy",'
-                         '"t1"."clicks_yoy","t1"."roi_yoy" '
-                         'FROM ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
-                         'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-                         'FROM "test_table" '
-                         'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t0" '
-                         'JOIN ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt_yoy","device_type" "device_type_yoy",'
-                         'SUM("clicks") "clicks_yoy",SUM("revenue")/SUM("cost") "roi_yoy" '
-                         'FROM "test_table" '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt_yoy"-INTERVAL \'52 WEEK\' '
-                         'AND "t0"."device_type"="t1"."device_type_yoy"', str(query))
+        self.assert_reference(query, 'yoy')
 
     def test_metrics_dimensions_filters_references__qoq(self):
         query = self._get_compare_query('qoq')
-
-        self.assertEqual('SELECT '
-                         '"t0"."dt","t0"."device_type",'
-                         '"t0"."clicks","t0"."roi",'
-                         '"t1"."dt_qoq",'
-                         '"t1"."clicks_qoq","t1"."roi_qoq" '
-                         'FROM ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
-                         'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-                         'FROM "test_table" '
-                         'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t0" '
-                         'JOIN ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt_qoq","device_type" "device_type_qoq",'
-                         'SUM("clicks") "clicks_qoq",SUM("revenue")/SUM("cost") "roi_qoq" '
-                         'FROM "test_table" '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt_qoq"-INTERVAL \'1 QUARTER\' '
-                         'AND "t0"."device_type"="t1"."device_type_qoq"', str(query))
+        self.assert_reference(query, 'qoq')
 
     def test_metrics_dimensions_filters_references__mom(self):
         query = self._get_compare_query('mom')
-
-        self.assertEqual('SELECT '
-                         '"t0"."dt","t0"."device_type",'
-                         '"t0"."clicks","t0"."roi",'
-                         '"t1"."dt_mom",'
-                         '"t1"."clicks_mom","t1"."roi_mom" '
-                         'FROM ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
-                         'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-                         'FROM "test_table" '
-                         'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t0" '
-                         'JOIN ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt_mom","device_type" "device_type_mom",'
-                         'SUM("clicks") "clicks_mom",SUM("revenue")/SUM("cost") "roi_mom" '
-                         'FROM "test_table" '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt_mom"-INTERVAL \'4 WEEK\' '
-                         'AND "t0"."device_type"="t1"."device_type_mom"', str(query))
+        self.assert_reference(query, 'mom')
 
     def test_metrics_dimensions_filters_references__wow(self):
         query = self._get_compare_query('wow')
-
-        self.assertEqual('SELECT '
-                         '"t0"."dt","t0"."device_type",'
-                         '"t0"."clicks","t0"."roi",'
-                         '"t1"."dt_wow",'
-                         '"t1"."clicks_wow","t1"."roi_wow" '
-                         'FROM ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
-                         'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-                         'FROM "test_table" '
-                         'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t0" '
-                         'JOIN ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt_wow","device_type" "device_type_wow",'
-                         'SUM("clicks") "clicks_wow",SUM("revenue")/SUM("cost") "roi_wow" '
-                         'FROM "test_table" '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt_wow"-INTERVAL \'1 WEEK\' '
-                         'AND "t0"."device_type"="t1"."device_type_wow"', str(query))
+        self.assert_reference(query, 'wow')
 
     def test_metrics_dimensions_filters_references__yoy_d(self):
         query = self._get_compare_query('yoy_d')
-
-        self.assertEqual('SELECT '
-                         '"t0"."dt","t0"."device_type",'
-                         '"t0"."clicks","t0"."roi",'
-                         '"t1"."dt_yoy_d",'
-                         '"t0"."clicks"-"t1"."clicks_yoy_d" "clicks_yoy_d",'
-                         '"t0"."roi"-"t1"."roi_yoy_d" "roi_yoy_d" '
-                         'FROM ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
-                         'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-                         'FROM "test_table" '
-                         'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t0" '
-                         'JOIN ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt_yoy_d","device_type" "device_type_yoy_d",'
-                         'SUM("clicks") "clicks_yoy_d",SUM("revenue")/SUM("cost") "roi_yoy_d" '
-                         'FROM "test_table" '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt_yoy_d"-INTERVAL \'52 WEEK\' '
-                         'AND "t0"."device_type"="t1"."device_type_yoy_d"', str(query))
+        self.assert_reference_d(query, 'yoy')
 
     def test_metrics_dimensions_filters_references__qoq_d(self):
         query = self._get_compare_query('qoq_d')
-
-        self.assertEqual('SELECT '
-                         '"t0"."dt","t0"."device_type",'
-                         '"t0"."clicks","t0"."roi",'
-                         '"t1"."dt_qoq_d",'
-                         '"t0"."clicks"-"t1"."clicks_qoq_d" "clicks_qoq_d",'
-                         '"t0"."roi"-"t1"."roi_qoq_d" "roi_qoq_d" '
-                         'FROM ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
-                         'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-                         'FROM "test_table" '
-                         'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t0" '
-                         'JOIN ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt_qoq_d","device_type" "device_type_qoq_d",'
-                         'SUM("clicks") "clicks_qoq_d",SUM("revenue")/SUM("cost") "roi_qoq_d" '
-                         'FROM "test_table" '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt_qoq_d"-INTERVAL \'1 QUARTER\' '
-                         'AND "t0"."device_type"="t1"."device_type_qoq_d"', str(query))
+        self.assert_reference_d(query, 'qoq')
 
     def test_metrics_dimensions_filters_references__mom_d(self):
         query = self._get_compare_query('mom_d')
-
-        self.assertEqual('SELECT '
-                         '"t0"."dt","t0"."device_type",'
-                         '"t0"."clicks","t0"."roi",'
-                         '"t1"."dt_mom_d",'
-                         '"t0"."clicks"-"t1"."clicks_mom_d" "clicks_mom_d",'
-                         '"t0"."roi"-"t1"."roi_mom_d" "roi_mom_d" '
-                         'FROM ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
-                         'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-                         'FROM "test_table" '
-                         'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t0" '
-                         'JOIN ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt_mom_d","device_type" "device_type_mom_d",'
-                         'SUM("clicks") "clicks_mom_d",SUM("revenue")/SUM("cost") "roi_mom_d" '
-                         'FROM "test_table" '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt_mom_d"-INTERVAL \'4 WEEK\' '
-                         'AND "t0"."device_type"="t1"."device_type_mom_d"', str(query))
+        self.assert_reference_d(query, 'mom')
 
     def test_metrics_dimensions_filters_references__wow_d(self):
         query = self._get_compare_query('wow_d')
-
-        self.assertEqual('SELECT '
-                         '"t0"."dt","t0"."device_type",'
-                         '"t0"."clicks","t0"."roi",'
-                         '"t1"."dt_wow_d",'
-                         '"t0"."clicks"-"t1"."clicks_wow_d" "clicks_wow_d",'
-                         '"t0"."roi"-"t1"."roi_wow_d" "roi_wow_d" '
-                         'FROM ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
-                         'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-                         'FROM "test_table" '
-                         'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t0" '
-                         'JOIN ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt_wow_d","device_type" "device_type_wow_d",'
-                         'SUM("clicks") "clicks_wow_d",SUM("revenue")/SUM("cost") "roi_wow_d" '
-                         'FROM "test_table" '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt_wow_d"-INTERVAL \'1 WEEK\' '
-                         'AND "t0"."device_type"="t1"."device_type_wow_d"', str(query))
+        self.assert_reference_d(query, 'wow')
 
     def test_metrics_dimensions_filters_references__yoy_p(self):
         query = self._get_compare_query('yoy_p')
-
-        self.assertEqual('SELECT '
-                         '"t0"."dt","t0"."device_type",'
-                         '"t0"."clicks","t0"."roi",'
-                         '"t1"."dt_yoy_p",'
-                         '("t0"."clicks"-"t1"."clicks_yoy_p")/"t1"."clicks_yoy_p" "clicks_yoy_p",'
-                         '("t0"."roi"-"t1"."roi_yoy_p")/"t1"."roi_yoy_p" "roi_yoy_p" '
-                         'FROM ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
-                         'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-                         'FROM "test_table" '
-                         'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t0" '
-                         'JOIN ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt_yoy_p","device_type" "device_type_yoy_p",'
-                         'SUM("clicks") "clicks_yoy_p",SUM("revenue")/SUM("cost") "roi_yoy_p" '
-                         'FROM "test_table" '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt_yoy_p"-INTERVAL \'52 WEEK\' '
-                         'AND "t0"."device_type"="t1"."device_type_yoy_p"', str(query))
+        self.assert_reference_p(query, 'yoy')
 
     def test_metrics_dimensions_filters_references__qoq_p(self):
         query = self._get_compare_query('qoq_p')
-
-        self.assertEqual('SELECT '
-                         '"t0"."dt","t0"."device_type",'
-                         '"t0"."clicks","t0"."roi",'
-                         '"t1"."dt_qoq_p",'
-                         '("t0"."clicks"-"t1"."clicks_qoq_p")/"t1"."clicks_qoq_p" "clicks_qoq_p",'
-                         '("t0"."roi"-"t1"."roi_qoq_p")/"t1"."roi_qoq_p" "roi_qoq_p" '
-                         'FROM ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
-                         'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-                         'FROM "test_table" '
-                         'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t0" '
-                         'JOIN ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt_qoq_p","device_type" "device_type_qoq_p",'
-                         'SUM("clicks") "clicks_qoq_p",SUM("revenue")/SUM("cost") "roi_qoq_p" '
-                         'FROM "test_table" '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt_qoq_p"-INTERVAL \'1 QUARTER\' '
-                         'AND "t0"."device_type"="t1"."device_type_qoq_p"', str(query))
+        self.assert_reference_p(query, 'qoq')
 
     def test_metrics_dimensions_filters_references__mom_p(self):
         query = self._get_compare_query('mom_p')
-
-        self.assertEqual('SELECT '
-                         '"t0"."dt","t0"."device_type",'
-                         '"t0"."clicks","t0"."roi",'
-                         '"t1"."dt_mom_p",'
-                         '("t0"."clicks"-"t1"."clicks_mom_p")/"t1"."clicks_mom_p" "clicks_mom_p",'
-                         '("t0"."roi"-"t1"."roi_mom_p")/"t1"."roi_mom_p" "roi_mom_p" '
-                         'FROM ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
-                         'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-                         'FROM "test_table" '
-                         'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t0" '
-                         'JOIN ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt_mom_p","device_type" "device_type_mom_p",'
-                         'SUM("clicks") "clicks_mom_p",SUM("revenue")/SUM("cost") "roi_mom_p" '
-                         'FROM "test_table" '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt_mom_p"-INTERVAL \'4 WEEK\' '
-                         'AND "t0"."device_type"="t1"."device_type_mom_p"', str(query))
+        self.assert_reference_p(query, 'mom')
 
     def test_metrics_dimensions_filters_references__wow_p(self):
         query = self._get_compare_query('wow_p')
-
-        self.assertEqual('SELECT '
-                         '"t0"."dt","t0"."device_type",'
-                         '"t0"."clicks","t0"."roi",'
-                         '"t1"."dt_wow_p",'
-                         '("t0"."clicks"-"t1"."clicks_wow_p")/"t1"."clicks_wow_p" "clicks_wow_p",'
-                         '("t0"."roi"-"t1"."roi_wow_p")/"t1"."roi_wow_p" "roi_wow_p" '
-                         'FROM ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
-                         'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-                         'FROM "test_table" '
-                         'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t0" '
-                         'JOIN ('
-                         'SELECT '
-                         'ROUND("dt",\'DD\') "dt_wow_p","device_type" "device_type_wow_p",'
-                         'SUM("clicks") "clicks_wow_p",SUM("revenue")/SUM("cost") "roi_wow_p" '
-                         'FROM "test_table" '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type"'
-                         ') "t1" ON "t0"."dt"="t1"."dt_wow_p"-INTERVAL \'1 WEEK\' '
-                         'AND "t0"."device_type"="t1"."device_type_wow_p"', str(query))
+        self.assert_reference_p(query, 'wow')
 
 
 class TotalsQueryTests(QueryTests):
@@ -981,4 +800,4 @@ class TotalsQueryTests(QueryTests):
                          'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
                          'FROM "test_table" '
                          'GROUP BY ROUND("dt",\'DD\'),"device_type",ROLLUP("locale") '
-                         'ORDER BY ROUND("dt",\'DD\'),"device_type","locale"', str(query))
+                         'ORDER BY ROUND("dt",\'DD\'),"locale","device_type"', str(query))

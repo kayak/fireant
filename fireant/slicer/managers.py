@@ -144,7 +144,8 @@ class SlicerManager(QueryManager):
             'metrics': {key: self.slicer.metrics[key].label
                         for key in metrics or []},
             'dimensions': self._display_dimensions(dimensions),
-            'references': [reference.key for reference in references or []]
+            'references': {reference.key: reference.label
+                           for reference in references or []}
         }
 
     def _metrics_schema(self, keys):

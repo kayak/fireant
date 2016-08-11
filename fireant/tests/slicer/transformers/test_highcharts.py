@@ -21,7 +21,7 @@ class HighChartsLineTransformerTests(BaseTransformerTests):
         for data, (_, row) in zip(result_data, df.iteritems()):
             self.assertListEqual(list(row.iteritems()), data)
 
-    def evaluate_chart_options(self, result, n_results=1, xaxis_type='linear'):
+    def evaluate_chart_options(self, result, n_results=1, xaxis_type='linear', dash_style='Solid'):
         self.assertSetEqual({'title', 'series', 'chart', 'tooltip', 'xAxis', 'yAxis'}, set(result.keys()))
         self.assertEqual(n_results, len(result['series']))
 
@@ -34,7 +34,7 @@ class HighChartsLineTransformerTests(BaseTransformerTests):
         self.assertEqual(xaxis_type, result['xAxis']['type'])
 
         for series in result['series']:
-            self.assertSetEqual({'name', 'data', 'yAxis'}, set(series.keys()))
+            self.assertSetEqual({'name', 'data', 'yAxis', 'dashStyle'}, set(series.keys()))
 
     def test_series_single_metric(self):
         # Tests transformation of a single-metric, single-dimension result
@@ -80,7 +80,7 @@ class HighChartsLineTransformerTests(BaseTransformerTests):
         )
 
         df2 = df
-        df2.index = df2.index.astype(int) // 1e6
+        df2.index = df2.index.astype(int) // int(1e6)
         self.evaluate_result(df2, result)
 
     def test_cont_uni_dim_single_metric(self):
