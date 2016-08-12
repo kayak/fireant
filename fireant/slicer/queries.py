@@ -116,7 +116,10 @@ class QueryManager(object):
         if getattr(settings, 'debug', False):
             print("Executing query:\n----START----\n{query}\n-----END-----".format(query=querystring))
 
-        dataframe = settings.database.fetch_dataframe(querystring).set_index(
+        dataframe = settings.database.fetch_dataframe(querystring)
+        dataframe.columns = [col.decode('utf-8') if isinstance(col, bytes) else col
+                             for col in dataframe.columns]
+        dataframe = dataframe.set_index(
             # Removed the reference keys for now
             list(dimensions.keys())  # + ['{1}_{0}'.format(*ref) for ref in references.items()]
         ).sort_index()

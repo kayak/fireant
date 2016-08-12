@@ -15,7 +15,19 @@ class DatabaseTests(TestCase):
 
         result = Database().fetch('SELECT 1')
 
-        self.assertEqual('OK', result)
+        self.assertEqual(mock_cursor.fetchall.return_value, result)
         mock_cursor_func.assert_called_once_with()
         mock_cursor.execute.assert_called_once_with('SELECT 1')
         mock_cursor.fetchall.assert_called_once_with()
+
+    @patch('pandas.read_sql', name='mock_read_sql')
+    @patch('fireant.database.Database.connect', name='mock_connect')
+    def test_fetch_dataframe(self, mock_connect, mock_read_sql):
+        query = 'SELECT 1'
+        mock_read_sql.return_value = 'OK'
+
+        result = Database().fetch_dataframe(query)
+
+        self.assertEqual(mock_read_sql.return_value, result)
+
+        mock_read_sql.assert_called_once_with(query, mock_connect().__enter__())
