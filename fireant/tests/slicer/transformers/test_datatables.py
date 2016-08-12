@@ -419,7 +419,7 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
                             break
 
 
-class HighChartsUtilityTests(TestCase):
+class DatatablesUtilityTests(TestCase):
     def test_nan_data_point(self):
         # Needs to be cast to python int
         result = datatables.format_data_point(np.nan)
@@ -436,5 +436,5 @@ class HighChartsUtilityTests(TestCase):
 
     def test_datetime_data_point(self):
         # Needs to be converted to milliseconds
-        result = datatables.format_data_point(pd.Timestamp(2000, 1, 1))
+        result = datatables.format_data_point(pd.Timestamp(2000, 1, 1, 0, 0, 0))
         self.assertEqual('1970-01-01T00:00:00', result)
