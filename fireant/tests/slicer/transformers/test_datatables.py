@@ -1,4 +1,5 @@
 # coding: utf-8
+from datetime import date
 from unittest import TestCase
 
 import numpy as np
@@ -436,5 +437,5 @@ class DatatablesUtilityTests(TestCase):
 
     def test_datetime_data_point(self):
         # Needs to be converted to milliseconds
-        result = datatables.format_data_point(pd.Timestamp(2000, 1, 1, 0, 0, 0))
-        self.assertEqual('1970-01-01T00:00:00', result)
+        result = datatables.format_data_point(pd.Timestamp(date(2000, 1, 1)))
+        self.assertEqual('2000-01-01T00:00:00', result)

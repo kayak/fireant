@@ -1,4 +1,5 @@
 # coding: utf-8
+from datetime import date
 from unittest import TestCase
 
 import numpy as np
@@ -371,5 +372,5 @@ class HighchartsUtilityTests(TestCase):
 
     def test_datetime_data_point(self):
         # Needs to be converted to milliseconds
-        result = highcharts.format_data_point(pd.Timestamp(2000, 1, 1, 0, 0, 0))
+        result = highcharts.format_data_point(pd.Timestamp(date(2000, 1, 1)))
         self.assertEqual(946684800000, result)
