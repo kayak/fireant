@@ -5,11 +5,13 @@ import pandas as pd
 from .base import Transformer, TransformationException
 
 
-def format_data_point(value):
+def _format_data_point(value):
     if isinstance(value, str):
         return value
     if isinstance(value, pd.Timestamp):
         return int(value.asm8) // int(1e6)
+    if np.isnan(value):
+        return None
     if np.isnan(value):
         return None
     if isinstance(value, np.int64):
@@ -18,15 +20,12 @@ def format_data_point(value):
     return value
 
 
-class HighchartsTransformer(Transformer):
+class HighchartsLineTransformer(Transformer):
     """
     Transforms data frames into Highcharts format for several chart types, particularly line or bar charts.
     """
 
-    line = 'line'
-
-    def __init__(self, chart_type=line):
-        self.chart_type = chart_type
+    chart_type = 'line'
 
     def transform(self, data_frame, display_schema):
         self._validate_dimensions(data_frame, display_schema['dimensions'])
@@ -170,7 +169,7 @@ class HighchartsTransformer(Transformer):
 
     def _format_data(self, column):
         if isinstance(column, float):
-            return [format_data_point(column)]
+            return [_format_data_point(column)]
 
         return [self._format_point(key, value)
                 for key, value in column.iteritems()
@@ -178,7 +177,7 @@ class HighchartsTransformer(Transformer):
 
     @staticmethod
     def _format_point(x, y):
-        return (format_data_point(x), format_data_point(y))
+        return (_format_data_point(x), _format_data_point(y))
 
     def _unstack_levels(self, dimensions, dim_ordinal):
         for dimension in dimensions:
@@ -189,17 +188,11 @@ class HighchartsTransformer(Transformer):
                 yield dim_ordinal[dimension['label_field']]
 
 
-class HighchartsColumnTransformer(HighchartsTransformer):
-    column = 'column'
-    bar = 'bar'
-
-    def __init__(self, chart_type=column):
-        super(HighchartsColumnTransformer, self).__init__(chart_type)
-
+class HighchartsColumnTransformer(HighchartsLineTransformer):
     def _make_series_item(self, idx, item, dim_ordinal, display_schema, y_axis, reference):
         return {
             'name': self._format_label(idx, dim_ordinal, display_schema, reference),
-            'data': [format_data_point(x)
+            'data': [_format_data_point(x)
                      for x in item
                      if not np.isnan(x)],
             'yAxis': y_axis
@@ -248,3 +241,7 @@ class HighchartsColumnTransformer(HighchartsTransformer):
             return data_frame.index.get_level_values(label_field).unique().tolist()
 
         return []
+
+
+class HighchartsBarTransformer(HighchartsColumnTransformer):
+    chart_type = 'bar'

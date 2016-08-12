@@ -5,12 +5,7 @@ import pandas as pd
 from .base import Transformer
 
 
-class TableIndex(object):
-    column_index = 'col'
-    row_index = 'row'
-
-
-def format_data_point(value):
+def _format_data_point(value):
     if isinstance(value, str):
         return value
     if isinstance(value, pd.Timestamp):
@@ -23,9 +18,8 @@ def format_data_point(value):
     return value
 
 
-class DataTablesTransformer(Transformer):
-    def __init__(self, table_type=TableIndex.row_index):
-        self.table_type = table_type
+class DataTablesRowIndexTransformer(Transformer):
+    table_type = 'row'
 
     def transform(self, data_frame, display_schema):
         dim_ordinal = {name: ordinal
@@ -65,7 +59,7 @@ class DataTablesTransformer(Transformer):
         # Replaces invalid values and unstacks the data frame for column_index tables.
         data_frame = data_frame.replace([np.inf, -np.inf], np.nan)
 
-        if 1 < len(dimensions) and self.table_type == TableIndex.column_index:
+        if 1 < len(dimensions) and self.table_type == 'column':
             unstack_levels = list(range(
                 len(dimensions[0]['id_fields']),
                 len(data_frame.index.levels))
@@ -75,12 +69,12 @@ class DataTablesTransformer(Transformer):
         return data_frame
 
     def _render_index_levels(self, idx, dim_ordinal, display_schema):
-        row_dimensions = display_schema['dimensions'][:None if self.table_type == TableIndex.row_index else 1]
+        row_dimensions = display_schema['dimensions'][:None if self.table_type == 'row' else 1]
         for dimension in row_dimensions:
             key = dimension['label']
 
             if not isinstance(idx, tuple):
-                value = format_data_point(idx)
+                value = _format_data_point(idx)
 
             elif 1 < len(dimension['id_fields']) or 'label_field' in dimension:
                 fields = dimension['id_fields'] + [dimension.get('label_field')]
@@ -90,7 +84,7 @@ class DataTablesTransformer(Transformer):
 
             else:
                 id_field = dimension['id_fields'][0]
-                value = format_data_point(idx[dim_ordinal[id_field]])
+                value = _format_data_point(idx[dim_ordinal[id_field]])
 
                 if value is None:
                     value = 'Total'
@@ -106,14 +100,14 @@ class DataTablesTransformer(Transformer):
             for idx, value in row.iteritems():
                 label = self._format_series_labels(idx, dim_ordinal, display_schema)
                 label = self._format_reference_label(display_schema, label, reference_key)
-                yield label, format_data_point(value)
+                yield label, _format_data_point(value)
 
         else:
             # Single level columns
             for col in row.index:
                 label = display_schema['metrics'][col]
                 label = self._format_reference_label(display_schema, label, reference_key)
-                yield label, format_data_point(row[col])
+                yield label, _format_data_point(row[col])
 
     def _format_series_labels(self, idx, dim_ordinal, display_schema):
         metric, dimensions = idx[0], idx[1:]
@@ -163,10 +157,7 @@ class DataTablesTransformer(Transformer):
         return dimension_label
 
 
-class CSVTransformer(DataTablesTransformer):
-    def __init__(self, table_type=TableIndex.row_index):
-        self.table_type = table_type
-
+class CSVRowIndexTransformer(DataTablesRowIndexTransformer):
     def transform(self, data_frame, display_schema):
         dim_ordinal = {name: ordinal
                        for ordinal, name in enumerate(data_frame.index.names)}
@@ -179,7 +170,7 @@ class CSVTransformer(DataTablesTransformer):
 
         csv_df = self._format_index(csv_df, dim_ordinal, display_schema)
 
-        row_dimensions = display_schema['dimensions'][:None if self.table_type == TableIndex.row_index else 1]
+        row_dimensions = display_schema['dimensions'][:None if self.table_type == 'row' else 1]
         return csv_df.to_csv(index_label=[dimension['label']
                                           for dimension in row_dimensions])
 
@@ -200,7 +191,7 @@ class CSVTransformer(DataTablesTransformer):
         return csv_df
 
     def _format_columns(self, data_frame, dim_ordinal, display_schema):
-        if 1 < len(display_schema['dimensions']) and self.table_type == TableIndex.column_index:
+        if 1 < len(display_schema['dimensions']) and self.table_type == 'column':
             csv_df = self._prepare_data_frame(data_frame, display_schema['dimensions'])
 
             csv_df.columns = pd.Index([self._format_series_labels(column, dim_ordinal, display_schema)
@@ -210,3 +201,11 @@ class CSVTransformer(DataTablesTransformer):
         return data_frame.rename(
             columns=lambda metric: display_schema['metrics'].get(metric, metric)
         )
+
+
+class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
+    table_type = 'column'
+
+
+class CSVColumnIndexTransformer(DataTablesColumnIndexTransformer, CSVRowIndexTransformer):
+    pass

@@ -30,9 +30,9 @@ setup(
     include_package_data=True,
 
     # Details
-    url="https://github.com/kayak/fireant",
+    url='https://github.com/kayak/fireant',
 
-    description="A data analysis tool for Python and Jupyter Notebooks",
+    description='A data analysis tool for Python and Jupyter Notebooks',
     long_description=readme(),
 
     classifiers=[
@@ -61,8 +61,9 @@ setup(
         'mock',
     ],
     extras_require={
-        'vertica': ["vertica-python>=0.6"],
+        'vertica': ['vertica-python>=0.6'],
+        'matplotlib': ['matplotlib', 'seaborn'],
     },
 
-    test_suite="fireant.tests",
+    test_suite='fireant.tests',
 )

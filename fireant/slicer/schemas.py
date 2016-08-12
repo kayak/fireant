@@ -1,6 +1,7 @@
 # coding: utf-8
 from fireant import settings
-from fireant.slicer.managers import SlicerManager
+from fireant.slicer import transformers
+from fireant.slicer.managers import SlicerManager, TransformerManager
 from pypika import JoinType
 from pypika.terms import Mod
 
@@ -165,6 +166,8 @@ class Slicer(object):
         self.joins = {join.key: join for join in joins}
 
         self.manager = SlicerManager(self)
+        for name, bundle in transformers.bundles.items():
+            setattr(self, name, TransformerManager(self.manager, bundle))
 
 
 class EqualityOperator(object):
