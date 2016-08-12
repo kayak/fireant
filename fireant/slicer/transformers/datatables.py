@@ -11,10 +11,12 @@ class TableIndex(object):
 
 
 def format_data_point(value):
-    if value is np.nan:
-        value = None
+    if isinstance(value, str):
+        return value
     if isinstance(value, pd.Timestamp):
-        return value.isoformat()
+        return value.strftime('%Y-%m-%dT%H:%M:%S')
+    if np.isnan(value):
+        return None
     if isinstance(value, np.int64):
         # Cannot transform np.int64 to json
         return int(value)

@@ -1,8 +1,11 @@
 # coding: utf-8
+from unittest import TestCase
 
 import numpy as np
+import pandas as pd
 
 from fireant.slicer.transformers import TableIndex, DataTablesTransformer
+from fireant.slicer.transformers import datatables
 from fireant.tests.slicer.transformers.base import BaseTransformerTests
 
 
@@ -414,3 +417,24 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
                         # skip the rest of the level if the previous level is rolled up
                         if label1 is None:
                             break
+
+
+class HighChartsUtilityTests(TestCase):
+    def test_nan_data_point(self):
+        # Needs to be cast to python int
+        result = datatables.format_data_point(np.nan)
+        self.assertIsNone(result)
+
+    def test_str_data_point(self):
+        result = datatables.format_data_point('abc')
+        self.assertEqual('abc', result)
+
+    def test_int64_data_point(self):
+        # Needs to be cast to python int
+        result = datatables.format_data_point(np.int64(1))
+        self.assertEqual(int(1), result)
+
+    def test_datetime_data_point(self):
+        # Needs to be converted to milliseconds
+        result = datatables.format_data_point(pd.Timestamp(2000, 1, 1))
+        self.assertEqual('1970-01-01T00:00:00', result)

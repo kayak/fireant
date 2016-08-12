@@ -6,10 +6,14 @@ from .base import Transformer, TransformationException
 
 
 def format_data_point(value):
+    if isinstance(value, str):
+        return value
     if isinstance(value, pd.Timestamp):
         return int(value.asm8) // int(1e6)
+    if np.isnan(value):
+        return None
     if isinstance(value, np.int64):
-        # Cannot transform np.int64 to json
+        # Cannot serialize np.int64 to json
         return int(value)
     return value
 
@@ -195,7 +199,9 @@ class HighchartsColumnTransformer(HighchartsTransformer):
     def _make_series_item(self, idx, item, dim_ordinal, display_schema, y_axis, reference):
         return {
             'name': self._format_label(idx, dim_ordinal, display_schema, reference),
-            'data': [format_data_point(x) for x in item if x is not np.nan],
+            'data': [format_data_point(x)
+                     for x in item
+                     if not np.isnan(x)],
             'yAxis': y_axis
         }
 
@@ -218,7 +224,7 @@ class HighchartsColumnTransformer(HighchartsTransformer):
         # Replaces invalid values and unstacks the data frame for line charts.
 
         # Force all fields to be float (Safer for highcharts)
-        data_frame = data_frame.astype(np.float).replace([np.inf, -np.inf], np.nan)
+        data_frame = data_frame.replace([np.inf, -np.inf], np.nan)
 
         # Unstack multi-indices
         if 1 < len(dimensions):

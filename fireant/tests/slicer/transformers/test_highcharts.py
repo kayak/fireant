@@ -1,7 +1,12 @@
 # coding: utf-8
+from datetime import date
+from unittest import TestCase
 
+import numpy as np
+import pandas as pd
 
 from fireant.slicer.transformers import HighchartsTransformer, TransformationException, HighchartsColumnTransformer
+from fireant.slicer.transformers import highcharts
 from fireant.tests.slicer.transformers.base import BaseTransformerTests
 
 
@@ -353,3 +358,19 @@ class HighChartsColumnTransformerTests(BaseTransformerTests):
 
 class HighChartsBarTransformerTests(HighChartsColumnTransformerTests):
     type = HighchartsColumnTransformer.bar
+
+
+class HighChartsUtilityTests(TestCase):
+    def test_str_data_point(self):
+        result = highcharts.format_data_point('abc')
+        self.assertEqual('abc', result)
+
+    def test_int64_data_point(self):
+        # Needs to be cast to python int
+        result = highcharts.format_data_point(np.int64(1))
+        self.assertEqual(int(1), result)
+
+    def test_datetime_data_point(self):
+        # Needs to be converted to milliseconds
+        result = highcharts.format_data_point(pd.Timestamp(date(2000, 1, 1)))
+        self.assertEqual(946684800000, result)
