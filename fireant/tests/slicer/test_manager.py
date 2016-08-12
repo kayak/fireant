@@ -10,6 +10,8 @@ class ManagerInitializationTests(TestCase):
         slicer = Slicer(Table('test'))
 
         self.assertTrue(hasattr(slicer, 'manager'))
-        self.assertTrue(hasattr(slicer, 'notebook'))
         self.assertTrue(hasattr(slicer, 'highcharts'))
         self.assertTrue(hasattr(slicer, 'datatables'))
+
+        # False until the feature can be fully added
+        self.assertFalse(hasattr(slicer, 'notebook'))

@@ -62,7 +62,7 @@ setup(
     ],
     extras_require={
         'vertica': ['vertica-python>=0.6'],
-        'matplotlib': ['matplotlib', 'seaborn'],
+        'plotly': ['plotly'],
     },
 
     test_suite='fireant.tests',

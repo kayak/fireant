@@ -3,30 +3,31 @@ from . import (HighchartsLineTransformer, HighchartsColumnTransformer, Highchart
                DataTablesRowIndexTransformer, DataTablesColumnIndexTransformer, PandasTransformer)
 
 notebook_tx = {
-    'row_index': PandasTransformer(),
-    'column_index': PandasTransformer(),
+    'row_index_table': PandasTransformer(),
+    'column_index_table': PandasTransformer(),
 }
 
 try:
-    from fireant.slicer.transformers.notebook import MatplotlibTransformer
+    from fireant.slicer.transformers.notebook import PlotlyTransformer
 
-    notebook_tx['line'] = MatplotlibTransformer()
-    notebook_tx['column'] = MatplotlibTransformer()
-    notebook_tx['bar'] = MatplotlibTransformer()
+    notebook_tx['line_chart'] = PlotlyTransformer()
+    notebook_tx['column_chart'] = PlotlyTransformer()
+    notebook_tx['bar_chart'] = PlotlyTransformer()
 
 except ImportError:
     # Matplotlib not installed
     pass
 
 bundles = {
-    'notebook': notebook_tx,
+    # Unfinished
+    # 'notebook': notebook_tx,
     'highcharts': {
-        'line': HighchartsLineTransformer(),
-        'column ': HighchartsColumnTransformer(),
-        'bar': HighchartsBarTransformer(),
+        'line_chart': HighchartsLineTransformer(),
+        'column_chart ': HighchartsColumnTransformer(),
+        'bar_chart': HighchartsBarTransformer(),
     },
     'datatables': {
-        'row_index': DataTablesRowIndexTransformer(),
-        'column_index': DataTablesColumnIndexTransformer(),
+        'row_index_table': DataTablesRowIndexTransformer(),
+        'column_index_table': DataTablesColumnIndexTransformer(),
     },
 }
