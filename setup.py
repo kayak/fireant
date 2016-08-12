@@ -13,7 +13,7 @@ def readme():
 
 
 setup(
-    name='FireAnt',
+    name='fireant',
     version='{major}.{minor}.{patch}'.format(major=__major_version__,
                                              minor=__minor_version__,
                                              patch=__patch_version__),

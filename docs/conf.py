@@ -53,7 +53,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'FireAnt'
+project = 'fireant'
 copyright = '2016, KAYAK Germany GmbH'
 author = 'Timothy Heys, Mourad Mourafiq, Arturas Tutkus, Remi Koenig'
 
@@ -271,8 +271,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'FireAnt', 'FireAnt Documentation',
-     author, 'Fireant', 'Slicer tool for building charts, tables and dashboards.',
+    (master_doc, 'fireant', 'fireant Documentation',
+     author, 'fireant', 'Slicer tool for building charts, tables and dashboards.',
      'Miscellaneous'),
 ]
 
