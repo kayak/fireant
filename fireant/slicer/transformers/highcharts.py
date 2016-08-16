@@ -12,8 +12,6 @@ def _format_data_point(value):
         return int(value.asm8) // int(1e6)
     if np.isnan(value):
         return None
-    if np.isnan(value):
-        return None
     if isinstance(value, np.int64):
         # Cannot serialize np.int64 to json
         return int(value)
@@ -239,8 +237,6 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
         if 'label_field' in category_dimension:
             label_field = category_dimension['label_field']
             return data_frame.index.get_level_values(label_field).unique().tolist()
-
-        return []
 
 
 class HighchartsBarTransformer(HighchartsColumnTransformer):

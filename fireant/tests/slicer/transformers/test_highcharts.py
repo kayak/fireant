@@ -4,6 +4,7 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+
 from fireant.slicer.transformers import (HighchartsLineTransformer, TransformationException,
                                          HighchartsColumnTransformer,
                                          HighchartsBarTransformer)
@@ -378,3 +379,8 @@ class HighchartsUtilityTests(TestCase):
         # Needs to be converted to milliseconds
         result = highcharts._format_data_point(pd.Timestamp(date(2000, 1, 1)))
         self.assertEqual(946684800000, result)
+
+    def test_nan_data_point(self):
+        # Needs to be cast to python int
+        result = highcharts._format_data_point(np.nan)
+        self.assertIsNone(result)
