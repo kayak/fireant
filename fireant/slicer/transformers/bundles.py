@@ -1,6 +1,7 @@
 # coding: utf-8
 from . import (HighchartsLineTransformer, HighchartsColumnTransformer, HighchartsBarTransformer,
-               DataTablesRowIndexTransformer, DataTablesColumnIndexTransformer, PandasTransformer)
+               DataTablesRowIndexTransformer, DataTablesColumnIndexTransformer, PandasTransformer,
+               CSVRowIndexTransformer, CSVColumnIndexTransformer)
 
 notebook_tx = {
     'row_index_table': PandasTransformer(),
@@ -23,11 +24,13 @@ bundles = {
     # 'notebook': notebook_tx,
     'highcharts': {
         'line_chart': HighchartsLineTransformer(),
-        'column_chart ': HighchartsColumnTransformer(),
+        'column_chart': HighchartsColumnTransformer(),
         'bar_chart': HighchartsBarTransformer(),
     },
     'datatables': {
         'row_index_table': DataTablesRowIndexTransformer(),
         'column_index_table': DataTablesColumnIndexTransformer(),
+        'row_index_csv': CSVRowIndexTransformer(),
+        'column_index_csv': CSVColumnIndexTransformer(),
     },
 }

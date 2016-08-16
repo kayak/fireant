@@ -79,7 +79,7 @@ class SlicerSchemaTests(TestCase):
 
 class SlicerSchemaMetricTests(SlicerSchemaTests):
     def test_metric_with_default_definition(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
         )
 
@@ -90,7 +90,7 @@ class SlicerSchemaMetricTests(SlicerSchemaTests):
         self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
     def test_metric_with_custom_definition(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['bar'],
         )
 
@@ -103,7 +103,7 @@ class SlicerSchemaMetricTests(SlicerSchemaTests):
 
 class SlicerSchemaDimensionTests(SlicerSchemaTests):
     def test_date_dimension_default_interval(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['date'],
         )
@@ -118,7 +118,7 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
         self.assertEqual('ROUND("test"."dt",\'DD\')', str(query_schema['dimensions']['date']))
 
     def test_date_dimension_custom_interval(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             # TODO This could be improved by using an object
             dimensions=[('date', DatetimeDimension.week)],
@@ -134,7 +134,7 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
         self.assertEqual('ROUND("test"."dt",\'WW\')', str(query_schema['dimensions']['date']))
 
     def test_numeric_dimension_default_interval(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['clicks'],
         )
@@ -149,7 +149,7 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
         self.assertEqual('MOD("test"."clicks"+0,1)', str(query_schema['dimensions']['clicks']))
 
     def test_numeric_dimension_custom_interval(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             # TODO This could be improved by using an object
             dimensions=[('clicks', 100, 25)],
@@ -165,7 +165,7 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
         self.assertEqual('MOD("test"."clicks"+25,100)', str(query_schema['dimensions']['clicks']))
 
     def test_categorical_dimension(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
         )
@@ -180,7 +180,7 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
         self.assertEqual('"test"."locale"', str(query_schema['dimensions']['locale']))
 
     def test_unique_dimension_single_id(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['account'],
         )
@@ -196,7 +196,7 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
         self.assertEqual('"test"."account_name"', str(query_schema['dimensions']['account_label']))
 
     def test_unique_dimension_composite_id(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['keyword'],
         )
@@ -214,7 +214,7 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
         self.assertEqual('"test"."keyword_name"', str(query_schema['dimensions']['keyword_label']))
 
     def test_multiple_metrics_and_dimensions(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo', 'bar'],
             dimensions=[('date', DatetimeDimension.month), ('clicks', 50, 100), 'locale', 'account'],
         )
@@ -236,7 +236,7 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
 
 class SlicerSchemaFilterTests(SlicerSchemaTests):
     def test_dimension_filter_eq(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
             dimension_filters=[EqualityFilter('locale', EqualityOperator.eq, 'en')],
@@ -254,7 +254,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertListEqual(['"test"."locale"=\'en\''], [str(f) for f in query_schema['dfilters']])
 
     def test_dimension_filter_ne(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
             dimension_filters=[
@@ -274,7 +274,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertListEqual(['"test"."locale"<>\'en\''], [str(f) for f in query_schema['dfilters']])
 
     def test_dimension_filter_in(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
             dimension_filters=[
@@ -294,7 +294,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertListEqual(['"test"."locale" IN (\'en\',\'es\',\'de\')'], [str(f) for f in query_schema['dfilters']])
 
     def test_dimension_filter_like(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
             dimension_filters=[
@@ -314,7 +314,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertListEqual(['"test"."locale" LIKE \'e%\''], [str(f) for f in query_schema['dfilters']])
 
     def test_dimension_filter_gt(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
             dimension_filters=[
@@ -334,7 +334,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertListEqual(['"test"."dt">\'2000-01-01\''], [str(f) for f in query_schema['dfilters']])
 
     def test_dimension_filter_lt(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
             dimension_filters=[
@@ -354,7 +354,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertListEqual(['"test"."dt"<\'2000-01-01\''], [str(f) for f in query_schema['dfilters']])
 
     def test_dimension_filter_gte(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
             dimension_filters=[
@@ -374,7 +374,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertListEqual(['"test"."dt">=\'2000-01-01\''], [str(f) for f in query_schema['dfilters']])
 
     def test_dimension_filter_lte(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
             dimension_filters=[
@@ -394,7 +394,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertListEqual(['"test"."dt"<=\'2000-01-01\''], [str(f) for f in query_schema['dfilters']])
 
     def test_dimension_filter_daterange(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
             dimension_filters=[
@@ -412,7 +412,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
                              [str(f) for f in query_schema['dfilters']])
 
     def test_unique_dimension_filter_single_id(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['account'],
             dimension_filters=[EqualityFilter('account', EqualityOperator.eq, 1)],
@@ -431,7 +431,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertListEqual(['"test"."account_id"=1'], [str(f) for f in query_schema['dfilters']])
 
     def test_unique_dimension_filter_composite_id(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['keyword'],
             dimension_filters=[EqualityFilter('keyword', EqualityOperator.eq, (1, 'broad'))],
@@ -452,7 +452,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
                              [str(f) for f in query_schema['dfilters']])
 
     def test_unique_dimension_filter_label(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['account'],
             dimension_filters=[WildcardFilter('account.label', 'nam%')],
@@ -471,7 +471,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertListEqual(['"test"."account_name" LIKE \'nam%\''], [str(f) for f in query_schema['dfilters']])
 
     def test_metric_filter_eq(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
             metric_filters=[EqualityFilter('foo', EqualityOperator.eq, 0)],
@@ -489,7 +489,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertListEqual(['SUM("test"."foo")=0'], [str(f) for f in query_schema['mfilters']])
 
     def test_metric_filter_ne(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
             metric_filters=[
@@ -509,7 +509,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertListEqual(['SUM("test"."foo")<>0'], [str(f) for f in query_schema['mfilters']])
 
     def test_metric_filter_gt(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
             metric_filters=[
@@ -529,7 +529,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertListEqual(['SUM("test"."foo")>100'], [str(f) for f in query_schema['mfilters']])
 
     def test_metric_filter_lt(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
             metric_filters=[
@@ -549,7 +549,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertListEqual(['SUM("test"."foo")<100'], [str(f) for f in query_schema['mfilters']])
 
     def test_metric_filter_gte(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
             metric_filters=[
@@ -569,7 +569,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertListEqual(['SUM("test"."foo")>=100'], [str(f) for f in query_schema['mfilters']])
 
     def test_metric_filter_lte(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
             metric_filters=[
@@ -590,7 +590,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
 
     def test_invalid_dimensions_raise_exception(self):
         with self.assertRaises(SlicerException):
-            self.test_slicer.manager.get_query_schema(
+            self.test_slicer.manager.query_schema(
                 metrics=['foo'],
                 dimensions=['locale'],
                 dimension_filters=[
@@ -600,7 +600,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
 
     def test_invalid_metrics_raise_exception(self):
         with self.assertRaises(SlicerException):
-            self.test_slicer.manager.get_query_schema(
+            self.test_slicer.manager.query_schema(
                 metrics=['foo'],
                 dimensions=['locale'],
                 metric_filters=[
@@ -610,7 +610,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
 
     def test_metrics_dont_work_for_dimensions(self):
         with self.assertRaises(SlicerException):
-            self.test_slicer.manager.get_query_schema(
+            self.test_slicer.manager.query_schema(
                 metrics=['foo'],
                 dimensions=['locale'],
                 dimension_filters=[
@@ -620,7 +620,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
 
     def test_dimensions_dont_work_for_metrics(self):
         with self.assertRaises(SlicerException):
-            self.test_slicer.manager.get_query_schema(
+            self.test_slicer.manager.query_schema(
                 metrics=['foo'],
                 dimensions=['locale'],
                 metric_filters=[
@@ -631,7 +631,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
 
 class SlicerSchemaReferenceTests(SlicerSchemaTests):
     def _reference_test_with_date(self, reference):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['date'],
             references=[reference],
@@ -683,7 +683,7 @@ class SlicerSchemaReferenceTests(SlicerSchemaTests):
     def test_reference_missing_dimension(self):
         # Reference dimension is required in order to use a reference with it
         with self.assertRaises(SlicerException):
-            self.test_slicer.manager.get_query_schema(
+            self.test_slicer.manager.query_schema(
                 metrics=['foo'],
                 dimensions=[],
                 references=[WoW('date')],
@@ -692,14 +692,14 @@ class SlicerSchemaReferenceTests(SlicerSchemaTests):
     def test_reference_wrong_dimension_type(self):
         # Reference dimension is required in order to use a reference with it
         with self.assertRaises(SlicerException):
-            self.test_slicer.manager.get_query_schema(
+            self.test_slicer.manager.query_schema(
                 metrics=['foo'],
                 dimensions=['locale'],
                 references=[WoW('locale')],
             )
 
     def test_rollup_operation(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['date', 'locale', 'account'],
             operations=[Rollup(['locale', 'account'])],
@@ -719,7 +719,7 @@ class SlicerSchemaReferenceTests(SlicerSchemaTests):
 
 class SlicerDisplaySchemaTests(SlicerSchemaTests):
     def test_metric_with_default_definition(self):
-        display_schema = self.test_slicer.manager.get_display_schema(
+        display_schema = self.test_slicer.manager.display_schema(
             metrics=['foo'],
         )
 
@@ -733,7 +733,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
 
     def test_metric_with_custom_definition(self):
-        display_schema = self.test_slicer.manager.get_display_schema(
+        display_schema = self.test_slicer.manager.display_schema(
             metrics=['bar'],
         )
 
@@ -747,7 +747,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
 
     def test_date_dimension_default_interval(self):
-        display_schema = self.test_slicer.manager.get_display_schema(
+        display_schema = self.test_slicer.manager.display_schema(
             metrics=['foo'],
             dimensions=['date'],
         )
@@ -765,7 +765,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
 
     def test_numeric_dimension_default_interval(self):
-        display_schema = self.test_slicer.manager.get_display_schema(
+        display_schema = self.test_slicer.manager.display_schema(
             metrics=['foo'],
             dimensions=['clicks'],
         )
@@ -783,7 +783,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
 
     def test_categorical_dimension(self):
-        display_schema = self.test_slicer.manager.get_display_schema(
+        display_schema = self.test_slicer.manager.display_schema(
             metrics=['foo'],
             dimensions=['locale'],
         )
@@ -802,7 +802,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
 
     def test_unique_dimension_single_id(self):
-        display_schema = self.test_slicer.manager.get_display_schema(
+        display_schema = self.test_slicer.manager.display_schema(
             metrics=['foo'],
             dimensions=['account'],
         )
@@ -820,7 +820,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
 
     def test_unique_dimension_composite_id(self):
-        display_schema = self.test_slicer.manager.get_display_schema(
+        display_schema = self.test_slicer.manager.display_schema(
             metrics=['foo'],
             dimensions=['keyword'],
         )
@@ -839,7 +839,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
 
     def test_multiple_metrics_and_dimensions(self):
-        display_schema = self.test_slicer.manager.get_display_schema(
+        display_schema = self.test_slicer.manager.display_schema(
             metrics=['foo', 'bar'],
             dimensions=[('date', DatetimeDimension.month), ('clicks', 50, 100), 'locale', 'account'],
         )
@@ -865,7 +865,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
 
     def test_reference_wow_with_date(self):
-        display_schema = self.test_slicer.manager.get_display_schema(
+        display_schema = self.test_slicer.manager.display_schema(
             metrics=['foo'],
             dimensions=['date'],
             references=[WoW('date')],
@@ -886,7 +886,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
 
 class SlicerSchemaJoinTests(SlicerSchemaTests):
     def test_metric_with_join(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['piddle'],
         )
 
@@ -901,7 +901,7 @@ class SlicerSchemaJoinTests(SlicerSchemaTests):
         self.assertEqual('SUM("join"."piddle")', str(query_schema['metrics']['piddle']))
 
     def test_metric_with_complex_join(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['paddle'],
         )
 
@@ -916,7 +916,7 @@ class SlicerSchemaJoinTests(SlicerSchemaTests):
         self.assertEqual('SUM("join"."paddle"+"test"."foo")', str(query_schema['metrics']['paddle']))
 
     def test_dimension_with_join(self):
-        query_schema = self.test_slicer.manager.get_query_schema(
+        query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['blah'],
         )

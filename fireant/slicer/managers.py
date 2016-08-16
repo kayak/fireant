@@ -25,7 +25,7 @@ class SlicerManager(QueryManager):
         df = self.data(metrics=metrics, dimensions=dimensions,
                        metric_filters=metric_filters, dimension_filters=dimension_filters,
                        references=references, operations=operations)
-        display_schema = self.get_display_schema(metrics, dimensions, references)
+        display_schema = self.display_schema(metrics, dimensions, references)
         return tx.transform(df, display_schema)
 
     def data(self, metrics=tuple(), dimensions=tuple(),
@@ -64,9 +64,9 @@ class SlicerManager(QueryManager):
             raise SlicerException('Unable to execute queries until a database is configured.  Please import '
                                   '`fireant.settings` and set some value to `settings.database`.')
 
-        query_schema = self.get_query_schema(metrics=metrics, dimensions=dimensions,
-                                             metric_filters=metric_filters, dimension_filters=dimension_filters,
-                                             references=references, operations=operations)
+        query_schema = self.query_schema(metrics=metrics, dimensions=dimensions,
+                                         metric_filters=metric_filters, dimension_filters=dimension_filters,
+                                         references=references, operations=operations)
 
         data_frame = self._query_data(**query_schema)
 
@@ -81,9 +81,9 @@ class SlicerManager(QueryManager):
 
         return data_frame
 
-    def get_query_schema(self, metrics=None, dimensions=None,
-                         metric_filters=None, dimension_filters=None,
-                         references=None, operations=None):
+    def query_schema(self, metrics=None, dimensions=None,
+                     metric_filters=None, dimension_filters=None,
+                     references=None, operations=None):
 
         if not metrics:
             raise ValueError('Invalid slicer request.  At least one metric is required to build a query.')
@@ -108,7 +108,7 @@ class SlicerManager(QueryManager):
                        for dimension in operation.schemas(self.slicer)],
         }
 
-    def get_display_schema(self, metrics=None, dimensions=None, references=None):
+    def display_schema(self, metrics=None, dimensions=None, references=None):
         """
         Builds a display schema for
 
@@ -279,6 +279,6 @@ class TransformerManager(object):
                                 metric_filters=metric_filters, dimension_filters=dimension_filters,
                                 references=references, operations=operations)
 
-        display_schema = self._manager.get_display_schema(metrics, dimensions, references)
+        display_schema = self._manager.display_schema(metrics, dimensions, references)
 
         return tx.transform(df, display_schema)
