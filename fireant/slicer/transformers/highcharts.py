@@ -85,20 +85,18 @@ class HighchartsLineTransformer(Transformer):
         return reordered
 
     def _make_series(self, data_frame, dim_ordinal, display_schema, reference=None):
-        # This value represents how many iterations over data_frame items per yAxis we have.  It's the product of
-        # non-metric levels of the data_frame's columns. We want metrics to share the same yAxis for all dimensions.
-        yaxis_span = (np.product([len(l) for l in data_frame.columns.levels[1:]])
-                      if isinstance(data_frame.columns, pd.MultiIndex)
-                      else 1)
+        metrics = list(data_frame.columns.levels[0]
+                       if isinstance(data_frame.columns, pd.MultiIndex)
+                       else data_frame.columns)
 
-        return [self._make_series_item(idx, item, dim_ordinal, display_schema, int(i // yaxis_span), reference)
-                for i, (idx, item) in enumerate(data_frame.iteritems())]
+        return [self._make_series_item(idx, item, dim_ordinal, display_schema, metrics, reference)
+                for idx, item in data_frame.iteritems()]
 
-    def _make_series_item(self, idx, item, dim_ordinal, display_schema, y_axis, reference):
+    def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference):
         return {
             'name': self._format_label(idx, dim_ordinal, display_schema, reference),
             'data': self._format_data(item),
-            'yAxis': y_axis,
+            'yAxis': metrics.index(idx[0] if isinstance(idx, tuple) else idx),
             'dashStyle': 'Dot' if reference else 'Solid'
         }
 
@@ -187,13 +185,15 @@ class HighchartsLineTransformer(Transformer):
 
 
 class HighchartsColumnTransformer(HighchartsLineTransformer):
-    def _make_series_item(self, idx, item, dim_ordinal, display_schema, y_axis, reference):
+    chart_type = 'column'
+
+    def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference):
         return {
             'name': self._format_label(idx, dim_ordinal, display_schema, reference),
             'data': [_format_data_point(x)
                      for x in item
                      if not np.isnan(x)],
-            'yAxis': y_axis
+            'yAxis': metrics.index(idx[0] if isinstance(idx, tuple) else idx),
         }
 
     def xaxis_options(self, data_frame, dim_ordinal, display_schema):
@@ -232,6 +232,9 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
         category_dimension = display_schema['dimensions'][0]
         if 'label_options' in category_dimension:
             return [category_dimension['label_options'].get(dim, dim)
+                    # Pandas gives both NaN or None in the index depending on whether a level was unstacked
+                    if dim and not (isinstance(dim, float) and np.isnan(dim))
+                    else 'Totals'
                     for dim in data_frame.index]
 
         if 'label_field' in category_dimension:
