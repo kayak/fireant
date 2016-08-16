@@ -318,7 +318,7 @@ For each |FeatureReference|, there are the following variations:
 
 .. code-block:: python
 
-    from fireant.slicer import WoW, DeltaMoM, DeltaQoQ
+    from fireant.slicer.references import WoW, DeltaMoM, DeltaQoQ
 
     slicer.notebook.column_index_table(
         metrics=['clicks', 'conversions'],
@@ -329,3 +329,29 @@ For each |FeatureReference|, there are the following variations:
 .. note::
 
     For any reference, the comparison is made for the same days of the week.
+
+
+Post-Processing Operations
+--------------------------
+
+Operations include extra computations that modify the final results.
+
+Totals
+""""""
+
+Totals adds ``ROLLUP`` to the SQL query to load the data and aggregated across dimensions.  It requires one or more dimension keys as parameters for the dimensions that should be totaled.  The below example will add an extra line with the total clicks and conversions for each date in addition to the three lines for each device type, desktop, mobile and tablet.
+
+.. code-block:: python
+
+    from fireant.slicer.operations import Totals
+
+    slicer.notebook.line_chart(
+        metrics=['clicks', 'conversions'],
+        dimensions=['date', 'device'],
+        operations=[Totals('device')],
+    )
+
+L1 and L2 Loss
+""""""""""""""
+
+Coming soon

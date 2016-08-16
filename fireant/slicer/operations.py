@@ -13,9 +13,9 @@ class Operation(object):
         raise NotImplementedError
 
 
-class Rollup(Operation):
-    def __init__(self, dimension_keys):
-        super(Rollup, self).__init__('rollup')
+class Totals(Operation):
+    def __init__(self, *dimension_keys):
+        super(Totals, self).__init__('rollup')
         self.dimension_keys = dimension_keys
 
     def schemas(self, slicer):
