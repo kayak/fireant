@@ -1,16 +1,17 @@
 # coding: utf-8
 import numpy as np
 import pandas as pd
+from future.types.newstr import newstr
 
 from .base import Transformer
 
 
 def _format_data_point(value):
-    if isinstance(value, str):
-        return value
+    if isinstance(value, (str, newstr)):
+        return str(value)
     if isinstance(value, pd.Timestamp):
         return value.strftime('%Y-%m-%dT%H:%M:%S')
-    if np.isnan(value):
+    if value is None or np.isnan(value):
         return None
     if isinstance(value, np.int64):
         # Cannot transform np.int64 to json
@@ -73,24 +74,28 @@ class DataTablesRowIndexTransformer(Transformer):
         for dimension in row_dimensions:
             key = dimension['label']
 
-            if not isinstance(idx, tuple):
-                value = _format_data_point(idx)
-
-            elif 1 < len(dimension['id_fields']) or 'label_field' in dimension:
+            if 'label_field' in dimension:
                 fields = dimension['id_fields'] + [dimension.get('label_field')]
 
                 value = {id_field: idx[dim_ordinal[id_field]]
-                         for id_field in filter(None, fields)}
+                         for id_field in fields
+                         if id_field is not None}
 
-            else:
+                yield key, value
+                continue
+
+            if isinstance(idx, tuple):
                 id_field = dimension['id_fields'][0]
                 value = _format_data_point(idx[dim_ordinal[id_field]])
 
-                if value is None:
-                    value = 'Total'
+            else:
+                value = _format_data_point(idx)
 
-                if 'label_options' in dimension:
-                    value = dimension['label_options'].get(value, value)
+            if 'label_options' in dimension:
+                value = dimension['label_options'].get(value, value)
+
+            if value is None:
+                value = 'Total'
 
             yield key, value
 

@@ -4,6 +4,8 @@ from unittest import TestCase
 
 from fireant import settings
 from fireant.slicer import *
+from fireant.slicer.operations import Totals
+from fireant.slicer.references import *
 from fireant.tests.database.mock_database import TestDatabase
 from pypika import functions as fn, Tables, Case
 
@@ -702,7 +704,7 @@ class SlicerSchemaReferenceTests(SlicerSchemaTests):
         query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['date', 'locale', 'account'],
-            operations=[Rollup(['locale', 'account'])],
+            operations=[Totals('locale', 'account')],
         )
 
         self.assertTrue({'table', 'metrics', 'dimensions', 'rollup'}.issubset(query_schema.keys()))
