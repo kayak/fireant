@@ -22,7 +22,7 @@ class WidgetGroupManager(object):
             references=enabled_references,
             operations=enabled_operations
         )
-        display_schema = self.widget_group.slicer.manager.get_display_schema(
+        display_schema = self.widget_group.slicer.manager.display_schema(
             metrics=enabled_metrics,
             dimensions=enabled_dimensions
         )

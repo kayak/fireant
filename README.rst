@@ -103,15 +103,27 @@ To configure a slicer, instantiate a |ClassSlicer| with a list of |ClassMetric| 
 Querying Data and Rendering Charts
 ----------------------------------
 
-Once a slicer is configured, it is ready to be used.  Each slicer comes with a |ClassSlicerManager| which exposes an interface for executing queries and transforming the results.  Each function in the manager uses the same signature.  The principal function is ``data`` and all othe functions call this function first.  The additional functions provide a transformation to the data.
+Once a slicer is configured, it is ready to be used.  Each slicer comes with a |ClassSlicerManager| and several |ClassTransformerManager| which expose an interface for executing queries and transforming the results.  Each function in the manager uses the same signature.  The principal function is ``data`` and all othe functions call this function first.  The additional functions provide a transformation to the data.
+
+The notebook transformer bundle includes different functions for use in Jupyter_ notebooks.  Other formats return results in JSON format.
 
 .. _manager_api_start:
 
 * ``my_slicer.manager.data`` - A Pandas_ data frame indexed by the selected dimensions.
-* ``my_slicer.manager.line_chart`` - A Highcharts_ line chart.
-* ``my_slicer.manager.bar_chart`` - A Highcharts_ bar chart.
-* ``my_slicer.manager.row_index_table`` - A Datatables_ row-indexed table.
-* ``my_slicer.manager.column_index_table`` - A Datatables_ column-indexed table.
+
+* ``my_slicer.notebook.row_index_table`` - A Datatables_ row-indexed table.
+* ``my_slicer.notebook.column_index_table`` - A Datatables_ column-indexed table.
+
+* ``my_slicer.notebook.line_chart`` - A Matplotlib_ line chart. (Requires [matplotlib] dependency)
+* ``my_slicer.notebook.column_chart`` - A Matplotlib_ column chart. (Requires [matplotlib] dependency)
+* ``my_slicer.notebook.bar_chart`` - A Matplotlib_ bar chart. (Requires [matplotlib] dependency)
+
+* ``my_slicer.highcharts.line_chart`` - A Highcharts_ line chart.
+* ``my_slicer.highcharts.column_chart`` - A Highcharts_ column chart.
+* ``my_slicer.highcharts.bar_chart`` - A Highcharts_ bar chart.
+
+* ``my_slicer.datatables.row_index_table`` - A Datatables_ row-indexed table.
+* ``my_slicer.datatables.column_index_table`` - A Datatables_ column-indexed table.
 
 .. code-block:: python
 
@@ -251,6 +263,8 @@ limitations under the License.
 
 .. _PyPika: https://github.com/kayak/pypika/
 .. _Pandas: http://pandas.pydata.org/
+.. _Jupyter: http://jupyter.org/
+.. _Matplotlib: http://matplotlib.org/
 .. _Highcharts: http://www.highcharts.com/
 .. _Datatables: https://datatables.net/
 

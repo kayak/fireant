@@ -1,11 +1,11 @@
 # coding: utf-8
-from fireant.slicer.transformers import TableIndex, CSVTransformer
+from fireant.slicer.transformers import CSVRowIndexTransformer, CSVColumnIndexTransformer
 from fireant.tests.slicer.transformers.base import BaseTransformerTests
 
 
 class CSVRowIndexTransformerTests(BaseTransformerTests):
     maxDiff = None
-    csv_tx = CSVTransformer(TableIndex.row_index)
+    csv_tx = CSVRowIndexTransformer()
 
     def test_no_dims_single_metric(self):
         df = self.no_dims_multi_metric_df
@@ -196,7 +196,7 @@ class CSVRowIndexTransformerTests(BaseTransformerTests):
 
 class CSVColumnIndexTransformerTests(CSVRowIndexTransformerTests):
     maxDiff = None
-    csv_tx = CSVTransformer(TableIndex.column_index)
+    csv_tx = CSVColumnIndexTransformer()
 
     def test_cont_cat_dim_single_metric(self):
         df = self.cont_cat_dims_single_metric_df

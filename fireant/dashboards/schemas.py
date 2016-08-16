@@ -1,8 +1,7 @@
 # coding: utf-8
 from fireant.dashboards.managers import WidgetGroupManager
 
-from fireant.slicer.transformers import DataTablesTransformer, HighchartsTransformer, HighchartsColumnTransformer, \
-    TableIndex
+from fireant.slicer.transformers import *
 
 
 class Widget(object):
@@ -23,35 +22,35 @@ class LineChartWidget(Widget):
     """
     The `LineChartWidget` class represents a Highcharts line chart.
     """
-    transformer = HighchartsTransformer()
+    transformer = HighchartsLineTransformer()
 
 
 class BarChartWidget(Widget):
     """
     The `BarChartWidget` class represents a Highcharts bar chart.
     """
-    transformer = HighchartsColumnTransformer(HighchartsColumnTransformer.bar)
+    transformer = HighchartsBarTransformer()
 
 
 class ColumnChartWidget(Widget):
     """
     The `ColumnChartWidget` class represents a Highcharts column chart.
     """
-    transformer = HighchartsColumnTransformer(HighchartsColumnTransformer.column)
+    transformer = HighchartsColumnTransformer()
 
 
 class RowIndexTableWidget(Widget):
     """
     The `RowIndexTableWidget` class represents datatables.js data table with row-indexed dimensions.
     """
-    transformer = DataTablesTransformer(TableIndex.row_index)
+    transformer = DataTablesRowIndexTransformer()
 
 
 class ColumnIndexTableWidget(Widget):
     """
     The `ColumnIndexTableWidget` class represents datatables.js data table with column-indexed dimensions.
     """
-    transformer = DataTablesTransformer(TableIndex.column_index)
+    transformer = DataTablesColumnIndexTransformer()
 
 
 class WidgetGroup(object):

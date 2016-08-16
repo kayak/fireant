@@ -5,15 +5,6 @@ from collections import OrderedDict
 
 from pypika import functions as fn
 from .queries import QueryManager
-from .transformers import (TableIndex, HighchartsTransformer, HighchartsColumnTransformer, DataTablesTransformer)
-
-web_transformers = {
-    'line_chart': HighchartsTransformer(),
-    'column_chart': HighchartsColumnTransformer(HighchartsColumnTransformer.column),
-    'bar_chart': HighchartsColumnTransformer(HighchartsColumnTransformer.bar),
-    'row_index_table': DataTablesTransformer(TableIndex.row_index),
-    'column_index_table': DataTablesTransformer(TableIndex.column_index),
-}
 
 
 class SlicerException(Exception):
@@ -21,16 +12,11 @@ class SlicerException(Exception):
 
 
 class SlicerManager(QueryManager):
-    def __init__(self, slicer, transformers=None):
+    def __init__(self, slicer):
         """
         :param slicer:
-        :param transformers:
         """
         self.slicer = slicer
-
-        # Creates a function on the slicer for each transformer
-        for tx_key, tx in (transformers or web_transformers).items():
-            setattr(self, tx_key, functools.partial(self._get_and_transform_data, tx))
 
     def _get_and_transform_data(self, tx, metrics=tuple(), dimensions=tuple(),
                                 metric_filters=tuple(), dimension_filters=tuple(),
@@ -39,7 +25,7 @@ class SlicerManager(QueryManager):
         df = self.data(metrics=metrics, dimensions=dimensions,
                        metric_filters=metric_filters, dimension_filters=dimension_filters,
                        references=references, operations=operations)
-        display_schema = self.get_display_schema(metrics, dimensions, references)
+        display_schema = self.display_schema(metrics, dimensions, references)
         return tx.transform(df, display_schema)
 
     def data(self, metrics=tuple(), dimensions=tuple(),
@@ -78,9 +64,9 @@ class SlicerManager(QueryManager):
             raise SlicerException('Unable to execute queries until a database is configured.  Please import '
                                   '`fireant.settings` and set some value to `settings.database`.')
 
-        query_schema = self.get_query_schema(metrics=metrics, dimensions=dimensions,
-                                             metric_filters=metric_filters, dimension_filters=dimension_filters,
-                                             references=references, operations=operations)
+        query_schema = self.query_schema(metrics=metrics, dimensions=dimensions,
+                                         metric_filters=metric_filters, dimension_filters=dimension_filters,
+                                         references=references, operations=operations)
 
         data_frame = self._query_data(**query_schema)
 
@@ -95,9 +81,9 @@ class SlicerManager(QueryManager):
 
         return data_frame
 
-    def get_query_schema(self, metrics=None, dimensions=None,
-                         metric_filters=None, dimension_filters=None,
-                         references=None, operations=None):
+    def query_schema(self, metrics=None, dimensions=None,
+                     metric_filters=None, dimension_filters=None,
+                     references=None, operations=None):
 
         if not metrics:
             raise ValueError('Invalid slicer request.  At least one metric is required to build a query.')
@@ -111,8 +97,8 @@ class SlicerManager(QueryManager):
             'joins': schema_joins,
             'metrics': schema_metrics,
             'dimensions': schema_dimensions,
-            'mfilters': self._filters_schema(self.slicer.metrics, metric_filters or [], self._default_metric_definition,
-                                             element_label='metric'),
+            'mfilters': self._filters_schema(self.slicer.metrics, metric_filters or [],
+                                             self._default_metric_definition, element_label='metric'),
             'dfilters': self._filters_schema(self.slicer.dimensions, dimension_filters or [],
                                              self._default_dimension_definition),
             'references': self._references_schema(references, dimensions or [], schema_dimensions),
@@ -122,7 +108,7 @@ class SlicerManager(QueryManager):
                        for dimension in operation.schemas(self.slicer)],
         }
 
-    def get_display_schema(self, metrics=None, dimensions=None, references=None):
+    def display_schema(self, metrics=None, dimensions=None, references=None):
         """
         Builds a display schema for
 
@@ -275,3 +261,24 @@ class SlicerManager(QueryManager):
 
     def _default_metric_definition(self, key):
         return fn.Sum(self.slicer.table.field(key))
+
+
+class TransformerManager(object):
+    def __init__(self, manager, transformers):
+        self._manager = manager
+
+        # Creates a function on the slicer for each transformer
+        for tx_key, tx in transformers.items():
+            setattr(self, tx_key, functools.partial(self._get_and_transform_data, tx))
+
+    def _get_and_transform_data(self, tx, metrics=tuple(), dimensions=tuple(),
+                                metric_filters=tuple(), dimension_filters=tuple(),
+                                references=tuple(), operations=tuple()):
+        # Loads data and transforms it with a given transformer.
+        df = self._manager.data(metrics=metrics, dimensions=dimensions,
+                                metric_filters=metric_filters, dimension_filters=dimension_filters,
+                                references=references, operations=operations)
+
+        display_schema = self._manager.display_schema(metrics, dimensions, references)
+
+        return tx.transform(df, display_schema)

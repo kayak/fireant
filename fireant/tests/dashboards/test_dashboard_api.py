@@ -56,7 +56,7 @@ class DashboardTests(TestCase):
         cls.mock_dataframe = MagicMock()
         cls.mock_display_schema = {'OK'}
         cls.test_slicer.manager.data = Mock(return_value=cls.mock_dataframe)
-        cls.test_slicer.manager.get_display_schema = Mock(return_value=cls.mock_display_schema)
+        cls.test_slicer.manager.display_schema = Mock(return_value=cls.mock_display_schema)
 
     def assert_slicer_queried(self, metrics, dimensions=None, mfilters=None, dfilters=None,
                               references=None, operations=None):
@@ -68,7 +68,7 @@ class DashboardTests(TestCase):
             references=references or [],
             operations=operations or [],
         )
-        self.test_slicer.manager.get_display_schema.assert_called_with(
+        self.test_slicer.manager.display_schema.assert_called_with(
             metrics=metrics,
             dimensions=dimensions or [],
         )

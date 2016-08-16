@@ -5,20 +5,21 @@ from unittest import TestCase
 import numpy as np
 import pandas as pd
 
-from fireant.slicer.transformers import HighchartsTransformer, TransformationException, HighchartsColumnTransformer
+from fireant.slicer.transformers import (HighchartsLineTransformer, TransformationException,
+                                         HighchartsColumnTransformer,
+                                         HighchartsBarTransformer)
 from fireant.slicer.transformers import highcharts
 from fireant.tests.slicer.transformers.base import BaseTransformerTests
 
 
-class HighChartsLineTransformerTests(BaseTransformerTests):
+class HighchartsLineTransformerTests(BaseTransformerTests):
     """
     Line charts work with the following requests:
 
     1-cont-dim, *-metric
     1-cont-dim, *-dim, *-metric
     """
-    hc_tx = HighchartsTransformer()
-    type = HighchartsTransformer.line
+    hc_tx = HighchartsLineTransformer()
 
     def evaluate_result(self, df, result):
         result_data = [series['data'] for series in result['series']]
@@ -33,7 +34,7 @@ class HighChartsLineTransformerTests(BaseTransformerTests):
         self.assertSetEqual({'text'}, set(result['title'].keys()))
         self.assertIsNone(result['title']['text'])
 
-        self.assertEqual(self.type, result['chart']['type'])
+        self.assertEqual(HighchartsLineTransformer.chart_type, result['chart']['type'])
 
         self.assertSetEqual({'type'}, set(result['xAxis'].keys()))
         self.assertEqual(xaxis_type, result['xAxis']['type'])
@@ -223,14 +224,14 @@ class HighChartsLineTransformerTests(BaseTransformerTests):
             self.hc_tx.transform(df, self.no_dims_multi_metric_schema)
 
 
-class HighChartsColumnTransformerTests(BaseTransformerTests):
+class HighchartsColumnTransformerTests(BaseTransformerTests):
     """
     Bar and Column charts work with the following requests:
 
     1-dim, *-metric
     2-dim, 1-metric
     """
-    type = HighchartsColumnTransformer.column
+    type = HighchartsColumnTransformer.chart_type
 
     def evaluate_chart_options(self, result, n_results=1, categories=None):
         self.assertSetEqual({'title', 'series', 'chart', 'tooltip', 'xAxis', 'yAxis'}, set(result.keys()))
@@ -252,7 +253,7 @@ class HighChartsColumnTransformerTests(BaseTransformerTests):
 
     @classmethod
     def setUpClass(cls):
-        cls.hc_tx = HighchartsColumnTransformer(cls.type)
+        cls.hc_tx = HighchartsColumnTransformer()
 
     def evaluate_result(self, df, result):
         result_data = [series['data'] for series in result['series']]
@@ -356,21 +357,30 @@ class HighChartsColumnTransformerTests(BaseTransformerTests):
             self.hc_tx.transform(df, self.cat_cat_dims_multi_metric_schema)
 
 
-class HighChartsBarTransformerTests(HighChartsColumnTransformerTests):
-    type = HighchartsColumnTransformer.bar
+class HighchartsBarTransformerTests(HighchartsColumnTransformerTests):
+    type = HighchartsBarTransformer.chart_type
+
+    @classmethod
+    def setUpClass(cls):
+        cls.hc_tx = HighchartsBarTransformer()
 
 
 class HighchartsUtilityTests(TestCase):
     def test_str_data_point(self):
-        result = highcharts.format_data_point('abc')
+        result = highcharts._format_data_point('abc')
         self.assertEqual('abc', result)
 
     def test_int64_data_point(self):
         # Needs to be cast to python int
-        result = highcharts.format_data_point(np.int64(1))
+        result = highcharts._format_data_point(np.int64(1))
         self.assertEqual(int(1), result)
 
     def test_datetime_data_point(self):
         # Needs to be converted to milliseconds
-        result = highcharts.format_data_point(pd.Timestamp(date(2000, 1, 1)))
+        result = highcharts._format_data_point(pd.Timestamp(date(2000, 1, 1)))
         self.assertEqual(946684800000, result)
+
+    def test_nan_data_point(self):
+        # Needs to be cast to python int
+        result = highcharts._format_data_point(np.nan)
+        self.assertIsNone(result)

@@ -6,22 +6,34 @@ Installation and Setup
    :end-before:  _installation_end:
 
 
+Database Connector add-ons
+--------------------------
+
+
 By default, |Brand| does not include any database drivers.  You can optionally include one or provide your own.
 
 Vertica
-"""""""
 
 .. code-block:: bash
 
     pip install fireant[vertica]
 
+Transformer add-ons
+-------------------
 
-Once you have added |Brand| to your project, you must provide some additional settings.  A database connection is
-required in order to execute queries.  Currently, only Vertica is supported via ``vertica_python``, however future plans
-include support for various other databases such as MySQL and Oracle.
+There are also optional transformer packages which give access to different widget libraries.  This only applies to transformers that require additional packages.  All other transformers are included by default.
 
-To configure a database, instantiate a subclass of |ClassDatabase| and set it in ``fireant.settings``.  This
-must be only set once.  At the present, only one database connection is supported.
+
+matplotlib
+
+.. code-block:: bash
+
+    pip install fireant[matplotlib]
+
+
+Once you have added |Brand| to your project, you must provide some additional settings.  A database connection is required in order to execute queries.  Currently, only Vertica is supported via ``vertica_python``, however future plans include support for various other databases such as MySQL and Oracle.
+
+To configure a database, instantiate a subclass of |ClassDatabase| and set it in ``fireant.settings``.  This must be only set once.  At the present, only one database connection is supported.
 
 
 .. code-block:: python
@@ -79,8 +91,7 @@ Instead of using one of the built in database connectors, you can provide your o
         password='password123',
     )
 
-In a custom database connector, the ``connect`` function must be overridden to provide a ``connection`` to the database.
-The ``round_date`` function must also be overridden since there is no common way to round dates in SQL databases.
+In a custom database connector, the ``connect`` function must be overridden to provide a ``connection`` to the database. The ``round_date`` function must also be overridden since there is no common way to round dates in SQL databases.
 
 
 
