@@ -1,7 +1,7 @@
 # coding: utf-8
 import numpy as np
 import pandas as pd
-from future.types import newstr
+from future.types.newstr import newstr
 
 from .base import Transformer
 
