@@ -428,7 +428,7 @@ class DatatablesUtilityTests(TestCase):
 
     def test_str_data_point(self):
         result = datatables._format_data_point(u'abc')
-        self.assertEqual(u'abc', result)
+        self.assertEqual('abc', result)
 
     def test_int64_data_point(self):
         # Needs to be cast to python int

@@ -1,8 +1,4 @@
 # coding: utf-8
-
-# This import is necessary since Pandas uses it in some places
-from __future__ import unicode_literals
-
 import numpy as np
 import pandas as pd
 from builtins import str

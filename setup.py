@@ -58,7 +58,7 @@ setup(
         'pypika==0.0.26'
     ],
     tests_require=[
-        'mock',
+        'mock', 'vertica-python>=0.6'
     ],
     extras_require={
         'vertica': ['vertica-python>=0.6'],
