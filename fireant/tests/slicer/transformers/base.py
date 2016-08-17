@@ -1,4 +1,5 @@
 # coding: utf-8
+
 import unittest
 from datetime import date
 
@@ -37,13 +38,13 @@ class BaseTransformerTests(unittest.TestCase):
     }
 
     cont_idx = pd.Index([0, 1, 2, 3, 4, 5, 6, 7], name='cont')
-    cat1_idx = pd.Index(['a', 'b'], name='cat1')
-    cat2_idx = pd.Index(['y', 'z'], name='cat2')
+    cat1_idx = pd.Index([u'a', u'b'], name='cat1')
+    cat2_idx = pd.Index([u'y', u'z'], name='cat2')
 
-    uni1_idx = pd.MultiIndex.from_tuples([('Uni1_1', 1), ('Uni1_2', 2), ('Uni1_3', 3)],
+    uni1_idx = pd.MultiIndex.from_tuples([(u'Uni1_1', 1), (u'Uni1_2', 2), (u'Uni1_3', 3)],
                                          names=['uni1_label', 'uni1_id'])
-    uni2_idx = pd.MultiIndex.from_tuples([('Uni2_1', 1, 100), ('Uni2_2', 2, 200), ('Uni2_3', 3, 300),
-                                          ('Uni2_4', 4, 400)], names=['uni2_label', 'uni2_id0', 'uni2_id1'])
+    uni2_idx = pd.MultiIndex.from_tuples([(u'Uni2_1', 1, 100), (u'Uni2_2', 2, 200), (u'Uni2_3', 3, 300),
+                                          (u'Uni2_4', 4, 400)], names=['uni2_label', 'uni2_id0', 'uni2_id1'])
 
     datetime_idx = pd.DatetimeIndex(pd.date_range(start=date(2000, 1, 1), periods=8), name='dt')
     cont_cat_idx = pd.MultiIndex.from_product([cont_idx, cat1_idx], names=['cont', 'cat1'])

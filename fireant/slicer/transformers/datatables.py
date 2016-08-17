@@ -1,13 +1,17 @@
 # coding: utf-8
+
+# This import is necessary since Pandas uses it in some places
+from __future__ import unicode_literals
+
 import numpy as np
 import pandas as pd
-from future.types.newstr import newstr
+from builtins import str
 
 from .base import Transformer
 
 
 def _format_data_point(value):
-    if isinstance(value, (str, newstr)):
+    if isinstance(value, str):
         return str(value)
     if isinstance(value, pd.Timestamp):
         return value.strftime('%Y-%m-%dT%H:%M:%S')
