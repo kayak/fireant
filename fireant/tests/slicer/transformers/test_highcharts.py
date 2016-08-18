@@ -112,14 +112,14 @@ class HighchartsLineTransformerTests(BaseTransformerTests):
 
         result = self.hc_tx.transform(df, self.cont_uni_dims_single_metric_schema)
 
-        self.evaluate_chart_options(result, num_series=4)
+        self.evaluate_chart_options(result, num_series=3)
 
         self.assertSetEqual(
-            {'One (Uni2_1)', 'One (Uni2_2)', 'One (Uni2_3)', 'One (Uni2_4)'},
+            {'One (Aa)', 'One (Bb)', 'One (Cc)'},
             {series['name'] for series in result['series']}
         )
 
-        self.evaluate_result(df.unstack(level=[1, 2, 3]), result)
+        self.evaluate_result(df.unstack(level=[1, 2]), result)
 
     def test_cont_uni_dim_multi_metric(self):
         # Tests transformation of two metrics with a unique dimension with two keys and label
@@ -127,15 +127,14 @@ class HighchartsLineTransformerTests(BaseTransformerTests):
 
         result = self.hc_tx.transform(df, self.cont_uni_dims_multi_metric_schema)
 
-        self.evaluate_chart_options(result, num_series=8)
+        self.evaluate_chart_options(result, num_series=6)
 
         self.assertSetEqual(
-            {'One (Uni2_1)', 'One (Uni2_2)', 'One (Uni2_3)', 'One (Uni2_4)',
-             'Two (Uni2_1)', 'Two (Uni2_2)', 'Two (Uni2_3)', 'Two (Uni2_4)'},
+            {'One (Aa)', 'One (Bb)', 'One (Cc)', 'Two (Aa)', 'Two (Bb)', 'Two (Cc)'},
             {series['name'] for series in result['series']}
         )
 
-        self.evaluate_result(df.unstack(level=[1, 2, 3]), result)
+        self.evaluate_result(df.unstack(level=[1, 2]), result)
 
     def test_double_dimension_single_metric(self):
         # Tests transformation of a single-metric, double-dimension result
@@ -185,21 +184,21 @@ class HighchartsLineTransformerTests(BaseTransformerTests):
 
     def test_mixed_order_dimensions(self):
         # Tests transformation of a multi-metric, double-dimension result
-        df = self.cont_cat_uni_dims_multi_metric_df.reorder_levels([1, 2, 4, 0, 3])
+        df = self.cont_cat_uni_dims_multi_metric_df.reorder_levels([3, 2, 0, 1])
 
         result = self.hc_tx.transform(df, self.cont_cat_uni_dims_multi_metric_schema)
 
-        self.evaluate_chart_options(result, num_series=16)
+        self.evaluate_chart_options(result, num_series=12)
 
         self.assertSetEqual(
-            {'One (A, Uni2_1)', 'One (A, Uni2_2)', 'One (A, Uni2_3)', 'One (A, Uni2_4)',
-             'One (B, Uni2_1)', 'One (B, Uni2_2)', 'One (B, Uni2_3)', 'One (B, Uni2_4)',
-             'Two (A, Uni2_1)', 'Two (A, Uni2_2)', 'Two (A, Uni2_3)', 'Two (A, Uni2_4)',
-             'Two (B, Uni2_1)', 'Two (B, Uni2_2)', 'Two (B, Uni2_3)', 'Two (B, Uni2_4)'},
+            {'One (A, Aa)', 'One (A, Bb)', 'One (A, Cc)',
+             'One (B, Aa)', 'One (B, Bb)', 'One (B, Cc)',
+             'Two (A, Aa)', 'Two (A, Bb)', 'Two (A, Cc)',
+             'Two (B, Aa)', 'Two (B, Bb)', 'Two (B, Cc)'},
             {series['name'] for series in result['series']}
         )
 
-        self.evaluate_result(df.unstack([0, 1, 2, 4]), result)
+        self.evaluate_result(df.unstack([0, 1, 3]), result)
 
     def test_rollup_triple_dimension_multi_metric(self):
         # Tests transformation of a multi-metric, double-dimension result
@@ -233,9 +232,9 @@ class HighchartsColumnTransformerTests(BaseTransformerTests):
     """
     type = HighchartsColumnTransformer.chart_type
 
-    def evaluate_chart_options(self, result, n_results=1, categories=None):
+    def evaluate_chart_options(self, result, num_results=1, categories=None):
         self.assertSetEqual({'title', 'series', 'chart', 'tooltip', 'xAxis', 'yAxis'}, set(result.keys()))
-        self.assertEqual(n_results, len(result['series']))
+        self.assertEqual(num_results, len(result['series']))
 
         self.assertSetEqual({'text'}, set(result['title'].keys()))
         self.assertIsNone(result['title']['text'])
@@ -266,7 +265,7 @@ class HighchartsColumnTransformerTests(BaseTransformerTests):
 
         result = self.hc_tx.transform(df, self.no_dims_multi_metric_schema)
 
-        self.evaluate_chart_options(result, n_results=8)
+        self.evaluate_chart_options(result, num_results=8)
 
         self.assertSetEqual(
             {'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight'},
@@ -296,7 +295,7 @@ class HighchartsColumnTransformerTests(BaseTransformerTests):
 
         result = self.hc_tx.transform(df, self.cat_dim_multi_metric_schema)
 
-        self.evaluate_chart_options(result, n_results=2, categories=['A', 'B'])
+        self.evaluate_chart_options(result, num_results=2, categories=['A', 'B'])
 
         self.assertSetEqual(
             {'One', 'Two'},
@@ -311,7 +310,7 @@ class HighchartsColumnTransformerTests(BaseTransformerTests):
 
         result = self.hc_tx.transform(df, self.cat_cat_dims_single_metric_schema)
 
-        self.evaluate_chart_options(result, n_results=2, categories=['A', 'B'])
+        self.evaluate_chart_options(result, num_results=2, categories=['A', 'B'])
 
         self.assertSetEqual(
             {'One (Y)', 'One (Z)'},
@@ -326,7 +325,7 @@ class HighchartsColumnTransformerTests(BaseTransformerTests):
 
         result = self.hc_tx.transform(df, self.uni_dim_single_metric_schema)
 
-        self.evaluate_chart_options(result, categories=['Uni1_1', 'Uni1_2', 'Uni1_3'])
+        self.evaluate_chart_options(result, categories=['Uni_1', 'Uni_2', 'Uni_3'])
 
         self.assertSetEqual(
             {'One'},
@@ -341,7 +340,7 @@ class HighchartsColumnTransformerTests(BaseTransformerTests):
 
         result = self.hc_tx.transform(df, self.uni_dim_multi_metric_schema)
 
-        self.evaluate_chart_options(result, n_results=2, categories=['Uni2_1', 'Uni2_2', 'Uni2_3', 'Uni2_4'])
+        self.evaluate_chart_options(result, num_results=2, categories=['Uni_1', 'Uni_2', 'Uni_3'])
 
         self.assertSetEqual(
             {'One', 'Two'},

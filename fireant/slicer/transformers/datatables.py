@@ -60,6 +60,8 @@ class DataTablesRowIndexTransformer(Transformer):
         # Replaces invalid values and unstacks the data frame for column_index tables.
         data_frame = data_frame.replace([np.inf, -np.inf], np.nan)
 
+        return data_frame
+
         if 1 < len(dimensions) and self.table_type == 'column':
             unstack_levels = list(range(
                 len(dimensions[0]['id_fields']),
@@ -72,21 +74,18 @@ class DataTablesRowIndexTransformer(Transformer):
     def _render_index_levels(self, idx, dim_ordinal, display_schema):
         row_dimensions = display_schema['dimensions'][:None if self.table_type == 'row' else 1]
         for dimension in row_dimensions:
-            key = dimension['label']
+            key = dimension['key']
+            label = dimension['label'] if 'label' in dimension else key
 
             if 'label_field' in dimension:
-                fields = dimension['id_fields'] + [dimension.get('label_field')]
-
-                value = {id_field: idx[dim_ordinal[id_field]]
-                         for id_field in fields
-                         if id_field is not None}
-
-                yield key, value
+                yield label, {
+                    'value': idx[dim_ordinal[key]],
+                    'display': idx[dim_ordinal[dimension['label_field']]]
+                }
                 continue
 
             if isinstance(idx, tuple):
-                id_field = dimension['id_fields'][0]
-                value = _format_data_point(idx[dim_ordinal[id_field]])
+                value = _format_data_point(idx[dim_ordinal[key]])
 
             else:
                 value = _format_data_point(idx)
@@ -97,7 +96,7 @@ class DataTablesRowIndexTransformer(Transformer):
             if value is None:
                 value = 'Total'
 
-            yield key, value
+            yield label, value
 
     def _render_column_levels(self, row, dim_ordinal, display_schema, reference_key=None):
         if isinstance(row.index, pd.MultiIndex):
@@ -150,7 +149,7 @@ class DataTablesRowIndexTransformer(Transformer):
             return idx[dim_ordinal[label_field]]
 
         if isinstance(idx, tuple):
-            id_field = dimension['id_fields'][0]
+            id_field = dimension['key']
             dimension_label = idx[dim_ordinal[id_field]]
 
         else:
@@ -210,6 +209,17 @@ class CSVRowIndexTransformer(DataTablesRowIndexTransformer):
 
 class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
     table_type = 'column'
+
+    def _prepare_data_frame(self, data_frame, dimensions):
+        # Replaces invalid values and unstacks the data frame for column_index tables.
+        data_frame = super(DataTablesColumnIndexTransformer, self)._prepare_data_frame(data_frame, dimensions)
+
+        if 1 < len(dimensions):
+            indices = 2 if 'label_field' in dimensions[0] else 1
+            num_levels = len(data_frame.index.levels)
+            return data_frame.unstack(level=list(range(indices, num_levels)))
+
+        return data_frame
 
 
 class CSVColumnIndexTransformer(DataTablesColumnIndexTransformer, CSVRowIndexTransformer):

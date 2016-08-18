@@ -73,13 +73,10 @@ class HighchartsLineTransformer(Transformer):
         }] * num_metrics
 
     def _reorder_index_levels(self, data_frame, display_schema):
-        dimension_orders = [id_field
+        dimension_orders = [key
                             for d in display_schema['dimensions']
-                            for id_field in
-                            (d['id_fields'] + (
-                                [d['label_field']]
-                                if 'label_field' in d
-                                else []))]
+                            for key in [d['key']] + ([d['label_field']] if 'label_field' in d else [])]
+
         reordered = data_frame.reorder_levels(data_frame.index.names.index(level)
                                               for level in dimension_orders)
         return reordered
@@ -157,7 +154,7 @@ class HighchartsLineTransformer(Transformer):
             label_field = dimension['label_field']
             return idx[dim_ordinal[label_field]]
 
-        id_field = dimension['id_fields'][0]
+        id_field = dimension['key']
         dim_label = idx[dim_ordinal[id_field]]
         if 'label_options' in dimension:
             dim_label = dimension['label_options'].get(dim_label, dim_label)
@@ -177,8 +174,7 @@ class HighchartsLineTransformer(Transformer):
 
     def _unstack_levels(self, dimensions, dim_ordinal):
         for dimension in dimensions:
-            for id_field in dimension['id_fields']:
-                yield dim_ordinal[id_field]
+            yield dim_ordinal[dimension['key']]
 
             if 'label_field' in dimension:
                 yield dim_ordinal[dimension['label_field']]

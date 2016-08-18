@@ -122,15 +122,13 @@ class CategoricalDimension(Dimension):
 
 
 class UniqueDimension(Dimension):
-    def __init__(self, key, label=None, label_field=None, id_fields=None, joins=None):
-        super(UniqueDimension, self).__init__(key=key, label=label, definition=id_fields, joins=joins)
+    def __init__(self, key, label=None, definition=None, label_field=None, joins=None):
+        super(UniqueDimension, self).__init__(key=key, label=label, definition=definition, joins=joins)
         # TODO label_field and definition here are redundant
         self.label_field = label_field
-        self.id_fields = id_fields
 
     def schemas(self, *args):
-        id_field_schemas = [('{key}_id{ordinal}'.format(key=self.key, ordinal=i), id_field)
-                            for i, id_field in enumerate(self.id_fields)]
+        id_field_schemas = [('{key}_id'.format(key=self.key), self.definition)]
         return id_field_schemas + [('{key}_label'.format(key=self.key), self.label_field)]
 
 

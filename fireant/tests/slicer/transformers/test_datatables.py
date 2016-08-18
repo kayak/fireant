@@ -39,13 +39,13 @@ class DataTablesRowIndexTransformerTests(BaseTransformerTests):
                              'Five', 'Six', 'Seven', 'Eight'}, set(d.keys()))
         self.assertEqual('row_0', d['DT_RowId'])
         self.assertEqual(0., d['One'])
-        self.assertEqual(.1, d['Two'])
-        self.assertEqual(.2, d['Three'])
-        self.assertEqual(.3, d['Four'])
-        self.assertEqual(.4, d['Five'])
-        self.assertEqual(.5, d['Six'])
-        self.assertEqual(.6, d['Seven'])
-        self.assertEqual(.7, d['Eight'])
+        self.assertEqual(1, d['Two'])
+        self.assertEqual(2, d['Three'])
+        self.assertEqual(3, d['Four'])
+        self.assertEqual(4, d['Five'])
+        self.assertEqual(5, d['Six'])
+        self.assertEqual(6, d['Seven'])
+        self.assertEqual(7, d['Eight'])
 
     def test_cont_dim_single_metric(self):
         # Tests transformation of a single metric with a single continuous dimension
@@ -117,11 +117,11 @@ class DataTablesRowIndexTransformerTests(BaseTransformerTests):
 
         self._evaluate_table(result, num_rows=3)
 
-        for i, (data, ((df_label, df_id0), row)) in enumerate(zip(result['data'], df.iterrows())):
-            self.assertSetEqual({'DT_RowId', 'Uni1', 'One'}, set(data.keys()))
+        for i, (data, ((df_label, df_id), row)) in enumerate(zip(result['data'], df.iterrows())):
+            self.assertSetEqual({'DT_RowId', 'Uni', 'One'}, set(data.keys()))
 
             self.assertEqual('row_%d' % i, data['DT_RowId'])
-            self.assertDictEqual({'uni1_label': df_label, 'uni1_id': df_id0}, data['Uni1'])
+            self.assertDictEqual({'display': df_label, 'value': df_id}, data['Uni'])
             self.assertEqual(row['one'], data['One'])
 
     def test_uni_dim_multi_metric(self):
@@ -130,13 +130,13 @@ class DataTablesRowIndexTransformerTests(BaseTransformerTests):
 
         result = self.dt_tx.transform(df, self.uni_dim_multi_metric_schema)
 
-        self._evaluate_table(result, num_rows=4)
+        self._evaluate_table(result, num_rows=3)
 
-        for i, (data, ((df_label, df_id0, df_id1), row)) in enumerate(zip(result['data'], df.iterrows())):
-            self.assertSetEqual({'DT_RowId', 'Uni2', 'One', 'Two'}, set(data.keys()))
+        for i, (data, ((df_label, df_id), row)) in enumerate(zip(result['data'], df.iterrows())):
+            self.assertSetEqual({'DT_RowId', 'Uni', 'One', 'Two'}, set(data.keys()))
 
             self.assertEqual('row_%d' % i, data['DT_RowId'])
-            self.assertDictEqual({'uni2_label': df_label, 'uni2_id0': df_id0, 'uni2_id1': df_id1}, data['Uni2'])
+            self.assertDictEqual({'display': df_label, 'value': df_id}, data['Uni'])
             self.assertEqual(row['one'], data['One'])
 
     def test_cat_cat_dim_single_metric(self):
@@ -216,13 +216,13 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
 
             self.assertEqual('row_%d' % i, data['DT_RowId'])
             self.assertEqual(0., data['One'])
-            self.assertEqual(.1, data['Two'])
-            self.assertEqual(.2, data['Three'])
-            self.assertEqual(.3, data['Four'])
-            self.assertEqual(.4, data['Five'])
-            self.assertEqual(.5, data['Six'])
-            self.assertEqual(.6, data['Seven'])
-            self.assertEqual(.7, data['Eight'])
+            self.assertEqual(1, data['Two'])
+            self.assertEqual(2, data['Three'])
+            self.assertEqual(3, data['Four'])
+            self.assertEqual(4, data['Five'])
+            self.assertEqual(5, data['Six'])
+            self.assertEqual(6, data['Seven'])
+            self.assertEqual(7, data['Eight'])
 
     def test_cont_dim_single_metric(self):
         # Tests transformation of a single metric with a single continuous dimension
@@ -360,15 +360,15 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
 
         self._evaluate_table(result, num_rows=8)
 
-        df_row_iter = df.unstack(level=[1, 2, 3, 4]).iterrows()
+        df_row_iter = df.unstack(level=[1, 2, 3]).iterrows()
         for i, (data, (cont, row)) in enumerate(zip(result['data'], df_row_iter)):
             self.assertSetEqual(
                 {
                     'DT_RowId', 'Cont',
-                    'One (A, Uni2_1)', 'One (A, Uni2_2)', 'One (A, Uni2_3)', 'One (A, Uni2_4)',
-                    'One (B, Uni2_1)', 'One (B, Uni2_2)', 'One (B, Uni2_3)', 'One (B, Uni2_4)',
-                    'Two (A, Uni2_1)', 'Two (A, Uni2_2)', 'Two (A, Uni2_3)', 'Two (A, Uni2_4)',
-                    'Two (B, Uni2_1)', 'Two (B, Uni2_2)', 'Two (B, Uni2_3)', 'Two (B, Uni2_4)',
+                    'One (A, Aa)', 'One (A, Bb)', 'One (A, Cc)',
+                    'One (B, Aa)', 'One (B, Bb)', 'One (B, Cc)',
+                    'Two (A, Aa)', 'Two (A, Bb)', 'Two (A, Cc)',
+                    'Two (B, Aa)', 'Two (B, Bb)', 'Two (B, Cc)',
                 },
                 set(data.keys())
             )
@@ -377,12 +377,11 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
             self.assertEqual(cont, data['Cont'])
             for key0, label0 in [('one', 'One'), ('two', 'Two')]:
                 for key1, label1 in [('a', 'A'), ('b', 'B')]:
-                    for key2a, key2b, key2c, label2 in [('Uni2_1', 1, 100, 'Uni2_1'),
-                                                        ('Uni2_2', 2, 200, 'Uni2_2'),
-                                                        ('Uni2_3', 3, 300, 'Uni2_3'),
-                                                        ('Uni2_4', 4, 400, 'Uni2_4')]:
+                    for key2, label2 in [(1, 'Aa'),
+                                         (2, 'Bb'),
+                                         (3, 'Cc')]:
                         self.assertEqual(
-                            row[(key0, key1, key2a, key2b, key2c)],
+                            row[(key0, key1, label2, key2)],
                             data['%s (%s, %s)' % (label0, label1, label2)]
                         )
 
