@@ -128,7 +128,7 @@ class UniqueDimension(Dimension):
         self.label_field = label_field
 
     def schemas(self, *args):
-        id_field_schemas = [('{key}_id'.format(key=self.key), self.definition)]
+        id_field_schemas = [('{key}'.format(key=self.key), self.definition)]
         return id_field_schemas + [('{key}_label'.format(key=self.key), self.label_field)]
 
 

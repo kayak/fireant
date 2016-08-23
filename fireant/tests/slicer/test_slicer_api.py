@@ -191,8 +191,8 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
         self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
-        self.assertSetEqual({'account_id', 'account_label'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('"test"."account_id"', str(query_schema['dimensions']['account_id']))
+        self.assertSetEqual({'account', 'account_label'}, set(query_schema['dimensions'].keys()))
+        self.assertEqual('"test"."account_id"', str(query_schema['dimensions']['account']))
         self.assertEqual('"test"."account_name"', str(query_schema['dimensions']['account_label']))
 
     def test_multiple_metrics_and_dimensions(self):
@@ -208,16 +208,16 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
         self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
         self.assertEqual('SUM("test"."fiz"+"test"."buz")', str(query_schema['metrics']['bar']))
 
-        self.assertSetEqual({'date', 'clicks', 'locale', 'account_id', 'account_label'},
+        self.assertSetEqual({'date', 'clicks', 'locale', 'account', 'account_label'},
                             set(query_schema['dimensions'].keys()))
         self.assertEqual('MOD("test"."clicks"+100,50)', str(query_schema['dimensions']['clicks']))
         self.assertEqual('"test"."locale"', str(query_schema['dimensions']['locale']))
-        self.assertEqual('"test"."account_id"', str(query_schema['dimensions']['account_id']))
+        self.assertEqual('"test"."account_id"', str(query_schema['dimensions']['account']))
         self.assertEqual('"test"."account_name"', str(query_schema['dimensions']['account_label']))
 
 
 class SlicerSchemaFilterTests(SlicerSchemaTests):
-    def test_dimension_filter_eq(self):
+    def test_cat_dimension_filter_eq(self):
         query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
@@ -235,7 +235,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
 
         self.assertListEqual(['"test"."locale"=\'en\''], [str(f) for f in query_schema['dfilters']])
 
-    def test_dimension_filter_ne(self):
+    def test_cat_dimension_filter_ne(self):
         query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
@@ -255,7 +255,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
 
         self.assertListEqual(['"test"."locale"<>\'en\''], [str(f) for f in query_schema['dfilters']])
 
-    def test_dimension_filter_in(self):
+    def test_cat_dimension_filter_in(self):
         query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
@@ -275,7 +275,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
 
         self.assertListEqual(['"test"."locale" IN (\'en\',\'es\',\'de\')'], [str(f) for f in query_schema['dfilters']])
 
-    def test_dimension_filter_like(self):
+    def test_cat_dimension_filter_like(self):
         query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
@@ -295,7 +295,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
 
         self.assertListEqual(['"test"."locale" LIKE \'e%\''], [str(f) for f in query_schema['dfilters']])
 
-    def test_dimension_filter_gt(self):
+    def test_cat_dimension_filter_gt(self):
         query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
@@ -315,7 +315,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
 
         self.assertListEqual(['"test"."dt">\'2000-01-01\''], [str(f) for f in query_schema['dfilters']])
 
-    def test_dimension_filter_lt(self):
+    def test_cat_dimension_filter_lt(self):
         query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
@@ -335,7 +335,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
 
         self.assertListEqual(['"test"."dt"<\'2000-01-01\''], [str(f) for f in query_schema['dfilters']])
 
-    def test_dimension_filter_gte(self):
+    def test_cat_dimension_filter_gte(self):
         query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
@@ -355,7 +355,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
 
         self.assertListEqual(['"test"."dt">=\'2000-01-01\''], [str(f) for f in query_schema['dfilters']])
 
-    def test_dimension_filter_lte(self):
+    def test_cat_dimension_filter_lte(self):
         query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
@@ -375,7 +375,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
 
         self.assertListEqual(['"test"."dt"<=\'2000-01-01\''], [str(f) for f in query_schema['dfilters']])
 
-    def test_dimension_filter_daterange(self):
+    def test_cat_dimension_filter_daterange(self):
         query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['locale'],
@@ -393,7 +393,7 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertListEqual(['"test"."dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\''],
                              [str(f) for f in query_schema['dfilters']])
 
-    def test_unique_dimension_filter(self):
+    def test_unique_edimension_q_filter(self):
         query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['account'],
@@ -406,13 +406,32 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
         self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
-        self.assertSetEqual({'account_id', 'account_label'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('"test"."account_id"', str(query_schema['dimensions']['account_id']))
+        self.assertSetEqual({'account', 'account_label'}, set(query_schema['dimensions'].keys()))
+        self.assertEqual('"test"."account_id"', str(query_schema['dimensions']['account']))
         self.assertEqual('"test"."account_name"', str(query_schema['dimensions']['account_label']))
 
         self.assertListEqual(['"test"."account_id"=1'], [str(f) for f in query_schema['dfilters']])
 
-    def test_unique_dimension_filter_label(self):
+    def test_unique_dimension_contains_filter(self):
+        query_schema = self.test_slicer.manager.query_schema(
+            metrics=['foo'],
+            dimensions=['account'],
+            dimension_filters=[ContainsFilter('account', [1, 2, 3])],
+        )
+
+        self.assertSetEqual(QUERY_BUILDER_PARAMS, set(query_schema.keys()))
+        self.assertEqual(self.test_table, query_schema['table'])
+
+        self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
+        self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
+
+        self.assertSetEqual({'account', 'account_label'}, set(query_schema['dimensions'].keys()))
+        self.assertEqual('"test"."account_id"', str(query_schema['dimensions']['account']))
+        self.assertEqual('"test"."account_name"', str(query_schema['dimensions']['account_label']))
+
+        self.assertListEqual(['"test"."account_id" IN (1,2,3)'], [str(f) for f in query_schema['dfilters']])
+
+    def test_unique_dimension_wildcard_filter_label(self):
         query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['account'],
@@ -425,8 +444,8 @@ class SlicerSchemaFilterTests(SlicerSchemaTests):
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
         self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
-        self.assertSetEqual({'account_id', 'account_label'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('"test"."account_id"', str(query_schema['dimensions']['account_id']))
+        self.assertSetEqual({'account', 'account_label'}, set(query_schema['dimensions'].keys()))
+        self.assertEqual('"test"."account_id"', str(query_schema['dimensions']['account']))
         self.assertEqual('"test"."account_name"', str(query_schema['dimensions']['account_label']))
 
         self.assertListEqual(['"test"."account_name" LIKE \'nam%\''], [str(f) for f in query_schema['dfilters']])
@@ -672,10 +691,10 @@ class SlicerSchemaReferenceTests(SlicerSchemaTests):
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
         self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
-        self.assertSetEqual({'date', 'locale', 'account_id', 'account_label'}, set(query_schema['dimensions'].keys()))
+        self.assertSetEqual({'date', 'locale', 'account', 'account_label'}, set(query_schema['dimensions'].keys()))
         self.assertEqual('ROUND("test"."dt",\'DD\')', str(query_schema['dimensions']['date']))
 
-        self.assertListEqual(['locale', 'account_id', 'account_label'], query_schema['rollup'])
+        self.assertListEqual(['locale', 'account', 'account_label'], query_schema['rollup'])
 
 
 class SlicerDisplaySchemaTests(SlicerSchemaTests):
@@ -687,7 +706,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         self.assertDictEqual(
             {
                 'metrics': {'foo': 'Foo'},
-                'dimensions': [],
+                'dimensions': {},
                 'references': {},
             },
             display_schema
@@ -701,7 +720,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         self.assertDictEqual(
             {
                 'metrics': {'bar': 'FizBuz'},
-                'dimensions': [],
+                'dimensions': {},
                 'references': {},
             },
             display_schema
@@ -716,9 +735,9 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         self.assertDictEqual(
             {
                 'metrics': {'foo': 'Foo'},
-                'dimensions': [
-                    {'label': 'Date', 'key': 'date'}
-                ],
+                'dimensions': {
+                    'date': {'label': 'Date'}
+                },
                 'references': {},
             },
             display_schema
@@ -733,9 +752,9 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         self.assertDictEqual(
             {
                 'metrics': {'foo': 'Foo'},
-                'dimensions': [
-                    {'label': 'Clicks CUSTOM LABEL', 'key': 'clicks'}
-                ],
+                'dimensions': {
+                    'clicks': {'label': 'Clicks CUSTOM LABEL'}
+                },
                 'references': {},
             },
             display_schema
@@ -749,10 +768,9 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         self.assertDictEqual(
             {
                 'metrics': {'foo': 'Foo'},
-                'dimensions': [
-                    {'label': 'Locale', 'key': 'locale',
-                     'label_options': {'us': 'United States', 'de': 'Germany'}}
-                ],
+                'dimensions': {
+                    'locale': {'label': 'Locale', 'label_options': {'us': 'United States', 'de': 'Germany'}},
+                },
                 'references': {},
             },
             display_schema
@@ -766,9 +784,9 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         self.assertDictEqual(
             {
                 'metrics': {'foo': 'Foo'},
-                'dimensions': [
-                    {'label': 'Account', 'key': 'account', 'label_field': 'account_label'}
-                ],
+                'dimensions': {
+                    'account': {'label': 'Account', 'label_field': 'account_label'},
+                },
                 'references': {},
             },
             display_schema
@@ -783,13 +801,12 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         self.assertDictEqual(
             {
                 'metrics': {'foo': 'Foo', 'bar': 'FizBuz'},
-                'dimensions': [
-                    {'label': 'Date', 'key': 'date'},
-                    {'label': 'Clicks CUSTOM LABEL', 'key': 'clicks'},
-                    {'label': 'Locale', 'key': 'locale',
-                     'label_options': {'us': 'United States', 'de': 'Germany'}},
-                    {'label': 'Account', 'key': 'account', 'label_field': 'account_label'},
-                ],
+                'dimensions': {
+                    'date': {'label': 'Date'},
+                    'clicks': {'label': 'Clicks CUSTOM LABEL'},
+                    'locale': {'label': 'Locale', 'label_options': {'us': 'United States', 'de': 'Germany'}},
+                    'account': {'label': 'Account', 'label_field': 'account_label'},
+                },
                 'references': {},
             },
             display_schema
@@ -805,9 +822,9 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         self.assertDictEqual(
             {
                 'metrics': {'foo': 'Foo'},
-                'dimensions': [
-                    {'label': 'Date', 'key': 'date'}
-                ],
+                'dimensions': {
+                    'date': {'label': 'Date'},
+                },
                 'references': {'wow': 'WoW'},
             },
             display_schema

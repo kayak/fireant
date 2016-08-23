@@ -212,10 +212,10 @@ class SlicerManager(QueryManager):
                               else dimension
                               for dimension in dimensions or []]
 
-        display_dims = []
+        display_dims = OrderedDict()
         for key in req_dimension_keys:
             dimension = self.slicer.dimensions[key]
-            display_dim = {'key': key, 'label': dimension.label}
+            display_dim = {'label': dimension.label}
 
             if hasattr(dimension, 'options'):
                 display_dim['label_options'] = {opt.key: opt.label
@@ -224,7 +224,7 @@ class SlicerManager(QueryManager):
             if hasattr(dimension, 'label_field'):
                 display_dim['label_field'] = '%s_label' % dimension.key
 
-            display_dims.append(display_dim)
+            display_dims[key] = display_dim
 
         return display_dims
 
