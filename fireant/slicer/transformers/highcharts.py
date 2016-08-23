@@ -10,7 +10,7 @@ def _format_data_point(value):
         return value
     if isinstance(value, pd.Timestamp):
         return int(value.asm8) // int(1e6)
-    if np.isnan(value):
+    if value is None or (isinstance(value, float) and np.isnan(value)):
         return None
     if isinstance(value, np.int64):
         # Cannot serialize np.int64 to json

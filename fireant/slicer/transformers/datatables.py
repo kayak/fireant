@@ -19,7 +19,7 @@ def _format_data_point(value):
         else:
             return value.strftime('%Y-%m-%dT%H:%M:%S')
 
-    if value is None or np.isnan(value):
+    if value is None or (isinstance(value, float) and np.isnan(value)):
         return None
 
     if isinstance(value, np.int64):
@@ -304,7 +304,7 @@ class CSVColumnIndexTransformer(DataTablesColumnIndexTransformer, CSVRowIndexTra
                     dimension_label = dimensions[dimension_level]['label_options'].get(dimension_value, dimension_value)
                 else:
                     dimension_label = dimension_value
-                    
+
                 dimension_label = _format_data_point(dimension_label)
 
                 if dimension_label is not None:
