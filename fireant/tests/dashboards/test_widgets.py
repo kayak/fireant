@@ -33,11 +33,9 @@ class DashboardTests(TestCase):
     def test_row_index_table(self):
         tx = DataTablesRowIndexTransformer()
         widget = self._widget_test(RowIndexTableWidget, ['clicks', 'conversions'], tx)
-
-        self.assertEqual(DataTablesRowIndexTransformer.table_type, widget.transformer.table_type)
+        self.assertEqual(DataTablesRowIndexTransformer, type(widget.transformer))
 
     def test_column_index_table(self):
         tx = DataTablesColumnIndexTransformer()
         widget = self._widget_test(ColumnIndexTableWidget, ['clicks', 'conversions'], tx)
-
-        self.assertEqual(DataTablesColumnIndexTransformer.table_type, widget.transformer.table_type)
+        self.assertEqual(DataTablesColumnIndexTransformer, type(widget.transformer))

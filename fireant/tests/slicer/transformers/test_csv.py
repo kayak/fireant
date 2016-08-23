@@ -215,7 +215,6 @@ class CSVColumnIndexTransformerTests(CSVRowIndexTransformerTests):
         df = self.cont_cat_dims_multi_metric_df
 
         result = self.csv_tx.transform(df, self.cont_cat_dims_multi_metric_schema)
-        print(result)
 
         self.assertEqual('Cont,One (A),One (B),Two (A),Two (B)\n'
                          '0,0,1,0,2\n'
@@ -231,7 +230,6 @@ class CSVColumnIndexTransformerTests(CSVRowIndexTransformerTests):
         df = self.cont_cat_cat_dims_multi_metric_df
 
         result = self.csv_tx.transform(df, self.cont_cat_cat_dims_multi_metric_schema)
-        print(result)
 
         self.assertEqual('Cont,"One (A, Y)","One (A, Z)","One (B, Y)","One (B, Z)",'
                          '"Two (A, Y)","Two (A, Z)","Two (B, Y)","Two (B, Z)"\n'
@@ -248,7 +246,6 @@ class CSVColumnIndexTransformerTests(CSVRowIndexTransformerTests):
         df = self.rollup_cont_cat_cat_dims_multi_metric_df
 
         result = self.csv_tx.transform(df, self.rollup_cont_cat_cat_dims_multi_metric_schema)
-        print(result)
 
         self.assertEqual('Cont,One,One (A),"One (A, Y)","One (A, Z)",One (B),"One (B, Y)","One (B, Z)",'
                          'Two,Two (A),"Two (A, Y)","Two (A, Z)",Two (B),"Two (B, Y)","Two (B, Z)"\n'

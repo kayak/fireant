@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import unittest
+from collections import OrderedDict
 from datetime import date
 
 import numpy as np
@@ -22,11 +23,11 @@ def _rollup(data_frame, levels):
 class BaseTransformerTests(unittest.TestCase):
     maxDiff = None
 
-    cont_dim = {'key': 'cont', 'label': 'Cont'}
-    datetime_dim = {'key': 'date', 'label': 'Date', 'id_fields': ['dt']}
-    uni_dim = {'key': 'uni', 'label': 'Uni', 'label_field': 'uni_label'}
-    cat1_dim = {'key': 'cat1', 'label': 'Cat1', 'label_options': {'a': 'A', 'b': 'B'}}
-    cat2_dim = {'key': 'cat2', 'label': 'Cat2', 'label_options': {'y': 'Y', 'z': 'Z'}}
+    cont_dim = {'label': 'Cont'}
+    datetime_dim = {'label': 'Date'}
+    uni_dim = {'label': 'Uni', 'label_field': 'uni_label'}
+    cat1_dim = {'label': 'Cat1', 'label_options': {'a': 'A', 'b': 'B'}}
+    cat2_dim = {'label': 'Cat2', 'label_options': {'y': 'Y', 'z': 'Z'}}
 
     shortcuts = {
         'a': 'A',
@@ -45,7 +46,7 @@ class BaseTransformerTests(unittest.TestCase):
     uni_idx = pd.MultiIndex.from_tuples([(u'Aa', 1), (u'Bb', 2), (u'Cc', 3)],
                                         names=['uni_label', 'uni'])
 
-    datetime_idx = pd.DatetimeIndex(pd.date_range(start=date(2000, 1, 1), periods=8), name='dt')
+    datetime_idx = pd.DatetimeIndex(pd.date_range(start=date(2000, 1, 1), periods=8), name='date')
     cont_cat_idx = pd.MultiIndex.from_product([cont_idx, cat1_idx], names=['cont', 'cat1'])
     cont_uni_idx = pd.MultiIndex.from_product([cont_idx, uni_idx.levels[0]],
                                               names=['cont', 'uni_label'])
@@ -63,9 +64,9 @@ class BaseTransformerTests(unittest.TestCase):
         columns=['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'],
     )
     no_dims_multi_metric_schema = {
-        'metrics': {'one': 'One', 'two': 'Two', 'three': 'Three', 'four': 'Four',
-                    'five': 'Five', 'six': 'Six', 'seven': 'Seven', 'eight': 'Eight'},
-        'dimensions': []
+        'metrics': OrderedDict([('one', 'One'), ('two', 'Two'), ('three', 'Three'), ('four', 'Four'),
+                                ('five', 'Five'), ('six', 'Six'), ('seven', 'Seven'), ('eight', 'Eight')]),
+        'dimensions': OrderedDict()
     }
 
     # Mock DF with single continuous dimension and one metric column
@@ -77,8 +78,8 @@ class BaseTransformerTests(unittest.TestCase):
         index=cont_idx
     )
     cont_dim_single_metric_schema = {
-        'metrics': {'one': 'One'},
-        'dimensions': [cont_dim]
+        'metrics': OrderedDict([('one', 'One')]),
+        'dimensions': OrderedDict([('cont', cont_dim)])
     }
 
     # Mock DF with single continuous dimension and two metric columns
@@ -91,8 +92,8 @@ class BaseTransformerTests(unittest.TestCase):
         index=cont_idx
     )
     cont_dim_multi_metric_schema = {
-        'metrics': {'one': 'One', 'two': 'Two'},
-        'dimensions': [cont_dim]
+        'metrics': OrderedDict([('one', 'One'), ('two', 'Two')]),
+        'dimensions': OrderedDict([('cont', cont_dim)])
     }
 
     # Mock DF with single unique dimension and one metric column
@@ -104,8 +105,8 @@ class BaseTransformerTests(unittest.TestCase):
         index=uni_idx
     )
     uni_dim_single_metric_schema = {
-        'metrics': {'one': 'One'},
-        'dimensions': [uni_dim]
+        'metrics': OrderedDict([('one', 'One')]),
+        'dimensions': OrderedDict([('uni', uni_dim)])
     }
 
     # Mock DF with single unique dimension and two metric columns
@@ -118,8 +119,8 @@ class BaseTransformerTests(unittest.TestCase):
         index=uni_idx
     )
     uni_dim_multi_metric_schema = {
-        'metrics': {'one': 'One', 'two': 'Two'},
-        'dimensions': [uni_dim]
+        'metrics': OrderedDict([('one', 'One'), ('two', 'Two')]),
+        'dimensions': OrderedDict([('uni', uni_dim)])
     }
 
     # Mock DF with single categorical dimension and one metric column
@@ -131,8 +132,8 @@ class BaseTransformerTests(unittest.TestCase):
         index=cat1_idx
     )
     cat_dim_single_metric_schema = {
-        'metrics': {'one': 'One'},
-        'dimensions': [cat1_dim]
+        'metrics': OrderedDict([('one', 'One')]),
+        'dimensions': OrderedDict([('cat1', cat1_dim)])
     }
 
     # Mock DF with single categorical dimension and two metric columns
@@ -145,8 +146,8 @@ class BaseTransformerTests(unittest.TestCase):
         index=cat1_idx
     )
     cat_dim_multi_metric_schema = {
-        'metrics': {'one': 'One', 'two': 'Two'},
-        'dimensions': [cat1_dim]
+        'metrics': OrderedDict([('one', 'One'), ('two', 'Two')]),
+        'dimensions': OrderedDict([('cat1', cat1_dim)])
     }
 
     # Mock DF with single continuous time dimension and one metric column
@@ -158,8 +159,8 @@ class BaseTransformerTests(unittest.TestCase):
         index=datetime_idx
     )
     time_dim_single_metric_schema = {
-        'metrics': {'one': 'One'},
-        'dimensions': [datetime_dim]
+        'metrics': OrderedDict([('one', 'One')]),
+        'dimensions': OrderedDict([('date', datetime_dim)])
     }
     time_dim_single_metric_ref_df = pd.DataFrame(
         np.array([
@@ -170,8 +171,8 @@ class BaseTransformerTests(unittest.TestCase):
         index=datetime_idx
     )
     time_dim_single_metric_ref_schema = {
-        'metrics': {'one': 'One'},
-        'dimensions': [datetime_dim],
+        'metrics': OrderedDict([('one', 'One')]),
+        'dimensions': OrderedDict([('date', datetime_dim)]),
         'references': {'wow': 'WoW'}
     }
 
@@ -184,8 +185,8 @@ class BaseTransformerTests(unittest.TestCase):
         index=cont_cat_idx
     )
     cont_cat_dims_single_metric_schema = {
-        'metrics': {'one': 'One'},
-        'dimensions': [cont_dim, cat1_dim]
+        'metrics': OrderedDict([('one', 'One')]),
+        'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_dim)])
     }
 
     # Mock DF with continuous and categorical dimensions and two metric columns
@@ -198,8 +199,8 @@ class BaseTransformerTests(unittest.TestCase):
         index=cont_cat_idx
     )
     cont_cat_dims_multi_metric_schema = {
-        'metrics': {'one': 'One', 'two': 'Two'},
-        'dimensions': [cont_dim, cat1_dim]
+        'metrics': OrderedDict([('one', 'One'), ('two', 'Two')]),
+        'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_dim)])
     }
 
     # Mock DF with continuous and unique dimensions and two metric columns
@@ -215,15 +216,15 @@ class BaseTransformerTests(unittest.TestCase):
     cont_uni_dims_multi_metric_df = _cont_uni.set_index(['uni'], append=True)
     cont_uni_dims_multi_metric_df = pd.DataFrame(cont_uni_dims_multi_metric_df)
     cont_uni_dims_multi_metric_schema = {
-        'metrics': {'one': 'One', 'two': 'Two'},
-        'dimensions': [cont_dim, uni_dim]
+        'metrics': OrderedDict([('one', 'One'), ('two', 'Two')]),
+        'dimensions': OrderedDict([('cont', cont_dim), ('uni', uni_dim)])
     }
 
     # Mock DF with continuous and unique dimensions and one metric column
     cont_uni_dims_single_metric_df = pd.DataFrame(cont_uni_dims_multi_metric_df['one'])
     cont_uni_dims_single_metric_schema = {
-        'metrics': {'one': 'One'},
-        'dimensions': [cont_dim, uni_dim]
+        'metrics': OrderedDict([('one', 'One')]),
+        'dimensions': OrderedDict([('cont', cont_dim), ('uni', uni_dim)])
     }
 
     # Mock DF with two categorical dimensions and one metric column
@@ -235,8 +236,8 @@ class BaseTransformerTests(unittest.TestCase):
         index=cat_cat_idx,
     )
     cat_cat_dims_single_metric_schema = {
-        'metrics': {'one': 'One'},
-        'dimensions': [cat1_dim, cat2_dim]
+        'metrics': OrderedDict([('one', 'One')]),
+        'dimensions': OrderedDict([('cat1', cat1_dim), ('cat2', cat2_dim)])
     }
 
     # Mock DF with two categorical dimensions and two metric columns
@@ -249,8 +250,8 @@ class BaseTransformerTests(unittest.TestCase):
         index=cat_cat_idx,
     )
     cat_cat_dims_multi_metric_schema = {
-        'metrics': {'one': 'One', 'two': 'Two'},
-        'dimensions': [cat1_dim, cat2_dim]
+        'metrics': OrderedDict([('one', 'One'), ('two', 'Two')]),
+        'dimensions': OrderedDict([('cat1', cat1_dim), ('cat2', cat2_dim)])
     }
 
     # Mock DF with continuous and two categorical dimensions and two metric columns
@@ -263,8 +264,8 @@ class BaseTransformerTests(unittest.TestCase):
         index=cont_cat_cat_idx
     )
     cont_cat_cat_dims_multi_metric_schema = {
-        'metrics': {'one': 'One', 'two': 'Two'},
-        'dimensions': [cont_dim, cat1_dim, cat2_dim]
+        'metrics': OrderedDict([('one', 'One'), ('two', 'Two')]),
+        'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_dim), ('cat2', cat2_dim)])
     }
 
     # Mock DF with continuous and two categorical dimensions and two metric columns
@@ -279,8 +280,8 @@ class BaseTransformerTests(unittest.TestCase):
 
     cont_cat_uni_dims_multi_metric_df = _cont_cat_uni.set_index('uni', append=True)
     cont_cat_uni_dims_multi_metric_schema = {
-        'metrics': {'one': 'One', 'two': 'Two'},
-        'dimensions': [cont_dim, cat1_dim, uni_dim]
+        'metrics': OrderedDict([('one', 'One'), ('two', 'Two')]),
+        'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_dim), ('uni', uni_dim)])
     }
 
     # Mock DF with continuous and two categorical dimensions and two metric columns using rollup for totals
@@ -295,6 +296,6 @@ class BaseTransformerTests(unittest.TestCase):
     rollup_cont_cat_cat_dims_multi_metric_df = _rollup(rollup_cont_cat_cat_dims_multi_metric_df, [0, 1])
     rollup_cont_cat_cat_dims_multi_metric_df = _rollup(rollup_cont_cat_cat_dims_multi_metric_df, [0])
     rollup_cont_cat_cat_dims_multi_metric_schema = {
-        'metrics': {'one': 'One', 'two': 'Two'},
-        'dimensions': [cont_dim, cat1_dim, cat2_dim]
+        'metrics': OrderedDict([('one', 'One'), ('two', 'Two')]),
+        'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_dim), ('cat2', cat2_dim)])
     }
