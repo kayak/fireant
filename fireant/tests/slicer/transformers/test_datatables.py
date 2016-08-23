@@ -455,7 +455,6 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
     def test_time_series_date_with_ref(self):
         # Tests transformation of a single-metric, single-dimension result using a WoW reference
         result = self.dt_tx.transform(self.time_dim_single_metric_ref_df, self.time_dim_single_metric_ref_schema)
-        print(result)
         self.assertDictEqual({
             'columns': [{'data': 'date.display', 'title': 'Date'},
                         {'data': 'one', 'title': 'One'},

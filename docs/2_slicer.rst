@@ -43,12 +43,12 @@ Date/Time Dimensions are a special type of continuous dimension which contain so
 Unique Dimensions
 """""""""""""""""
 
-Lastly, a unique dimension represents a column that has one or more identifier columns and optionally a display label column.  This is useful when your data contains a significant number of values that cannot be represented by a small list of categories and is akin to using a foreign key in a SQL table.  In conjunction with a join on a foreign key, a display value can be selected from a second table and used when rendering your widgets.
+Lastly, a unique dimension represents a column that has one or more identifier columns and optionally a display field column.  This is useful when your data contains a significant number of values that cannot be represented by a small list of categories and is akin to using a foreign key in a SQL table.  In conjunction with a join on a foreign key, a display value can be selected from a second table and used when rendering your widgets.
 
 
 .. warning::
 
-    If the column your |FeatureDimension| uses contains ``null`` values, it is advised to define the dimension using the ``COALESE`` function in order to specify some label for that value.  |Brand| makes use of advanced queries that could lead to collisions with null values.
+    If the column your |FeatureDimension| uses contains ``null`` values, it is advised to define the dimension using the ``COALESE`` function in order to specify some default value.  |Brand| makes use of rollup queries that could result in collisions with null values.
 
 
 .. _config_slicer_start:
@@ -63,9 +63,9 @@ Here is a concrete example of a |FeatureSlicer| configuration. It includes a par
     :end-before:  _slicer_example_end:
 
 
-In our example, the first couple of metrics pass ``key`` and ``label`` parameters.  The key is a unique identifier for the |FeatureSlicer| and cannot be shared by other |FeatureSlicer| elements.  The label is used when transforming the data into widgets to represent the field.  The last three metrics also provide a ``definition`` parameter which is a PyPika_ expression used to select the data from the database.  When a ``definition`` parameter is not supplied, the key of the metric is wrapped in a ``Sum`` function as a default.  The metric for ``impressions`` will get the definition ``fn.Sum(analytics.impressions)``.
+In our example, the first couple of metrics pass ``key`` and ``label`` parameters.  The key is a unique identifier for the |FeatureSlicer| and cannot be shared by other |FeatureSlicer| elements.  The label is used as a name for metric in the component.  The last three metrics also provide a ``definition`` parameter which is a PyPika_ expression used to select the data from the database.  When a ``definition`` parameter is not supplied, the key of the metric is wrapped in a ``Sum`` function as a default.  The metric for ``impressions`` will get the definition ``fn.Sum(analytics.impressions)``.
 
-Here a few dimensions as also defined.  A |ClassDateDimension| is used with a custom definition which maps to the ``dt`` column in the database.  The Device dimension uses the column with the same name as the key ``device`` as a default. There are three possible values for a device: 'desktop', 'tablet', or 'mobile', so a  |ClassCatDimension| is a good fit. Last there is a  |ClassUniqueDimension| which uses the column ``account_id`` as an identifier but the column ``account_name`` as a display label.  Both columns will be included in the query.
+Here a few dimensions as also defined.  A |ClassDateDimension| is used with a custom definition which maps to the ``dt`` column in the database.  The Device dimension uses the column with the same name as the key ``device`` as a default. There are three possible values for a device: 'desktop', 'tablet', or 'mobile', so a  |ClassCatDimension| is a good fit. Last there is a  |ClassUniqueDimension| which uses the column ``account_id`` as an identifier but the column ``account_name`` as a display field for each account value.  Both columns will be included in the query.
 
 .. _config_slicer_end:
 
@@ -97,7 +97,7 @@ A join requires three parameters, a *key*, a *table*, and a *criterion*.  The *k
 
         dimension=[
             UniqueDimension('customer', id_fields=[customers.id],
-                            label_field=fn.Concat(customers.fname, ' ', customers.lname),
+                            display_field=fn.Concat(customers.fname, ' ', customers.lname),
                             joins=['customers'])
         ],
     )

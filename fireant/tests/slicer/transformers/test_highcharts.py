@@ -107,7 +107,7 @@ class HighchartsLineTransformerTests(BaseTransformerTests):
         self.evaluate_result(df2, result)
 
     def test_cont_uni_dim_single_metric(self):
-        # Tests transformation of a metric with a unique dimension with one key and label
+        # Tests transformation of a metric and a unique dimension
         df = self.cont_uni_dims_single_metric_df
 
         result = self.hc_tx.transform(df, self.cont_uni_dims_single_metric_schema)
@@ -122,7 +122,7 @@ class HighchartsLineTransformerTests(BaseTransformerTests):
         self.evaluate_result(df.unstack(level=[1, 2]), result)
 
     def test_cont_uni_dim_multi_metric(self):
-        # Tests transformation of two metrics with a unique dimension with two keys and label
+        # Tests transformation of two metrics and a unique dimension
         df = self.cont_uni_dims_multi_metric_df
 
         result = self.hc_tx.transform(df, self.cont_uni_dims_multi_metric_schema)
@@ -320,7 +320,7 @@ class HighchartsColumnTransformerTests(BaseTransformerTests):
         self.evaluate_result(df.unstack(), result)
 
     def test_uni_dim_single_metric(self):
-        # Tests transformation of a metric with a unique dimension with one key and label
+        # Tests transformation of a metric and a unique dimension
         df = self.uni_dim_single_metric_df
 
         result = self.hc_tx.transform(df, self.uni_dim_single_metric_schema)
@@ -335,7 +335,7 @@ class HighchartsColumnTransformerTests(BaseTransformerTests):
         self.evaluate_result(df, result)
 
     def test_uni_dim_multi_metric(self):
-        # Tests transformation of two metrics with a unique dimension with two keys and label
+        # Tests transformation of two metrics and a unique dimension
         df = self.uni_dim_multi_metric_df
 
         result = self.hc_tx.transform(df, self.uni_dim_multi_metric_schema)

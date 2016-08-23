@@ -196,8 +196,8 @@ class SlicerManager(QueryManager):
                         key=f.element_key
                     ))
 
-            if 'label' == modifier:
-                definition = element.label_field
+            if hasattr(element, 'display_field') and 'display' == modifier:
+                definition = element.display_field
 
             else:
                 definition = element.definition or default_value_func(element.key)
@@ -217,12 +217,12 @@ class SlicerManager(QueryManager):
             dimension = self.slicer.dimensions[key]
             display_dim = {'label': dimension.label}
 
-            if hasattr(dimension, 'options'):
-                display_dim['label_options'] = {opt.key: opt.label
-                                                for opt in dimension.options}
+            if hasattr(dimension, 'display_options'):
+                display_dim['display_options'] = {opt.key: opt.label
+                                                  for opt in dimension.display_options}
 
-            if hasattr(dimension, 'label_field'):
-                display_dim['label_field'] = '%s_label' % dimension.key
+            if hasattr(dimension, 'display_field'):
+                display_dim['display_field'] = '%s_display' % dimension.key
 
             display_dims[key] = display_dim
 
