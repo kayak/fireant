@@ -116,20 +116,19 @@ class DatetimeDimension(ContinuousDimension):
 
 
 class CategoricalDimension(Dimension):
-    def __init__(self, key, label=None, definition=None, options=tuple(), joins=None):
+    def __init__(self, key, label=None, definition=None, display_options=tuple(), joins=None):
         super(CategoricalDimension, self).__init__(key=key, label=label, definition=definition, joins=joins)
-        self.options = options
+        self.display_options = display_options
 
 
 class UniqueDimension(Dimension):
-    def __init__(self, key, label=None, definition=None, label_field=None, joins=None):
+    def __init__(self, key, label=None, definition=None, display_field=None, joins=None):
         super(UniqueDimension, self).__init__(key=key, label=label, definition=definition, joins=joins)
-        # TODO label_field and definition here are redundant
-        self.label_field = label_field
+        self.display_field = display_field
 
     def schemas(self, *args):
         id_field_schemas = [('{key}'.format(key=self.key), self.definition)]
-        return id_field_schemas + [('{key}_label'.format(key=self.key), self.label_field)]
+        return id_field_schemas + [('{key}_display'.format(key=self.key), self.display_field)]
 
 
 class BooleanDimension(Dimension):

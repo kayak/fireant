@@ -37,12 +37,12 @@ class DashboardTests(TestCase):
 
                 # Categorical dimension with fixed options
                 CategoricalDimension('locale', 'Locale', definition=test_table.locale,
-                                     options=[DimensionValue('us', 'United States'),
-                                              DimensionValue('de', 'Germany')]),
+                                     display_options=[DimensionValue('us', 'United States'),
+                                                      DimensionValue('de', 'Germany')]),
 
                 # Unique Dimension with single ID field
                 UniqueDimension('account', 'Account', definition=test_table.account_id,
-                                label_field=test_table.account_name),
+                                display_field=test_table.account_name),
             ]
         )
 

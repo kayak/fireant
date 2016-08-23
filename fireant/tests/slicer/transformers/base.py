@@ -25,9 +25,9 @@ class BaseTransformerTests(unittest.TestCase):
 
     cont_dim = {'label': 'Cont'}
     datetime_dim = {'label': 'Date'}
-    uni_dim = {'label': 'Uni', 'label_field': 'uni_label'}
-    cat1_dim = {'label': 'Cat1', 'label_options': {'a': 'A', 'b': 'B'}}
-    cat2_dim = {'label': 'Cat2', 'label_options': {'y': 'Y', 'z': 'Z'}}
+    uni_dim = {'label': 'Uni', 'display_field': 'uni_label'}
+    cat1_dim = {'label': 'Cat1', 'display_options': {'a': 'A', 'b': 'B'}}
+    cat2_dim = {'label': 'Cat2', 'display_options': {'y': 'Y', 'z': 'Z'}}
 
     shortcuts = {
         'a': 'A',
