@@ -6,8 +6,6 @@ from .base import Transformer, TransformationException
 
 
 def _format_data_point(value):
-    if isinstance(value, str):
-        return value
     if isinstance(value, pd.Timestamp):
         return int(value.asm8) // int(1e6)
     if value is None or (isinstance(value, float) and np.isnan(value)):

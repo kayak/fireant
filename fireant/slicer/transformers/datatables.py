@@ -10,9 +10,6 @@ NO_TIME = time(0)
 
 
 def _format_data_point(value):
-    if isinstance(value, str):
-        return str(value)
-
     if isinstance(value, pd.Timestamp):
         if value.time() == NO_TIME:
             return value.strftime('%Y-%m-%d')
