@@ -28,7 +28,6 @@ def _format_data_point(value):
 
 class DataTablesRowIndexTransformer(Transformer):
     def transform(self, dataframe, display_schema):
-        has_references = isinstance(dataframe.columns, pd.MultiIndex)
         dataframe = self._prepare_dataframe(dataframe, display_schema['dimensions'])
 
         return {
@@ -53,24 +52,25 @@ class DataTablesRowIndexTransformer(Transformer):
         return dimension_columns + metric_columns
 
     def _render_column_level(self, metric_column, display_schema):
+        metrics = display_schema['metrics']
         if not isinstance(metric_column, tuple):
-            return {'title': display_schema['metrics'][metric_column],
-                    'data': metric_column}
+            return {'title': metrics[metric_column], 'data': metric_column}
 
-        metric_key_idx = 1 if 'references' in display_schema else 0
+        references = display_schema.get('references')
+        metric_key_idx = 1 if references else 0
         if metric_key_idx and metric_column[0]:
             reference_key = metric_column[0]
             metric_key = metric_column[1]
             data_keys = [reference_key, metric_key]
             metric_label = '{metric} {reference}'.format(
-                metric=display_schema['metrics'][metric_key],
+                metric=metrics[metric_key],
                 reference=display_schema['references'][reference_key]
             )
 
         else:
             metric_key = metric_column[metric_key_idx]
             data_keys = [metric_key]
-            metric_label = display_schema['metrics'][metric_key]
+            metric_label = metrics[metric_key]
 
         return {
             'title': metric_label,
@@ -161,14 +161,14 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
         column = super(DataTablesColumnIndexTransformer, self)._render_column_level(metric_column, display_schema)
 
         # Iterate through the pivoted levels
-        i = 2 if 'references' in display_schema else 1
+        i = 2 if display_schema.get('references') else 1
         data_keys, levels = [], []
         for dimension_key, dimension in list(display_schema['dimensions'].items())[1:]:
             if 'display_options' in dimension:
                 level_key = metric_column[i]
                 level_display = (dimension['display_options'].get(level_key, None)
-                               if not (isinstance(level_key, float) and np.isnan(level_key))
-                               else 'Total')
+                                 if not (isinstance(level_key, float) and np.isnan(level_key))
+                                 else 'Total')
 
             else:
                 level_key = metric_column[i]
@@ -299,7 +299,7 @@ class CSVColumnIndexTransformer(DataTablesColumnIndexTransformer, CSVRowIndexTra
             for dimension_level, dimension_value in zip(csv_df.columns.names[1:], dimension_values):
                 if 'display_options' in dimensions[dimension_level]:
                     dimension_display = dimensions[dimension_level]['display_options'].get(dimension_value,
-                                                                                         dimension_value)
+                                                                                           dimension_value)
                 else:
                     dimension_display = dimension_value
 
