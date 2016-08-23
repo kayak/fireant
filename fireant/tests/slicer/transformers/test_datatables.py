@@ -1,6 +1,13 @@
 # coding: utf-8
 
+from datetime import date, datetime
+from unittest import TestCase
+
+import numpy as np
+import pandas as pd
+
 from fireant.slicer.transformers import DataTablesRowIndexTransformer, DataTablesColumnIndexTransformer
+from fireant.slicer.transformers import datatables
 from fireant.tests.slicer.transformers.base import BaseTransformerTests
 
 
@@ -639,3 +646,29 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
                      {'a': {'y': {'one': 28, 'two': 56}, 'z': {'one': 29, 'two': 58}},
                       'b': {'y': {'one': 30, 'two': 60}, 'z': {'one': 31, 'two': 62}},
                       'cont': {'display': 7}}]}, result)
+
+
+class DatatablesUtilityTests(TestCase):
+    def test_nan_data_point(self):
+        # Needs to be cast to python int
+        result = datatables._format_data_point(np.nan)
+        self.assertIsNone(result)
+
+    def test_str_data_point(self):
+        result = datatables._format_data_point(u'abc')
+        self.assertEqual('abc', result)
+
+    def test_int64_data_point(self):
+        # Needs to be cast to python int
+        result = datatables._format_data_point(np.int64(1))
+        self.assertEqual(int(1), result)
+
+    def test_date_data_point(self):
+        # Needs to be converted to milliseconds
+        result = datatables._format_data_point(pd.Timestamp(date(2000, 1, 1)))
+        self.assertEqual('2000-01-01', result)
+
+    def test_datetime_data_point(self):
+        # Needs to be converted to milliseconds
+        result = datatables._format_data_point(pd.Timestamp(datetime(2000, 1, 1, 1)))
+        self.assertEqual('2000-01-01T01:00:00', result)

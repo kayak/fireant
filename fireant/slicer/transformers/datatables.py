@@ -105,16 +105,16 @@ class DataTablesRowIndexTransformer(Transformer):
 
     def _render_dimension_data(self, idx, dimensions):
         i = 0
-        for key, schema in dimensions:
+        for key, dimension in dimensions:
             dimension_value = _format_data_point(idx[i])
 
-            if 'label_field' in schema:
+            if 'label_field' in dimension:
                 i += 1
                 yield key, {'display': dimension_value,
                             'value': _format_data_point(idx[i])}
 
-            elif 'label_options' in schema:
-                yield key, {'display': schema['label_options'].get(dimension_value, dimension_value) or 'Total',
+            elif 'label_options' in dimension:
+                yield key, {'display': dimension['label_options'].get(dimension_value, dimension_value) or 'Total',
                             'value': dimension_value}
 
             else:
@@ -173,9 +173,12 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
                                if not (isinstance(level_key, float) and np.isnan(level_key))
                                else 'Total')
 
-            elif 'label_field' in dimension:
+            else:
                 level_key = metric_column[i]
-                i += 1
+
+                if 'label_field' in dimension:
+                    i += 1
+
                 level_label = metric_column[i]
 
             # the metric key must remain last
@@ -218,50 +221,101 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
 
 
 class CSVRowIndexTransformer(DataTablesRowIndexTransformer):
-    def transform(self, data_frame, display_schema):
-        dim_ordinal = {name: ordinal
-                       for ordinal, name in enumerate(data_frame.index.names)}
+    def transform(self, dataframe, display_schema):
+        csv_df = self._format_columns(dataframe, display_schema['metrics'], display_schema['dimensions'])
 
-        csv_df = self._format_columns(data_frame, dim_ordinal, display_schema)
-
-        if isinstance(data_frame.index, pd.RangeIndex):
+        if isinstance(dataframe.index, pd.RangeIndex):
             # If there are no dimensions, just serialize to csv without the index
             return csv_df.to_csv(index=False)
 
-        csv_df = self._format_index(csv_df, dim_ordinal, display_schema)
+        csv_df = self._format_index(csv_df, display_schema['dimensions'])
 
-        row_dimensions = display_schema['dimensions'][:None if self.table_type == 'row' else 1]
-        return csv_df.to_csv(index_label=[dimension['label']
-                                          for dimension in row_dimensions])
+        row_dimension_labels = self._row_dimension_labels(display_schema['dimensions'])
+        return csv_df.to_csv(index_label=row_dimension_labels)
 
-    def _format_index(self, csv_df, dim_ordinal, display_schema):
-        if isinstance(csv_df.index, pd.MultiIndex):
-            csv_df.index = pd.MultiIndex.from_tuples(
-                [[self._format_dimension_label(idx, dim_ordinal, dimension)
-                  for dimension in display_schema['dimensions']]
-                 for idx in list(csv_df.index)]
-            )
+    def _format_index(self, csv_df, dimensions):
+        levels = list(dimensions.items())[:None if isinstance(csv_df.index, pd.MultiIndex) else 1]
 
-        else:
-            csv_df.reindex(
-                self._format_dimension_label(idx, dim_ordinal, display_schema['dimensions'][0])
-                for idx in list(csv_df.index)
-            )
-
+        csv_df.index = [self.get_level_values(csv_df, key, dimension)
+                        for key, dimension in levels]
+        csv_df.index.names = [key
+                              for key, dimension in levels]
         return csv_df
 
-    def _format_columns(self, data_frame, dim_ordinal, display_schema):
-        if 1 < len(display_schema['dimensions']) and self.table_type == 'column':
-            csv_df = self._prepare_data_frame(data_frame, display_schema['dimensions'])
+    def get_level_values(self, csv_df, key, dimension):
+        if 'label_options' in dimension:
+            return [_format_data_point(dimension['label_options'].get(value, value))
+                    for value in csv_df.index.get_level_values(key)]
 
-            csv_df.columns = pd.Index([self._format_series_labels(column, dim_ordinal, display_schema)
-                                       for column in csv_df.columns])
-            return csv_df
+        if 'label_field' in dimension:
+            return [_format_data_point(data_point)
+                    for data_point in csv_df.index.get_level_values(dimension['label_field'])]
 
-        return data_frame.rename(
-            columns=lambda metric: display_schema['metrics'].get(metric, metric)
-        )
+        return [_format_data_point(data_point)
+                for data_point in csv_df.index.get_level_values(key)]
+
+    @staticmethod
+    def _format_dimension_label(idx, dim_ordinal, dimension):
+        if 'label_field' in dimension:
+            label_field = dimension['label_field']
+            return idx[dim_ordinal[label_field]]
+
+        if isinstance(idx, tuple):
+            id_field = dimension['id_fields'][0]
+            dimension_label = idx[dim_ordinal[id_field]]
+
+        else:
+            dimension_label = idx
+
+        if 'label_options' in dimension:
+            dimension_label = dimension['label_options'].get(dimension_label, dimension_label)
+
+        return dimension_label
+
+    def _format_columns(self, dataframe, metrics, dimensions):
+        return dataframe.rename(columns=lambda metric: metrics.get(metric, metric))
+
+    def _row_dimension_labels(self, dimensions):
+        return [dimension['label']
+                for dimension in dimensions.values()]
 
 
 class CSVColumnIndexTransformer(DataTablesColumnIndexTransformer, CSVRowIndexTransformer):
-    pass
+    def _format_columns(self, dataframe, metrics, dimensions):
+        if 1 < len(dimensions):
+            csv_df = self._prepare_dataframe(dataframe, dimensions)
+            csv_df.columns = self._format_column_labels(csv_df, metrics, dimensions)
+            return csv_df
+
+        return super(CSVColumnIndexTransformer, self)._format_columns(dataframe, metrics, dimensions)
+
+    def _row_dimension_labels(self, dimensions):
+        return [dimension['label']
+                for dimension in list(dimensions.values())[:1]]
+
+    def _format_column_labels(self, csv_df, metrics, dimensions):
+        column_labels = []
+        for idx in list(csv_df.columns):
+            metric_value, dimension_values = idx[0], idx[1:]
+
+            dimension_labels = []
+            for dimension_level, dimension_value in zip(csv_df.columns.names[1:], dimension_values):
+                if 'label_options' in dimensions[dimension_level]:
+                    dimension_label = dimensions[dimension_level]['label_options'].get(dimension_value, dimension_value)
+                else:
+                    dimension_label = dimension_value
+                    
+                dimension_label = _format_data_point(dimension_label)
+
+                if dimension_label is not None:
+                    dimension_labels.append(dimension_label)
+
+            if dimension_labels:
+                column_labels.append('{metric} ({dimensions})'.format(
+                    metric=metrics[metric_value],
+                    dimensions=', '.join(dimension_labels),
+                ))
+            else:
+                column_labels.append(metrics[metric_value])
+
+        return column_labels

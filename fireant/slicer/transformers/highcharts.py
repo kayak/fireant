@@ -236,7 +236,7 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
 
         if 'label_field' in category_dimension:
             label_field = category_dimension['label_field']
-            return data_frame.index.get_level_values(label_field).unique().tolist()
+            return data_frame.index.get_level_values(label_field, ).unique().tolist()
 
 
 class HighchartsBarTransformer(HighchartsColumnTransformer):
