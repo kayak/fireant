@@ -6,11 +6,9 @@ from .base import Transformer, TransformationException
 
 
 def _format_data_point(value):
-    if isinstance(value, str):
-        return value
     if isinstance(value, pd.Timestamp):
         return int(value.asm8) // int(1e6)
-    if np.isnan(value):
+    if value is None or (isinstance(value, float) and np.isnan(value)):
         return None
     if isinstance(value, np.int64):
         # Cannot serialize np.int64 to json
@@ -73,13 +71,12 @@ class HighchartsLineTransformer(Transformer):
         }] * num_metrics
 
     def _reorder_index_levels(self, data_frame, display_schema):
-        dimension_orders = [id_field
-                            for d in display_schema['dimensions']
-                            for id_field in
-                            (d['id_fields'] + (
-                                [d['label_field']]
-                                if 'label_field' in d
-                                else []))]
+        dimension_orders = [order
+                            for key, dimension in display_schema['dimensions'].items()
+                            for order in [key] + ([dimension['label_field']]
+                                                  if 'label_field' in dimension
+                                                  else [])]
+
         reordered = data_frame.reorder_levels(data_frame.index.names.index(level)
                                               for level in dimension_orders)
         return reordered
@@ -119,7 +116,7 @@ class HighchartsLineTransformer(Transformer):
         if 1 < len(dimensions):
             # We need to unstack all of the dimensions here after the first dimension, which is the first dimension in
             # the dimensions list, not necessarily the one in the dataframe
-            unstack_levels = list(self._unstack_levels(dimensions[1:], dim_ordinal))
+            unstack_levels = list(self._unstack_levels(list(dimensions.items())[1:], dim_ordinal))
             data_frame = data_frame.unstack(level=unstack_levels)
 
         return data_frame
@@ -139,8 +136,8 @@ class HighchartsLineTransformer(Transformer):
         if not is_multidimensional:
             return metric_label
 
-        dim_labels = [self._format_dimension_label(dim_ordinal, dimension, idx)
-                      for dimension in display_schema['dimensions'][1:]]
+        dim_labels = [self._format_dimension_label(dim_ordinal, key, dimension, idx)
+                      for key, dimension in list(display_schema['dimensions'].items())[1:]]
         dim_labels = [dim_label  # filter out the NaNs
                       for dim_label in dim_labels
                       if dim_label is not np.nan]
@@ -152,13 +149,12 @@ class HighchartsLineTransformer(Transformer):
         )
 
     @staticmethod
-    def _format_dimension_label(dim_ordinal, dimension, idx):
+    def _format_dimension_label(dim_ordinal, key, dimension, idx):
         if 'label_field' in dimension:
             label_field = dimension['label_field']
             return idx[dim_ordinal[label_field]]
 
-        id_field = dimension['id_fields'][0]
-        dim_label = idx[dim_ordinal[id_field]]
+        dim_label = idx[dim_ordinal[key]]
         if 'label_options' in dimension:
             dim_label = dimension['label_options'].get(dim_label, dim_label)
         return dim_label
@@ -176,9 +172,8 @@ class HighchartsLineTransformer(Transformer):
         return (_format_data_point(x), _format_data_point(y))
 
     def _unstack_levels(self, dimensions, dim_ordinal):
-        for dimension in dimensions:
-            for id_field in dimension['id_fields']:
-                yield dim_ordinal[id_field]
+        for key, dimension in dimensions:
+            yield dim_ordinal[key]
 
             if 'label_field' in dimension:
                 yield dim_ordinal[dimension['label_field']]
@@ -219,7 +214,7 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
 
         # Unstack multi-indices
         if 1 < len(dimensions):
-            unstack_levels = list(self._unstack_levels(dimensions[1:], dim_ordinal))
+            unstack_levels = list(self._unstack_levels(list(dimensions.items())[1:], dim_ordinal))
             data_frame = data_frame.unstack(level=unstack_levels)
 
         return data_frame
@@ -229,7 +224,7 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
         if not display_schema['dimensions']:
             return None
 
-        category_dimension = display_schema['dimensions'][0]
+        category_dimension = list(display_schema['dimensions'].values())[0]
         if 'label_options' in category_dimension:
             return [category_dimension['label_options'].get(dim, dim)
                     # Pandas gives both NaN or None in the index depending on whether a level was unstacked
@@ -239,7 +234,7 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
 
         if 'label_field' in category_dimension:
             label_field = category_dimension['label_field']
-            return data_frame.index.get_level_values(label_field).unique().tolist()
+            return data_frame.index.get_level_values(label_field, ).unique().tolist()
 
 
 class HighchartsBarTransformer(HighchartsColumnTransformer):

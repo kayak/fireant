@@ -215,19 +215,14 @@ class SlicerManager(QueryManager):
         display_dims = []
         for key in req_dimension_keys:
             dimension = self.slicer.dimensions[key]
-            display_dim = {'label': dimension.label}
+            display_dim = {'key': key, 'label': dimension.label}
 
             if hasattr(dimension, 'options'):
                 display_dim['label_options'] = {opt.key: opt.label
                                                 for opt in dimension.options}
 
-            if hasattr(dimension, 'id_fields'):
-                id_fields = ['{}_id{}'.format(dimension.key, i)
-                             for i in range(len(dimension.id_fields))]
-                display_dim['id_fields'] = id_fields
+            if hasattr(dimension, 'label_field'):
                 display_dim['label_field'] = '%s_label' % dimension.key
-            else:
-                display_dim['id_fields'] = [dimension.key]
 
             display_dims.append(display_dim)
 

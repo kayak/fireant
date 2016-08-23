@@ -41,15 +41,8 @@ class DashboardTests(TestCase):
                                               DimensionValue('de', 'Germany')]),
 
                 # Unique Dimension with single ID field
-                UniqueDimension('account', 'Account',
-                                label_field=test_table.account_name,
-                                id_fields=[test_table.account_id]),
-
-                # Unique Dimension with composite ID field
-                UniqueDimension('keyword', 'Keyword',
-                                label_field=test_table.keyword_name,
-                                id_fields=[test_table.keyword_id, test_table.keyword_type,
-                                           test_table.adgroup_id, test_table.engine]),
+                UniqueDimension('account', 'Account', definition=test_table.account_id,
+                                label_field=test_table.account_name),
             ]
         )
 
