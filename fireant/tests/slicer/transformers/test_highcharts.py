@@ -248,7 +248,7 @@ class HighchartsColumnTransformerTests(BaseTransformerTests):
             self.assertSetEqual({'type'}, set(result['xAxis'].keys()))
 
         for series in result['series']:
-            self.assertSetEqual({'name', 'data', 'yAxis'}, set(series.keys()))
+            self.assertSetEqual({'name', 'data', 'yAxis', 'color'}, set(series.keys()))
 
     @classmethod
     def setUpClass(cls):

@@ -106,12 +106,12 @@ class HighchartsLineTransformer(Transformer):
         color = colors.get(settings.highcharts_colors, 'grid')
         n_colors = len(color)
 
-        yAxis = metrics.index(idx[0] if isinstance(idx, tuple) else idx)
+        metric_index = metrics.index(idx[0] if isinstance(idx, tuple) else idx)
         return {
             'name': self._format_label(idx, dim_ordinal, display_schema, reference),
             'data': self._format_data(item),
-            'yAxis': yAxis,
-            'color': color[yAxis % n_colors],
+            'yAxis': metric_index,
+            'color': color[metric_index % n_colors],
             'dashStyle': 'Dot' if reference else 'Solid'
         }
 
@@ -204,12 +204,17 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
     chart_type = 'column'
 
     def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference):
+        color = colors.get(settings.highcharts_colors, 'grid')
+        n_colors = len(color)
+        metric_index = metrics.index(idx[0] if isinstance(idx, tuple) else idx)
+
         return {
             'name': self._format_label(idx, dim_ordinal, display_schema, reference),
             'data': [_format_data_point(x)
                      for x in item
                      if not np.isnan(x)],
             'yAxis': metrics.index(idx[0] if isinstance(idx, tuple) else idx),
+            'color': color[metric_index % n_colors],
         }
 
     def xaxis_options(self, dataframe, dim_ordinal, display_schema):
