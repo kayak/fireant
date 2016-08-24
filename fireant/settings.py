@@ -2,3 +2,5 @@
 
 database = None
 transformers = None
+
+highcharts_colors = 'grid'
