@@ -16,6 +16,10 @@ class ManagerInitializationTests(TestCase):
     def test_transformers(self):
         self.assertTrue(hasattr(self.slicer, 'manager'))
 
+        self.assertTrue(hasattr(self.slicer, 'notebook'))
+        self.assertTrue(hasattr(self.slicer.notebook, 'line_chart'))
+        self.assertTrue(hasattr(self.slicer.notebook, 'bar_chart'))
+
         self.assertTrue(hasattr(self.slicer, 'highcharts'))
         self.assertTrue(hasattr(self.slicer.highcharts, 'line_chart'))
         self.assertTrue(hasattr(self.slicer.highcharts, 'column_chart'))
@@ -26,9 +30,6 @@ class ManagerInitializationTests(TestCase):
         self.assertTrue(hasattr(self.slicer.datatables, 'column_index_table'))
         self.assertTrue(hasattr(self.slicer.datatables, 'row_index_csv'))
         self.assertTrue(hasattr(self.slicer.datatables, 'column_index_csv'))
-
-        # False until the feature can be fully added
-        self.assertFalse(hasattr(self.slicer, 'notebook'))
 
     @patch('fireant.settings.database')
     def test_data(self, mock_db):

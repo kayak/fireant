@@ -26,8 +26,6 @@ class HighchartsLineTransformer(Transformer):
     def transform(self, dataframe, display_schema):
         self._validate_dimensions(dataframe, display_schema['dimensions'])
 
-        if isinstance(dataframe.index, pd.MultiIndex):
-            dataframe = self._reorder_index_levels(dataframe, display_schema)
         has_references = isinstance(dataframe.columns, pd.MultiIndex)
 
         dim_ordinal = {name: ordinal
@@ -69,17 +67,6 @@ class HighchartsLineTransformer(Transformer):
         return [{
             'title': None
         }] * num_metrics
-
-    def _reorder_index_levels(self, dataframe, display_schema):
-        dimension_orders = [order
-                            for key, dimension in display_schema['dimensions'].items()
-                            for order in [key] + ([dimension['display_field']]
-                                                  if 'display_field' in dimension
-                                                  else [])]
-
-        reordered = dataframe.reorder_levels(dataframe.index.names.index(level)
-                                             for level in dimension_orders)
-        return reordered
 
     def _make_series(self, dataframe, dim_ordinal, display_schema, reference=None):
         metrics = list(dataframe.columns.levels[0]
@@ -176,10 +163,10 @@ class HighchartsLineTransformer(Transformer):
 
     def _unstack_levels(self, dimensions, dim_ordinal):
         for key, dimension in dimensions:
-            yield dim_ordinal[key]
-
             if 'display_field' in dimension:
                 yield dim_ordinal[dimension['display_field']]
+
+            yield dim_ordinal[key]
 
 
 class HighchartsColumnTransformer(HighchartsLineTransformer):

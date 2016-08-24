@@ -8,16 +8,16 @@ import numpy as np
 import pandas as pd
 
 
-def _rollup(data_frame, levels):
-    roll = data_frame.groupby(level=levels).sum()
+def _rollup(dataframe, levels):
+    roll = dataframe.groupby(level=levels).sum()
     rolled_levels = [name
-                     for i, name in enumerate(data_frame.index.names)
+                     for i, name in enumerate(dataframe.index.names)
                      if i not in levels]
 
     for rolled_level in rolled_levels:
         roll[rolled_level] = None
 
-    return data_frame.append(roll.set_index(rolled_levels, append=True)).sort_index()
+    return dataframe.append(roll.set_index(rolled_levels, append=True)).sort_index()
 
 
 class BaseTransformerTests(unittest.TestCase):

@@ -2,7 +2,7 @@
 
 
 class Transformer(object):
-    def transform(self, data_frame, display_schema):
+    def transform(self, dataframe, display_schema):
         raise NotImplementedError()
 
 

@@ -14,7 +14,7 @@ class WidgetGroupManager(object):
         enabled_references = self._filter_duplicates(self.widget_group.references + (references or []))
         enabled_operations = self._filter_duplicates(self.widget_group.operations + (operations or []))
 
-        data_frame = self.widget_group.slicer.manager.data(
+        dataframe = self.widget_group.slicer.manager.data(
             metrics=enabled_metrics,
             dimensions=enabled_dimensions,
             metric_filters=metric_filters or [],
@@ -27,7 +27,7 @@ class WidgetGroupManager(object):
             dimensions=enabled_dimensions
         )
 
-        return self._transform_widgets(self.widget_group.widgets, data_frame, display_schema)
+        return self._transform_widgets(self.widget_group.widgets, dataframe, display_schema)
 
     @staticmethod
     def _filter_duplicates(iterable):
@@ -44,10 +44,10 @@ class WidgetGroupManager(object):
         return filtered_list
 
     @staticmethod
-    def _transform_widgets(widgets, data_frame, display_schema):
+    def _transform_widgets(widgets, dataframe, display_schema):
         return (
             widget.transformer.transform(
-                data_frame[widget.metrics],
+                dataframe[widget.metrics],
                 display_schema
             ) for widget in widgets
         )

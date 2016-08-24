@@ -182,24 +182,6 @@ class HighchartsLineTransformerTests(BaseTransformerTests):
 
         self.evaluate_result(df.unstack(level=[1, 2]), result)
 
-    def test_mixed_order_dimensions(self):
-        # Tests transformation of a multi-metric, double-dimension result
-        df = self.cont_cat_uni_dims_multi_metric_df.reorder_levels([3, 2, 0, 1])
-
-        result = self.hc_tx.transform(df, self.cont_cat_uni_dims_multi_metric_schema)
-
-        self.evaluate_chart_options(result, num_series=12)
-
-        self.assertSetEqual(
-            {'One (A, Aa)', 'One (A, Bb)', 'One (A, Cc)',
-             'One (B, Aa)', 'One (B, Bb)', 'One (B, Cc)',
-             'Two (A, Aa)', 'Two (A, Bb)', 'Two (A, Cc)',
-             'Two (B, Aa)', 'Two (B, Bb)', 'Two (B, Cc)'},
-            {series['name'] for series in result['series']}
-        )
-
-        self.evaluate_result(df.unstack([0, 1, 3]), result)
-
     def test_rollup_triple_dimension_multi_metric(self):
         # Tests transformation of a multi-metric, double-dimension result
         df = self.rollup_cont_cat_cat_dims_multi_metric_df

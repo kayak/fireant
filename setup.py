@@ -58,11 +58,11 @@ setup(
         'pypika==0.0.27'
     ],
     tests_require=[
-        'mock', 'vertica-python>=0.6'
+        'mock', 'vertica-python>=0.6', 'matplotlib'
     ],
     extras_require={
         'vertica': ['vertica-python>=0.6'],
-        'plotly': ['plotly'],
+        'notebook': ['matplotlib'],
     },
 
     test_suite='fireant.tests',
