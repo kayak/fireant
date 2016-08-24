@@ -2,7 +2,25 @@
 import numpy as np
 import pandas as pd
 
+from fireant import settings
 from .base import Transformer, TransformationException
+
+colors = {
+    'dark-blue': ["#DDDF0D", "#55BF3B", "#DF5353", "#7798BF", "#aaeeee", "#ff0066", "#eeaaee",
+                  "#55BF3B", "#DF5353", "#7798BF", "#aaeeee"],
+    'dark-green': ["#DDDF0D", "#55BF3B", "#DF5353", "#7798BF", "#aaeeee", "#ff0066", "#eeaaee",
+                   "#55BF3B", "#DF5353", "#7798BF", "#aaeeee"],
+    'dark-unica': ["#2b908f", "#90ee7e", "#f45b5b", "#7798BF", "#aaeeee", "#ff0066", "#eeaaee",
+                   "#55BF3B", "#DF5353", "#7798BF", "#aaeeee"],
+    'gray': ["#DDDF0D", "#7798BF", "#55BF3B", "#DF5353", "#aaeeee", "#ff0066", "#eeaaee",
+             "#55BF3B", "#DF5353", "#7798BF", "#aaeeee"],
+    'grid-light': ["#7cb5ec", "#f7a35c", "#90ee7e", "#7798BF", "#aaeeee", "#ff0066", "#eeaaee",
+                   "#55BF3B", "#DF5353", "#7798BF", "#aaeeee"],
+    'grid': ['#058DC7', '#50B432', '#ED561B', '#DDDF00', '#24CBE5', '#64E572', '#FF9655', '#FFF263', '#6AF9C4'],
+    'sand-signika': ["#f45b5b", "#8085e9", "#8d4654", "#7798BF", "#aaeeee", "#ff0066", "#eeaaee",
+                     "#55BF3B", "#DF5353", "#7798BF", "#aaeeee"],
+    'skies': ["#514F78", "#42A07B", "#9B5E4A", "#72727F", "#1F949A", "#82914E", "#86777F", "#42A07B"],
+}
 
 
 def _format_data_point(value):
@@ -61,14 +79,9 @@ class HighchartsLineTransformer(Transformer):
         }
 
     def yaxis_options(self, dataframe, dim_ordinal, display_schema):
-        if isinstance(dataframe.columns, pd.MultiIndex):
-            num_metrics = len(dataframe.columns.levels[0])
-        else:
-            num_metrics = len(dataframe.columns)
-
         return [{
             'title': None
-        }] * num_metrics
+        }] * len(display_schema['metrics'])
 
     def _reorder_index_levels(self, dataframe, display_schema):
         dimension_orders = [order
@@ -90,10 +103,15 @@ class HighchartsLineTransformer(Transformer):
                 for idx, item in dataframe.iteritems()]
 
     def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference):
+        color = colors.get(settings.highcharts_colors, 'grid')
+        n_colors = len(color)
+
+        metric_index = metrics.index(idx[0] if isinstance(idx, tuple) else idx)
         return {
             'name': self._format_label(idx, dim_ordinal, display_schema, reference),
             'data': self._format_data(item),
-            'yAxis': metrics.index(idx[0] if isinstance(idx, tuple) else idx),
+            'yAxis': metric_index,
+            'color': color[metric_index % n_colors],
             'dashStyle': 'Dot' if reference else 'Solid'
         }
 
@@ -186,12 +204,17 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
     chart_type = 'column'
 
     def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference):
+        color = colors.get(settings.highcharts_colors, 'grid')
+        n_colors = len(color)
+        metric_index = metrics.index(idx[0] if isinstance(idx, tuple) else idx)
+
         return {
             'name': self._format_label(idx, dim_ordinal, display_schema, reference),
             'data': [_format_data_point(x)
                      for x in item
                      if not np.isnan(x)],
             'yAxis': metrics.index(idx[0] if isinstance(idx, tuple) else idx),
+            'color': color[metric_index % n_colors],
         }
 
     def xaxis_options(self, dataframe, dim_ordinal, display_schema):
