@@ -40,7 +40,7 @@ class HighchartsLineTransformerTests(BaseTransformerTests):
         self.assertEqual(xaxis_type, result['xAxis']['type'])
 
         for series in result['series']:
-            self.assertSetEqual({'name', 'data', 'yAxis', 'dashStyle'}, set(series.keys()))
+            self.assertSetEqual({'name', 'data', 'yAxis', 'color', 'dashStyle'}, set(series.keys()))
 
     def test_series_single_metric(self):
         # Tests transformation of a single-metric, single-dimension result
