@@ -16,9 +16,9 @@ class ManagerInitializationTests(TestCase):
     def test_transformers(self):
         self.assertTrue(hasattr(self.slicer, 'manager'))
 
-        self.assertTrue(hasattr(self.slicer, 'notebook'))
-        self.assertTrue(hasattr(self.slicer.notebook, 'line_chart'))
-        self.assertTrue(hasattr(self.slicer.notebook, 'bar_chart'))
+        self.assertTrue(hasattr(self.slicer, 'notebooks'))
+        self.assertTrue(hasattr(self.slicer.notebooks, 'line_chart'))
+        self.assertTrue(hasattr(self.slicer.notebooks, 'bar_chart'))
 
         self.assertTrue(hasattr(self.slicer, 'highcharts'))
         self.assertTrue(hasattr(self.slicer.highcharts, 'line_chart'))

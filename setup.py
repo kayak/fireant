@@ -4,7 +4,7 @@ from setuptools import setup
 
 __major_version__ = 0
 __minor_version__ = 0
-__patch_version__ = 15
+__patch_version__ = 16
 
 
 def readme():
@@ -62,7 +62,7 @@ setup(
     ],
     extras_require={
         'vertica': ['vertica-python>=0.6'],
-        'notebook': ['matplotlib'],
+        'matplotlib': ['matplotlib'],
     },
 
     test_suite='fireant.tests',

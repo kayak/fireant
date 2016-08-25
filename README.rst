@@ -105,18 +105,18 @@ Querying Data and Rendering Charts
 
 Once a slicer is configured, it is ready to be used.  Each slicer comes with a |ClassSlicerManager| and several |ClassTransformerManager| which expose an interface for executing queries and transforming the results.  Each function in the manager uses the same signature.  The principal function is ``data`` and all othe functions call this function first.  The additional functions provide a transformation to the data.
 
-The notebook transformer bundle includes different functions for use in Jupyter_ notebooks.  Other formats return results in JSON format.
+The notebooks transformer bundle includes different functions for use in Jupyter_ notebooks.  Other formats return results in JSON format.
 
 .. _manager_api_start:
 
 * ``my_slicer.manager.data`` - A Pandas_ data frame indexed by the selected dimensions.
 
-* ``my_slicer.notebook.row_index_table`` - A Datatables_ row-indexed table.
-* ``my_slicer.notebook.column_index_table`` - A Datatables_ column-indexed table.
+* ``my_slicer.notebooks.row_index_table`` - A Datatables_ row-indexed table.
+* ``my_slicer.notebooks.column_index_table`` - A Datatables_ column-indexed table.
 
-* ``my_slicer.notebook.line_chart`` - A Matplotlib_ line chart. (Requires [matplotlib] dependency)
-* ``my_slicer.notebook.column_chart`` - A Matplotlib_ column chart. (Requires [matplotlib] dependency)
-* ``my_slicer.notebook.bar_chart`` - A Matplotlib_ bar chart. (Requires [matplotlib] dependency)
+* ``my_slicer.notebooks.line_chart`` - A Matplotlib_ line chart. (Requires [matplotlib] dependency)
+* ``my_slicer.notebooks.column_chart`` - A Matplotlib_ column chart. (Requires [matplotlib] dependency)
+* ``my_slicer.notebooks.bar_chart`` - A Matplotlib_ bar chart. (Requires [matplotlib] dependency)
 
 * ``my_slicer.highcharts.line_chart`` - A Highcharts_ line chart.
 * ``my_slicer.highcharts.column_chart`` - A Highcharts_ column chart.

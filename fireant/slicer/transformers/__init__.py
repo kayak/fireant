@@ -5,10 +5,10 @@ from .datatables import DataTablesRowIndexTransformer, DataTablesColumnIndexTran
 from .datatables import (DataTablesRowIndexTransformer, DataTablesColumnIndexTransformer, CSVRowIndexTransformer,
                          CSVColumnIndexTransformer)
 from .highcharts import HighchartsLineTransformer, HighchartsColumnTransformer, HighchartsBarTransformer
-from .notebook import (PandasRowIndexTransformer, PandasColumnIndexTransformer, MatplotlibLineChartTransformer,
-                       MatplotlibBarChartTransformer)
+from .notebooks import (PandasRowIndexTransformer, PandasColumnIndexTransformer, MatplotlibLineChartTransformer,
+                        MatplotlibBarChartTransformer)
 
-notebook_tx = {
+notebooks_tx = {
     'row_index_table': PandasRowIndexTransformer(),
     'column_index_table': PandasColumnIndexTransformer(),
     'line_chart': MatplotlibLineChartTransformer(),
@@ -16,7 +16,7 @@ notebook_tx = {
 }
 
 bundles = {
-    'notebook': notebook_tx,
+    'notebooks': notebooks_tx,
     'highcharts': {
         'line_chart': HighchartsLineTransformer(),
         'column_chart': HighchartsColumnTransformer(),

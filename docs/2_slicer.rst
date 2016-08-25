@@ -109,7 +109,7 @@ Slicer and Transformer Managers
 
 The |FeatureSlicer| expose different managers for different types of request.  The primary one is the Slicer manager which exposes a ``data`` function which returns the query results as Pandas_ data frame.  Transformer managers provide the additional functionality of converting your data into a specified format.  There are several transformers available by default as well as optional ones which require additional python dependencies.
 
-The ``notebook`` transformer manager is the default one which is intended for use in Jupyter_ notebooks.  In this tutorial it will be used exclusively.  All transformer managers expose different methods for different types of results, but the methods always have the same signature.
+The ``notebooks`` transformer manager is the default one which is intended for use in Jupyter_ notebookss.  In this tutorial it will be used exclusively.  All transformer managers expose different methods for different types of results, but the methods always have the same signature.
 
 .. include:: ../README.rst
     :start-after: _manager_api_start:
@@ -232,7 +232,7 @@ The most basic type of filtering uses a equality/inequality expression such as `
     from fireant.slicer import EqualityFilter, EqualityOperator
 
     # Only desktop data
-    slicer.notebook.column_index_table(
+    slicer.notebooks.column_index_table(
         metrics=['clicks', 'conversions'],
         dimensions=['date'],
         dimension_filters=[EqualityFilter('device_type', EqualityOperator.eq, 'desktop')],
@@ -243,7 +243,7 @@ The most basic type of filtering uses a equality/inequality expression such as `
     from fireant.slicer import EqualityFilter, EqualityOperator
 
     # Only data for days where clicks were greater than 100
-    slicer.notebook.column_index_table(
+    slicer.notebooks.column_index_table(
         metrics=['clicks', 'conversions'],
         dimensions=['date'],
         metric_filters=[EqualityFilter('clicks', EqualityOperator.gt, 100)],
@@ -259,7 +259,7 @@ When a column should be equal to one of a set of values, a `Contains` filter can
 
     from fireant.slicer import ContainsFilter
 
-    slicer.notebook.column_index_table(
+    slicer.notebooks.column_index_table(
         metrics=['clicks', 'conversions'],
         dimensions=['date'],
         dimension_filters=[ContainsFilter('device_type', ['desktop', 'mobile'])],
@@ -275,7 +275,7 @@ Windows
 
     from fireant.slicer import RangeFilter
 
-    slicer.notebook.column_index_table(
+    slicer.notebooks.column_index_table(
         metrics=['clicks', 'conversions'],
         dimensions=['date'],
         dimension_filters=[RangeFilter('date', date.today() - timedelta(days=60), date.today())],
@@ -290,7 +290,7 @@ For pattern matching a `Fuzzy` can be used which parallels ``LIKE`` expressions 
 
     from fireant.slicer import WildcardFilter
 
-    slicer.notebook.column_index_table(
+    slicer.notebooks.column_index_table(
         metrics=['clicks', 'conversions'],
         dimensions=['date'],
         dimension_filters=[WildcardFilter('account', 'abc%')],
@@ -320,7 +320,7 @@ For each |FeatureReference|, there are the following variations:
 
     from fireant.slicer.references import WoW, DeltaMoM, DeltaQoQ
 
-    slicer.notebook.column_index_table(
+    slicer.notebooks.column_index_table(
         metrics=['clicks', 'conversions'],
         dimensions=['date'],
         references=[WoW('date'), DeltaMoM('date'), DeltaQoQ('date')],
@@ -345,7 +345,7 @@ Totals adds ``ROLLUP`` to the SQL query to load the data and aggregated across d
 
     from fireant.slicer.operations import Totals
 
-    slicer.notebook.line_chart(
+    slicer.notebooks.line_chart(
         metrics=['clicks', 'conversions'],
         dimensions=['date', 'device'],
         operations=[Totals('device')],
