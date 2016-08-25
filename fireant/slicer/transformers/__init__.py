@@ -5,22 +5,15 @@ from .datatables import DataTablesRowIndexTransformer, DataTablesColumnIndexTran
 from .datatables import (DataTablesRowIndexTransformer, DataTablesColumnIndexTransformer, CSVRowIndexTransformer,
                          CSVColumnIndexTransformer)
 from .highcharts import HighchartsLineTransformer, HighchartsColumnTransformer, HighchartsBarTransformer
-from .notebook import PandasRowIndexTransformer, PandasColumnIndexTransformer
+from .notebook import (PandasRowIndexTransformer, PandasColumnIndexTransformer, MatplotlibLineChartTransformer,
+                       MatplotlibBarChartTransformer)
 
 notebook_tx = {
     'row_index_table': PandasRowIndexTransformer(),
     'column_index_table': PandasColumnIndexTransformer(),
+    'line_chart': MatplotlibLineChartTransformer(),
+    'bar_chart': MatplotlibBarChartTransformer(),
 }
-
-try:
-    from .notebook import MatplotlibLineChartTransformer, MatplotlibBarChartTransformer
-
-    notebook_tx['line_chart'] = MatplotlibLineChartTransformer()
-    notebook_tx['bar_chart'] = MatplotlibBarChartTransformer()
-
-except ImportError:
-    # Matplotlib not installed
-    pass
 
 bundles = {
     'notebook': notebook_tx,
