@@ -54,7 +54,7 @@ class PandasRowIndexTransformer(Transformer):
 
     def _dimension_labels(self, dimension):
         if 'display_field' in dimension:
-            return [dimension['label'], '%s ID' % dimension['label']]
+            return ['%s ID' % dimension['label'], dimension['label']]
 
         return [dimension['label']]
 
