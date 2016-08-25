@@ -1,31 +1,22 @@
 # coding: utf-8
 
 from .base import Transformer, TransformationException
+from .datatables import DataTablesRowIndexTransformer, DataTablesColumnIndexTransformer
 from .datatables import (DataTablesRowIndexTransformer, DataTablesColumnIndexTransformer, CSVRowIndexTransformer,
                          CSVColumnIndexTransformer)
-from .datatables import DataTablesRowIndexTransformer, DataTablesColumnIndexTransformer
 from .highcharts import HighchartsLineTransformer, HighchartsColumnTransformer, HighchartsBarTransformer
-from .notebook import PlotlyTransformer, PandasTransformer
+from .notebook import (PandasRowIndexTransformer, PandasColumnIndexTransformer, MatplotlibLineChartTransformer,
+                       MatplotlibBarChartTransformer)
 
 notebook_tx = {
-    'row_index_table': PandasTransformer(),
-    'column_index_table': PandasTransformer(),
+    'row_index_table': PandasRowIndexTransformer(),
+    'column_index_table': PandasColumnIndexTransformer(),
+    'line_chart': MatplotlibLineChartTransformer(),
+    'bar_chart': MatplotlibBarChartTransformer(),
 }
 
-try:
-    from fireant.slicer.transformers.notebook import PlotlyTransformer
-
-    notebook_tx['line_chart'] = PlotlyTransformer()
-    notebook_tx['column_chart'] = PlotlyTransformer()
-    notebook_tx['bar_chart'] = PlotlyTransformer()
-
-except ImportError:
-    # Matplotlib not installed
-    pass
-
 bundles = {
-    # Unfinished
-    # 'notebook': notebook_tx,
+    'notebook': notebook_tx,
     'highcharts': {
         'line_chart': HighchartsLineTransformer(),
         'column_chart': HighchartsColumnTransformer(),

@@ -107,12 +107,11 @@ class DataTablesRowIndexTransformer(Transformer):
 
             if 'display_field' in dimension:
                 i += 1
-                yield key, {'display': dimension_value,
-                            'value': _format_data_point(idx[i])}
+                yield key, {'display': _format_data_point(idx[i]), 'value': dimension_value}
 
             elif 'display_options' in dimension:
-                yield key, {'display': dimension['display_options'].get(dimension_value, dimension_value) or 'Total',
-                            'value': dimension_value}
+                display = dimension['display_options'].get(dimension_value, dimension_value) or 'Total'
+                yield key, {'display': display, 'value': dimension_value}
 
             else:
                 yield key, {'display': dimension_value}

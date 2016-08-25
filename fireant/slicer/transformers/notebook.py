@@ -1,59 +1,112 @@
 # coding: utf-8
-import numpy as np
 import pandas as pd
 
-from . import Transformer
+from . import Transformer, TransformationException
 
 
-class PlotlyTransformer(Transformer):
-    # FIXME Unfinished
+class PandasRowIndexTransformer(Transformer):
+    def transform(self, dataframe, display_schema):
+        dataframe = self._set_display_options(dataframe, display_schema)
+        if display_schema['dimensions']:
+            dataframe = self._set_dimension_labels(dataframe, display_schema['dimensions'])
+        dataframe = self._set_metric_labels(dataframe, display_schema['metrics'], display_schema.get('references'))
 
-    def transform(self, data_frame, display_schema):
-        if isinstance(data_frame.index, pd.MultiIndex):
-            data_frame = self._reorder_index_levels(data_frame, display_schema)
+        if isinstance(dataframe.index, pd.MultiIndex):
+            drop_levels = ['%s ID' % dimension['label']
+                           for key, dimension in display_schema['dimensions'].items()
+                           if dimension.get('display_field')]
+            dataframe.reset_index(level=drop_levels, drop=True, inplace=True)
 
-        dim_ordinal = {name: ordinal
-                       for ordinal, name in enumerate(data_frame.index.names)}
-        return self._prepare_data_frame(data_frame, dim_ordinal, display_schema['dimensions'])
+        return dataframe
 
-    def _prepare_data_frame(self, data_frame, dim_ordinal, dimensions):
-        # Replaces invalid values and unstacks the data frame for line charts.
+    def _set_display_options(self, dataframe, display_schema):
+        dataframe = dataframe.copy()
 
-        # Force all fields to be float (Safer for highcharts)
-        data_frame = data_frame.astype(np.float).replace([np.inf, -np.inf], np.nan)
+        for key, dimension in display_schema['dimensions'].items():
+            if 'display_options' in dimension:
+                display_values = [dimension['display_options'].get(value, value)
+                                  for value in dataframe.index.get_level_values(key).unique()]
+                dataframe.index.set_levels(display_values, key, inplace=True)
 
-        # Unstack multi-indices
-        if 1 < len(dimensions):
-            # We need to unstack all of the dimensions here after the first dimension, which is the first dimension in
-            # the dimensions list, not necessarily the one in the dataframe
-            unstack_levels = list(self._unstack_levels(dimensions[1:], dim_ordinal))
-            data_frame = data_frame.unstack(level=unstack_levels)
+        return dataframe
 
-        return data_frame
+    def _set_dimension_labels(self, dataframe, dimensions):
+        dataframe = dataframe.copy()
+        dataframe.index.names = [label
+                                 for key, dimension in dimensions.items()
+                                 for label in self._dimension_labels(dimension)]
 
-    def _unstack_levels(self, dimensions, dim_ordinal):
-        for dimension in dimensions:
-            for id_field in dimension['id_fields']:
-                yield dim_ordinal[id_field]
+        return dataframe
 
-            if 'display_field' in dimension:
-                yield dim_ordinal[dimension['display_field']]
+    def _set_metric_labels(self, dataframe, metrics, references):
+        dataframe = dataframe.copy()
 
-    def _reorder_index_levels(self, data_frame, display_schema):
-        dimension_orders = [id_field
-                            for d in display_schema['dimensions']
-                            for id_field in
-                            (d['id_fields'] + (
-                                [d['display_field']]
-                                if 'display_field' in d
-                                else []))]
-        reordered = data_frame.reorder_levels(data_frame.index.names.index(level)
-                                              for level in dimension_orders)
-        return reordered
+        if isinstance(dataframe.columns, pd.MultiIndex):
+            dataframe.columns = dataframe.columns.reorder_levels((1, 0)) \
+                .set_levels([list(metrics.values()),
+                             [None] + list(references.values())]) \
+                .set_names('Reference', 1)
+
+        else:
+            dataframe.columns = list(metrics.values())
+
+        return dataframe
+
+    def _dimension_labels(self, dimension):
+        if 'display_field' in dimension:
+            return ['%s ID' % dimension['label'], dimension['label']]
+
+        return [dimension['label']]
 
 
-class PandasTransformer(Transformer):
-    # FIXME Unfinished
+class PandasColumnIndexTransformer(PandasRowIndexTransformer):
+    def transform(self, dataframe, display_schema):
+        dataframe = super(PandasColumnIndexTransformer, self).transform(dataframe, display_schema)
 
-    def transform(self, data_frame, display_schema):
-        return data_frame.plot()
+        if isinstance(dataframe.index, pd.MultiIndex):
+            drop_levels = [dimension['label']
+                           for dimension in list(display_schema['dimensions'].values())[1:]]
+
+            dataframe = dataframe.unstack(level=drop_levels)
+
+        return dataframe
+
+
+class MatplotlibLineChartTransformer(PandasColumnIndexTransformer):
+    def transform(self, dataframe, display_schema):
+        self._validate_dimensions(dataframe, display_schema['dimensions'])
+        dataframe = super(MatplotlibLineChartTransformer, self).transform(dataframe, display_schema)
+
+        metrics = list(display_schema['metrics'].values())
+        figsize = (14, 5 * len(metrics))
+
+        if 1 == len(metrics):
+            return dataframe.plot.line(figsize=figsize) \
+                .legend(loc='center left', bbox_to_anchor=(1, 0.5)) \
+                .set_title(metrics[0])
+
+        try:
+            import matplotlib.pyplot as plt
+        except ImportError:
+            raise TransformationException('Missing library: matplotlib')
+
+        fig, axes = plt.subplots(len(metrics), sharex=True, figsize=figsize)
+        for metric, axis in zip(metrics, axes):
+            dataframe[metric].plot.line(ax=axis) \
+                .legend(loc='center left', bbox_to_anchor=(1, 0.5)) \
+                .set_title(metric)
+
+        return axes
+
+    def _validate_dimensions(self, dataframe, dimensions):
+        if not 0 < len(dimensions):
+            raise TransformationException('Cannot transform line chart.  '
+                                          'At least one dimension is required.')
+
+
+class MatplotlibBarChartTransformer(PandasColumnIndexTransformer):
+    def transform(self, dataframe, display_schema):
+        dataframe = super(MatplotlibBarChartTransformer, self).transform(dataframe, display_schema)
+
+        return dataframe.plot.bar(figsize=(14, 5)) \
+            .legend(loc='center left', bbox_to_anchor=(1, 0.5))

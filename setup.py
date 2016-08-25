@@ -62,7 +62,7 @@ setup(
     ],
     extras_require={
         'vertica': ['vertica-python>=0.6'],
-        'plotly': ['plotly'],
+        'notebook': ['matplotlib'],
     },
 
     test_suite='fireant.tests',

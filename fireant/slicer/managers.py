@@ -3,8 +3,11 @@
 import functools
 from collections import OrderedDict
 
+import pandas as pd
+
 from pypika import functions as fn
 from .queries import QueryManager
+from .transformers import utils as tx_utils
 
 
 class SlicerException(Exception):
@@ -68,18 +71,18 @@ class SlicerManager(QueryManager):
                                          metric_filters=metric_filters, dimension_filters=dimension_filters,
                                          references=references, operations=operations)
 
-        data_frame = self._query_data(**query_schema)
+        dataframe = self._query_data(**query_schema)
 
         # TODO add post processing
         # operations_schema = self._get_operations_schema(operations)
-        # data_frame = self.post_process(
-        #     data_frame,
+        # dataframe = self.post_process(
+        #     dataframe,
         #     operations_schema,
         # )
 
         # do post-processing ops
 
-        return data_frame
+        return dataframe
 
     def query_schema(self, metrics=None, dimensions=None,
                      metric_filters=None, dimension_filters=None,
@@ -127,11 +130,11 @@ class SlicerManager(QueryManager):
             A dictionary describing how to transform the resulting data frame for the same request.
         """
         return {
-            'metrics': {key: self.slicer.metrics[key].label
-                        for key in metrics or []},
+            'metrics': OrderedDict([(key, self.slicer.metrics[key].label)
+                                    for key in metrics or []]),
             'dimensions': self._display_dimensions(dimensions),
-            'references': {reference.key: reference.label
-                           for reference in references or []}
+            'references': OrderedDict([(reference.key, reference.label)
+                                       for reference in references or []]),
         }
 
     def _metrics_schema(self, keys):
@@ -275,5 +278,8 @@ class TransformerManager(object):
                                 references=references, operations=operations)
 
         display_schema = self._manager.display_schema(metrics, dimensions, references)
+
+        if isinstance(df.index, pd.MultiIndex):
+            df = tx_utils.correct_dimension_level_order(df, display_schema)
 
         return tx.transform(df, display_schema)

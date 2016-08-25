@@ -33,7 +33,7 @@ matplotlib
 
 Once you have added |Brand| to your project, you must provide some additional settings.  A database connection is required in order to execute queries.  Currently, only Vertica is supported via ``vertica_python``, however future plans include support for various other databases such as MySQL and Oracle.
 
-To configure a database, instantiate a subclass of |ClassDatabase| and set it in ``fireant.settings``.  This must be only set once.  At the present, only one database connection is supported.
+To configure a database, instantiate a subclass of |ClassDatabase| and set it in ``fireant.settings``.  This must be only set once.
 
 
 .. code-block:: python
