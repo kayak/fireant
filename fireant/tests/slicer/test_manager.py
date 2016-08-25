@@ -50,10 +50,11 @@ class ManagerInitializationTests(TestCase):
     @patch.object(SlicerManager, 'display_schema')
     @patch.object(SlicerManager, 'data')
     def _test_transform(self, test_func, mock_transform, mock_sm_data, mock_sm_ds):
-        mock_df, mock_schema, mock_return = 'dataframe', 'schema', 'OK'
-        mock_sm_data.return_value = mock_df
-        mock_sm_ds.return_value = mock_schema
-        mock_transform.return_value = mock_return
+        mock_sm_data.return_value = mock_df = MagicMock()
+        mock_sm_ds.return_value = mock_schema = {
+            'metrics': []
+        }
+        mock_transform.return_value = mock_return = 'OK'
 
         mock_args = {'metrics': 0, 'dimensions': 1,
                      'metric_filters': 2, 'dimension_filters': 3,
@@ -64,7 +65,7 @@ class ManagerInitializationTests(TestCase):
         self.assertEqual(mock_return, result)
         mock_sm_data.assert_called_once_with(**mock_args)
         mock_sm_ds.assert_called_once_with(mock_args['metrics'], mock_args['dimensions'], mock_args['references'])
-        mock_transform.assert_called_once_with(mock_df, mock_schema)
+        mock_transform.assert_called_once_with(mock_df.__getitem__(), mock_schema)
 
     @patch.object(HighchartsLineTransformer, 'transform')
     def test_transform_highcharts_line_chart(self, mock_transform):
