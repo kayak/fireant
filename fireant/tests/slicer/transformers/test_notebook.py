@@ -1,12 +1,10 @@
 # coding: utf-8
 from datetime import datetime
-from unittest import skip
 
 import numpy as np
 from mock import patch, ANY, call
 
-from fireant.slicer.transformers import (PandasRowIndexTransformer, TransformationException,
-                                         MatplotlibLineChartTransformer)
+from fireant.slicer.transformers import PandasRowIndexTransformer, TransformationException
 from fireant.tests.slicer.transformers.base import BaseTransformerTests
 
 
@@ -275,7 +273,10 @@ class PandasColumnIndexTransformerTests(BaseTransformerTests):
                               472, 114, 56, 58, 122, 60, 62], list(result['Two']))
 
 
+@patch('matplotlib.pyplot')
 class MatplotlibLineChartTransformerTests(BaseTransformerTests):
+    from fireant.slicer.transformers import MatplotlibLineChartTransformer
+
     plt_tx = MatplotlibLineChartTransformer()
 
     def _assert_matplotlib_calls(self, mock_plot, metrics):
@@ -285,71 +286,70 @@ class MatplotlibLineChartTransformerTests(BaseTransformerTests):
                                              call().legend().set_title(metrics[0])])
             return
 
-        calls = sum([[call(ax=ANY, figsize=(14, 5 * len(metrics))),
-                      call().legend(loc='center left', bbox_to_anchor=(1, 0.5)),
-                      call().legend().set_title(metric)]
-                     for metric in metrics], [])
-        mock_plot.line.assert_has_calls(calls)
+        mock_plot.line.assert_has_calls([c
+                                         for metric in metrics
+                                         for c in [call(ax=ANY),
+                                                   call().legend(loc='center left', bbox_to_anchor=(1, 0.5)),
+                                                   call().legend().set_title(metric)]])
 
     @patch('pandas.DataFrame.plot')
-    def test_series_single_metric(self, mock_plot):
+    def test_series_single_metric(self, mock_plot, mock_matplotlib):
         # Tests transformation of a single-metric, single-dimension result
         result = self.plt_tx.transform(self.cont_dim_single_metric_df, self.cont_dim_single_metric_schema)
 
         self._assert_matplotlib_calls(mock_plot, ['One'])
 
-    @patch('pandas.DataFrame.plot')
-    @skip('Weird mock bug')
-    def test_series_multi_metric(self, mock_plot):
+    @patch('pandas.Series.plot')
+    def test_series_multi_metric(self, mock_plot, mock_matplotlib):
         # Tests transformation of a multi-metric, single-dimension result
         result = self.plt_tx.transform(self.cont_dim_multi_metric_df, self.cont_dim_multi_metric_schema)
 
         self._assert_matplotlib_calls(mock_plot, ['One', 'Two'])
 
     @patch('pandas.DataFrame.plot')
-    def test_time_series_date_to_millis(self, mock_plot):
+    def test_time_series_date_to_millis(self, mock_plot, mock_matplotlib):
         # Tests transformation of a single-metric, single-dimension result
         result = self.plt_tx.transform(self.time_dim_single_metric_df, self.time_dim_single_metric_schema)
 
         self._assert_matplotlib_calls(mock_plot, ['One'])
 
     @patch('pandas.DataFrame.plot')
-    def test_time_series_date_with_ref(self, mock_plot):
+    def test_time_series_date_with_ref(self, mock_plot, mock_matplotlib):
         # Tests transformation of a single-metric, single-dimension result using a WoW reference
         result = self.plt_tx.transform(self.time_dim_single_metric_ref_df, self.time_dim_single_metric_ref_schema)
 
         self._assert_matplotlib_calls(mock_plot, ['One'])
 
     @patch('pandas.DataFrame.plot')
-    def test_cont_uni_dim_single_metric(self, mock_plot):
+    def test_cont_uni_dim_single_metric(self, mock_plot, mock_matplotlib):
         # Tests transformation of a metric and a unique dimension
         result = self.plt_tx.transform(self.cont_uni_dims_single_metric_df, self.cont_uni_dims_single_metric_schema)
 
         self._assert_matplotlib_calls(mock_plot, ['One'])
 
     @patch('pandas.DataFrame.plot')
-    def test_cont_uni_dim_multi_metric(self, mock_plot):
+    def test_cont_uni_dim_multi_metric(self, mock_plot, mock_matplotlib):
         # Tests transformation of two metrics and a unique dimension
         result = self.plt_tx.transform(self.cont_uni_dims_multi_metric_df, self.cont_uni_dims_multi_metric_schema)
 
         self._assert_matplotlib_calls(mock_plot, ['One', 'Two'])
 
     @patch('pandas.DataFrame.plot')
-    def test_double_dimension_single_metric(self, mock_plot):
+    def test_double_dimension_single_metric(self, mock_plot, mock_matplotlib):
         # Tests transformation of a single-metric, double-dimension result
         result = self.plt_tx.transform(self.cont_cat_dims_single_metric_df, self.cont_cat_dims_single_metric_schema)
 
         self._assert_matplotlib_calls(mock_plot, ['One'])
 
     @patch('pandas.DataFrame.plot')
-    def test_double_dimension_multi_metric(self, mock_plot):
+    def test_double_dimension_multi_metric(self, mock_plot, mock_matplotlib):
         # Tests transformation of a multi-metric, double-dimension result
         result = self.plt_tx.transform(self.cont_cat_dims_multi_metric_df, self.cont_cat_dims_multi_metric_schema)
 
         self._assert_matplotlib_calls(mock_plot, ['One', 'Two'])
 
     @patch('pandas.DataFrame.plot')
-    def test_triple_dimension_multi_metric(self, mock_plot):
+    def test_triple_dimension_multi_metric(self, mock_plot, mock_matplotlib):
         # Tests transformation of a multi-metric, double-dimension result
         df = self.cont_cat_cat_dims_multi_metric_df
 
@@ -358,7 +358,7 @@ class MatplotlibLineChartTransformerTests(BaseTransformerTests):
         self._assert_matplotlib_calls(mock_plot, ['One', 'Two'])
 
     @patch('pandas.DataFrame.plot')
-    def test_rollup_triple_dimension_multi_metric(self, mock_plot):
+    def test_rollup_triple_dimension_multi_metric(self, mock_plot, mock_matplotlib):
         # Tests transformation of a multi-metric, double-dimension result
         df = self.rollup_cont_cat_cat_dims_multi_metric_df
 
@@ -366,7 +366,7 @@ class MatplotlibLineChartTransformerTests(BaseTransformerTests):
 
         self._assert_matplotlib_calls(mock_plot, ['One', 'Two'])
 
-    def test_require_at_least_one_dimension(self):
+    def test_require_at_least_one_dimension(self, mock_plot):
         df = self.no_dims_multi_metric_df
 
         with self.assertRaises(TransformationException):
