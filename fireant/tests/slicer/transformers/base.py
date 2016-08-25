@@ -7,6 +7,8 @@ from datetime import date
 import numpy as np
 import pandas as pd
 
+from fireant.slicer.transformers import Transformer
+
 
 def _rollup(dataframe, levels):
     roll = dataframe.groupby(level=levels).sum()
@@ -299,3 +301,9 @@ class BaseTransformerTests(unittest.TestCase):
         'metrics': OrderedDict([('one', 'One'), ('two', 'Two')]),
         'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_dim), ('cat2', cat2_dim)])
     }
+
+    def test_transformer_api(self):
+        tx = Transformer()
+        
+        with self.assertRaises(NotImplementedError):
+            tx.transform(pd.DataFrame(), {})

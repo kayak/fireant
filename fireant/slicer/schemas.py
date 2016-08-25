@@ -58,6 +58,9 @@ class Dimension(SlicerElement):
     def __init__(self, key, label=None, definition=None, joins=None):
         super(Dimension, self).__init__(key, label, definition, joins)
 
+    def levels(self):
+        return [self.key]
+
 
 class NumericInterval(object):
     def __init__(self, size=1, offset=0):
@@ -129,6 +132,11 @@ class UniqueDimension(Dimension):
     def schemas(self, *args):
         id_field_schemas = [('{key}'.format(key=self.key), self.definition)]
         return id_field_schemas + [('{key}_display'.format(key=self.key), self.display_field)]
+
+    def levels(self):
+        if self.display_field is not None:
+            return [self.key, self.display_field]
+        return super(UniqueDimension, self).levels()
 
 
 class BooleanDimension(Dimension):
