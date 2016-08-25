@@ -1,4 +1,5 @@
 # coding: utf-8
+import pandas as pd
 
 
 def dimension_levels(dimension_key, dimension):
@@ -8,10 +9,12 @@ def dimension_levels(dimension_key, dimension):
 
 
 def correct_dimension_level_order(dataframe, display_schema):
-    dimension_orders = [order
-                        for key, dimension in display_schema['dimensions'].items()
-                        for order in dimension_levels(key, dimension)]
+    if isinstance(dataframe.index, pd.MultiIndex):
+        dimension_orders = [order
+                            for key, dimension in display_schema['dimensions'].items()
+                            for order in dimension_levels(key, dimension)]
 
-    reordered = dataframe.reorder_levels(dataframe.index.names.index(level)
-                                         for level in dimension_orders)
-    return reordered
+        dataframe = dataframe.reorder_levels(dataframe.index.names.index(level)
+                                             for level in dimension_orders)
+
+    return dataframe[list(display_schema['metrics'].keys())]
