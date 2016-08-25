@@ -4,6 +4,7 @@ from unittest import TestCase
 from mock import patch, MagicMock
 
 from fireant.database import Database
+from pypika import Field
 
 
 class DatabaseTests(TestCase):
@@ -31,3 +32,12 @@ class DatabaseTests(TestCase):
         self.assertEqual(mock_read_sql.return_value, result)
 
         mock_read_sql.assert_called_once_with(query, mock_connect().__enter__())
+
+    def test_database_api(self):
+        db = Database()
+
+        with self.assertRaises(NotImplementedError):
+            db.connect()
+
+        with self.assertRaises(NotImplementedError):
+            db.round_date(Field('abc'), 'DAY')

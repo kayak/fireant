@@ -3,7 +3,7 @@
 
 class Transformer(object):
     def transform(self, dataframe, display_schema):
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class TransformationException(Exception):

@@ -105,10 +105,11 @@ class SlicerManager(QueryManager):
             'dfilters': self._filters_schema(self.slicer.dimensions, dimension_filters or [],
                                              self._default_dimension_definition),
             'references': self._references_schema(references, dimensions or [], schema_dimensions),
-            'rollup': [dimension
+            'rollup': [level
                        for operation in operations or []
-                       if 'rollup' == operation.key
-                       for dimension in operation.schemas(self.slicer)],
+                       if 'totals' == operation.key
+                       for dimension in operation.dimension_keys
+                       for level in self.slicer.dimensions[dimension].levels()],
         }
 
     def display_schema(self, metrics=None, dimensions=None, references=None):
