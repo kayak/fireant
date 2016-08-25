@@ -1,4 +1,6 @@
 # coding: utf-8
+import itertools
+
 import pandas as pd
 
 
@@ -17,4 +19,9 @@ def correct_dimension_level_order(dataframe, display_schema):
         dataframe = dataframe.reorder_levels(dataframe.index.names.index(level)
                                              for level in dimension_orders)
 
-    return dataframe[list(display_schema['metrics'].keys())]
+    metrics = list(display_schema['metrics'])
+    if display_schema.get('references'):
+        references = [''] + list(display_schema['references'])
+        return dataframe[list(itertools.product(references, metrics))]
+
+    return dataframe[metrics]
