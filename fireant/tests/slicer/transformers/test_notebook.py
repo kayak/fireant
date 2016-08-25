@@ -386,3 +386,70 @@ class MatplotlibLineChartTransformerTests(BaseTransformerTests):
 
         with self.assertRaises(TransformationException):
             self.plt_tx.transform(df, self.no_dims_multi_metric_schema)
+
+
+class MatplotlibBarChartTransformerTests(BaseTransformerTests):
+    mock_matplotlib = MagicMock(name='mock_matplotlib')
+    patcher = patch.dict('sys.modules', {
+        'matplotlib': mock_matplotlib,
+        'matplotlib.pyplot': mock_matplotlib.pyplot,
+    })
+
+    def setUp(self):
+        self.patcher.start()
+
+        mock_axes = MagicMock()
+        mock_axes.__iter__.return_value = iter([0, 1, 2, 3])
+        self.mock_matplotlib.pyplot.subplots.return_value = MagicMock(), mock_axes
+
+    def tearDown(self):
+        self.patcher.stop()
+
+    from fireant.slicer.transformers import MatplotlibBarChartTransformer
+    plt_tx = MatplotlibBarChartTransformer()
+
+    def _assert_matplotlib_calls(self, mock_plot):
+        mock_plot.bar.assert_has_calls([call(figsize=(14, 5)),
+                                        call().legend(loc='center left', bbox_to_anchor=(1, 0.5))])
+
+    @patch('pandas.DataFrame.plot')
+    def test_series_single_metric(self, mock_plot):
+        # Tests transformation of a single-metric, single-dimension result
+        result = self.plt_tx.transform(self.cont_dim_single_metric_df, self.cont_dim_single_metric_schema)
+
+        self._assert_matplotlib_calls(mock_plot)
+
+    @patch('pandas.DataFrame.plot')
+    def test_series_multi_metric(self, mock_plot):
+        # Tests transformation of a multi-metric, single-dimension result
+        result = self.plt_tx.transform(self.cont_dim_multi_metric_df, self.cont_dim_multi_metric_schema)
+
+        self._assert_matplotlib_calls(mock_plot)
+
+    @patch('pandas.DataFrame.plot')
+    def test_time_series_date_to_millis(self, mock_plot):
+        # Tests transformation of a single-metric, single-dimension result
+        result = self.plt_tx.transform(self.time_dim_single_metric_df, self.time_dim_single_metric_schema)
+
+        self._assert_matplotlib_calls(mock_plot)
+
+    @patch('pandas.DataFrame.plot')
+    def test_time_series_date_with_ref(self, mock_plot):
+        # Tests transformation of a single-metric, single-dimension result using a WoW reference
+        result = self.plt_tx.transform(self.time_dim_single_metric_ref_df, self.time_dim_single_metric_ref_schema)
+
+        self._assert_matplotlib_calls(mock_plot)
+
+    @patch('pandas.DataFrame.plot')
+    def test_cont_uni_dim_single_metric(self, mock_plot):
+        # Tests transformation of a metric and a unique dimension
+        result = self.plt_tx.transform(self.cont_uni_dims_single_metric_df, self.cont_uni_dims_single_metric_schema)
+
+        self._assert_matplotlib_calls(mock_plot)
+
+    @patch('pandas.DataFrame.plot')
+    def test_double_dimension_single_metric(self, mock_plot):
+        # Tests transformation of a single-metric, double-dimension result
+        result = self.plt_tx.transform(self.cont_cat_dims_single_metric_df, self.cont_cat_dims_single_metric_schema)
+
+        self._assert_matplotlib_calls(mock_plot)

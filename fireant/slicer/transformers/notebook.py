@@ -1,6 +1,7 @@
 # coding: utf-8
 import pandas as pd
 
+from fireant import settings
 from . import Transformer, TransformationException
 
 
@@ -78,7 +79,8 @@ class MatplotlibLineChartTransformer(PandasColumnIndexTransformer):
         dataframe = super(MatplotlibLineChartTransformer, self).transform(dataframe, display_schema)
 
         metrics = list(display_schema['metrics'].values())
-        figsize = (14, 5 * len(metrics))
+        height, width = settings.matplotlib_figsize
+        figsize = (height, width * len(metrics))
 
         if 1 == len(metrics):
             return dataframe.plot.line(figsize=figsize) \
@@ -108,5 +110,5 @@ class MatplotlibBarChartTransformer(PandasColumnIndexTransformer):
     def transform(self, dataframe, display_schema):
         dataframe = super(MatplotlibBarChartTransformer, self).transform(dataframe, display_schema)
 
-        return dataframe.plot.bar(figsize=(14, 5)) \
+        return dataframe.plot.bar(figsize=settings.matplotlib_figsize) \
             .legend(loc='center left', bbox_to_anchor=(1, 0.5))
