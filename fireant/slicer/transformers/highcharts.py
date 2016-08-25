@@ -163,10 +163,10 @@ class HighchartsLineTransformer(Transformer):
 
     def _unstack_levels(self, dimensions, dim_ordinal):
         for key, dimension in dimensions:
+            yield dim_ordinal[key]
+
             if 'display_field' in dimension:
                 yield dim_ordinal[dimension['display_field']]
-
-            yield dim_ordinal[key]
 
 
 class HighchartsColumnTransformer(HighchartsLineTransformer):

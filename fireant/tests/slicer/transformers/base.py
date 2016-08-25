@@ -43,18 +43,18 @@ class BaseTransformerTests(unittest.TestCase):
     cat1_idx = pd.Index([u'a', u'b'], name='cat1')
     cat2_idx = pd.Index([u'y', u'z'], name='cat2')
 
-    uni_idx = pd.MultiIndex.from_tuples([(u'Aa', 1), (u'Bb', 2), (u'Cc', 3)],
-                                        names=['uni_label', 'uni'])
+    uni_idx = pd.MultiIndex.from_tuples([(1, u'Aa'), (2, u'Bb'), (3, u'Cc')],
+                                        names=['uni', 'uni_label'])
 
     datetime_idx = pd.DatetimeIndex(pd.date_range(start=date(2000, 1, 1), periods=8), name='date')
     cont_cat_idx = pd.MultiIndex.from_product([cont_idx, cat1_idx], names=['cont', 'cat1'])
     cont_uni_idx = pd.MultiIndex.from_product([cont_idx, uni_idx.levels[0]],
-                                              names=['cont', 'uni_label'])
+                                              names=['cont', 'uni'])
     cat_cat_idx = pd.MultiIndex.from_product([cat1_idx, cat2_idx], names=['cat1', 'cat2'])
     cont_cat_cat_idx = pd.MultiIndex.from_product([cont_idx, cat1_idx, cat2_idx], names=['cont', 'cat1', 'cat2'])
 
     cont_cat_uni_idx = pd.MultiIndex.from_product([cont_idx, cat1_idx, uni_idx.levels[0]],
-                                                  names=['cont', 'cat1', 'uni_label'])
+                                                  names=['cont', 'cat1', 'uni'])
 
     # Mock DF with single continuous dimension and one metric column
     no_dims_multi_metric_df = pd.DataFrame(
@@ -209,11 +209,11 @@ class BaseTransformerTests(unittest.TestCase):
         columns=['one', 'two'],
         index=cont_uni_idx
     )
-    _cont_uni['uni'] = None
-    for label, uni_id in uni_idx:
-        _cont_uni.loc[pd.IndexSlice[:, label], ['uni']] = uni_id
+    _cont_uni['uni_label'] = None
+    for uni_id, label in uni_idx:
+        _cont_uni.loc[pd.IndexSlice[:, uni_id], ['uni_label']] = label
 
-    cont_uni_dims_multi_metric_df = _cont_uni.set_index(['uni'], append=True)
+    cont_uni_dims_multi_metric_df = _cont_uni.set_index(['uni_label'], append=True)
     cont_uni_dims_multi_metric_df = pd.DataFrame(cont_uni_dims_multi_metric_df)
     cont_uni_dims_multi_metric_schema = {
         'metrics': OrderedDict([('one', 'One'), ('two', 'Two')]),
@@ -274,11 +274,11 @@ class BaseTransformerTests(unittest.TestCase):
         columns=['one', 'two'],
         index=cont_cat_uni_idx
     )
-    _cont_cat_uni['uni'] = None
-    for label, uni_id in uni_idx:
-        _cont_cat_uni.loc[pd.IndexSlice[:, :, label], ['uni']] = uni_id
+    _cont_cat_uni['uni_label'] = None
+    for uni_id, label in uni_idx:
+        _cont_cat_uni.loc[pd.IndexSlice[:, :, uni_id], ['uni_label']] = label
 
-    cont_cat_uni_dims_multi_metric_df = _cont_cat_uni.set_index('uni', append=True)
+    cont_cat_uni_dims_multi_metric_df = _cont_cat_uni.set_index('uni_label', append=True)
     cont_cat_uni_dims_multi_metric_schema = {
         'metrics': OrderedDict([('one', 'One'), ('two', 'Two')]),
         'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_dim), ('uni', uni_dim)])

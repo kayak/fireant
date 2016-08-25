@@ -107,12 +107,11 @@ class DataTablesRowIndexTransformer(Transformer):
 
             if 'display_field' in dimension:
                 i += 1
-                yield key, {'display': dimension_value,
-                            'value': _format_data_point(idx[i])}
+                yield key, {'display': _format_data_point(idx[i]), 'value': dimension_value}
 
             elif 'display_options' in dimension:
-                yield key, {'display': dimension['display_options'].get(dimension_value, dimension_value) or 'Total',
-                            'value': dimension_value}
+                display = dimension['display_options'].get(dimension_value, dimension_value) or 'Total'
+                yield key, {'display': display, 'value': dimension_value}
 
             else:
                 yield key, {'display': dimension_value}
@@ -167,8 +166,8 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
             if 'display_options' in dimension:
                 level_key = metric_column[i]
                 level_display = (dimension['display_options'].get(level_key, None)
-                               if not (isinstance(level_key, float) and np.isnan(level_key))
-                               else 'Total')
+                                 if not (isinstance(level_key, float) and np.isnan(level_key))
+                                 else 'Total')
 
             else:
                 level_key = metric_column[i]
@@ -299,7 +298,7 @@ class CSVColumnIndexTransformer(DataTablesColumnIndexTransformer, CSVRowIndexTra
             for dimension_level, dimension_value in zip(csv_df.columns.names[1:], dimension_values):
                 if 'display_options' in dimensions[dimension_level]:
                     dimension_display = dimensions[dimension_level]['display_options'].get(dimension_value,
-                                                                                         dimension_value)
+                                                                                           dimension_value)
                 else:
                     dimension_display = dimension_value
 
