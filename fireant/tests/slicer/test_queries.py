@@ -106,46 +106,46 @@ class ExampleTests(QueryTests):
 
         self.assertEqual('SELECT '
                          # Dimensions
-                         '"t0"."dt" "dt","t0"."fiz" "fiz",'
+                         '"sq0"."dt" "dt","sq0"."fiz" "fiz",'
                          # Metrics
-                         '"t0"."foo" "foo","t0"."bar" "bar","t0"."ratio" "ratio",'
+                         '"sq0"."foo" "foo","sq0"."bar" "bar","sq0"."ratio" "ratio",'
                          # Reference Dimension
                          # Currently not selected
-                         # '"t1"."dt" "dt_wow",'
+                         # '"sq1"."dt" "dt_wow",'
                          # Reference Metrics
-                         '"t1"."foo" "foo_wow","t1"."bar" "bar_wow","t1"."ratio" "ratio_wow" '
+                         '"sq1"."foo" "foo_wow","sq1"."bar" "bar_wow","sq1"."ratio" "ratio_wow" '
                          'FROM ('
                          # Main Query
                          'SELECT '
-                         'ROUND("t0"."dt",\'DD\') "dt","t2"."fiz" "fiz",'
-                         'SUM("t0"."foo") "foo",'
-                         'AVG("t1"."bar") "bar",'
-                         'SUM("t0"."numerator")/SUM("t0"."denominator") "ratio" '
-                         'FROM "test_table" "t0" '
-                         'JOIN "test_join1" "t1" ON "t0"."join1_id"="t1"."id" '
-                         'LEFT JOIN "test_join2" "t2" ON "t0"."join2_id"="t2"."id" '
-                         'WHERE "t0"."dt" BETWEEN \'2016-01-01\' AND \'2016-12-31\' '
-                         'AND "t2"."fiz" IN (\'a\',\'b\',\'c\') '
-                         'GROUP BY ROUND("t0"."dt",\'DD\'),"t2"."fiz" '
-                         'HAVING SUM("t2"."buz")>100'
-                         ') "t0" '
+                         'ROUND("test_table"."dt",\'DD\') "dt","test_join2"."fiz" "fiz",'
+                         'SUM("test_table"."foo") "foo",'
+                         'AVG("test_join1"."bar") "bar",'
+                         'SUM("test_table"."numerator")/SUM("test_table"."denominator") "ratio" '
+                         'FROM "test_table" '
+                         'JOIN "test_join1" ON "test_table"."join1_id"="test_join1"."id" '
+                         'LEFT JOIN "test_join2" ON "test_table"."join2_id"="test_join2"."id" '
+                         'WHERE "test_table"."dt" BETWEEN \'2016-01-01\' AND \'2016-12-31\' '
+                         'AND "test_join2"."fiz" IN (\'a\',\'b\',\'c\') '
+                         'GROUP BY ROUND("test_table"."dt",\'DD\'),"test_join2"."fiz" '
+                         'HAVING SUM("test_join2"."buz")>100'
+                         ') "sq0" '
                          'LEFT JOIN ('
                          # Reference Query
                          'SELECT '
-                         'ROUND("t0"."dt",\'DD\') "dt","t2"."fiz" "fiz",'
-                         'SUM("t0"."foo") "foo",'
-                         'AVG("t1"."bar") "bar",'
-                         'SUM("t0"."numerator")/SUM("t0"."denominator") "ratio" '
-                         'FROM "test_table" "t0" '
-                         'JOIN "test_join1" "t1" ON "t0"."join1_id"="t1"."id" '
-                         'LEFT JOIN "test_join2" "t2" ON "t0"."join2_id"="t2"."id" '
-                         'WHERE "t0"."dt"+INTERVAL \'1 WEEK\' BETWEEN \'2016-01-01\' AND \'2016-12-31\' '
-                         'AND "t2"."fiz" IN (\'a\',\'b\',\'c\') '
-                         'GROUP BY ROUND("t0"."dt",\'DD\'),"t2"."fiz" '
-                         'HAVING SUM("t2"."buz")>100'
-                         ') "t1" ON "t0"."dt"="t1"."dt"+INTERVAL \'1 WEEK\' '
-                         'AND "t0"."fiz"="t1"."fiz" '
-                         'ORDER BY "t0"."dt","t0"."fiz"', str(query))
+                         'ROUND("test_table"."dt",\'DD\') "dt","test_join2"."fiz" "fiz",'
+                         'SUM("test_table"."foo") "foo",'
+                         'AVG("test_join1"."bar") "bar",'
+                         'SUM("test_table"."numerator")/SUM("test_table"."denominator") "ratio" '
+                         'FROM "test_table" '
+                         'JOIN "test_join1" ON "test_table"."join1_id"="test_join1"."id" '
+                         'LEFT JOIN "test_join2" ON "test_table"."join2_id"="test_join2"."id" '
+                         'WHERE "test_table"."dt"+INTERVAL \'1 WEEK\' BETWEEN \'2016-01-01\' AND \'2016-12-31\' '
+                         'AND "test_join2"."fiz" IN (\'a\',\'b\',\'c\') '
+                         'GROUP BY ROUND("test_table"."dt",\'DD\'),"test_join2"."fiz" '
+                         'HAVING SUM("test_join2"."buz")>100'
+                         ') "sq1" ON "sq0"."dt"="sq1"."dt"+INTERVAL \'1 WEEK\' '
+                         'AND "sq0"."fiz"="sq1"."fiz" '
+                         'ORDER BY "sq0"."dt","sq0"."fiz"', str(query))
 
 
 class MetricsTests(QueryTests):
@@ -403,14 +403,15 @@ class DimensionTests(QueryTests):
         )
 
         self.assertEqual('SELECT '
-                         'ROUND("t0"."dt",\'DD\') "dt","t0"."locale" "locale",'
-                         'SUM("t0"."clicks") "clicks",SUM("t0"."revenue")/SUM("t0"."cost") "roi",'
-                         '"t1"."hotel_name" "hotel_name","t1"."address" "hotel_address",'
-                         '"t1"."ctid" "city_id","t1"."city_name" "city_name" '
-                         'FROM "test_table" "t0" '
-                         'LEFT JOIN "test_join1" "t1" ON "t0"."hotel_id"="t1"."hotel_id" '
-                         'GROUP BY ROUND("t0"."dt",\'DD\'),"t0"."locale" '
-                         'ORDER BY ROUND("t0"."dt",\'DD\'),"t0"."locale"', str(query))
+                         'ROUND("test_table"."dt",\'DD\') "dt","test_table"."locale" "locale",'
+                         'SUM("test_table"."clicks") "clicks",'
+                         'SUM("test_table"."revenue")/SUM("test_table"."cost") "roi",'
+                         '"test_join1"."hotel_name" "hotel_name","test_join1"."address" "hotel_address",'
+                         '"test_join1"."ctid" "city_id","test_join1"."city_name" "city_name" '
+                         'FROM "test_table" '
+                         'LEFT JOIN "test_join1" ON "test_table"."hotel_id"="test_join1"."hotel_id" '
+                         'GROUP BY ROUND("test_table"."dt",\'DD\'),"test_table"."locale" '
+                         'ORDER BY ROUND("test_table"."dt",\'DD\'),"test_table"."locale"', str(query))
 
 
 class FilterTests(QueryTests):
@@ -571,11 +572,11 @@ class ComparisonTests(QueryTests):
     def assert_reference(self, query, key):
         self.assertEqual(
             'SELECT '
-            '"t0"."dt" "dt","t0"."device_type" "device_type",'
-            '"t0"."clicks" "clicks","t0"."roi" "roi",'
-            # '"t1"."dt" "dt_{key}",'
-            '"t1"."clicks" "clicks_{key}",'
-            '"t1"."roi" "roi_{key}" '
+            '"sq0"."dt" "dt","sq0"."device_type" "device_type",'
+            '"sq0"."clicks" "clicks","sq0"."roi" "roi",'
+            # '"sq1"."dt" "dt_{key}",'
+            '"sq1"."clicks" "clicks_{key}",'
+            '"sq1"."roi" "roi_{key}" '
             'FROM ('
             'SELECT '
             'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
@@ -583,7 +584,7 @@ class ComparisonTests(QueryTests):
             'FROM "test_table" '
             'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
             'GROUP BY ROUND("dt",\'DD\'),"device_type"'
-            ') "t0" '
+            ') "sq0" '
             'LEFT JOIN ('
             'SELECT '
             'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
@@ -591,9 +592,9 @@ class ComparisonTests(QueryTests):
             'FROM "test_table" '
             'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
             'GROUP BY ROUND("dt",\'DD\'),"device_type"'
-            ') "t1" ON "t0"."dt"="t1"."dt"+INTERVAL \'{expr}\' '
-            'AND "t0"."device_type"="t1"."device_type" '
-            'ORDER BY "t0"."dt","t0"."device_type"'.format(
+            ') "sq1" ON "sq0"."dt"="sq1"."dt"+INTERVAL \'{expr}\' '
+            'AND "sq0"."device_type"="sq1"."device_type" '
+            'ORDER BY "sq0"."dt","sq0"."device_type"'.format(
                 key=key,
                 expr=self.intervals[key]
             ), str(query)
@@ -602,11 +603,11 @@ class ComparisonTests(QueryTests):
     def assert_reference_d(self, query, key):
         self.assertEqual(
             'SELECT '
-            '"t0"."dt" "dt","t0"."device_type" "device_type",'
-            '"t0"."clicks" "clicks","t0"."roi" "roi",'
-            # '"t1"."dt" "dt_{key}_d",'
-            '"t0"."clicks"-"t1"."clicks" "clicks_{key}_d",'
-            '"t0"."roi"-"t1"."roi" "roi_{key}_d" '
+            '"sq0"."dt" "dt","sq0"."device_type" "device_type",'
+            '"sq0"."clicks" "clicks","sq0"."roi" "roi",'
+            # '"sq1"."dt" "dt_{key}_d",'
+            '"sq0"."clicks"-"sq1"."clicks" "clicks_{key}_d",'
+            '"sq0"."roi"-"sq1"."roi" "roi_{key}_d" '
             'FROM ('
             'SELECT '
             'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
@@ -614,7 +615,7 @@ class ComparisonTests(QueryTests):
             'FROM "test_table" '
             'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
             'GROUP BY ROUND("dt",\'DD\'),"device_type"'
-            ') "t0" '
+            ') "sq0" '
             'LEFT JOIN ('
             'SELECT '
             'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
@@ -622,9 +623,9 @@ class ComparisonTests(QueryTests):
             'FROM "test_table" '
             'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
             'GROUP BY ROUND("dt",\'DD\'),"device_type"'
-            ') "t1" ON "t0"."dt"="t1"."dt"+INTERVAL \'{expr}\' '
-            'AND "t0"."device_type"="t1"."device_type" '
-            'ORDER BY "t0"."dt","t0"."device_type"'.format(
+            ') "sq1" ON "sq0"."dt"="sq1"."dt"+INTERVAL \'{expr}\' '
+            'AND "sq0"."device_type"="sq1"."device_type" '
+            'ORDER BY "sq0"."dt","sq0"."device_type"'.format(
                 key=key,
                 expr=self.intervals[key]
             ), str(query)
@@ -633,11 +634,11 @@ class ComparisonTests(QueryTests):
     def assert_reference_p(self, query, key):
         self.assertEqual(
             'SELECT '
-            '"t0"."dt" "dt","t0"."device_type" "device_type",'
-            '"t0"."clicks" "clicks","t0"."roi" "roi",'
-            # '"t1"."dt" "dt_{key}_p",'
-            '("t0"."clicks"-"t1"."clicks")/"t1"."clicks" "clicks_{key}_p",'
-            '("t0"."roi"-"t1"."roi")/"t1"."roi" "roi_{key}_p" '
+            '"sq0"."dt" "dt","sq0"."device_type" "device_type",'
+            '"sq0"."clicks" "clicks","sq0"."roi" "roi",'
+            # '"sq1"."dt" "dt_{key}_p",'
+            '("sq0"."clicks"-"sq1"."clicks")/"sq1"."clicks" "clicks_{key}_p",'
+            '("sq0"."roi"-"sq1"."roi")/"sq1"."roi" "roi_{key}_p" '
             'FROM ('
             'SELECT '
             'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
@@ -645,7 +646,7 @@ class ComparisonTests(QueryTests):
             'FROM "test_table" '
             'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
             'GROUP BY ROUND("dt",\'DD\'),"device_type"'
-            ') "t0" '
+            ') "sq0" '
             'LEFT JOIN ('
             'SELECT '
             'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
@@ -653,9 +654,9 @@ class ComparisonTests(QueryTests):
             'FROM "test_table" '
             'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
             'GROUP BY ROUND("dt",\'DD\'),"device_type"'
-            ') "t1" ON "t0"."dt"="t1"."dt"+INTERVAL \'{expr}\' '
-            'AND "t0"."device_type"="t1"."device_type" '
-            'ORDER BY "t0"."dt","t0"."device_type"'.format(
+            ') "sq1" ON "sq0"."dt"="sq1"."dt"+INTERVAL \'{expr}\' '
+            'AND "sq0"."device_type"="sq1"."device_type" '
+            'ORDER BY "sq0"."dt","sq0"."device_type"'.format(
                 key=key,
                 expr=self.intervals[key]
             ), str(query)
