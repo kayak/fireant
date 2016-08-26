@@ -280,7 +280,6 @@ class TransformerManager(object):
 
         display_schema = self._manager.display_schema(metrics, dimensions, references)
 
-        if isinstance(df.index, pd.MultiIndex):
-            df = tx_utils.correct_dimension_level_order(df, display_schema)
+        df = tx_utils.correct_dimension_level_order(df, display_schema)
 
         return tx.transform(df, display_schema)

@@ -27,7 +27,12 @@ class PandasRowIndexTransformer(Transformer):
             if 'display_options' in dimension:
                 display_values = [dimension['display_options'].get(value, value)
                                   for value in dataframe.index.get_level_values(key).unique()]
-                dataframe.index.set_levels(display_values, key, inplace=True)
+
+                if isinstance(dataframe.index, pd.MultiIndex):
+                    dataframe.index.set_levels(display_values, key, inplace=True)
+
+                else:
+                    dataframe.index = pd.Index(display_values)
 
         return dataframe
 
