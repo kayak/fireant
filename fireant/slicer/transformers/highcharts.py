@@ -41,9 +41,22 @@ class HighchartsLineTransformer(Transformer):
 
     chart_type = 'line'
 
-    def transform(self, dataframe, display_schema):
-        self._validate_dimensions(dataframe, display_schema['dimensions'])
+    def prevalidate_request(self, slicer, metrics, dimensions,
+                            metric_filters, dimension_filters,
+                            references, operations):
+        super(HighchartsLineTransformer, self).prevalidate_request(slicer, metrics, dimensions,
+                                                                   metric_filters, dimension_filters,
+                                                                   references, operations)
 
+        from fireant.slicer import ContinuousDimension
+
+        dimension0 = slicer.dimensions[dimensions[0]]
+        if not dimensions or not isinstance(dimension0, ContinuousDimension):
+            raise TransformationException('Highcharts line charts require a continuous dimension as the first '
+                                          'dimension.  Please add a continuous dimension from your Slicer to '
+                                          'your request.')
+
+    def transform(self, dataframe, display_schema):
         has_references = isinstance(dataframe.columns, pd.MultiIndex)
 
         dim_ordinal = {name: ordinal
@@ -101,11 +114,6 @@ class HighchartsLineTransformer(Transformer):
             'color': color[metric_index % n_colors],
             'dashStyle': 'Dot' if reference else 'Solid'
         }
-
-    def _validate_dimensions(self, dataframe, dimensions):
-        if not 0 < len(dimensions):
-            raise TransformationException('Cannot transform %s chart.  '
-                                          'At least one dimension is required.' % self.chart_type)
 
     @staticmethod
     def _make_categories(dataframe, dim_ordinal, display_schema):
@@ -189,6 +197,25 @@ class HighchartsLineTransformer(Transformer):
 
 class HighchartsColumnTransformer(HighchartsLineTransformer):
     chart_type = 'column'
+
+    def prevalidate_request(self, slicer, metrics, dimensions,
+                            metric_filters, dimension_filters,
+                            references, operations):
+        super(HighchartsLineTransformer, self).prevalidate_request(slicer, metrics, dimensions,
+                                                                   metric_filters, dimension_filters,
+                                                                   references, operations)
+
+        if dimensions and 2 < len(dimensions):
+            # Too many dimensions
+            raise TransformationException('Highcharts bar and column charts support at a maximum two dimensions.  '
+                                          'Request included %d dimensions.' % len(dimensions))
+
+        if dimensions and 2 == len(dimensions) and metrics and 1 < len(metrics):
+            # Too many metrics
+            raise TransformationException('Highcharts bar and column charts support at a maximum one metric with '
+                                          'two dimensions.  Please remove some dimensions or metrics.  '
+                                          'Request included %d metrics and %d dimensions.' % (len(metrics),
+                                                                                              len(dimensions)))
 
     def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference):
         color = colors.get(settings.highcharts_colors, 'grid')
