@@ -257,14 +257,14 @@ class CSVRowIndexTransformer(DataTablesRowIndexTransformer):
             return idx[dim_ordinal[display_field]]
 
         if isinstance(idx, tuple):
-            id_field = dimension['id_fields'][0]
+            id_field = dimension['definition'][0]
             dimension_display = idx[dim_ordinal[id_field]]
 
         else:
             dimension_display = idx
 
         if 'display_options' in dimension:
-            dimension_display = dimension['display_options'].get(dimension_display, dimension_display)
+            return dimension['display_options'].get(dimension_display, dimension_display)
 
         return dimension_display
 

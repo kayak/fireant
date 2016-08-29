@@ -96,7 +96,7 @@ A join requires three parameters, a *key*, a *table*, and a *criterion*.  The *k
         ],
 
         dimension=[
-            UniqueDimension('customer', id_fields=[customers.id],
+            UniqueDimension('customer', definition=customers.id,
                             display_field=fn.Concat(customers.fname, ' ', customers.lname),
                             joins=['customers'])
         ],

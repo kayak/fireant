@@ -76,21 +76,17 @@ To configure a slicer, instantiate a |ClassSlicer| with a list of |ClassMetric| 
             DatetimeDimension('date', definition=analytics.dt),
 
             # Categorical dimensions are ones with a fixed number of options.
-            CategoricalDimension('device', options=[DimensionValue('desktop'),
+            CategoricalDimension('device', display_options=[DimensionValue('desktop'),
                                                     DimensionValue('tablet'),
                                                     DimensionValue('mobile')]]),
 
-            # Unique dimensions are used for entities that have a primary or composite
-            # key and optionally a label.
-            UniqueDimension('account', label='Account Name',
-
-                            # id_fields is a list which contains one or more PKey
-                            # fields.
-                            id_fields=[analytics.account_id],
+            # Unique dimensions are used for entities that have a unique ID and
+            # a display name field
+            UniqueDimension('account', label='Account Name', definition=analytics.account_id,
 
                             # The accounts table is joined to get more data about the
                             # account.
-                            label_field=accounts.name,
+                            display_field=accounts.name,
 
                             # Just a list of keys of the required joins is needed.
                             joins=['accounts']),
