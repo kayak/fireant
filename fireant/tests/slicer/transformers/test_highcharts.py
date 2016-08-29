@@ -5,8 +5,7 @@ from unittest import TestCase
 import numpy as np
 import pandas as pd
 
-from fireant.slicer.transformers import (HighchartsLineTransformer, TransformationException,
-                                         HighchartsColumnTransformer,
+from fireant.slicer.transformers import (HighchartsLineTransformer, HighchartsColumnTransformer,
                                          HighchartsBarTransformer)
 from fireant.slicer.transformers import highcharts
 from fireant.tests.slicer.transformers.base import BaseTransformerTests
@@ -198,12 +197,6 @@ class HighchartsLineTransformerTests(BaseTransformerTests):
 
         self.evaluate_result(df.unstack(level=[1, 2]), result)
 
-    def test_require_at_least_one_dimension(self):
-        df = self.no_dims_multi_metric_df
-
-        with self.assertRaises(TransformationException):
-            self.hc_tx.transform(df, self.no_dims_multi_metric_schema)
-
 
 class HighchartsColumnTransformerTests(BaseTransformerTests):
     """
@@ -330,12 +323,6 @@ class HighchartsColumnTransformerTests(BaseTransformerTests):
         )
 
         self.evaluate_result(df, result)
-
-    def test_require_no_more_than_one_dimension_with_multi_metrics(self):
-        df = self.cat_cat_dims_multi_metric_df
-
-        with self.assertRaises(TransformationException):
-            self.hc_tx.transform(df, self.cat_cat_dims_multi_metric_schema)
 
 
 class HighchartsBarTransformerTests(HighchartsColumnTransformerTests):

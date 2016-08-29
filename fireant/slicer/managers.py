@@ -3,8 +3,6 @@
 import functools
 from collections import OrderedDict
 
-import pandas as pd
-
 from pypika import functions as fn
 from .queries import QueryManager
 from .transformers import utils as tx_utils
@@ -20,16 +18,6 @@ class SlicerManager(QueryManager):
         :param slicer:
         """
         self.slicer = slicer
-
-    def _get_and_transform_data(self, tx, metrics=tuple(), dimensions=tuple(),
-                                metric_filters=tuple(), dimension_filters=tuple(),
-                                references=tuple(), operations=tuple()):
-        # Loads data and transforms it with a given transformer.
-        df = self.data(metrics=metrics, dimensions=dimensions,
-                       metric_filters=metric_filters, dimension_filters=dimension_filters,
-                       references=references, operations=operations)
-        display_schema = self.display_schema(metrics, dimensions, references)
-        return tx.transform(df, display_schema)
 
     def data(self, metrics=tuple(), dimensions=tuple(),
              metric_filters=tuple(), dimension_filters=tuple(),
@@ -87,10 +75,6 @@ class SlicerManager(QueryManager):
     def query_schema(self, metrics=None, dimensions=None,
                      metric_filters=None, dimension_filters=None,
                      references=None, operations=None):
-
-        if not metrics:
-            raise ValueError('Invalid slicer request.  At least one metric is required to build a query.')
-
         schema_metrics, metrics_joins = self._metrics_schema(metrics)
         schema_dimensions, dimensions_joins = self._dimensions_schema(dimensions or [])
         schema_joins = self._joins_schema(metrics_joins | dimensions_joins)
@@ -139,13 +123,21 @@ class SlicerManager(QueryManager):
         }
 
     def _metrics_schema(self, keys):
+        if not keys:
+            raise SlicerException('At least one metric is required requests.  Please add a metric.')
+
+        invalid_metrics = {key[0]
+                           if isinstance(key, (tuple, list))
+                           else key
+                           for key in keys} - set(self.slicer.metrics)
+        if invalid_metrics:
+            raise SlicerException('Invalid metrics included in request: '
+                                  '[%s]' % ', '.join(invalid_metrics))
+
         joins = set()
         metrics = {}
         for metric in keys:
             schema_metric = self.slicer.metrics.get(metric)
-
-            if not schema_metric:
-                raise ValueError('Invalid metric key [%s]' % metric)
 
             for key, definition in schema_metric.schemas():
                 metrics[key] = definition or self._default_metric_definition(key)
@@ -156,6 +148,14 @@ class SlicerManager(QueryManager):
         return metrics, joins
 
     def _dimensions_schema(self, keys):
+        invalid_dimensions = {key[0]
+                              if isinstance(key, (tuple, list))
+                              else key
+                              for key in keys} - set(self.slicer.dimensions)
+        if invalid_dimensions:
+            raise SlicerException('Invalid dimensions included in request: '
+                                  '[%s]' % ', '.join(invalid_dimensions))
+
         joins = set()
         dimensions = {}
         for dimension in keys:
@@ -166,9 +166,6 @@ class SlicerManager(QueryManager):
                 args = []
 
             schema_dimension = self.slicer.dimensions.get(dimension)
-
-            if not schema_dimension:
-                raise ValueError('Invalid dimension key [%s]' % dimension)
 
             for key, definition in schema_dimension.schemas(*args):
                 dimensions[key] = definition or self._default_dimension_definition(key)
@@ -256,7 +253,7 @@ class SlicerManager(QueryManager):
         return schema_references
 
     def _default_dimension_definition(self, key):
-        return fn.Coalesce(self.slicer.table.field(key), 'null')
+        return fn.Coalesce(self.slicer.table.field(key), 'None')
 
     def _default_metric_definition(self, key):
         return fn.Sum(self.slicer.table.field(key))
@@ -264,7 +261,7 @@ class SlicerManager(QueryManager):
 
 class TransformerManager(object):
     def __init__(self, manager, transformers):
-        self._manager = manager
+        self.manager = manager
 
         # Creates a function on the slicer for each transformer
         for tx_key, tx in transformers.items():
@@ -273,12 +270,53 @@ class TransformerManager(object):
     def _get_and_transform_data(self, tx, metrics=tuple(), dimensions=tuple(),
                                 metric_filters=tuple(), dimension_filters=tuple(),
                                 references=tuple(), operations=tuple()):
-        # Loads data and transforms it with a given transformer.
-        df = self._manager.data(metrics=metrics, dimensions=dimensions,
-                                metric_filters=metric_filters, dimension_filters=dimension_filters,
-                                references=references, operations=operations)
+        """
+        Handles a request and applies a transformation to the result.  This is the implementation of all of the
+        transformer manager methods, which are constructed in the __init__ function of this class for each transformer.
 
-        display_schema = self._manager.display_schema(metrics, dimensions, references)
+        The request is first validated with the transformer then the request is executed via the SlicerManager and then
+        lastly the result is transformed and returned.
+
+        :param tx:
+            The transformer to use
+        :param metrics:
+            See ``fireant.slicer.SlicerManager``
+            A list of metrics to include in the query.
+
+        :param dimensions:
+            See ``fireant.slicer.SlicerManager``
+            A list of dimensions to include in the query.
+
+        :param metric_filters:
+            See ``fireant.slicer.SlicerManager``
+            A list of metrics filters to apply to the query.
+
+        :param dimension_filters:
+            See ``fireant.slicer.SlicerManager``
+            A list of dimension filters to apply to the query.
+
+        :param references:
+            See ``fireant.slicer.SlicerManager``
+            A list of references to include in the query
+
+        :param operations:
+            See ``fireant.slicer.SlicerManager``
+            A list of post-operations to apply to the result before transformation.
+
+        :return:
+            The transformed result of the request.
+        """
+
+        tx.prevalidate_request(self.manager.slicer, metrics=metrics, dimensions=dimensions,
+                               metric_filters=metric_filters, dimension_filters=dimension_filters,
+                               references=references, operations=operations)
+
+        # Loads data and transforms it with a given transformer.
+        df = self.manager.data(metrics=metrics, dimensions=dimensions,
+                               metric_filters=metric_filters, dimension_filters=dimension_filters,
+                               references=references, operations=operations)
+
+        display_schema = self.manager.display_schema(metrics, dimensions, references)
 
         df = tx_utils.correct_dimension_level_order(df, display_schema)
 
