@@ -74,7 +74,7 @@ class HighchartsLineTransformer(Transformer):
             series = self._make_series(dataframe, dim_ordinal, display_schema)
 
         result = {
-            'chart': {'type': self.chart_type},
+            'chart': {'type': self.chart_type,'zoomType': 'x'},
             'title': {'text': None},
             'xAxis': self.xaxis_options(dataframe, dim_ordinal, display_schema),
             'yAxis': self.yaxis_options(dataframe, dim_ordinal, display_schema),
