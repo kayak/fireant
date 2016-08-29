@@ -18,3 +18,18 @@ class UtilsTest(BaseTransformerTests):
         result = utils.correct_dimension_level_order(df, self.cont_cat_uni_dims_multi_metric_schema)
 
         self.assertListEqual(['cont', 'cat1', 'uni', 'uni_label'], list(result.index.names))
+
+    def test_correct_metrics(self):
+        df = self.cont_cat_uni_dims_multi_metric_df
+
+        result = utils.correct_dimension_level_order(df[['two', 'one']], self.cont_cat_uni_dims_multi_metric_schema)
+
+        self.assertListEqual(['one', 'two'], list(result.columns))
+
+    def test_correct_metrics_ref(self):
+        df = self.time_dim_single_metric_ref_df
+
+        result = utils.correct_dimension_level_order(df[[('wow', 'one'), ('', 'one')]],
+                                                     self.time_dim_single_metric_ref_schema)
+
+        self.assertListEqual([('', 'one'), ('wow', 'one')], list(result.columns))
