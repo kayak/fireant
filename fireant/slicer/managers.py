@@ -98,7 +98,9 @@ class SlicerManager(QueryManager):
 
     def display_schema(self, metrics=None, dimensions=None, references=None):
         """
-        Builds a display schema for
+        Builds a display schema for a request.  This is used in combination with the results of the query that is
+        executed by the Slicer manager to transform the results with display labels.  The display schema carries
+        meta-data pertaining to displaying the results of the query.
 
         :param metrics:
             Type: list[str]
