@@ -2,5 +2,5 @@
 
 database = None
 
-highcharts_colors = 'grid'
+highcharts_colors = 'kayak'
 matplotlib_figsize = (14, 5)
