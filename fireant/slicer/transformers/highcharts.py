@@ -74,7 +74,7 @@ class HighchartsLineTransformer(Transformer):
             series = self._make_series(dataframe, dim_ordinal, display_schema)
 
         result = {
-            'chart': {'type': self.chart_type,'zoomType': 'x'},
+            'chart': {'type': self.chart_type, 'zoomType': 'x'},
             'title': {'text': None},
             'xAxis': self.xaxis_options(dataframe, dim_ordinal, display_schema),
             'yAxis': self.yaxis_options(dataframe, dim_ordinal, display_schema),
@@ -99,19 +99,18 @@ class HighchartsLineTransformer(Transformer):
                        if isinstance(dataframe.columns, pd.MultiIndex)
                        else dataframe.columns)
 
-        return [self._make_series_item(idx, item, dim_ordinal, display_schema, metrics, reference)
-                for idx, item in dataframe.iteritems()]
-
-    def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference):
         color = colors.get(settings.highcharts_colors, 'grid')
         n_colors = len(color)
 
-        metric_index = metrics.index(idx[0] if isinstance(idx, tuple) else idx)
+        return [self._make_series_item(idx, item, dim_ordinal, display_schema, metrics, reference, color[i % n_colors])
+                for i, (idx, item) in enumerate(dataframe.iteritems())]
+
+    def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference, color='#000'):
         return {
             'name': self._format_label(idx, dim_ordinal, display_schema, reference),
             'data': self._format_data(item),
-            'yAxis': metric_index,
-            'color': color[metric_index % n_colors],
+            'yAxis': metrics.index(idx[0] if isinstance(idx, tuple) else idx),
+            'color': color,
             'dashStyle': 'Dot' if reference else 'Solid'
         }
 
@@ -217,18 +216,14 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
                                           'Request included %d metrics and %d dimensions.' % (len(metrics),
                                                                                               len(dimensions)))
 
-    def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference):
-        color = colors.get(settings.highcharts_colors, 'grid')
-        n_colors = len(color)
-        metric_index = metrics.index(idx[0] if isinstance(idx, tuple) else idx)
-
+    def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference, color='#000'):
         return {
             'name': self._format_label(idx, dim_ordinal, display_schema, reference),
             'data': [_format_data_point(x)
                      for x in item
                      if not np.isnan(x)],
             'yAxis': metrics.index(idx[0] if isinstance(idx, tuple) else idx),
-            'color': color[metric_index % n_colors],
+            'color': color,
         }
 
     def xaxis_options(self, dataframe, dim_ordinal, display_schema):
