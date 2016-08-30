@@ -306,7 +306,6 @@ class TransformerManager(object):
         :return:
             The transformed result of the request.
         """
-
         tx.prevalidate_request(self.manager.slicer, metrics=metrics, dimensions=dimensions,
                                metric_filters=metric_filters, dimension_filters=dimension_filters,
                                references=references, operations=operations)
