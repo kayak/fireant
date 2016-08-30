@@ -38,9 +38,9 @@ To configure a slicer, instantiate a |ClassSlicer| with a list of |ClassMetric| 
 .. code-block:: python
 
     from fireant.slicer import *
-    from pypika import Table, functions as fn
+    from pypika import Tables, functions as fn
 
-    analytics, accounts = Table('analytics', 'accounts')
+    analytics, accounts = Tables('analytics', 'accounts')
 
     my_slicer = Slicer(
         # This is the primary database table that our slicer uses
@@ -78,7 +78,7 @@ To configure a slicer, instantiate a |ClassSlicer| with a list of |ClassMetric| 
             # Categorical dimensions are ones with a fixed number of options.
             CategoricalDimension('device', display_options=[DimensionValue('desktop'),
                                                     DimensionValue('tablet'),
-                                                    DimensionValue('mobile')]]),
+                                                    DimensionValue('mobile')]),
 
             # Unique dimensions are used for entities that have a unique ID and
             # a display name field
@@ -217,7 +217,7 @@ Crafted with ♥ in Berlin.
 
 .. _appendix_start:
 
-.. |Brand| replace:: *FireAnt*
+.. |Brand| replace:: *fireant*
 
 .. |FeatureSlicer| replace:: *Slicer*
 .. |FeatureMetric| replace:: *Metric*
