@@ -6,7 +6,7 @@ import pandas as pd
 from fireant import settings
 from pypika import Query, Interval, JoinType
 
-logger = logging.getLogger(__name__)
+logger = logging.Logger('fireant')
 
 reference_dimension_mappers = {
     'yoy': lambda join_key: join_key + Interval(weeks=52),
@@ -112,9 +112,7 @@ class QueryManager(object):
                                   dfilters or dict(), mfilters or dict(), references or dict(), rollup or dict())
 
         querystring = str(query)
-
-        if getattr(settings, 'debug', False):
-            print("Executing query:\n----START----\n{query}\n-----END-----".format(query=querystring))
+        logger.info("Executing query:\n----START----\n{query}\n-----END-----".format(query=querystring))
 
         dataframe = settings.database.fetch_dataframe(querystring)
         dataframe.columns = [col.decode('utf-8') if isinstance(col, bytes) else col
