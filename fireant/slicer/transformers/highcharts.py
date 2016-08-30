@@ -6,19 +6,20 @@ from fireant import settings
 from .base import Transformer, TransformationException
 
 colors = {
-    'dark-blue': ["#DDDF0D", "#55BF3B", "#DF5353", "#7798BF", "#aaeeee", "#ff0066", "#eeaaee",
-                  "#55BF3B", "#DF5353", "#7798BF", "#aaeeee"],
-    'dark-green': ["#DDDF0D", "#55BF3B", "#DF5353", "#7798BF", "#aaeeee", "#ff0066", "#eeaaee",
-                   "#55BF3B", "#DF5353", "#7798BF", "#aaeeee"],
-    'dark-unica': ["#2b908f", "#90ee7e", "#f45b5b", "#7798BF", "#aaeeee", "#ff0066", "#eeaaee",
-                   "#55BF3B", "#DF5353", "#7798BF", "#aaeeee"],
-    'gray': ["#DDDF0D", "#7798BF", "#55BF3B", "#DF5353", "#aaeeee", "#ff0066", "#eeaaee",
-             "#55BF3B", "#DF5353", "#7798BF", "#aaeeee"],
-    'grid-light': ["#7cb5ec", "#f7a35c", "#90ee7e", "#7798BF", "#aaeeee", "#ff0066", "#eeaaee",
-                   "#55BF3B", "#DF5353", "#7798BF", "#aaeeee"],
+    'kayak': ['#FF690F', '#1A1A1A', '#3083F0', '#00B86B', '#D10244', '#FFDBE5', '#7B4F4B', '#B903AA', '#B05B6F'],
+    'dark-blue': ["#DDDF0D", "#55BF3B", "#DF5353", "#7798BF", "#AAEEEE", "#FF0066", "#EEAAEE",
+                  "#55BF3B", "#DF5353", "#7798BF", "#AAEEEE"],
+    'dark-green': ["#DDDF0D", "#55BF3B", "#DF5353", "#7798BF", "#AAEEEE", "#FF0066", "#EEAAEE",
+                   "#55BF3B", "#DF5353", "#7798BF", "#AAEEEE"],
+    'dark-unica': ["#2B908F", "#90EE7E", "#F45B5B", "#7798BF", "#AAEEEE", "#FF0066", "#EEAAEE",
+                   "#55BF3B", "#DF5353", "#7798BF", "#AAEEEE"],
+    'gray': ["#DDDF0D", "#7798BF", "#55BF3B", "#DF5353", "#AAEEEE", "#FF0066", "#EEAAEE",
+             "#55BF3B", "#DF5353", "#7798BF", "#AAEEEE"],
+    'grid-light': ["#7CB5EC", "#F7A35C", "#90EE7E", "#7798BF", "#AAEEEE", "#FF0066", "#EEAAEE",
+                   "#55BF3B", "#DF5353", "#7798BF", "#AAEEEE"],
     'grid': ['#058DC7', '#50B432', '#ED561B', '#DDDF00', '#24CBE5', '#64E572', '#FF9655', '#FFF263', '#6AF9C4'],
-    'sand-signika': ["#f45b5b", "#8085e9", "#8d4654", "#7798BF", "#aaeeee", "#ff0066", "#eeaaee",
-                     "#55BF3B", "#DF5353", "#7798BF", "#aaeeee"],
+    'sand-signika': ["#F45B5B", "#8085E9", "#8D4654", "#7798BF", "#AAEEEE", "#FF0066", "#EEAAEE",
+                     "#55BF3B", "#DF5353", "#7798BF", "#AAEEEE"],
     'skies': ["#514F78", "#42A07B", "#9B5E4A", "#72727F", "#1F949A", "#82914E", "#86777F", "#42A07B"],
 }
 
@@ -74,7 +75,7 @@ class HighchartsLineTransformer(Transformer):
             series = self._make_series(dataframe, dim_ordinal, display_schema)
 
         result = {
-            'chart': {'type': self.chart_type,'zoomType': 'x'},
+            'chart': {'type': self.chart_type, 'zoomType': 'x'},
             'title': {'text': None},
             'xAxis': self.xaxis_options(dataframe, dim_ordinal, display_schema),
             'yAxis': self.yaxis_options(dataframe, dim_ordinal, display_schema),
@@ -99,19 +100,18 @@ class HighchartsLineTransformer(Transformer):
                        if isinstance(dataframe.columns, pd.MultiIndex)
                        else dataframe.columns)
 
-        return [self._make_series_item(idx, item, dim_ordinal, display_schema, metrics, reference)
-                for idx, item in dataframe.iteritems()]
-
-    def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference):
         color = colors.get(settings.highcharts_colors, 'grid')
         n_colors = len(color)
 
-        metric_index = metrics.index(idx[0] if isinstance(idx, tuple) else idx)
+        return [self._make_series_item(idx, item, dim_ordinal, display_schema, metrics, reference, color[i % n_colors])
+                for i, (idx, item) in enumerate(dataframe.iteritems())]
+
+    def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference, color='#000'):
         return {
             'name': self._format_label(idx, dim_ordinal, display_schema, reference),
             'data': self._format_data(item),
-            'yAxis': metric_index,
-            'color': color[metric_index % n_colors],
+            'yAxis': metrics.index(idx[0] if isinstance(idx, tuple) else idx),
+            'color': color,
             'dashStyle': 'Dot' if reference else 'Solid'
         }
 
@@ -217,18 +217,14 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
                                           'Request included %d metrics and %d dimensions.' % (len(metrics),
                                                                                               len(dimensions)))
 
-    def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference):
-        color = colors.get(settings.highcharts_colors, 'grid')
-        n_colors = len(color)
-        metric_index = metrics.index(idx[0] if isinstance(idx, tuple) else idx)
-
+    def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference, color='#000'):
         return {
             'name': self._format_label(idx, dim_ordinal, display_schema, reference),
             'data': [_format_data_point(x)
                      for x in item
                      if not np.isnan(x)],
             'yAxis': metrics.index(idx[0] if isinstance(idx, tuple) else idx),
-            'color': color[metric_index % n_colors],
+            'color': color,
         }
 
     def xaxis_options(self, dataframe, dim_ordinal, display_schema):
