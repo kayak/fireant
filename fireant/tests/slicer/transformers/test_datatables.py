@@ -1,11 +1,12 @@
 # coding: utf-8
-
+from collections import OrderedDict
 from datetime import date, datetime
 from unittest import TestCase
 
 import numpy as np
 import pandas as pd
 
+from fireant import settings
 from fireant.slicer.transformers import DataTablesRowIndexTransformer, DataTablesColumnIndexTransformer
 from fireant.slicer.transformers import datatables
 from fireant.tests.slicer.transformers.base import BaseTransformerTests
@@ -645,6 +646,27 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
                      {'a': {'y': {'one': 28, 'two': 56}, 'z': {'one': 29, 'two': 58}},
                       'b': {'y': {'one': 30, 'two': 60}, 'z': {'one': 31, 'two': 62}},
                       'cont': {'display': 7}}]}, result)
+
+    def test_max_cols(self, ):
+        settings.datatables_maxcols = 24
+
+        df = self.cont_cat_cat_dims_multi_metric_df.reorder_levels([1, 2, 0])
+        schema = self.cont_cat_cat_dims_multi_metric_schema.copy()
+        schema['dimensions'] = OrderedDict([(k, schema['dimensions'][k])
+                                            for k in ['cat1', 'cat2', 'cont']])
+
+        result = self.dt_tx.transform(df, schema)
+
+        self.assertEqual(24, len(result['columns']))
+
+        for column in result['columns']:
+            data_location = column['data']
+            levels = data_location.split('.')
+
+            data = result['data'][0]
+            for i, level in enumerate(levels):
+                self.assertIn(level, data, msg='Missing data level %d [%s] in %s.' % (i, level, data_location))
+                data = data[level]
 
 
 class DatatablesUtilityTests(TestCase):

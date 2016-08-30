@@ -4,6 +4,7 @@ from datetime import time
 import numpy as np
 import pandas as pd
 
+from fireant import settings
 from fireant.slicer.transformers import Transformer
 
 NO_TIME = time(0)
@@ -40,14 +41,16 @@ class DataTablesRowIndexTransformer(Transformer):
         return dataframe.replace([np.inf, -np.inf], np.nan)
 
     def _render_columns(self, dataframe, display_schema):
+        maxcols = settings.datatables_maxcols
         dimensions = display_schema['dimensions']
         dimension_columns = [{'title': dimensions[dimension_key]['label'],
                               'data': '{}.display'.format(dimension_key)}
-                             for dimension_key in dataframe.index.names
+                             for dimension_key in dataframe.index.names[:maxcols]
                              if dimension_key in dimensions]
 
+        maxcols -= len(dimension_columns)
         metric_columns = [self._render_column_level(metric_column, display_schema)
-                          for metric_column in dataframe.columns]
+                          for metric_column in list(dataframe.columns)[:maxcols]]
 
         return dimension_columns + metric_columns
 
@@ -187,7 +190,7 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
         if levels:
             metric_label = '{metric} ({levels})'.format(
                 metric=column['title'],
-                levels=', '.join(levels)
+                levels=', '.join(map(str, levels))
             )
         else:
             metric_label = column['title']
@@ -212,7 +215,7 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
             return [(key, dict(self._recurse_dimensions(df[:, key, display], dimensions[1:], metrics)))
                     for key, display in zip(*df.index.levels[1:3])]
 
-        return [(level, dict(self._recurse_dimensions(df[:, level], dimensions[1:], metrics)))
+        return [(str(level), dict(self._recurse_dimensions(df[:, level], dimensions[1:], metrics)))
                 for level in df.index.levels[1]]
 
 

@@ -213,6 +213,10 @@ A *column-indexed* table will contain only one index column and display a metric
     )
 
 
+.. note::
+
+    *Column-indexed* tables use the setting ``datatables_maxcols`` to avoid creating uncontrollably large tables.
+
 Filtering Data
 --------------
 
