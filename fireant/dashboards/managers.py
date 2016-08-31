@@ -1,4 +1,5 @@
 # coding: utf-8
+from fireant.slicer.transformers import utils as tx_utils
 
 
 class WidgetGroupManager(object):
@@ -20,14 +21,10 @@ class WidgetGroupManager(object):
             metric_filters=metric_filters or [],
             dimension_filters=enabled_dfilters,
             references=enabled_references,
-            operations=enabled_operations
-        )
-        display_schema = self.widget_group.slicer.manager.display_schema(
-            metrics=enabled_metrics,
-            dimensions=enabled_dimensions
+            operations=enabled_operations,
         )
 
-        return self._transform_widgets(self.widget_group.widgets, dataframe, display_schema)
+        return self._transform_widgets(self.widget_group.widgets, dataframe, enabled_dimensions)
 
     @staticmethod
     def _filter_duplicates(iterable):
@@ -43,11 +40,14 @@ class WidgetGroupManager(object):
 
         return filtered_list
 
-    @staticmethod
-    def _transform_widgets(widgets, dataframe, display_schema):
-        return (
-            widget.transformer.transform(
-                dataframe[widget.metrics],
+    def _transform_widgets(self, widgets, dataframe, dimensions):
+        for widget in widgets:
+            display_schema = self.widget_group.slicer.manager.display_schema(
+                metrics=widget.metrics,
+                dimensions=dimensions
+            )
+            widget_df = tx_utils.correct_dimension_level_order(dataframe[widget.metrics], display_schema)
+            yield widget.transformer.transform(
+                widget_df,
                 display_schema
-            ) for widget in widgets
-        )
+            )
