@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from fireant.slicer.transformers import utils
+from fireant import utils
 from fireant.tests.slicer.transformers.base import BaseTransformerTests
 
 

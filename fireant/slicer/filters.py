@@ -1,8 +1,5 @@
 # coding: utf8
-
-
-def wrap_list(value):
-    return value if isinstance(value, (tuple, list)) else [value]
+from fireant import utils
 
 
 class Filter(object):
@@ -17,8 +14,8 @@ class EqualityFilter(Filter):
         self.value = value
 
     def schemas(self, element):
-        element = wrap_list(element)
-        value = wrap_list(self.value)
+        element = utils.wrap_list(element)
+        value = utils.wrap_list(self.value)
 
         criterion = None
         for el, value in zip(element, value):
@@ -47,9 +44,9 @@ class RangeFilter(Filter):
         self.stop = stop
 
     def schemas(self, element):
-        element = wrap_list(element)
-        starts = wrap_list(self.start)
-        stops = wrap_list(self.stop)
+        element = utils.wrap_list(element)
+        starts = utils.wrap_list(self.start)
+        stops = utils.wrap_list(self.stop)
 
         criterion = None
         for el, start, stop in zip(element, starts, stops):

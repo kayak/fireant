@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 
-from fireant import settings
+from fireant import settings, utils
 from .base import Transformer, TransformationException
 
 colors = {
@@ -110,7 +110,7 @@ class  HighchartsLineTransformer(Transformer):
         return {
             'name': self._format_label(idx, dim_ordinal, display_schema, reference),
             'data': self._format_data(item),
-            'yAxis': metrics.index(idx[0] if isinstance(idx, tuple) else idx),
+            'yAxis': metrics.index(utils.slice_first(idx)),
             'color': color,
             'dashStyle': 'Dot' if reference else 'Solid'
         }
@@ -223,7 +223,7 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
             'data': [_format_data_point(x)
                      for x in item
                      if not np.isnan(x)],
-            'yAxis': metrics.index(idx[0] if isinstance(idx, tuple) else idx),
+            'yAxis': metrics.index(utils.slice_first(idx)),
             'color': color,
         }
 
