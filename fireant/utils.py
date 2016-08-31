@@ -25,3 +25,13 @@ def correct_dimension_level_order(dataframe, display_schema):
         return dataframe[list(itertools.product(references, metrics))]
 
     return dataframe[metrics]
+
+
+def wrap_list(value):
+    return value if isinstance(value, (tuple, list)) else [value]
+
+
+def slice_first(item):
+    if isinstance(item, (tuple, list)):
+        return item[0]
+    return item

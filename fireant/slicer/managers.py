@@ -3,9 +3,9 @@
 import functools
 from collections import OrderedDict
 
+from fireant import utils
 from pypika import functions as fn
 from .queries import QueryManager
-from .transformers import utils as tx_utils
 
 
 class SlicerException(Exception):
@@ -128,9 +128,7 @@ class SlicerManager(QueryManager):
         if not keys:
             raise SlicerException('At least one metric is required requests.  Please add a metric.')
 
-        invalid_metrics = {key[0]
-                           if isinstance(key, (tuple, list))
-                           else key
+        invalid_metrics = {utils.slice_first(key)
                            for key in keys} - set(self.slicer.metrics)
         if invalid_metrics:
             raise SlicerException('Invalid metrics included in request: '
@@ -210,9 +208,7 @@ class SlicerManager(QueryManager):
         return filters_schema
 
     def _display_dimensions(self, dimensions):
-        req_dimension_keys = [dimension[0]
-                              if isinstance(dimension, (tuple, list))
-                              else dimension
+        req_dimension_keys = [utils.slice_first(dimension)
                               for dimension in dimensions or []]
 
         display_dims = OrderedDict()
@@ -308,7 +304,8 @@ class TransformerManager(object):
         :return:
             The transformed result of the request.
         """
-        tx.prevalidate_request(self.manager.slicer, metrics=metrics, dimensions=dimensions,
+        tx.prevalidate_request(self.manager.slicer, metrics=metrics, dimensions=[utils.slice_first(dimension)
+                                                                                 for dimension in dimensions],
                                metric_filters=metric_filters, dimension_filters=dimension_filters,
                                references=references, operations=operations)
 
@@ -319,6 +316,6 @@ class TransformerManager(object):
 
         display_schema = self.manager.display_schema(metrics, dimensions, references)
 
-        df = tx_utils.correct_dimension_level_order(df, display_schema)
+        df = utils.correct_dimension_level_order(df, display_schema)
 
         return tx.transform(df, display_schema)

@@ -1,5 +1,5 @@
 # coding: utf-8
-from fireant.slicer.transformers import utils as tx_utils
+from fireant import utils
 
 
 class WidgetGroupManager(object):
@@ -29,14 +29,14 @@ class WidgetGroupManager(object):
     @staticmethod
     def _filter_duplicates(iterable):
         filtered_list, seen = [], set()
-        for x in iterable:
-            key = x[0] if isinstance(x, (list, tuple, set)) else x
+        for item in iterable:
+            key = utils.slice_first(item)
 
             if key in seen:
                 continue
 
             seen.add(key)
-            filtered_list.append(x)
+            filtered_list.append(item)
 
         return filtered_list
 
@@ -46,7 +46,7 @@ class WidgetGroupManager(object):
                 metrics=widget.metrics,
                 dimensions=dimensions
             )
-            widget_df = tx_utils.correct_dimension_level_order(dataframe[widget.metrics], display_schema)
+            widget_df = utils.correct_dimension_level_order(dataframe[widget.metrics], display_schema)
             yield widget.transformer.transform(
                 widget_df,
                 display_schema
