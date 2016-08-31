@@ -35,7 +35,7 @@ def _format_data_point(value):
     return value
 
 
-class HighchartsLineTransformer(Transformer):
+class  HighchartsLineTransformer(Transformer):
     """
     Transforms data frames into Highcharts format for several chart types, particularly line or bar charts.
     """
