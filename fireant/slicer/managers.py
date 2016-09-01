@@ -55,6 +55,9 @@ class SlicerManager(QueryManager):
             raise SlicerException('Unable to execute queries until a database is configured.  Please import '
                                   '`fireant.settings` and set some value to `settings.database`.')
 
+        metrics = utils.filter_duplicates(metrics)
+        dimensions = utils.filter_duplicates(dimensions)
+
         query_schema = self.query_schema(metrics=metrics, dimensions=dimensions,
                                          metric_filters=metric_filters, dimension_filters=dimension_filters,
                                          references=references, operations=operations)

@@ -7,38 +7,20 @@ class WidgetGroupManager(object):
         self.widget_group = widget_group
 
     def render(self, dimensions=None, metric_filters=None, dimension_filters=None, references=None, operations=None):
-        enabled_metrics = self._filter_duplicates(metric
-                                                  for widget in self.widget_group.widgets
-                                                  for metric in widget.metrics)
-        enabled_dimensions = self._filter_duplicates(self.widget_group.dimensions + (dimensions or []))
-        enabled_dfilters = self._filter_duplicates(self.widget_group.dimension_filters + (dimension_filters or []))
-        enabled_references = self._filter_duplicates(self.widget_group.references + (references or []))
-        enabled_operations = self._filter_duplicates(self.widget_group.operations + (operations or []))
+        combined_dimensions = utils.filter_duplicates(self.widget_group.dimensions + (dimensions or []))
 
         dataframe = self.widget_group.slicer.manager.data(
-            metrics=enabled_metrics,
-            dimensions=enabled_dimensions,
+            metrics=[metric
+                     for widget in self.widget_group.widgets
+                     for metric in widget.metrics],
+            dimensions=combined_dimensions,
             metric_filters=metric_filters or [],
-            dimension_filters=enabled_dfilters,
-            references=enabled_references,
-            operations=enabled_operations,
+            dimension_filters=self.widget_group.dimension_filters + (dimension_filters or []),
+            references=self.widget_group.references + (references or []),
+            operations=self.widget_group.operations + (operations or []),
         )
 
-        return self._transform_widgets(self.widget_group.widgets, dataframe, enabled_dimensions)
-
-    @staticmethod
-    def _filter_duplicates(iterable):
-        filtered_list, seen = [], set()
-        for item in iterable:
-            key = utils.slice_first(item)
-
-            if key in seen:
-                continue
-
-            seen.add(key)
-            filtered_list.append(item)
-
-        return filtered_list
+        return self._transform_widgets(self.widget_group.widgets, dataframe, combined_dimensions)
 
     def _transform_widgets(self, widgets, dataframe, dimensions):
         for widget in widgets:
