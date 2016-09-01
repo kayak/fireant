@@ -92,7 +92,7 @@ class ManagerInitializationTests(TestCase):
 
         self.assertEqual(mock_return, result)
         mock_sm_data.assert_called_once_with(**request)
-        mock_sm_ds.assert_called_once_with(request['metrics'], request['dimensions'], request.get('references', []))
+        mock_sm_ds.assert_called_once_with(request['metrics'], request['dimensions'], request.get('references', ()), ())
         mock_transform.assert_called_once_with(mock_df.__getitem__(), mock_schema)
 
     @patch.object(HighchartsLineTransformer, 'transform')
@@ -158,8 +158,7 @@ class ManagerInitializationTests(TestCase):
     @patch.object(HighchartsBarTransformer, 'transform')
     def test_transform_highcharts_bar_chart(self, mock_transform):
         request = {
-            'metrics': ['foo'],
-            'dimensions': [],
+            'metrics': ['foo'], 'dimensions': [],
             'metric_filters': tuple(), 'dimension_filters': tuple(),
             'references': tuple(), 'operations': tuple(),
         }

@@ -5,12 +5,14 @@ class Operation(object):
     """
     The `Operation` class represents an operation in the `Slicer` API.
     """
+    key = None
+    label = None
 
     def schemas(self):
         pass
 
     def metrics(self):
-        return ()
+        return []
 
 
 class Totals(Operation):
@@ -29,6 +31,7 @@ class L1Loss(Operation):
     Performs L1 Loss (mean abs. error) operation on a metric using another metric as the target.
     """
     key = 'l1loss'
+    label = 'L1 loss'
 
     def __init__(self, metric_key, target_metric_key):
         self.metric_key = metric_key
@@ -42,7 +45,7 @@ class L1Loss(Operation):
         }
 
     def metrics(self):
-        return (self.metric_key, self.target_metric_key)
+        return [self.metric_key, self.target_metric_key]
 
 
 class L2Loss(L1Loss):
@@ -50,6 +53,7 @@ class L2Loss(L1Loss):
     Performs L1 Loss (mean sqr. error) operation on a metric using another metric as the target.
     """
     key = 'l2loss'
+    label = 'L2 loss'
 
 
 class CumSum(Operation):
@@ -57,18 +61,19 @@ class CumSum(Operation):
     Accumulates the sum of one or more metrics.
     """
     key = 'cumsum'
+    label = 'cum. sum'
 
-    def __init__(self, *metric_keys):
-        self.metric_keys = metric_keys
+    def __init__(self, metric_key):
+        self.metric_key = metric_key
 
     def schemas(self):
         return {
             'key': self.key,
-            'metrics': self.metric_keys,
+            'metric': self.metric_key,
         }
 
     def metrics(self):
-        return tuple(self.metric_keys)
+        return (self.metric_key,)
 
 
 class CumMean(CumSum):
@@ -76,3 +81,4 @@ class CumMean(CumSum):
     Accumulates the mean of one or more metrics
     """
     key = 'cummean'
+    label = 'cum. mean'

@@ -91,7 +91,7 @@ class SlicerManager(QueryManager, OperationManager):
                        for level in self.slicer.dimensions[dimension].levels()],
         }
 
-    def display_schema(self, metrics=(), dimensions=(), references=()):
+    def display_schema(self, metrics=(), dimensions=(), references=(), operations=()):
         """
         Builds a display schema for a request.  This is used in combination with the results of the query that is
         executed by the Slicer manager to transform the results with display labels.  The display schema carries
@@ -111,9 +111,18 @@ class SlicerManager(QueryManager, OperationManager):
         :return:
             A dictionary describing how to transform the resulting data frame for the same request.
         """
+        metric_metrics = [(key, self.slicer.metrics[key].label)
+                          for key in metrics]
+        for operation in operations:
+            if not hasattr(operation, 'metric_key'):
+                continue
+            metric_metrics.append((
+                '{}_{}'.format(operation.metric_key, operation.key),
+                '{} {}'.format(self.slicer.metrics[operation.metric_key].label, operation.label)
+            ))
+
         return {
-            'metrics': OrderedDict([(key, self.slicer.metrics[key].label)
-                                    for key in metrics]),
+            'metrics': OrderedDict(metric_metrics),
             'dimensions': self._display_dimensions(dimensions),
             'references': OrderedDict([(reference.key, reference.label)
                                        for reference in references]),
@@ -323,7 +332,7 @@ class TransformerManager(object):
                                metric_filters=metric_filters, dimension_filters=dimension_filters,
                                references=references, operations=operations)
 
-        display_schema = self.manager.display_schema(metrics, dimensions, references)
+        display_schema = self.manager.display_schema(metrics, dimensions, references, operations)
 
         df = utils.correct_dimension_level_order(df, display_schema)
 
