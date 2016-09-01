@@ -1,23 +1,25 @@
 # coding: utf-8
+from unittest import TestCase
+
 from fireant.slicer.transformers import CSVRowIndexTransformer, CSVColumnIndexTransformer
-from fireant.tests.slicer.transformers.base import BaseTransformerTests
+from fireant.tests import mock_dataframes as mock_df
 
 
-class CSVRowIndexTransformerTests(BaseTransformerTests):
+class CSVRowIndexTransformerTests(TestCase):
     csv_tx = CSVRowIndexTransformer()
 
     def test_no_dims_single_metric(self):
-        df = self.no_dims_multi_metric_df
+        df = mock_df.no_dims_multi_metric_df
 
-        result = self.csv_tx.transform(df, self.no_dims_multi_metric_schema)
+        result = self.csv_tx.transform(df, mock_df.no_dims_multi_metric_schema)
 
         self.assertEqual('One,Two,Three,Four,Five,Six,Seven,Eight\n'
                          '0,1,2,3,4,5,6,7\n', result)
 
     def test_cont_dim_single_metric(self):
-        df = self.cont_dim_single_metric_df
+        df = mock_df.cont_dim_single_metric_df
 
-        result = self.csv_tx.transform(df, self.cont_dim_single_metric_schema)
+        result = self.csv_tx.transform(df, mock_df.cont_dim_single_metric_schema)
 
         self.assertEqual('Cont,One\n'
                          '0,0\n'
@@ -30,9 +32,9 @@ class CSVRowIndexTransformerTests(BaseTransformerTests):
                          '7,7\n', result)
 
     def test_cont_dim_multi_metric(self):
-        df = self.cont_dim_multi_metric_df
+        df = mock_df.cont_dim_multi_metric_df
 
-        result = self.csv_tx.transform(df, self.cont_dim_multi_metric_schema)
+        result = self.csv_tx.transform(df, mock_df.cont_dim_multi_metric_schema)
 
         self.assertEqual('Cont,One,Two\n'
                          '0,0,0\n'
@@ -45,9 +47,9 @@ class CSVRowIndexTransformerTests(BaseTransformerTests):
                          '7,7,14\n', result)
 
     def test_cont_cat_dim_single_metric(self):
-        df = self.cont_cat_dims_single_metric_df
+        df = mock_df.cont_cat_dims_single_metric_df
 
-        result = self.csv_tx.transform(df, self.cont_cat_dims_single_metric_schema)
+        result = self.csv_tx.transform(df, mock_df.cont_cat_dims_single_metric_schema)
 
         self.assertEqual('Cont,Cat1,One\n'
                          '0,A,0\n'
@@ -68,9 +70,9 @@ class CSVRowIndexTransformerTests(BaseTransformerTests):
                          '7,B,15\n', result)
 
     def test_cont_cat_dim_multi_metric(self):
-        df = self.cont_cat_dims_multi_metric_df
+        df = mock_df.cont_cat_dims_multi_metric_df
 
-        result = self.csv_tx.transform(df, self.cont_cat_dims_multi_metric_schema)
+        result = self.csv_tx.transform(df, mock_df.cont_cat_dims_multi_metric_schema)
 
         self.assertEqual('Cont,Cat1,One,Two\n'
                          '0,A,0,0\n'
@@ -91,9 +93,9 @@ class CSVRowIndexTransformerTests(BaseTransformerTests):
                          '7,B,15,30\n', result)
 
     def test_cont_cat_cat_dim_multi_metric(self):
-        df = self.cont_cat_cat_dims_multi_metric_df
+        df = mock_df.cont_cat_cat_dims_multi_metric_df
 
-        result = self.csv_tx.transform(df, self.cont_cat_cat_dims_multi_metric_schema)
+        result = self.csv_tx.transform(df, mock_df.cont_cat_cat_dims_multi_metric_schema)
 
         self.assertEqual('Cont,Cat1,Cat2,One,Two\n'
                          '0,A,Y,0,0\n'
@@ -130,9 +132,9 @@ class CSVRowIndexTransformerTests(BaseTransformerTests):
                          '7,B,Z,31,62\n', result)
 
     def test_rollup_cont_cat_cat_dim_multi_metric(self):
-        df = self.rollup_cont_cat_cat_dims_multi_metric_df
+        df = mock_df.rollup_cont_cat_cat_dims_multi_metric_df
 
-        result = self.csv_tx.transform(df, self.rollup_cont_cat_cat_dims_multi_metric_schema)
+        result = self.csv_tx.transform(df, mock_df.rollup_cont_cat_cat_dims_multi_metric_schema)
 
         self.assertEqual('Cont,Cat1,Cat2,One,Two\n'
                          '0,,,12,24\n'
@@ -197,9 +199,9 @@ class CSVColumnIndexTransformerTests(CSVRowIndexTransformerTests):
     csv_tx = CSVColumnIndexTransformer()
 
     def test_cont_cat_dim_single_metric(self):
-        df = self.cont_cat_dims_single_metric_df
+        df = mock_df.cont_cat_dims_single_metric_df
 
-        result = self.csv_tx.transform(df, self.cont_cat_dims_single_metric_schema)
+        result = self.csv_tx.transform(df, mock_df.cont_cat_dims_single_metric_schema)
 
         self.assertEqual('Cont,One (A),One (B)\n'
                          '0,0,1\n'
@@ -212,9 +214,9 @@ class CSVColumnIndexTransformerTests(CSVRowIndexTransformerTests):
                          '7,14,15\n', result)
 
     def test_cont_cat_dim_multi_metric(self):
-        df = self.cont_cat_dims_multi_metric_df
+        df = mock_df.cont_cat_dims_multi_metric_df
 
-        result = self.csv_tx.transform(df, self.cont_cat_dims_multi_metric_schema)
+        result = self.csv_tx.transform(df, mock_df.cont_cat_dims_multi_metric_schema)
 
         self.assertEqual('Cont,One (A),One (B),Two (A),Two (B)\n'
                          '0,0,1,0,2\n'
@@ -227,9 +229,9 @@ class CSVColumnIndexTransformerTests(CSVRowIndexTransformerTests):
                          '7,14,15,28,30\n', result)
 
     def test_cont_cat_cat_dim_multi_metric(self):
-        df = self.cont_cat_cat_dims_multi_metric_df
+        df = mock_df.cont_cat_cat_dims_multi_metric_df
 
-        result = self.csv_tx.transform(df, self.cont_cat_cat_dims_multi_metric_schema)
+        result = self.csv_tx.transform(df, mock_df.cont_cat_cat_dims_multi_metric_schema)
 
         self.assertEqual('Cont,"One (A, Y)","One (A, Z)","One (B, Y)","One (B, Z)",'
                          '"Two (A, Y)","Two (A, Z)","Two (B, Y)","Two (B, Z)"\n'
@@ -243,9 +245,9 @@ class CSVColumnIndexTransformerTests(CSVRowIndexTransformerTests):
                          '7,28,29,30,31,56,58,60,62\n', result)
 
     def test_rollup_cont_cat_cat_dim_multi_metric(self):
-        df = self.rollup_cont_cat_cat_dims_multi_metric_df
+        df = mock_df.rollup_cont_cat_cat_dims_multi_metric_df
 
-        result = self.csv_tx.transform(df, self.rollup_cont_cat_cat_dims_multi_metric_schema)
+        result = self.csv_tx.transform(df, mock_df.rollup_cont_cat_cat_dims_multi_metric_schema)
 
         self.assertEqual('Cont,One,One (A),"One (A, Y)","One (A, Z)",One (B),"One (B, Y)","One (B, Z)",'
                          'Two,Two (A),"Two (A, Y)","Two (A, Z)",Two (B),"Two (B, Y)","Two (B, Z)"\n'

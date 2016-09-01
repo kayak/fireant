@@ -1,10 +1,11 @@
 # coding: utf-8
+from unittest import TestCase
 
 from fireant.slicer.postprocessors import OperationManager
-from slicer.transformers.base import BaseTransformerTests
+from fireant.tests import mock_dataframes as mock_df
 
 
-class PostProcessingTests(BaseTransformerTests):
+class PostProcessingTests(TestCase):
     manager = OperationManager()
     maxDiff = None
 
@@ -15,7 +16,7 @@ class LossOperationTests(PostProcessingTests):
 
 class CumulativeOperationTests(PostProcessingTests):
     def test_cumsum_single_dim(self):
-        df = self.time_dim_single_metric_df
+        df = mock_df.time_dim_single_metric_df
         result_df = self.manager.post_process(df, [{'key': 'cumsum', 'metric': 'one'}])
 
         # original DF unchanged
@@ -25,7 +26,7 @@ class CumulativeOperationTests(PostProcessingTests):
         self.assertListEqual(list(df['one'].cumsum()), list(result_df['one_cumsum']))
 
     def test_cumsum_single_dim_extra_metrics(self):
-        df = self.cont_dim_multi_metric_df
+        df = mock_df.cont_dim_multi_metric_df
         result_df = self.manager.post_process(df, [{'key': 'cumsum', 'metric': 'one'}])
 
         # original DF unchanged
@@ -36,7 +37,7 @@ class CumulativeOperationTests(PostProcessingTests):
         self.assertListEqual(list(df['two']), list(result_df['two']))
 
     def test_cumsum_single_dim_both_metrics(self):
-        df = self.cont_dim_multi_metric_df
+        df = mock_df.cont_dim_multi_metric_df
         result_df = self.manager.post_process(df, [{'key': 'cumsum', 'metric': 'one'},
                                                    {'key': 'cumsum', 'metric': 'two'}])
         # original DF unchanged
@@ -47,7 +48,7 @@ class CumulativeOperationTests(PostProcessingTests):
         self.assertListEqual(list(df['two'].cumsum()), list(result_df['two_cumsum']))
 
     def test_cumsum_single_dim_with_ref(self):
-        df = self.time_dim_single_metric_ref_df
+        df = mock_df.time_dim_single_metric_ref_df
         result_df = self.manager.post_process(df, [{'key': 'cumsum', 'metric': 'one'}])
 
         # original DF unchanged
@@ -61,7 +62,7 @@ class CumulativeOperationTests(PostProcessingTests):
                              list(result_df[('wow', 'one_cumsum')]))
 
     def test_cumsum_multi_dim(self):
-        df = self.cont_cat_dims_single_metric_df
+        df = mock_df.cont_cat_dims_single_metric_df
         result_df = self.manager.post_process(df, [{'key': 'cumsum', 'metric': 'one'}])
 
         self.assertListEqual(['one', 'one_cumsum'], list(result_df.columns))
@@ -71,14 +72,14 @@ class CumulativeOperationTests(PostProcessingTests):
                              list(result_df.loc[(slice(None), 'b'), 'one_cumsum']))
 
     def test_cummean_single_dim(self):
-        result_df = self.manager.post_process(self.time_dim_single_metric_df, [{'key': 'cummean', 'metric': 'one'}])
+        result_df = self.manager.post_process(mock_df.time_dim_single_metric_df, [{'key': 'cummean', 'metric': 'one'}])
 
         self.assertListEqual(['one', 'one_cummean'], list(result_df.columns))
-        self.assertListEqual(list(self.time_dim_single_metric_df['one'].expanding(min_periods=1).mean()),
+        self.assertListEqual(list(mock_df.time_dim_single_metric_df['one'].expanding(min_periods=1).mean()),
                              list(result_df['one_cummean']))
 
     def test_cummean_single_dim_with_ref(self):
-        df = self.time_dim_single_metric_ref_df
+        df = mock_df.time_dim_single_metric_ref_df
         result_df = self.manager.post_process(df, [{'key': 'cummean', 'metric': 'one'}])
 
         self.assertListEqual([('', 'one'), ('wow', 'one'), ('', 'one_cummean'), ('wow', 'one_cummean')],
@@ -89,7 +90,7 @@ class CumulativeOperationTests(PostProcessingTests):
                              list(result_df[('wow', 'one_cummean')]))
 
     def test_cummean_multi_dim(self):
-        df = self.cont_cat_dims_single_metric_df
+        df = mock_df.cont_cat_dims_single_metric_df
         result_df = self.manager.post_process(df, [{'key': 'cummean', 'metric': 'one'}])
 
         self.assertListEqual(['one', 'one_cummean'], list(result_df.columns))

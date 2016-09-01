@@ -8,10 +8,10 @@ import pandas as pd
 from fireant.slicer.transformers import (HighchartsLineTransformer, HighchartsColumnTransformer,
                                          HighchartsBarTransformer)
 from fireant.slicer.transformers import highcharts
-from fireant.tests.slicer.transformers.base import BaseTransformerTests
+from fireant.tests import mock_dataframes as mock_df
 
 
-class HighchartsLineTransformerTests(BaseTransformerTests):
+class HighchartsLineTransformerTests(TestCase):
     """
     Line charts work with the following requests:
 
@@ -43,9 +43,9 @@ class HighchartsLineTransformerTests(BaseTransformerTests):
 
     def test_series_single_metric(self):
         # Tests transformation of a single-metric, single-dimension result
-        df = self.cont_dim_single_metric_df
+        df = mock_df.cont_dim_single_metric_df
 
-        result = self.hc_tx.transform(df, self.cont_dim_single_metric_schema)
+        result = self.hc_tx.transform(df, mock_df.cont_dim_single_metric_schema)
 
         self.evaluate_chart_options(result)
 
@@ -58,9 +58,9 @@ class HighchartsLineTransformerTests(BaseTransformerTests):
 
     def test_series_multi_metric(self):
         # Tests transformation of a multi-metric, single-dimension result
-        df = self.cont_dim_multi_metric_df
+        df = mock_df.cont_dim_multi_metric_df
 
-        result = self.hc_tx.transform(df, self.cont_dim_multi_metric_schema)
+        result = self.hc_tx.transform(df, mock_df.cont_dim_multi_metric_schema)
 
         self.evaluate_chart_options(result, num_series=2)
 
@@ -73,9 +73,9 @@ class HighchartsLineTransformerTests(BaseTransformerTests):
 
     def test_time_series_date_to_millis(self):
         # Tests transformation of a single-metric, single-dimension result
-        df = self.time_dim_single_metric_df
+        df = mock_df.time_dim_single_metric_df
 
-        result = self.hc_tx.transform(df, self.time_dim_single_metric_schema)
+        result = self.hc_tx.transform(df, mock_df.time_dim_single_metric_schema)
 
         self.evaluate_chart_options(result, xaxis_type='datetime')
 
@@ -90,9 +90,9 @@ class HighchartsLineTransformerTests(BaseTransformerTests):
 
     def test_time_series_date_with_ref(self):
         # Tests transformation of a single-metric, single-dimension result using a WoW reference
-        df = self.time_dim_single_metric_ref_df
+        df = mock_df.time_dim_single_metric_ref_df
 
-        result = self.hc_tx.transform(df, self.time_dim_single_metric_ref_schema)
+        result = self.hc_tx.transform(df, mock_df.time_dim_single_metric_ref_schema)
 
         self.evaluate_chart_options(result, num_series=2, xaxis_type='datetime')
 
@@ -107,9 +107,9 @@ class HighchartsLineTransformerTests(BaseTransformerTests):
 
     def test_cont_uni_dim_single_metric(self):
         # Tests transformation of a metric and a unique dimension
-        df = self.cont_uni_dims_single_metric_df
+        df = mock_df.cont_uni_dims_single_metric_df
 
-        result = self.hc_tx.transform(df, self.cont_uni_dims_single_metric_schema)
+        result = self.hc_tx.transform(df, mock_df.cont_uni_dims_single_metric_schema)
 
         self.evaluate_chart_options(result, num_series=3)
 
@@ -122,9 +122,9 @@ class HighchartsLineTransformerTests(BaseTransformerTests):
 
     def test_cont_uni_dim_multi_metric(self):
         # Tests transformation of two metrics and a unique dimension
-        df = self.cont_uni_dims_multi_metric_df
+        df = mock_df.cont_uni_dims_multi_metric_df
 
-        result = self.hc_tx.transform(df, self.cont_uni_dims_multi_metric_schema)
+        result = self.hc_tx.transform(df, mock_df.cont_uni_dims_multi_metric_schema)
 
         self.evaluate_chart_options(result, num_series=6)
 
@@ -137,9 +137,9 @@ class HighchartsLineTransformerTests(BaseTransformerTests):
 
     def test_double_dimension_single_metric(self):
         # Tests transformation of a single-metric, double-dimension result
-        df = self.cont_cat_dims_single_metric_df
+        df = mock_df.cont_cat_dims_single_metric_df
 
-        result = self.hc_tx.transform(df, self.cont_cat_dims_single_metric_schema)
+        result = self.hc_tx.transform(df, mock_df.cont_cat_dims_single_metric_schema)
 
         self.evaluate_chart_options(result, num_series=2)
 
@@ -152,9 +152,9 @@ class HighchartsLineTransformerTests(BaseTransformerTests):
 
     def test_double_dimension_multi_metric(self):
         # Tests transformation of a multi-metric, double-dimension result
-        df = self.cont_cat_dims_multi_metric_df
+        df = mock_df.cont_cat_dims_multi_metric_df
 
-        result = self.hc_tx.transform(df, self.cont_cat_dims_multi_metric_schema)
+        result = self.hc_tx.transform(df, mock_df.cont_cat_dims_multi_metric_schema)
 
         self.evaluate_chart_options(result, num_series=4)
 
@@ -167,9 +167,9 @@ class HighchartsLineTransformerTests(BaseTransformerTests):
 
     def test_triple_dimension_multi_metric(self):
         # Tests transformation of a multi-metric, double-dimension result
-        df = self.cont_cat_cat_dims_multi_metric_df
+        df = mock_df.cont_cat_cat_dims_multi_metric_df
 
-        result = self.hc_tx.transform(df, self.cont_cat_cat_dims_multi_metric_schema)
+        result = self.hc_tx.transform(df, mock_df.cont_cat_cat_dims_multi_metric_schema)
 
         self.evaluate_chart_options(result, num_series=8)
 
@@ -183,9 +183,9 @@ class HighchartsLineTransformerTests(BaseTransformerTests):
 
     def test_rollup_triple_dimension_multi_metric(self):
         # Tests transformation of a multi-metric, double-dimension result
-        df = self.rollup_cont_cat_cat_dims_multi_metric_df
+        df = mock_df.rollup_cont_cat_cat_dims_multi_metric_df
 
-        result = self.hc_tx.transform(df, self.rollup_cont_cat_cat_dims_multi_metric_schema)
+        result = self.hc_tx.transform(df, mock_df.rollup_cont_cat_cat_dims_multi_metric_schema)
 
         self.evaluate_chart_options(result, num_series=14)
 
@@ -198,7 +198,7 @@ class HighchartsLineTransformerTests(BaseTransformerTests):
         self.evaluate_result(df.unstack(level=[1, 2]), result)
 
 
-class HighchartsColumnTransformerTests(BaseTransformerTests):
+class HighchartsColumnTransformerTests(TestCase):
     """
     Bar and Column charts work with the following requests:
 
@@ -236,9 +236,9 @@ class HighchartsColumnTransformerTests(BaseTransformerTests):
             self.assertListEqual(list(item), data)
 
     def test_no_dims_multi_metric(self):
-        df = self.no_dims_multi_metric_df
+        df = mock_df.no_dims_multi_metric_df
 
-        result = self.hc_tx.transform(df, self.no_dims_multi_metric_schema)
+        result = self.hc_tx.transform(df, mock_df.no_dims_multi_metric_schema)
 
         self.evaluate_chart_options(result, num_results=8)
 
@@ -251,9 +251,9 @@ class HighchartsColumnTransformerTests(BaseTransformerTests):
 
     def test_cat_dim_single_metric(self):
         # Tests transformation of a single-metric, single-dimension result
-        df = self.cat_dim_single_metric_df
+        df = mock_df.cat_dim_single_metric_df
 
-        result = self.hc_tx.transform(df, self.cat_dim_single_metric_schema)
+        result = self.hc_tx.transform(df, mock_df.cat_dim_single_metric_schema)
 
         self.evaluate_chart_options(result, categories=['A', 'B'])
 
@@ -266,9 +266,9 @@ class HighchartsColumnTransformerTests(BaseTransformerTests):
 
     def test_cat_dim_multi_metric(self):
         # Tests transformation of a single-metric, single-dimension result
-        df = self.cat_dim_multi_metric_df
+        df = mock_df.cat_dim_multi_metric_df
 
-        result = self.hc_tx.transform(df, self.cat_dim_multi_metric_schema)
+        result = self.hc_tx.transform(df, mock_df.cat_dim_multi_metric_schema)
 
         self.evaluate_chart_options(result, num_results=2, categories=['A', 'B'])
 
@@ -281,9 +281,9 @@ class HighchartsColumnTransformerTests(BaseTransformerTests):
 
     def test_cat_cat_dim_single_metric(self):
         # Tests transformation of a multi-metric, single-dimension result
-        df = self.cat_cat_dims_single_metric_df
+        df = mock_df.cat_cat_dims_single_metric_df
 
-        result = self.hc_tx.transform(df, self.cat_cat_dims_single_metric_schema)
+        result = self.hc_tx.transform(df, mock_df.cat_cat_dims_single_metric_schema)
 
         self.evaluate_chart_options(result, num_results=2, categories=['A', 'B'])
 
@@ -296,9 +296,9 @@ class HighchartsColumnTransformerTests(BaseTransformerTests):
 
     def test_uni_dim_single_metric(self):
         # Tests transformation of a metric and a unique dimension
-        df = self.uni_dim_single_metric_df
+        df = mock_df.uni_dim_single_metric_df
 
-        result = self.hc_tx.transform(df, self.uni_dim_single_metric_schema)
+        result = self.hc_tx.transform(df, mock_df.uni_dim_single_metric_schema)
 
         self.evaluate_chart_options(result, categories=['Uni_1', 'Uni_2', 'Uni_3'])
 
@@ -311,9 +311,9 @@ class HighchartsColumnTransformerTests(BaseTransformerTests):
 
     def test_uni_dim_multi_metric(self):
         # Tests transformation of two metrics and a unique dimension
-        df = self.uni_dim_multi_metric_df
+        df = mock_df.uni_dim_multi_metric_df
 
-        result = self.hc_tx.transform(df, self.uni_dim_multi_metric_schema)
+        result = self.hc_tx.transform(df, mock_df.uni_dim_multi_metric_schema)
 
         self.evaluate_chart_options(result, num_results=2, categories=['Uni_1', 'Uni_2', 'Uni_3'])
 

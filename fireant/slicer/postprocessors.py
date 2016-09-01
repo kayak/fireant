@@ -10,11 +10,11 @@ def cumulative(dataframe, key, metric, func):
     else:
         keys = [(metric, '{}_{}'.format(metric, key))]
 
-    for old_key, new_key in keys:
-        dataframe[new_key] = (
-            dataframe[old_key].groupby(level=list(range(1, len(dataframe.index.levels)))).apply(func)
+    for metric_key, operation_key in keys:
+        dataframe[operation_key] = (
+            dataframe[metric_key].groupby(level=list(range(1, len(dataframe.index.levels)))).apply(func)
             if isinstance(dataframe.index, pd.MultiIndex)
-            else func(dataframe[old_key])
+            else func(dataframe[metric_key])
         )
 
     return dataframe
