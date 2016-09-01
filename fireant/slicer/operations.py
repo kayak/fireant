@@ -25,7 +25,7 @@ class L1Loss(Operation):
     """
     Performs L1 Loss (mean abs. error) operation on a metric using another metric as the target.
     """
-    key = 'l1_loss'
+    key = 'l1loss'
 
     def __init__(self, metric_key, target_metric_key):
         self.metric_key = metric_key
@@ -43,7 +43,7 @@ class L2Loss(L1Loss):
     """
     Performs L1 Loss (mean sqr. error) operation on a metric using another metric as the target.
     """
-    key = 'l2_loss'
+    key = 'l2loss'
 
 
 class CumSum(Operation):

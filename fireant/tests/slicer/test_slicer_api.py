@@ -700,8 +700,6 @@ class SlicerOperationSchemaTests(SlicerSchemaTests):
 
     def test_totals_operation_schema(self):
         operation_schema = self.test_slicer.manager.operation_schema(
-            metrics=['foo'],
-            dimensions=['date', 'locale', 'account'],
             operations=[Totals('locale', 'account')],
         )
 
@@ -709,8 +707,6 @@ class SlicerOperationSchemaTests(SlicerSchemaTests):
 
     def test_cumsum_operation_schema(self):
         operation_schema = self.test_slicer.manager.operation_schema(
-            metrics=['foo'],
-            dimensions=['date'],
             operations=[CumSum('foo')],
         )
 
@@ -718,8 +714,6 @@ class SlicerOperationSchemaTests(SlicerSchemaTests):
 
     def test_cumsum_metric_list_operation_schema(self):
         operation_schema = self.test_slicer.manager.operation_schema(
-            metrics=['foo', 'bar'],
-            dimensions=['date'],
             operations=[CumSum('foo', 'bar')],
         )
 
@@ -727,8 +721,6 @@ class SlicerOperationSchemaTests(SlicerSchemaTests):
 
     def test_cummean_operation_schema(self):
         operation_schema = self.test_slicer.manager.operation_schema(
-            metrics=['foo'],
-            dimensions=['date'],
             operations=[CumMean('foo')],
         )
 
@@ -736,12 +728,24 @@ class SlicerOperationSchemaTests(SlicerSchemaTests):
 
     def test_cummean_metric_list_operation_schema(self):
         operation_schema = self.test_slicer.manager.operation_schema(
-            metrics=['foo', 'bar'],
-            dimensions=['date'],
             operations=[CumMean('foo', 'bar')],
         )
 
         self.assertListEqual([{'key': 'cummean', 'metrics': ('foo', 'bar')}], operation_schema)
+
+    def test_l1loss_operation_schema(self):
+        operation_schema = self.test_slicer.manager.operation_schema(
+            operations=[L1Loss('foo', 'bar')],
+        )
+
+        self.assertListEqual([{'key': 'l1loss', 'metric': 'foo', 'target': 'bar'}], operation_schema)
+
+    def test_l2loss_operation_schema(self):
+        operation_schema = self.test_slicer.manager.operation_schema(
+            operations=[L2Loss('foo', 'bar')],
+        )
+
+        self.assertListEqual([{'key': 'l2loss', 'metric': 'foo', 'target': 'bar'}], operation_schema)
 
 
 class SlicerDisplaySchemaTests(SlicerSchemaTests):

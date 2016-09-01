@@ -64,7 +64,7 @@ class SlicerManager(QueryManager, OperationManager):
                                          references=references, operations=operations)
         dataframe = self.query_data(**query_schema)
 
-        operation_schema = self.operation_schema(metrics, dimensions, operations)
+        operation_schema = self.operation_schema(operations)
         return self.post_process(dataframe, operation_schema)
 
     def query_schema(self, metrics=None, dimensions=None,
@@ -119,7 +119,7 @@ class SlicerManager(QueryManager, OperationManager):
                                        for reference in references or []]),
         }
 
-    def operation_schema(self, metrics, dimensions, operations):
+    def operation_schema(self, operations):
         results = []
         for operation in operations:
             schema = operation.schemas()

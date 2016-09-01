@@ -61,9 +61,7 @@ class ManagerInitializationTests(TestCase):
 
         self.assertEqual('OK', result)
         mock_query_schema.assert_called_once_with(**mock_args)
-        mock_operation_schema.assert_called_once_with(mock_args['metrics'],
-                                                      mock_args['dimensions'],
-                                                      mock_args['operations'], )
+        mock_operation_schema.assert_called_once_with(mock_args['operations'])
 
     def missing_database_config(self):
         with self.assertRaises(SlicerException):
