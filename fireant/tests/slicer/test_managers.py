@@ -46,13 +46,14 @@ class ManagerInitializationTests(TestCase):
         self.assertTrue(hasattr(self.slicer.datatables, 'row_index_csv'))
         self.assertTrue(hasattr(self.slicer.datatables, 'column_index_csv'))
 
-    @patch('fireant.slicer.managers.SlicerManager._query_data')
+    @patch('fireant.slicer.managers.SlicerManager.query_data')
+    @patch('fireant.slicer.managers.SlicerManager.operation_schema')
     @patch('fireant.slicer.managers.SlicerManager.query_schema')
     @patch('fireant.settings.database')
-    def test_data(self, mock_db, mock_query_schema, mock_query_data):
+    def test_data(self, mock_db, mock_query_schema, mock_operation_schema, mock_query_data):
         mock_args = {'metrics': [0], 'dimensions': [1],
                      'metric_filters': [2], 'dimension_filters': [3],
-                     'references': [4], 'operations': [5],}
+                     'references': [4], 'operations': [5]}
         mock_query_schema.return_value = {'a': 1, 'b': 2}
         mock_query_data.return_value = 'OK'
 
@@ -60,6 +61,9 @@ class ManagerInitializationTests(TestCase):
 
         self.assertEqual('OK', result)
         mock_query_schema.assert_called_once_with(**mock_args)
+        mock_operation_schema.assert_called_once_with(mock_args['metrics'],
+                                                      mock_args['dimensions'],
+                                                      mock_args['operations'], )
 
     def missing_database_config(self):
         with self.assertRaises(SlicerException):
@@ -227,7 +231,7 @@ class ManagerInitializationTests(TestCase):
 
         self._test_transform(self.slicer.datatables.column_index_csv, mock_transform, request)
 
-    @patch.object(SlicerManager, '_query_data')
+    @patch.object(SlicerManager, 'query_data')
     @patch.object(SlicerManager, 'query_schema')
     @patch('fireant.settings.database')
     def test_remove_duplicate_metric_keys(self, mock_database, mock_query_schema, mock_query_data):
@@ -242,7 +246,7 @@ class ManagerInitializationTests(TestCase):
             references=(), operations=(),
         )
 
-    @patch.object(SlicerManager, '_query_data')
+    @patch.object(SlicerManager, 'query_data')
     @patch.object(SlicerManager, 'query_schema')
     @patch('fireant.settings.database')
     def test_remove_duplicate_dimension_keys(self, mock_database, mock_query_schema, mock_query_data):
@@ -258,7 +262,7 @@ class ManagerInitializationTests(TestCase):
             references=(), operations=(),
         )
 
-    @patch.object(SlicerManager, '_query_data')
+    @patch.object(SlicerManager, 'query_data')
     @patch.object(SlicerManager, 'query_schema')
     @patch('fireant.settings.database')
     def test_remove_duplicate_dimension_keys_with_interval(self, mock_database, mock_query_schema, mock_query_data):
@@ -274,7 +278,7 @@ class ManagerInitializationTests(TestCase):
             references=(), operations=(),
         )
 
-    @patch.object(SlicerManager, '_query_data')
+    @patch.object(SlicerManager, 'query_data')
     @patch.object(SlicerManager, 'query_schema')
     @patch('fireant.settings.database')
     def test_remove_duplicate_dimension_keys_with_interval_backwards(self, mock_database, mock_query_schema,

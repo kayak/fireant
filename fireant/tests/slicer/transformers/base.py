@@ -23,6 +23,7 @@ def _rollup(dataframe, levels):
 
 
 class BaseTransformerTests(unittest.TestCase):
+    # TODO move dataframes into more general location
     maxDiff = None
 
     cont_dim = {'label': 'Cont'}
@@ -304,6 +305,6 @@ class BaseTransformerTests(unittest.TestCase):
 
     def test_transformer_api(self):
         tx = Transformer()
-        
+
         with self.assertRaises(NotImplementedError):
             tx.transform(pd.DataFrame(), {})

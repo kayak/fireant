@@ -20,19 +20,24 @@ class invert_levels():
         self.invert_column_levels(self.dataframe)
 
 
-def cumulative(dataframe, metric, func):
+def cumulative(dataframe, metrics, func):
     with invert_levels(dataframe) as dataframe:
-        dataframe[metric] = (dataframe[metric].groupby(level=list(range(1, len(dataframe.index.levels)))).apply(func)
-                             if isinstance(dataframe.index, pd.MultiIndex)
-                             else func(dataframe[metric]))
+        # Cannot apply expanding function directly with groupby
+        # https://github.com/pydata/pandas/issues/14013
+        for metric in metrics:
+            dataframe[metric] = (
+                dataframe[metric].groupby(level=list(range(1, len(dataframe.index.levels)))).apply(func)
+                if isinstance(dataframe.index, pd.MultiIndex)
+                else func(dataframe[metric])
+            )
 
     return dataframe
 
 
 operations = {
-    'cumsum': lambda dataframe, schema: cumulative(dataframe, schema['metric'],
+    'cumsum': lambda dataframe, schema: cumulative(dataframe, schema['metrics'],
                                                    lambda x: x.expanding(min_periods=1).sum()),
-    'cummean': lambda dataframe, schema: cumulative(dataframe, schema['metric'],
+    'cummean': lambda dataframe, schema: cumulative(dataframe, schema['metrics'],
                                                     lambda x: x.expanding(min_periods=1).mean()),
 }
 

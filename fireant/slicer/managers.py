@@ -5,6 +5,7 @@ from collections import OrderedDict
 
 from fireant import utils
 from pypika import functions as fn
+from .postprocessors import OperationManager
 from .queries import QueryManager
 
 
@@ -12,7 +13,7 @@ class SlicerException(Exception):
     pass
 
 
-class SlicerManager(QueryManager):
+class SlicerManager(QueryManager, OperationManager):
     def __init__(self, slicer):
         """
         :param slicer:
@@ -61,19 +62,10 @@ class SlicerManager(QueryManager):
         query_schema = self.query_schema(metrics=metrics, dimensions=dimensions,
                                          metric_filters=metric_filters, dimension_filters=dimension_filters,
                                          references=references, operations=operations)
+        dataframe = self.query_data(**query_schema)
 
-        dataframe = self._query_data(**query_schema)
-
-        # TODO add post processing
-        # operations_schema = self._get_operations_schema(operations)
-        # dataframe = self.post_process(
-        #     dataframe,
-        #     operations_schema,
-        # )
-
-        # do post-processing ops
-
-        return dataframe
+        operation_schema = self.operation_schema(metrics, dimensions, operations)
+        return self.post_process(dataframe, operation_schema)
 
     def query_schema(self, metrics=None, dimensions=None,
                      metric_filters=None, dimension_filters=None,
@@ -126,6 +118,16 @@ class SlicerManager(QueryManager):
             'references': OrderedDict([(reference.key, reference.label)
                                        for reference in references or []]),
         }
+
+    def operation_schema(self, metrics, dimensions, operations):
+        results = []
+        for operation in operations:
+            schema = operation.schemas()
+
+            if schema is not None:
+                results.append(schema)
+
+        return results
 
     def _metrics_schema(self, keys):
         if not keys:

@@ -21,10 +21,10 @@ reference_metric_mappers = {
 
 
 class QueryManager(object):
-    def _query_data(self, table, joins=None,
-                    metrics=None, dimensions=None,
-                    mfilters=None, dfilters=None,
-                    references=None, rollup=None):
+    def query_data(self, table, joins=None,
+                   metrics=None, dimensions=None,
+                   mfilters=None, dfilters=None,
+                   references=None, rollup=None):
         """
         Loads a pandas data frame given a table and a description of the request.
 

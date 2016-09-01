@@ -4,7 +4,7 @@ from unittest import TestCase
 
 from fireant import settings
 from fireant.slicer import *
-from fireant.slicer.operations import Totals
+from fireant.slicer.operations import *
 from fireant.slicer.references import *
 from fireant.tests.database.mock_database import TestDatabase
 from pypika import functions as fn, Tables, Case
@@ -678,7 +678,9 @@ class SlicerSchemaReferenceTests(SlicerSchemaTests):
                 references=[WoW('locale')],
             )
 
-    def test_rollup_operation(self):
+
+class SlicerOperationSchemaTests(SlicerSchemaTests):
+    def test_totals_query_schema(self):
         query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['date', 'locale', 'account'],
@@ -695,6 +697,51 @@ class SlicerSchemaReferenceTests(SlicerSchemaTests):
         self.assertEqual('ROUND("test"."dt",\'DD\')', str(query_schema['dimensions']['date']))
 
         self.assertListEqual(['locale', 'account', 'account_display'], query_schema['rollup'])
+
+    def test_totals_operation_schema(self):
+        operation_schema = self.test_slicer.manager.operation_schema(
+            metrics=['foo'],
+            dimensions=['date', 'locale', 'account'],
+            operations=[Totals('locale', 'account')],
+        )
+
+        self.assertListEqual([], operation_schema)
+
+    def test_cumsum_operation_schema(self):
+        operation_schema = self.test_slicer.manager.operation_schema(
+            metrics=['foo'],
+            dimensions=['date'],
+            operations=[CumSum('foo')],
+        )
+
+        self.assertListEqual([{'key': 'cumsum', 'metrics': ('foo',)}], operation_schema)
+
+    def test_cumsum_metric_list_operation_schema(self):
+        operation_schema = self.test_slicer.manager.operation_schema(
+            metrics=['foo', 'bar'],
+            dimensions=['date'],
+            operations=[CumSum('foo', 'bar')],
+        )
+
+        self.assertListEqual([{'key': 'cumsum', 'metrics': ('foo', 'bar')}], operation_schema)
+
+    def test_cummean_operation_schema(self):
+        operation_schema = self.test_slicer.manager.operation_schema(
+            metrics=['foo'],
+            dimensions=['date'],
+            operations=[CumMean('foo')],
+        )
+
+        self.assertListEqual([{'key': 'cummean', 'metrics': ('foo',)}], operation_schema)
+
+    def test_cummean_metric_list_operation_schema(self):
+        operation_schema = self.test_slicer.manager.operation_schema(
+            metrics=['foo', 'bar'],
+            dimensions=['date'],
+            operations=[CumMean('foo', 'bar')],
+        )
+
+        self.assertListEqual([{'key': 'cummean', 'metrics': ('foo', 'bar')}], operation_schema)
 
 
 class SlicerDisplaySchemaTests(SlicerSchemaTests):
