@@ -9,6 +9,9 @@ class Operation(object):
     def schemas(self):
         pass
 
+    def metrics(self):
+        return ()
+
 
 class Totals(Operation):
     """
@@ -38,6 +41,9 @@ class L1Loss(Operation):
             'target': self.target_metric_key,
         }
 
+    def metrics(self):
+        return (self.metric_key, self.target_metric_key)
+
 
 class L2Loss(L1Loss):
     """
@@ -60,6 +66,9 @@ class CumSum(Operation):
             'key': self.key,
             'metrics': self.metric_keys,
         }
+
+    def metrics(self):
+        return tuple(self.metric_keys)
 
 
 class CumMean(CumSum):

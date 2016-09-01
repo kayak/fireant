@@ -100,6 +100,67 @@ class SlicerSchemaMetricTests(SlicerSchemaTests):
         self.assertSetEqual({'bar'}, set(query_schema['metrics'].keys()))
         self.assertEqual('SUM("test"."fiz"+"test"."buz")', str(query_schema['metrics']['bar']))
 
+    def test_metrics_added_for_cumsum(self):
+        query_schema = self.test_slicer.manager.query_schema(
+            operations=[CumSum('foo', )]
+        )
+
+        self.assertTrue({'table', 'metrics'}.issubset(query_schema.keys()))
+        self.assertEqual(self.test_table, query_schema['table'])
+
+        self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
+
+    def test_metrics_added_for_cumsum_multi(self):
+        query_schema = self.test_slicer.manager.query_schema(
+            operations=[CumSum('foo', 'bar')]
+        )
+
+        self.assertTrue({'table', 'metrics'}.issubset(query_schema.keys()))
+        self.assertEqual(self.test_table, query_schema['table'])
+
+        self.assertSetEqual({'foo', 'bar'}, set(query_schema['metrics'].keys()))
+
+    def test_metrics_added_for_cummean(self):
+        query_schema = self.test_slicer.manager.query_schema(
+            operations=[CumMean('foo')]
+        )
+
+        self.assertTrue({'table', 'metrics'}.issubset(query_schema.keys()))
+        self.assertEqual(self.test_table, query_schema['table'])
+
+        self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
+
+    def test_metrics_added_for_cummean_multi(self):
+        query_schema = self.test_slicer.manager.query_schema(
+            operations=[CumMean('foo', 'bar')]
+        )
+
+        self.assertTrue({'table', 'metrics'}.issubset(query_schema.keys()))
+        self.assertEqual(self.test_table, query_schema['table'])
+
+        self.assertSetEqual({'foo', 'bar'}, set(query_schema['metrics'].keys()))
+
+    def test_metrics_added_for_l1loss(self):
+        query_schema = self.test_slicer.manager.query_schema(
+            operations=[L1Loss('foo', 'bar')]
+        )
+
+        self.assertTrue({'table', 'metrics'}.issubset(query_schema.keys()))
+        self.assertEqual(self.test_table, query_schema['table'])
+
+        self.assertSetEqual({'foo', 'bar'}, set(query_schema['metrics'].keys()))
+
+    def test_metrics_added_for_l2loss(self):
+        query_schema = self.test_slicer.manager.query_schema(
+            metrics=[],
+            operations=[CumMean('foo', 'bar')]
+        )
+
+        self.assertTrue({'table', 'metrics'}.issubset(query_schema.keys()))
+        self.assertEqual(self.test_table, query_schema['table'])
+
+        self.assertSetEqual({'foo', 'bar'}, set(query_schema['metrics'].keys()))
+
 
 class SlicerSchemaDimensionTests(SlicerSchemaTests):
     def test_date_dimension_default_interval(self):

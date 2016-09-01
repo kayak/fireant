@@ -20,9 +20,9 @@ class SlicerManager(QueryManager, OperationManager):
         """
         self.slicer = slicer
 
-    def data(self, metrics=tuple(), dimensions=tuple(),
-             metric_filters=tuple(), dimension_filters=tuple(),
-             references=tuple(), operations=tuple()):
+    def data(self, metrics=(), dimensions=(),
+             metric_filters=(), dimension_filters=(),
+             references=(), operations=()):
         """
         :param metrics:
             Type: list or tuple
@@ -67,11 +67,11 @@ class SlicerManager(QueryManager, OperationManager):
         operation_schema = self.operation_schema(operations)
         return self.post_process(dataframe, operation_schema)
 
-    def query_schema(self, metrics=None, dimensions=None,
-                     metric_filters=None, dimension_filters=None,
-                     references=None, operations=None):
-        schema_metrics, metrics_joins = self._metrics_schema(metrics)
-        schema_dimensions, dimensions_joins = self._dimensions_schema(dimensions or [])
+    def query_schema(self, metrics=(), dimensions=(),
+                     metric_filters=(), dimension_filters=(),
+                     references=(), operations=()):
+        schema_metrics, metrics_joins = self._metrics_schema(metrics, operations)
+        schema_dimensions, dimensions_joins = self._dimensions_schema(dimensions)
         schema_joins = self._joins_schema(metrics_joins | dimensions_joins)
 
         return {
@@ -79,19 +79,19 @@ class SlicerManager(QueryManager, OperationManager):
             'joins': schema_joins,
             'metrics': schema_metrics,
             'dimensions': schema_dimensions,
-            'mfilters': self._filters_schema(self.slicer.metrics, metric_filters or [],
+            'mfilters': self._filters_schema(self.slicer.metrics, metric_filters,
                                              self._default_metric_definition, element_label='metric'),
-            'dfilters': self._filters_schema(self.slicer.dimensions, dimension_filters or [],
+            'dfilters': self._filters_schema(self.slicer.dimensions, dimension_filters,
                                              self._default_dimension_definition),
-            'references': self._references_schema(references, dimensions or [], schema_dimensions),
+            'references': self._references_schema(references, dimensions, schema_dimensions),
             'rollup': [level
-                       for operation in operations or []
+                       for operation in operations
                        if 'totals' == operation.key
                        for dimension in operation.dimension_keys
                        for level in self.slicer.dimensions[dimension].levels()],
         }
 
-    def display_schema(self, metrics=None, dimensions=None, references=None):
+    def display_schema(self, metrics=(), dimensions=(), references=()):
         """
         Builds a display schema for a request.  This is used in combination with the results of the query that is
         executed by the Slicer manager to transform the results with display labels.  The display schema carries
@@ -113,10 +113,10 @@ class SlicerManager(QueryManager, OperationManager):
         """
         return {
             'metrics': OrderedDict([(key, self.slicer.metrics[key].label)
-                                    for key in metrics or []]),
+                                    for key in metrics]),
             'dimensions': self._display_dimensions(dimensions),
             'references': OrderedDict([(reference.key, reference.label)
-                                       for reference in references or []]),
+                                       for reference in references]),
         }
 
     def operation_schema(self, operations):
@@ -129,7 +129,11 @@ class SlicerManager(QueryManager, OperationManager):
 
         return results
 
-    def _metrics_schema(self, keys):
+    def _metrics_schema(self, metrics=(), operations=()):
+        keys = list(metrics) + [metric
+                                for op in operations
+                                for metric in op.metrics()]
+
         if not keys:
             raise SlicerException('At least one metric is required requests.  Please add a metric.')
 
@@ -141,8 +145,8 @@ class SlicerManager(QueryManager, OperationManager):
 
         joins = set()
         metrics = {}
-        for metric in keys:
-            schema_metric = self.slicer.metrics.get(metric)
+        for key in keys:
+            schema_metric = self.slicer.metrics.get(key)
 
             for key, definition in schema_metric.schemas():
                 metrics[key] = definition or self._default_metric_definition(key)
@@ -214,7 +218,7 @@ class SlicerManager(QueryManager, OperationManager):
 
     def _display_dimensions(self, dimensions):
         req_dimension_keys = [utils.slice_first(dimension)
-                              for dimension in dimensions or []]
+                              for dimension in dimensions]
 
         display_dims = OrderedDict()
         for key in req_dimension_keys:
@@ -237,7 +241,7 @@ class SlicerManager(QueryManager, OperationManager):
                           for dimension in dimensions}
 
         schema_references = OrderedDict()
-        for reference in references or []:
+        for reference in references:
             if reference.element_key not in dimension_keys:
                 raise SlicerException(
                     'Unable to query with [{reference}]. '
@@ -270,9 +274,9 @@ class TransformerManager(object):
         for tx_key, tx in transformers.items():
             setattr(self, tx_key, functools.partial(self._get_and_transform_data, tx))
 
-    def _get_and_transform_data(self, tx, metrics=tuple(), dimensions=tuple(),
-                                metric_filters=tuple(), dimension_filters=tuple(),
-                                references=tuple(), operations=tuple()):
+    def _get_and_transform_data(self, tx, metrics=(), dimensions=(),
+                                metric_filters=(), dimension_filters=(),
+                                references=(), operations=()):
         """
         Handles a request and applies a transformation to the result.  This is the implementation of all of the
         transformer manager methods, which are constructed in the __init__ function of this class for each transformer.
