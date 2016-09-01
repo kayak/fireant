@@ -2,42 +2,30 @@
 import pandas as pd
 
 
-class invert_levels():
-    def __init__(self, dataframe):
-        self.dataframe = dataframe.copy()
+def cumulative(dataframe, key, metrics, func):
+    multilevel = isinstance(dataframe.columns, pd.MultiIndex)
+    for metric in metrics:
+        if multilevel:
+            keys = [((ref, metric), (ref, '{}_{}'.format(metric, key)))
+                    for ref in dataframe.columns.levels[0]]
 
-    @staticmethod
-    def invert_column_levels(dataframe):
-        if isinstance(dataframe.columns, pd.MultiIndex):
-            dataframe.columns = dataframe.columns.reorder_levels([1, 0])
+        else:
+            keys = [(metric, '{}_{}'.format(metric, key))]
 
-        return dataframe
-
-    def __enter__(self):
-        return self.invert_column_levels(self.dataframe)
-
-    def __exit__(self, type, value, traceback):
-        self.invert_column_levels(self.dataframe)
-
-
-def cumulative(dataframe, metrics, func):
-    with invert_levels(dataframe) as dataframe:
-        # Cannot apply expanding function directly with groupby
-        # https://github.com/pydata/pandas/issues/14013
-        for metric in metrics:
-            dataframe[metric] = (
-                dataframe[metric].groupby(level=list(range(1, len(dataframe.index.levels)))).apply(func)
+        for old_key, new_key in keys:
+            dataframe[new_key] = (
+                dataframe[old_key].groupby(level=list(range(1, len(dataframe.index.levels)))).apply(func)
                 if isinstance(dataframe.index, pd.MultiIndex)
-                else func(dataframe[metric])
+                else func(dataframe[old_key])
             )
 
     return dataframe
 
 
 operations = {
-    'cumsum': lambda dataframe, schema: cumulative(dataframe, schema['metrics'],
+    'cumsum': lambda dataframe, schema: cumulative(dataframe.copy(), 'cumsum', schema['metrics'],
                                                    lambda x: x.expanding(min_periods=1).sum()),
-    'cummean': lambda dataframe, schema: cumulative(dataframe, schema['metrics'],
+    'cummean': lambda dataframe, schema: cumulative(dataframe.copy(), 'cummean', schema['metrics'],
                                                     lambda x: x.expanding(min_periods=1).mean()),
 }
 
