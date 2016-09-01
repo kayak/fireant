@@ -35,7 +35,7 @@ def _format_data_point(value):
     return value
 
 
-class  HighchartsLineTransformer(Transformer):
+class HighchartsLineTransformer(Transformer):
     """
     Transforms data frames into Highcharts format for several chart types, particularly line or bar charts.
     """
@@ -222,7 +222,7 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
             'name': self._format_label(idx, dim_ordinal, display_schema, reference),
             'data': [_format_data_point(x)
                      for x in item
-                     if not np.isnan(x)],
+                     if not (isinstance(x, float) and np.isnan(x))],
             'yAxis': metrics.index(utils.slice_first(idx)),
             'color': color,
         }
