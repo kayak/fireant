@@ -4,7 +4,7 @@ from unittest import TestCase
 
 from fireant import settings
 from fireant.slicer import *
-from fireant.slicer.operations import Totals
+from fireant.slicer.operations import *
 from fireant.slicer.references import *
 from fireant.tests.database.mock_database import TestDatabase
 from pypika import functions as fn, Tables, Case
@@ -99,6 +99,47 @@ class SlicerSchemaMetricTests(SlicerSchemaTests):
 
         self.assertSetEqual({'bar'}, set(query_schema['metrics'].keys()))
         self.assertEqual('SUM("test"."fiz"+"test"."buz")', str(query_schema['metrics']['bar']))
+
+    def test_metrics_added_for_cumsum(self):
+        query_schema = self.test_slicer.manager.query_schema(
+            operations=[CumSum('foo', )]
+        )
+
+        self.assertTrue({'table', 'metrics'}.issubset(query_schema.keys()))
+        self.assertEqual(self.test_table, query_schema['table'])
+
+        self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
+
+    def test_metrics_added_for_cummean(self):
+        query_schema = self.test_slicer.manager.query_schema(
+            operations=[CumMean('foo')]
+        )
+
+        self.assertTrue({'table', 'metrics'}.issubset(query_schema.keys()))
+        self.assertEqual(self.test_table, query_schema['table'])
+
+        self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
+
+    def test_metrics_added_for_l1loss(self):
+        query_schema = self.test_slicer.manager.query_schema(
+            operations=[L1Loss('foo', 'bar')]
+        )
+
+        self.assertTrue({'table', 'metrics'}.issubset(query_schema.keys()))
+        self.assertEqual(self.test_table, query_schema['table'])
+
+        self.assertSetEqual({'foo', 'bar'}, set(query_schema['metrics'].keys()))
+
+    def test_metrics_added_for_l2loss(self):
+        query_schema = self.test_slicer.manager.query_schema(
+            metrics=[],
+            operations=[L2Loss('foo', 'bar')]
+        )
+
+        self.assertTrue({'table', 'metrics'}.issubset(query_schema.keys()))
+        self.assertEqual(self.test_table, query_schema['table'])
+
+        self.assertSetEqual({'foo', 'bar'}, set(query_schema['metrics'].keys()))
 
 
 class SlicerSchemaDimensionTests(SlicerSchemaTests):
@@ -678,7 +719,9 @@ class SlicerSchemaReferenceTests(SlicerSchemaTests):
                 references=[WoW('locale')],
             )
 
-    def test_rollup_operation(self):
+
+class SlicerOperationSchemaTests(SlicerSchemaTests):
+    def test_totals_query_schema(self):
         query_schema = self.test_slicer.manager.query_schema(
             metrics=['foo'],
             dimensions=['date', 'locale', 'account'],
@@ -695,6 +738,41 @@ class SlicerSchemaReferenceTests(SlicerSchemaTests):
         self.assertEqual('ROUND("test"."dt",\'DD\')', str(query_schema['dimensions']['date']))
 
         self.assertListEqual(['locale', 'account', 'account_display'], query_schema['rollup'])
+
+    def test_totals_operation_schema(self):
+        operation_schema = self.test_slicer.manager.operation_schema(
+            operations=[Totals('locale', 'account')],
+        )
+
+        self.assertListEqual([], operation_schema)
+
+    def test_cumsum_operation_schema(self):
+        operation_schema = self.test_slicer.manager.operation_schema(
+            operations=[CumSum('foo')],
+        )
+
+        self.assertListEqual([{'key': 'cumsum', 'metric': 'foo'}], operation_schema)
+
+    def test_cummean_operation_schema(self):
+        operation_schema = self.test_slicer.manager.operation_schema(
+            operations=[CumMean('foo')],
+        )
+
+        self.assertListEqual([{'key': 'cummean', 'metric': 'foo'}], operation_schema)
+
+    def test_l1loss_operation_schema(self):
+        operation_schema = self.test_slicer.manager.operation_schema(
+            operations=[L1Loss('foo', 'bar')],
+        )
+
+        self.assertListEqual([{'key': 'l1loss', 'metric': 'foo', 'target': 'bar'}], operation_schema)
+
+    def test_l2loss_operation_schema(self):
+        operation_schema = self.test_slicer.manager.operation_schema(
+            operations=[L2Loss('foo', 'bar')],
+        )
+
+        self.assertListEqual([{'key': 'l2loss', 'metric': 'foo', 'target': 'bar'}], operation_schema)
 
 
 class SlicerDisplaySchemaTests(SlicerSchemaTests):
@@ -826,6 +904,92 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
                     'date': {'label': 'Date'},
                 },
                 'references': {'wow': 'WoW'},
+            },
+            display_schema
+        )
+
+    def test_cumsum_operation(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            operations=[CumSum('foo')],
+        )
+
+        self.assertDictEqual(
+            {
+                'metrics': {'foo_cumsum': 'Foo cum. sum'},
+                'dimensions': {},
+                'references': {},
+            },
+            display_schema
+        )
+
+    def test_cummean_operation(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            operations=[CumMean('foo')],
+        )
+
+        self.assertDictEqual(
+            {
+                'metrics': {'foo_cummean': 'Foo cum. mean'},
+                'dimensions': {},
+                'references': {},
+            },
+            display_schema
+        )
+
+    def test_l1loss_operation(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            operations=[L1Loss('foo', 'bar')],
+        )
+
+        self.assertDictEqual(
+            {
+                'metrics': {'foo_l1loss': 'Foo L1 loss'},
+                'dimensions': {},
+                'references': {},
+            },
+            display_schema
+        )
+
+    def test_l2loss_operation(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            operations=[L2Loss('foo', 'bar')],
+        )
+
+        self.assertDictEqual(
+            {
+                'metrics': {'foo_l2loss': 'Foo L2 loss'},
+                'dimensions': {},
+                'references': {},
+            },
+            display_schema
+        )
+
+    def test_operation_with_metric(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            metrics=['bar'],
+            operations=[CumSum('foo')],
+        )
+
+        self.assertDictEqual(
+            {
+                'metrics': {'bar': 'FizBuz', 'foo_cumsum': 'Foo cum. sum'},
+                'dimensions': {},
+                'references': {},
+            },
+            display_schema
+        )
+
+    def test_operation_with_same_metric(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            metrics=['foo'],
+            operations=[CumSum('foo')],
+        )
+
+        self.assertDictEqual(
+            {
+                'metrics': {'foo': 'Foo', 'foo_cumsum': 'Foo cum. sum'},
+                'dimensions': {},
+                'references': {},
             },
             display_schema
         )

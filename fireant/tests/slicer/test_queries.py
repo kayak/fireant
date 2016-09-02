@@ -10,7 +10,7 @@ from pypika import Tables, functions as fn, JoinType
 
 
 class QueryTests(unittest.TestCase):
-    dao = QueryManager()
+    manager = QueryManager()
     maxDiff = None
 
     mock_table, mock_join1, mock_join2 = Tables('test_table', 'test_join1', 'test_join2')
@@ -61,7 +61,7 @@ class ExampleTests(QueryTests):
 
         See pypika documentation for more examples of query expressions: http://pypika.readthedocs.io/en/latest/
         """
-        query = self.dao._build_query(
+        query = self.manager._build_query(
             table=self.mock_table,
             joins=[
                 (self.mock_join1, self.mock_table.join1_id == self.mock_join1.id, JoinType.inner),
@@ -150,7 +150,7 @@ class ExampleTests(QueryTests):
 
 class MetricsTests(QueryTests):
     def test_metrics(self):
-        query = self.dao._build_query(
+        query = self.manager._build_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -168,7 +168,7 @@ class MetricsTests(QueryTests):
                          'FROM "test_table"', str(query))
 
     def test_metrics_dimensions(self):
-        query = self.dao._build_query(
+        query = self.manager._build_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -191,7 +191,7 @@ class MetricsTests(QueryTests):
             'ORDER BY "device_type"', str(query))
 
     def test_metrics_filters(self):
-        query = self.dao._build_query(
+        query = self.manager._build_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -217,7 +217,7 @@ class MetricsTests(QueryTests):
             'ORDER BY "device_type"', str(query))
 
     def test_metrics_dimensions_filters(self):
-        query = self.dao._build_query(
+        query = self.manager._build_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -252,7 +252,7 @@ class DimensionTests(QueryTests):
     def _test_rounded_timeseries(self, increment):
         rounded_dt = settings.database.round_date(self.mock_table.dt, increment)
 
-        return self.dao._build_query(
+        return self.manager._build_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -323,7 +323,7 @@ class DimensionTests(QueryTests):
             'ORDER BY ROUND("dt",\'YEAR\')', str(query))
 
     def test_multidimension_categorical(self):
-        query = self.dao._build_query(
+        query = self.manager._build_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -351,7 +351,7 @@ class DimensionTests(QueryTests):
         rounded_dt = settings.database.round_date(self.mock_table.dt, 'DD')
         device_type = self.mock_table.device_type
 
-        query = self.dao._build_query(
+        query = self.manager._build_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -379,7 +379,7 @@ class DimensionTests(QueryTests):
         rounded_dt = settings.database.round_date(self.mock_table.dt, 'DD')
         locale = self.mock_table.locale
 
-        query = self.dao._build_query(
+        query = self.manager._build_query(
             table=self.mock_table,
             joins=[
                 (self.mock_join1, self.mock_table.hotel_id == self.mock_join1.hotel_id, JoinType.left),
@@ -416,7 +416,7 @@ class DimensionTests(QueryTests):
 
 class FilterTests(QueryTests):
     def test_single_dimension_filter(self):
-        query = self.dao._build_query(
+        query = self.manager._build_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -444,7 +444,7 @@ class FilterTests(QueryTests):
                          'ORDER BY "locale"', str(query))
 
     def test_multi_dimension_filter(self):
-        query = self.dao._build_query(
+        query = self.manager._build_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -476,7 +476,7 @@ class FilterTests(QueryTests):
                          'ORDER BY "locale"', str(query))
 
     def test_single_metric_filter(self):
-        query = self.dao._build_query(
+        query = self.manager._build_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -504,7 +504,7 @@ class FilterTests(QueryTests):
                          'ORDER BY "locale"', str(query))
 
     def test_multi_metric_filter(self):
-        query = self.dao._build_query(
+        query = self.manager._build_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -547,7 +547,7 @@ class ComparisonTests(QueryTests):
     def _get_compare_query(self, compare_type):
         rounded_dt = settings.database.round_date(self.mock_table.dt, 'DD')
         device_type = self.mock_table.device_type
-        query = self.dao._build_query(
+        query = self.manager._build_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -716,7 +716,7 @@ class TotalsQueryTests(QueryTests):
         rounded_dt = settings.database.round_date(self.mock_table.dt, 'DD')
         locale = self.mock_table.locale
 
-        query = self.dao._build_query(
+        query = self.manager._build_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -745,7 +745,7 @@ class TotalsQueryTests(QueryTests):
         locale = self.mock_table.locale
         device_type = self.mock_table.device_type
 
-        query = self.dao._build_query(
+        query = self.manager._build_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -777,7 +777,7 @@ class TotalsQueryTests(QueryTests):
         locale = self.mock_table.locale
         device_type = self.mock_table.device_type
 
-        query = self.dao._build_query(
+        query = self.manager._build_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([

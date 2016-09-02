@@ -9,15 +9,15 @@ import pandas as pd
 from fireant import settings
 from fireant.slicer.transformers import DataTablesRowIndexTransformer, DataTablesColumnIndexTransformer
 from fireant.slicer.transformers import datatables
-from fireant.tests.slicer.transformers.base import BaseTransformerTests
+from fireant.tests import mock_dataframes as mock_df
 
 
-class DataTablesRowIndexTransformerTests(BaseTransformerTests):
+class DataTablesRowIndexTransformerTests(TestCase):
     dt_tx = DataTablesRowIndexTransformer()
 
     def test_no_dims_multi_metric(self):
         # Tests transformation of a single metric with a single continuous dimension
-        result = self.dt_tx.transform(self.no_dims_multi_metric_df, self.no_dims_multi_metric_schema)
+        result = self.dt_tx.transform(mock_df.no_dims_multi_metric_df, mock_df.no_dims_multi_metric_schema)
         self.assertDictEqual({
             'columns': [{'data': 'one', 'title': 'One'},
                         {'data': 'two', 'title': 'Two'},
@@ -31,7 +31,7 @@ class DataTablesRowIndexTransformerTests(BaseTransformerTests):
 
     def test_cont_dim_single_metric(self):
         # Tests transformation of a single metric with a single continuous dimension
-        result = self.dt_tx.transform(self.cont_dim_single_metric_df, self.cont_dim_single_metric_schema)
+        result = self.dt_tx.transform(mock_df.cont_dim_single_metric_df, mock_df.cont_dim_single_metric_schema)
         self.assertDictEqual({
             'columns': [{'data': 'cont.display', 'title': 'Cont'},
                         {'data': 'one', 'title': 'One'}],
@@ -46,7 +46,7 @@ class DataTablesRowIndexTransformerTests(BaseTransformerTests):
 
     def test_cont_dim_multi_metric(self):
         # Tests transformation of two metrics with a single continuous dimension
-        result = self.dt_tx.transform(self.cont_dim_multi_metric_df, self.cont_dim_multi_metric_schema)
+        result = self.dt_tx.transform(mock_df.cont_dim_multi_metric_df, mock_df.cont_dim_multi_metric_schema)
         self.assertDictEqual({
             'columns': [{'data': 'cont.display', 'title': 'Cont'},
                         {'data': 'one', 'title': 'One'},
@@ -62,7 +62,7 @@ class DataTablesRowIndexTransformerTests(BaseTransformerTests):
 
     def test_time_series_date(self):
         # Tests transformation of a single-metric, single-dimension result
-        result = self.dt_tx.transform(self.time_dim_single_metric_df, self.time_dim_single_metric_schema)
+        result = self.dt_tx.transform(mock_df.time_dim_single_metric_df, mock_df.time_dim_single_metric_schema)
         self.assertDictEqual({
             'columns': [{'data': 'date.display', 'title': 'Date'},
                         {'data': 'one', 'title': 'One'}],
@@ -77,7 +77,7 @@ class DataTablesRowIndexTransformerTests(BaseTransformerTests):
 
     def test_time_series_date_with_ref(self):
         # Tests transformation of a single-metric, single-dimension result using a WoW reference
-        result = self.dt_tx.transform(self.time_dim_single_metric_ref_df, self.time_dim_single_metric_ref_schema)
+        result = self.dt_tx.transform(mock_df.time_dim_single_metric_ref_df, mock_df.time_dim_single_metric_ref_schema)
         self.assertDictEqual({
             'columns': [{'data': 'date.display', 'title': 'Date'},
                         {'data': 'one', 'title': 'One'},
@@ -93,7 +93,7 @@ class DataTablesRowIndexTransformerTests(BaseTransformerTests):
 
     def test_uni_dim_single_metric(self):
         # Tests transformation of a metric with a unique dimension with one key and display
-        result = self.dt_tx.transform(self.uni_dim_single_metric_df, self.uni_dim_single_metric_schema)
+        result = self.dt_tx.transform(mock_df.uni_dim_single_metric_df, mock_df.uni_dim_single_metric_schema)
         self.assertDictEqual({
             'columns': [{'data': 'uni.display', 'title': 'Uni'},
                         {'data': 'one', 'title': 'One'}],
@@ -103,7 +103,7 @@ class DataTablesRowIndexTransformerTests(BaseTransformerTests):
 
     def test_uni_dim_multi_metric(self):
         # Tests transformation of a metric with a unique dimension with one key and display
-        result = self.dt_tx.transform(self.uni_dim_multi_metric_df, self.uni_dim_multi_metric_schema)
+        result = self.dt_tx.transform(mock_df.uni_dim_multi_metric_df, mock_df.uni_dim_multi_metric_schema)
         self.assertDictEqual({
             'columns': [{'data': 'uni.display', 'title': 'Uni'},
                         {'data': 'one', 'title': 'One'},
@@ -114,7 +114,7 @@ class DataTablesRowIndexTransformerTests(BaseTransformerTests):
 
     def test_cat_cat_dim_single_metric(self):
         # Tests transformation of a single metric with two categorical dimensions
-        result = self.dt_tx.transform(self.cat_cat_dims_single_metric_df, self.cat_cat_dims_single_metric_schema)
+        result = self.dt_tx.transform(mock_df.cat_cat_dims_single_metric_df, mock_df.cat_cat_dims_single_metric_schema)
         self.assertDictEqual({
             'columns': [{'data': 'cat1.display', 'title': 'Cat1'},
                         {'data': 'cat2.display', 'title': 'Cat2'},
@@ -134,7 +134,7 @@ class DataTablesRowIndexTransformerTests(BaseTransformerTests):
 
     def test_cat_cat_dim_multi_metric(self):
         # Tests transformation of two metrics with two categorical dimensions
-        result = self.dt_tx.transform(self.cat_cat_dims_multi_metric_df, self.cat_cat_dims_multi_metric_schema)
+        result = self.dt_tx.transform(mock_df.cat_cat_dims_multi_metric_df, mock_df.cat_cat_dims_multi_metric_schema)
         self.assertDictEqual({
             'columns': [{'data': 'cat1.display', 'title': 'Cat1'},
                         {'data': 'cat2.display', 'title': 'Cat2'},
@@ -155,9 +155,9 @@ class DataTablesRowIndexTransformerTests(BaseTransformerTests):
 
     def test_rollup_cont_cat_cat_dim_multi_metric(self):
         # Tests transformation of two metrics with two categorical dimensions
-        df = self.rollup_cont_cat_cat_dims_multi_metric_df
+        df = mock_df.rollup_cont_cat_cat_dims_multi_metric_df
 
-        result = self.dt_tx.transform(df, self.rollup_cont_cat_cat_dims_multi_metric_schema)
+        result = self.dt_tx.transform(df, mock_df.rollup_cont_cat_cat_dims_multi_metric_schema)
         self.assertDictEqual({
             'columns': [{'data': 'cont.display', 'title': 'Cont'},
                         {'data': 'cat1.display', 'title': 'Cat1'},
@@ -390,12 +390,12 @@ class DataTablesRowIndexTransformerTests(BaseTransformerTests):
                       'one': 31, 'two': 62}]}, result)
 
 
-class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
+class DataTablesColumnIndexTransformerTests(TestCase):
     dt_tx = DataTablesColumnIndexTransformer()
 
     def test_no_dims_multi_metric(self):
         # Tests transformation of a single metric with a single continuous dimension
-        result = self.dt_tx.transform(self.no_dims_multi_metric_df, self.no_dims_multi_metric_schema)
+        result = self.dt_tx.transform(mock_df.no_dims_multi_metric_df, mock_df.no_dims_multi_metric_schema)
         self.assertDictEqual({
             'columns': [{'data': 'one', 'title': 'One'},
                         {'data': 'two', 'title': 'Two'},
@@ -409,7 +409,7 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
 
     def test_cont_dim_single_metric(self):
         # Tests transformation of a single metric with a single continuous dimension
-        result = self.dt_tx.transform(self.cont_dim_single_metric_df, self.cont_dim_single_metric_schema)
+        result = self.dt_tx.transform(mock_df.cont_dim_single_metric_df, mock_df.cont_dim_single_metric_schema)
         self.assertDictEqual({
             'columns': [{'data': 'cont.display', 'title': 'Cont'},
                         {'data': 'one', 'title': 'One'}],
@@ -424,7 +424,7 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
 
     def test_cont_dim_multi_metric(self):
         # Tests transformation of two metrics with a single continuous dimension
-        result = self.dt_tx.transform(self.cont_dim_multi_metric_df, self.cont_dim_multi_metric_schema)
+        result = self.dt_tx.transform(mock_df.cont_dim_multi_metric_df, mock_df.cont_dim_multi_metric_schema)
         self.assertDictEqual({
             'columns': [{'data': 'cont.display', 'title': 'Cont'},
                         {'data': 'one', 'title': 'One'},
@@ -440,7 +440,7 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
 
     def test_time_series_date_to_millis(self):
         # Tests transformation of a single-metric, single-dimension result
-        result = self.dt_tx.transform(self.time_dim_single_metric_df, self.time_dim_single_metric_schema)
+        result = self.dt_tx.transform(mock_df.time_dim_single_metric_df, mock_df.time_dim_single_metric_schema)
         self.assertDictEqual({
             'columns': [{'data': 'date.display', 'title': 'Date'},
                         {'data': 'one', 'title': 'One'}],
@@ -455,7 +455,7 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
 
     def test_time_series_date_with_ref(self):
         # Tests transformation of a single-metric, single-dimension result using a WoW reference
-        result = self.dt_tx.transform(self.time_dim_single_metric_ref_df, self.time_dim_single_metric_ref_schema)
+        result = self.dt_tx.transform(mock_df.time_dim_single_metric_ref_df, mock_df.time_dim_single_metric_ref_schema)
         self.assertDictEqual({
             'columns': [{'data': 'date.display', 'title': 'Date'},
                         {'data': 'one', 'title': 'One'},
@@ -471,7 +471,8 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
 
     def test_cont_cat_dim_single_metric(self):
         # Tests transformation of a single metric with a continuous and a categorical dimension
-        result = self.dt_tx.transform(self.cont_cat_dims_single_metric_df, self.cont_cat_dims_single_metric_schema)
+        result = self.dt_tx.transform(mock_df.cont_cat_dims_single_metric_df,
+                                      mock_df.cont_cat_dims_single_metric_schema)
         self.assertDictEqual({
             'columns': [{'data': 'cont.display', 'title': 'Cont'},
                         {'data': 'a.one', 'title': 'One (A)'},
@@ -487,7 +488,7 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
 
     def test_cont_cat_dim_multi_metric(self):
         # Tests transformation of two metrics with a continuous and a categorical dimension
-        result = self.dt_tx.transform(self.cont_cat_dims_multi_metric_df, self.cont_cat_dims_multi_metric_schema)
+        result = self.dt_tx.transform(mock_df.cont_cat_dims_multi_metric_df, mock_df.cont_cat_dims_multi_metric_schema)
         self.assertDictEqual({
             'columns': [{'data': 'cont.display', 'title': 'Cont'},
                         {'data': 'a.one', 'title': 'One (A)'},
@@ -521,8 +522,8 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
 
     def test_cont_cat_cat_dim_multi_metric(self):
         # Tests transformation of two metrics with a continuous and two categorical dimensions
-        result = self.dt_tx.transform(self.cont_cat_cat_dims_multi_metric_df,
-                                      self.cont_cat_cat_dims_multi_metric_schema)
+        result = self.dt_tx.transform(mock_df.cont_cat_cat_dims_multi_metric_df,
+                                      mock_df.cont_cat_cat_dims_multi_metric_schema)
         self.assertDictEqual({
             'columns': [{'data': 'cont.display', 'title': 'Cont'},
                         {'data': 'a.y.one', 'title': 'One (A, Y)'},
@@ -560,8 +561,8 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
 
     def test_cont_cat_uni_dim_multi_metric(self):
         # Tests transformation of two metrics with a continuous and two categorical dimensions
-        result = self.dt_tx.transform(self.cont_cat_uni_dims_multi_metric_df,
-                                      self.cont_cat_uni_dims_multi_metric_schema)
+        result = self.dt_tx.transform(mock_df.cont_cat_uni_dims_multi_metric_df,
+                                      mock_df.cont_cat_uni_dims_multi_metric_schema)
         self.assertDictEqual({
             'columns': [{'data': 'cont.display', 'title': 'Cont'},
                         {'data': 'a.1.one', 'title': 'One (A, Aa)'},
@@ -603,8 +604,8 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
 
     def test_rollup_cont_cat_cat_dims_multi_metric_df(self):
         # Tests transformation of two metrics with a continuous and two categorical dimensions
-        result = self.dt_tx.transform(self.rollup_cont_cat_cat_dims_multi_metric_df,
-                                      self.rollup_cont_cat_cat_dims_multi_metric_schema)
+        result = self.dt_tx.transform(mock_df.rollup_cont_cat_cat_dims_multi_metric_df,
+                                      mock_df.rollup_cont_cat_cat_dims_multi_metric_schema)
 
         self.assertDictEqual({
             'columns': [{'data': 'cont.display', 'title': 'Cont'},
@@ -650,8 +651,8 @@ class DataTablesColumnIndexTransformerTests(BaseTransformerTests):
     def test_max_cols(self, ):
         settings.datatables_maxcols = 24
 
-        df = self.cont_cat_cat_dims_multi_metric_df.reorder_levels([1, 2, 0])
-        schema = self.cont_cat_cat_dims_multi_metric_schema.copy()
+        df = mock_df.cont_cat_cat_dims_multi_metric_df.reorder_levels([1, 2, 0])
+        schema = mock_df.cont_cat_cat_dims_multi_metric_schema.copy()
         schema['dimensions'] = OrderedDict([(k, schema['dimensions'][k])
                                             for k in ['cat1', 'cat2', 'cont']])
 

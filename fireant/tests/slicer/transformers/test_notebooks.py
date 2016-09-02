@@ -1,19 +1,20 @@
 # coding: utf-8
 from datetime import datetime
+from unittest import TestCase
 
 import numpy as np
 from mock import patch, ANY, call, MagicMock
 
 from fireant.slicer.transformers import PandasRowIndexTransformer, TransformationException
-from fireant.tests.slicer.transformers.base import BaseTransformerTests
+from fireant.tests import mock_dataframes as mock_df
 
 
-class PandasRowIndexTransformerTests(BaseTransformerTests):
+class PandasRowIndexTransformerTests(TestCase):
     pd_tx = PandasRowIndexTransformer()
 
     def test_no_dims_multi_metric(self):
         # Tests transformation of a single metric with a single continuous dimension
-        result = self.pd_tx.transform(self.no_dims_multi_metric_df, self.no_dims_multi_metric_schema)
+        result = self.pd_tx.transform(mock_df.no_dims_multi_metric_df, mock_df.no_dims_multi_metric_schema)
 
         self.assertListEqual([None], list(result.index.names))
         self.assertListEqual([0], list(result.index))
@@ -23,7 +24,7 @@ class PandasRowIndexTransformerTests(BaseTransformerTests):
 
     def test_cont_dim_single_metric(self):
         # Tests transformation of a single metric with a single continuous dimension
-        result = self.pd_tx.transform(self.cont_dim_single_metric_df, self.cont_dim_single_metric_schema)
+        result = self.pd_tx.transform(mock_df.cont_dim_single_metric_df, mock_df.cont_dim_single_metric_schema)
 
         self.assertListEqual(['Cont'], list(result.index.names))
         self.assertListEqual([a for a in range(8)], list(result.index))
@@ -33,7 +34,7 @@ class PandasRowIndexTransformerTests(BaseTransformerTests):
 
     def test_cont_dim_multi_metric(self):
         # Tests transformation of two metrics with a single continuous dimension
-        result = self.pd_tx.transform(self.cont_dim_multi_metric_df, self.cont_dim_multi_metric_schema)
+        result = self.pd_tx.transform(mock_df.cont_dim_multi_metric_df, mock_df.cont_dim_multi_metric_schema)
 
         self.assertListEqual(['Cont'], list(result.index.names))
         self.assertListEqual([a for a in range(8)], list(result.index))
@@ -44,7 +45,7 @@ class PandasRowIndexTransformerTests(BaseTransformerTests):
 
     def test_time_series_date(self):
         # Tests transformation of a single-metric, single-dimension result
-        result = self.pd_tx.transform(self.time_dim_single_metric_df, self.time_dim_single_metric_schema)
+        result = self.pd_tx.transform(mock_df.time_dim_single_metric_df, mock_df.time_dim_single_metric_schema)
 
         self.assertListEqual(['Date'], list(result.index.names))
         self.assertListEqual([datetime(2000, 1, i) for i in range(1, 9)], list(result.index))
@@ -54,7 +55,7 @@ class PandasRowIndexTransformerTests(BaseTransformerTests):
 
     def test_time_series_date_with_ref(self):
         # Tests transformation of a single-metric, single-dimension result using a WoW reference
-        result = self.pd_tx.transform(self.time_dim_single_metric_ref_df, self.time_dim_single_metric_ref_schema)
+        result = self.pd_tx.transform(mock_df.time_dim_single_metric_ref_df, mock_df.time_dim_single_metric_ref_schema)
 
         self.assertListEqual(['Date'], list(result.index.names))
         self.assertListEqual([datetime(2000, 1, i) for i in range(1, 9)], list(result.index))
@@ -65,14 +66,14 @@ class PandasRowIndexTransformerTests(BaseTransformerTests):
 
     def test_uni_dim_single_metric(self):
         # Tests transformation of a metric with a unique dimension with one key and display
-        result = self.pd_tx.transform(self.uni_dim_single_metric_df, self.uni_dim_single_metric_schema)
+        result = self.pd_tx.transform(mock_df.uni_dim_single_metric_df, mock_df.uni_dim_single_metric_schema)
 
         self.assertListEqual(['Uni'], list(result.index.names))
         self.assertListEqual(['One'], list(result.columns))
 
     def test_uni_dim_multi_metric(self):
         # Tests transformation of a metric with a unique dimension with one key and display
-        result = self.pd_tx.transform(self.uni_dim_multi_metric_df, self.uni_dim_multi_metric_schema)
+        result = self.pd_tx.transform(mock_df.uni_dim_multi_metric_df, mock_df.uni_dim_multi_metric_schema)
 
         self.assertListEqual(['Uni'], list(result.index.names))
         self.assertListEqual(['Aa', 'Bb', 'Cc'], list(result.index))
@@ -83,7 +84,7 @@ class PandasRowIndexTransformerTests(BaseTransformerTests):
 
     def test_cat_cat_dim_single_metric(self):
         # Tests transformation of a single metric with two categorical dimensions
-        result = self.pd_tx.transform(self.cat_cat_dims_single_metric_df, self.cat_cat_dims_single_metric_schema)
+        result = self.pd_tx.transform(mock_df.cat_cat_dims_single_metric_df, mock_df.cat_cat_dims_single_metric_schema)
 
         self.assertListEqual(['Cat1', 'Cat2'], list(result.index.names))
         self.assertListEqual(['A', 'B'], list(result.index.levels[0]))
@@ -94,7 +95,7 @@ class PandasRowIndexTransformerTests(BaseTransformerTests):
 
     def test_cat_cat_dim_multi_metric(self):
         # Tests transformation of two metrics with two categorical dimensions
-        result = self.pd_tx.transform(self.cat_cat_dims_multi_metric_df, self.cat_cat_dims_multi_metric_schema)
+        result = self.pd_tx.transform(mock_df.cat_cat_dims_multi_metric_df, mock_df.cat_cat_dims_multi_metric_schema)
 
         self.assertListEqual(['Cat1', 'Cat2'], list(result.index.names))
         self.assertListEqual(['A', 'B'], list(result.index.levels[0]))
@@ -106,9 +107,9 @@ class PandasRowIndexTransformerTests(BaseTransformerTests):
 
     def test_rollup_cont_cat_cat_dim_multi_metric(self):
         # Tests transformation of two metrics with two categorical dimensions
-        df = self.rollup_cont_cat_cat_dims_multi_metric_df
+        df = mock_df.rollup_cont_cat_cat_dims_multi_metric_df
 
-        result = self.pd_tx.transform(df, self.rollup_cont_cat_cat_dims_multi_metric_schema)
+        result = self.pd_tx.transform(df, mock_df.rollup_cont_cat_cat_dims_multi_metric_schema)
 
         self.assertListEqual(['Cont', 'Cat1', 'Cat2'], list(result.index.names))
         self.assertListEqual([0, 1, 2, 3, 4, 5, 6, 7], list(result.index.levels[0]))
@@ -134,12 +135,12 @@ class PandasRowIndexTransformerTests(BaseTransformerTests):
                               472, 114, 56, 58, 122, 60, 62], list(result['Two']))
 
 
-class PandasColumnIndexTransformerTests(BaseTransformerTests):
+class PandasColumnIndexTransformerTests(TestCase):
     pd_tx = PandasRowIndexTransformer()
 
     def test_no_dims_multi_metric(self):
         # Tests transformation of a single metric with a single continuous dimension
-        result = self.pd_tx.transform(self.no_dims_multi_metric_df, self.no_dims_multi_metric_schema)
+        result = self.pd_tx.transform(mock_df.no_dims_multi_metric_df, mock_df.no_dims_multi_metric_schema)
 
         self.assertListEqual([None], list(result.index.names))
         self.assertListEqual([0], list(result.index))
@@ -149,7 +150,7 @@ class PandasColumnIndexTransformerTests(BaseTransformerTests):
 
     def test_cont_dim_single_metric(self):
         # Tests transformation of a single metric with a single continuous dimension
-        result = self.pd_tx.transform(self.cont_dim_single_metric_df, self.cont_dim_single_metric_schema)
+        result = self.pd_tx.transform(mock_df.cont_dim_single_metric_df, mock_df.cont_dim_single_metric_schema)
 
         self.assertListEqual(['Cont'], list(result.index.names))
         self.assertListEqual([a for a in range(8)], list(result.index))
@@ -159,7 +160,7 @@ class PandasColumnIndexTransformerTests(BaseTransformerTests):
 
     def test_cont_dim_multi_metric(self):
         # Tests transformation of two metrics with a single continuous dimension
-        result = self.pd_tx.transform(self.cont_dim_multi_metric_df, self.cont_dim_multi_metric_schema)
+        result = self.pd_tx.transform(mock_df.cont_dim_multi_metric_df, mock_df.cont_dim_multi_metric_schema)
 
         self.assertListEqual(['Cont'], list(result.index.names))
         self.assertListEqual([a for a in range(8)], list(result.index))
@@ -170,7 +171,7 @@ class PandasColumnIndexTransformerTests(BaseTransformerTests):
 
     def test_time_series_date_to_millis(self):
         # Tests transformation of a single-metric, single-dimension result
-        result = self.pd_tx.transform(self.time_dim_single_metric_df, self.time_dim_single_metric_schema)
+        result = self.pd_tx.transform(mock_df.time_dim_single_metric_df, mock_df.time_dim_single_metric_schema)
 
         self.assertListEqual(['Date'], list(result.index.names))
         self.assertListEqual([datetime(2000, 1, i) for i in range(1, 9)], list(result.index))
@@ -180,7 +181,7 @@ class PandasColumnIndexTransformerTests(BaseTransformerTests):
 
     def test_time_series_date_with_ref(self):
         # Tests transformation of a single-metric, single-dimension result using a WoW reference
-        result = self.pd_tx.transform(self.time_dim_single_metric_ref_df, self.time_dim_single_metric_ref_schema)
+        result = self.pd_tx.transform(mock_df.time_dim_single_metric_ref_df, mock_df.time_dim_single_metric_ref_schema)
 
         self.assertListEqual(['Date'], list(result.index.names))
         self.assertListEqual([datetime(2000, 1, i) for i in range(1, 9)], list(result.index))
@@ -191,7 +192,8 @@ class PandasColumnIndexTransformerTests(BaseTransformerTests):
 
     def test_cont_cat_dim_single_metric(self):
         # Tests transformation of a single metric with a continuous and a categorical dimension
-        result = self.pd_tx.transform(self.cont_cat_dims_single_metric_df, self.cont_cat_dims_single_metric_schema)
+        result = self.pd_tx.transform(mock_df.cont_cat_dims_single_metric_df,
+                                      mock_df.cont_cat_dims_single_metric_schema)
 
         self.assertListEqual(['Cont', 'Cat1'], list(result.index.names))
         self.assertListEqual([(a, b)
@@ -203,7 +205,7 @@ class PandasColumnIndexTransformerTests(BaseTransformerTests):
 
     def test_cont_cat_dim_multi_metric(self):
         # Tests transformation of two metrics with a continuous and a categorical dimension
-        result = self.pd_tx.transform(self.cont_cat_dims_multi_metric_df, self.cont_cat_dims_multi_metric_schema)
+        result = self.pd_tx.transform(mock_df.cont_cat_dims_multi_metric_df, mock_df.cont_cat_dims_multi_metric_schema)
 
         self.assertListEqual(['Cont', 'Cat1'], list(result.index.names))
         self.assertListEqual([(a, b)
@@ -216,8 +218,8 @@ class PandasColumnIndexTransformerTests(BaseTransformerTests):
 
     def test_cont_cat_cat_dim_multi_metric(self):
         # Tests transformation of two metrics with a continuous and two categorical dimensions
-        result = self.pd_tx.transform(self.cont_cat_cat_dims_multi_metric_df,
-                                      self.cont_cat_cat_dims_multi_metric_schema)
+        result = self.pd_tx.transform(mock_df.cont_cat_cat_dims_multi_metric_df,
+                                      mock_df.cont_cat_cat_dims_multi_metric_schema)
 
         self.assertListEqual(['Cont', 'Cat1', 'Cat2'], list(result.index.names))
         self.assertListEqual([(a, b, c)
@@ -231,8 +233,8 @@ class PandasColumnIndexTransformerTests(BaseTransformerTests):
 
     def test_cont_cat_uni_dim_multi_metric(self):
         # Tests transformation of two metrics with a continuous and two categorical dimensions
-        result = self.pd_tx.transform(self.cont_cat_uni_dims_multi_metric_df,
-                                      self.cont_cat_uni_dims_multi_metric_schema)
+        result = self.pd_tx.transform(mock_df.cont_cat_uni_dims_multi_metric_df,
+                                      mock_df.cont_cat_uni_dims_multi_metric_schema)
 
         self.assertListEqual(['Cont', 'Cat1', 'Uni'], list(result.index.names))
         self.assertListEqual([(a, b, c)
@@ -246,8 +248,8 @@ class PandasColumnIndexTransformerTests(BaseTransformerTests):
 
     def test_rollup_cont_cat_cat_dims_multi_metric_df(self):
         # Tests transformation of two metrics with a continuous and two categorical dimensions
-        result = self.pd_tx.transform(self.rollup_cont_cat_cat_dims_multi_metric_df,
-                                      self.rollup_cont_cat_cat_dims_multi_metric_schema)
+        result = self.pd_tx.transform(mock_df.rollup_cont_cat_cat_dims_multi_metric_df,
+                                      mock_df.rollup_cont_cat_cat_dims_multi_metric_schema)
 
         self.assertListEqual(['Cont', 'Cat1', 'Cat2'], list(result.index.names))
         self.assertListEqual([0, 1, 2, 3, 4, 5, 6, 7], list(result.index.levels[0]))
@@ -273,7 +275,7 @@ class PandasColumnIndexTransformerTests(BaseTransformerTests):
                               472, 114, 56, 58, 122, 60, 62], list(result['Two']))
 
 
-class MatplotlibLineChartTransformerTests(BaseTransformerTests):
+class MatplotlibLineChartTransformerTests(TestCase):
     mock_matplotlib = MagicMock(name='mock_matplotlib')
     patcher = patch.dict('sys.modules', {
         'matplotlib': mock_matplotlib,
@@ -310,85 +312,87 @@ class MatplotlibLineChartTransformerTests(BaseTransformerTests):
     @patch('pandas.DataFrame.plot')
     def test_series_single_metric(self, mock_plot):
         # Tests transformation of a single-metric, single-dimension result
-        result = self.plt_tx.transform(self.cont_dim_single_metric_df, self.cont_dim_single_metric_schema)
+        result = self.plt_tx.transform(mock_df.cont_dim_single_metric_df, mock_df.cont_dim_single_metric_schema)
 
         self._assert_matplotlib_calls(mock_plot, ['One'])
 
     @patch('pandas.Series.plot')
     def test_series_multi_metric(self, mock_plot):
         # Tests transformation of a multi-metric, single-dimension result
-        result = self.plt_tx.transform(self.cont_dim_multi_metric_df, self.cont_dim_multi_metric_schema)
+        result = self.plt_tx.transform(mock_df.cont_dim_multi_metric_df, mock_df.cont_dim_multi_metric_schema)
 
         self._assert_matplotlib_calls(mock_plot, ['One', 'Two'])
 
     @patch('pandas.DataFrame.plot')
     def test_time_series_date_to_millis(self, mock_plot):
         # Tests transformation of a single-metric, single-dimension result
-        result = self.plt_tx.transform(self.time_dim_single_metric_df, self.time_dim_single_metric_schema)
+        result = self.plt_tx.transform(mock_df.time_dim_single_metric_df, mock_df.time_dim_single_metric_schema)
 
         self._assert_matplotlib_calls(mock_plot, ['One'])
 
     @patch('pandas.DataFrame.plot')
     def test_time_series_date_with_ref(self, mock_plot):
         # Tests transformation of a single-metric, single-dimension result using a WoW reference
-        result = self.plt_tx.transform(self.time_dim_single_metric_ref_df, self.time_dim_single_metric_ref_schema)
+        result = self.plt_tx.transform(mock_df.time_dim_single_metric_ref_df, mock_df.time_dim_single_metric_ref_schema)
 
         self._assert_matplotlib_calls(mock_plot, ['One'])
 
     @patch('pandas.DataFrame.plot')
     def test_cont_uni_dim_single_metric(self, mock_plot):
         # Tests transformation of a metric and a unique dimension
-        result = self.plt_tx.transform(self.cont_uni_dims_single_metric_df, self.cont_uni_dims_single_metric_schema)
+        result = self.plt_tx.transform(mock_df.cont_uni_dims_single_metric_df,
+                                       mock_df.cont_uni_dims_single_metric_schema)
 
         self._assert_matplotlib_calls(mock_plot, ['One'])
 
     @patch('pandas.DataFrame.plot')
     def test_cont_uni_dim_multi_metric(self, mock_plot):
         # Tests transformation of two metrics and a unique dimension
-        result = self.plt_tx.transform(self.cont_uni_dims_multi_metric_df, self.cont_uni_dims_multi_metric_schema)
+        result = self.plt_tx.transform(mock_df.cont_uni_dims_multi_metric_df, mock_df.cont_uni_dims_multi_metric_schema)
 
         self._assert_matplotlib_calls(mock_plot, ['One', 'Two'])
 
     @patch('pandas.DataFrame.plot')
     def test_double_dimension_single_metric(self, mock_plot):
         # Tests transformation of a single-metric, double-dimension result
-        result = self.plt_tx.transform(self.cont_cat_dims_single_metric_df, self.cont_cat_dims_single_metric_schema)
+        result = self.plt_tx.transform(mock_df.cont_cat_dims_single_metric_df,
+                                       mock_df.cont_cat_dims_single_metric_schema)
 
         self._assert_matplotlib_calls(mock_plot, ['One'])
 
     @patch('pandas.DataFrame.plot')
     def test_double_dimension_multi_metric(self, mock_plot):
         # Tests transformation of a multi-metric, double-dimension result
-        result = self.plt_tx.transform(self.cont_cat_dims_multi_metric_df, self.cont_cat_dims_multi_metric_schema)
+        result = self.plt_tx.transform(mock_df.cont_cat_dims_multi_metric_df, mock_df.cont_cat_dims_multi_metric_schema)
 
         self._assert_matplotlib_calls(mock_plot, ['One', 'Two'])
 
     @patch('pandas.DataFrame.plot')
     def test_triple_dimension_multi_metric(self, mock_plot):
         # Tests transformation of a multi-metric, double-dimension result
-        df = self.cont_cat_cat_dims_multi_metric_df
+        df = mock_df.cont_cat_cat_dims_multi_metric_df
 
-        result = self.plt_tx.transform(df, self.cont_cat_cat_dims_multi_metric_schema)
+        result = self.plt_tx.transform(df, mock_df.cont_cat_cat_dims_multi_metric_schema)
 
         self._assert_matplotlib_calls(mock_plot, ['One', 'Two'])
 
     @patch('pandas.DataFrame.plot')
     def test_rollup_triple_dimension_multi_metric(self, mock_plot):
         # Tests transformation of a multi-metric, double-dimension result
-        df = self.rollup_cont_cat_cat_dims_multi_metric_df
+        df = mock_df.rollup_cont_cat_cat_dims_multi_metric_df
 
-        result = self.plt_tx.transform(df, self.rollup_cont_cat_cat_dims_multi_metric_schema)
+        result = self.plt_tx.transform(df, mock_df.rollup_cont_cat_cat_dims_multi_metric_schema)
 
         self._assert_matplotlib_calls(mock_plot, ['One', 'Two'])
 
     def test_require_at_least_one_dimension(self):
-        df = self.no_dims_multi_metric_df
+        df = mock_df.no_dims_multi_metric_df
 
         with self.assertRaises(TransformationException):
-            self.plt_tx.transform(df, self.no_dims_multi_metric_schema)
+            self.plt_tx.transform(df, mock_df.no_dims_multi_metric_schema)
 
 
-class MatplotlibBarChartTransformerTests(BaseTransformerTests):
+class MatplotlibBarChartTransformerTests(TestCase):
     mock_matplotlib = MagicMock(name='mock_matplotlib')
     patcher = patch.dict('sys.modules', {
         'matplotlib': mock_matplotlib,
@@ -415,41 +419,43 @@ class MatplotlibBarChartTransformerTests(BaseTransformerTests):
     @patch('pandas.DataFrame.plot')
     def test_series_single_metric(self, mock_plot):
         # Tests transformation of a single-metric, single-dimension result
-        result = self.plt_tx.transform(self.cont_dim_single_metric_df, self.cont_dim_single_metric_schema)
+        result = self.plt_tx.transform(mock_df.cont_dim_single_metric_df, mock_df.cont_dim_single_metric_schema)
 
         self._assert_matplotlib_calls(mock_plot)
 
     @patch('pandas.DataFrame.plot')
     def test_series_multi_metric(self, mock_plot):
         # Tests transformation of a multi-metric, single-dimension result
-        result = self.plt_tx.transform(self.cont_dim_multi_metric_df, self.cont_dim_multi_metric_schema)
+        result = self.plt_tx.transform(mock_df.cont_dim_multi_metric_df, mock_df.cont_dim_multi_metric_schema)
 
         self._assert_matplotlib_calls(mock_plot)
 
     @patch('pandas.DataFrame.plot')
     def test_time_series_date_to_millis(self, mock_plot):
         # Tests transformation of a single-metric, single-dimension result
-        result = self.plt_tx.transform(self.time_dim_single_metric_df, self.time_dim_single_metric_schema)
+        result = self.plt_tx.transform(mock_df.time_dim_single_metric_df, mock_df.time_dim_single_metric_schema)
 
         self._assert_matplotlib_calls(mock_plot)
 
     @patch('pandas.DataFrame.plot')
     def test_time_series_date_with_ref(self, mock_plot):
         # Tests transformation of a single-metric, single-dimension result using a WoW reference
-        result = self.plt_tx.transform(self.time_dim_single_metric_ref_df, self.time_dim_single_metric_ref_schema)
+        result = self.plt_tx.transform(mock_df.time_dim_single_metric_ref_df, mock_df.time_dim_single_metric_ref_schema)
 
         self._assert_matplotlib_calls(mock_plot)
 
     @patch('pandas.DataFrame.plot')
     def test_cont_uni_dim_single_metric(self, mock_plot):
         # Tests transformation of a metric and a unique dimension
-        result = self.plt_tx.transform(self.cont_uni_dims_single_metric_df, self.cont_uni_dims_single_metric_schema)
+        result = self.plt_tx.transform(mock_df.cont_uni_dims_single_metric_df,
+                                       mock_df.cont_uni_dims_single_metric_schema)
 
         self._assert_matplotlib_calls(mock_plot)
 
     @patch('pandas.DataFrame.plot')
     def test_double_dimension_single_metric(self, mock_plot):
         # Tests transformation of a single-metric, double-dimension result
-        result = self.plt_tx.transform(self.cont_cat_dims_single_metric_df, self.cont_cat_dims_single_metric_schema)
+        result = self.plt_tx.transform(mock_df.cont_cat_dims_single_metric_df,
+                                       mock_df.cont_cat_dims_single_metric_schema)
 
         self._assert_matplotlib_calls(mock_plot)
