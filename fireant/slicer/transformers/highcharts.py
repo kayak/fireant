@@ -27,7 +27,7 @@ colors = {
 def _format_data_point(value):
     if isinstance(value, pd.Timestamp):
         return int(value.asm8) // int(1e6)
-    if value is None or (isinstance(value, float) and np.isnan(value)):
+    if value is None or (isinstance(value, (float, int)) and np.isnan(value)):
         return None
     if isinstance(value, np.int64):
         # Cannot serialize np.int64 to json
@@ -181,7 +181,7 @@ class HighchartsLineTransformer(Transformer):
 
         return [self._format_point(key, value)
                 for key, value in column.iteritems()
-                if not np.isnan(value)]
+                if not (isinstance(value, (float, int)) and np.isnan(value))]
 
     @staticmethod
     def _format_point(x, y):
@@ -222,7 +222,7 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
             'name': self._format_label(idx, dim_ordinal, display_schema, reference),
             'data': [_format_data_point(x)
                      for x in item
-                     if not (isinstance(x, float) and np.isnan(x))],
+                     if not (isinstance(x, (float, int)) and np.isnan(x))],
             'yAxis': metrics.index(utils.slice_first(idx)),
             'color': color,
         }
@@ -264,7 +264,7 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
         if 'display_options' in category_dimension:
             return [category_dimension['display_options'].get(dim, dim)
                     # Pandas gives both NaN or None in the index depending on whether a level was unstacked
-                    if dim and not (isinstance(dim, float) and np.isnan(dim))
+                    if dim and not (isinstance(dim, (float, int)) and np.isnan(dim))
                     else 'Totals'
                     for dim in dataframe.index]
 
