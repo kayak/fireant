@@ -2,40 +2,72 @@
 import pandas as pd
 
 
-def cumulative(dataframe, key, metric, func):
-    if isinstance(dataframe.columns, pd.MultiIndex):
-        keys = [((ref, metric), (ref, '{}_{}'.format(metric, key)))
-                for ref in dataframe.columns.levels[0]]
-
-    else:
-        keys = [(metric, '{}_{}'.format(metric, key))]
-
-    for metric_key, operation_key in keys:
-        dataframe[operation_key] = (
-            dataframe[metric_key].groupby(level=list(range(1, len(dataframe.index.levels)))).apply(func)
-            if isinstance(dataframe.index, pd.MultiIndex)
-            else func(dataframe[metric_key])
-        )
-
-    return dataframe
+def get_cum_metric(dataframe, schema, reference=None):
+    metric = schema['metric']
+    if reference is None:
+        return dataframe[metric]
+    return dataframe[reference, metric]
 
 
-operations = {
-    'cumsum': lambda dataframe, schema: cumulative(dataframe.copy(), 'cumsum', schema['metric'],
-                                                   lambda x: x.expanding(min_periods=1).sum()),
-    'cummean': lambda dataframe, schema: cumulative(dataframe.copy(), 'cummean', schema['metric'],
-                                                    lambda x: x.expanding(min_periods=1).mean()),
+def get_loss_metric(dataframe, schema, reference=None):
+    target, metric = (
+        (schema['target'], schema['metric'])
+        if reference is None
+        else ((reference, schema['target']), (reference, schema['metric']))
+    )
+
+    error_series = dataframe[target] - dataframe[metric]
+    error_series.name = (schema['metric']
+                         if reference is None
+                         else (reference, schema['metric']))
+    return error_series
+
+
+value_functions = {
+    'cumsum': get_cum_metric,
+    'cummean': get_cum_metric,
+    'l1loss': get_loss_metric,
+    'l2loss': get_loss_metric,
+}
+operation_functions = {
+    'cumsum': lambda x: x.expanding(min_periods=1).sum(),
+    'cummean': lambda x: x.expanding(min_periods=1).mean(),
+    'l1loss': lambda x: x.abs().expanding(min_periods=1).mean(),
+    'l2loss': lambda x: x.pow(2).expanding(min_periods=1).mean(),
 }
 
 
 class OperationManager(object):
     def post_process(self, dataframe, operation_schema):
-        for schema in operation_schema:
-            operation = operations.get(schema['key'])
+        dataframe = dataframe.copy()
 
-            if not operation:
+        for schema in operation_schema:
+            key = schema['key']
+
+            value_func, operation_func = value_functions.get(key), operation_functions.get(schema['key'])
+            if not value_func or not operation_func:
                 continue
 
-            dataframe = operation(dataframe, schema)
+            self._perform_operation(dataframe, key, schema, value_func, operation_func)
 
         return dataframe
+
+    def _perform_operation(self, dataframe, key, schema, value_func, operation):
+        # Check for references
+        references = (dataframe.columns.get_level_values(0).tolist()
+                      if isinstance(dataframe.columns, pd.MultiIndex)
+                      else [None])
+
+        for reference in references:
+            metric_df = value_func(dataframe, schema, reference=reference)
+
+            operation_key = ('{}_{}'.format(metric_df.name, key)
+                             if reference is None
+                             else (reference, '{}_{}'.format(metric_df.name[1], key)))
+
+            if isinstance(dataframe.index, pd.MultiIndex):
+                unstack_levels = list(range(1, len(dataframe.index.levels)))
+                dataframe[operation_key] = metric_df.groupby(level=unstack_levels).apply(operation)
+
+            else:
+                dataframe[operation_key] = operation(metric_df)
