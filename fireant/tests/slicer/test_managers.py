@@ -46,21 +46,26 @@ class ManagerInitializationTests(TestCase):
         self.assertTrue(hasattr(self.slicer.datatables, 'row_index_csv'))
         self.assertTrue(hasattr(self.slicer.datatables, 'column_index_csv'))
 
+    @patch('fireant.slicer.managers.SlicerManager.post_process')
     @patch('fireant.slicer.managers.SlicerManager.query_data')
     @patch('fireant.slicer.managers.SlicerManager.operation_schema')
     @patch('fireant.slicer.managers.SlicerManager.query_schema')
     @patch('fireant.settings.database')
-    def test_data(self, mock_db, mock_query_schema, mock_operation_schema, mock_query_data):
+    def test_data(self, mock_db, mock_query_schema, mock_operation_schema, mock_query_data, mock_post_process):
         mock_args = {'metrics': [0], 'dimensions': [1],
                      'metric_filters': [2], 'dimension_filters': [3],
                      'references': [4], 'operations': [5]}
         mock_query_schema.return_value = {'a': 1, 'b': 2}
-        mock_query_data.return_value = 'OK'
+        mock_query_data.return_value = 'dataframe'
+        mock_operation_schema.return_value = 'op_schema'
+        mock_post_process.return_value = 'OK'
 
         result = self.slicer.manager.data(**mock_args)
 
         self.assertEqual('OK', result)
         mock_query_schema.assert_called_once_with(**mock_args)
+        mock_query_data.assert_called_once_with(a=1, b=2)
+        mock_post_process.assert_called_once_with('dataframe', 'op_schema')
         mock_operation_schema.assert_called_once_with(mock_args['operations'])
 
     def missing_database_config(self):
