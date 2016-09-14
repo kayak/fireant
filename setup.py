@@ -57,7 +57,7 @@ setup(
 
     install_requires=[
         'six',
-        'pandas',
+        'pandas==0.18.1',
         'pypika==0.0.28'
     ],
     tests_require=[
