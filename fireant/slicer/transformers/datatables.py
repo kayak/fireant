@@ -28,7 +28,15 @@ def _safe(value):
 
 
 def _pretty(value, schema):
-    return schema.get('prefix', '') + str(round(value, schema.get('round', 4))) + schema.get('suffix', '')
+    if value and isinstance(value, float):
+        value = round(value, schema.get('round', 3))
+
+    return '{prefix}{value}{suffix}'.format(
+        prefix=schema.get('prefix', ''),
+        value=str(value),
+        suffix=schema.get('suffix', ''),
+    )
+
 
 class DataTablesRowIndexTransformer(Transformer):
     def transform(self, dataframe, display_schema):
