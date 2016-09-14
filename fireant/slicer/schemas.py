@@ -46,8 +46,11 @@ class Metric(SlicerElement):
     The `Metric` class represents a metric in the `Slicer` object.
     """
 
-    def __init__(self, key, label=None, definition=None, joins=None):
+    def __init__(self, key, label=None, definition=None, joins=None, round=None, prefix=None, suffix=None):
         super(Metric, self).__init__(key, label, definition, joins)
+        self.round = round
+        self.prefix = prefix
+        self.suffix = suffix
 
 
 class Dimension(SlicerElement):

@@ -137,10 +137,11 @@ class HighchartsLineTransformer(Transformer):
     def _format_label(self, idx, dim_ordinal, display_schema, reference):
         is_multidimensional = isinstance(idx, tuple)
         if is_multidimensional:
-            metric_label = display_schema['metrics'].get(idx[0], idx[0])
+            metric = display_schema['metrics'].get(idx[0], idx[0])
         else:
-            metric_label = display_schema['metrics'].get(idx, idx)
+            metric = display_schema['metrics'].get(idx, idx)
 
+        metric_label = metric['label']
         if reference:
             metric_label += ' {reference}'.format(
                 reference=display_schema['references'][reference]

@@ -47,14 +47,15 @@ class PandasRowIndexTransformer(Transformer):
     def _set_metric_labels(self, dataframe, metrics, references):
         dataframe = dataframe.copy()
 
+        labels = [metric['label'] for metric in metrics.values()]
         if isinstance(dataframe.columns, pd.MultiIndex):
             dataframe.columns = dataframe.columns.reorder_levels((1, 0)) \
-                .set_levels([list(metrics.values()),
+                .set_levels([labels,
                              [None] + list(references.values())]) \
                 .set_names('Reference', 1)
 
         else:
-            dataframe.columns = list(metrics.values())
+            dataframe.columns = labels
 
         return dataframe
 
@@ -90,7 +91,7 @@ class MatplotlibLineChartTransformer(PandasColumnIndexTransformer):
         if 1 == len(metrics):
             return dataframe.plot.line(figsize=figsize) \
                 .legend(loc='center left', bbox_to_anchor=(1, 0.5)) \
-                .set_title(metrics[0])
+                .set_title(metrics[0]['label'])
 
         try:
             import matplotlib.pyplot as plt
@@ -99,9 +100,10 @@ class MatplotlibLineChartTransformer(PandasColumnIndexTransformer):
 
         fig, axes = plt.subplots(len(metrics), sharex=True, figsize=figsize)
         for metric, axis in zip(metrics, axes):
-            dataframe[metric].plot.line(ax=axis) \
+            label = metric['label']
+            dataframe[label].plot.line(ax=axis) \
                 .legend(loc='center left', bbox_to_anchor=(1, 0.5)) \
-                .set_title(metric)
+                .set_title(label)
 
         return axes
 

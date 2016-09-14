@@ -111,18 +111,8 @@ class SlicerManager(QueryManager, OperationManager):
         :return:
             A dictionary describing how to transform the resulting data frame for the same request.
         """
-        metric_metrics = [(key, self.slicer.metrics[key].label)
-                          for key in metrics]
-        for operation in operations:
-            if not hasattr(operation, 'metric_key'):
-                continue
-            metric_metrics.append((
-                '{}_{}'.format(operation.metric_key, operation.key),
-                '{} {}'.format(self.slicer.metrics[operation.metric_key].label, operation.label)
-            ))
-
         return {
-            'metrics': OrderedDict(metric_metrics),
+            'metrics': self._display_metrics(metrics, operations),
             'dimensions': self._display_dimensions(dimensions),
             'references': OrderedDict([(reference.key, reference.label)
                                        for reference in references]),
@@ -273,6 +263,28 @@ class SlicerManager(QueryManager, OperationManager):
 
     def _default_metric_definition(self, key):
         return fn.Sum(self.slicer.table.field(key))
+
+    def _display_metrics(self, metrics, operations):
+        display = OrderedDict()
+        for metric_key in metrics:
+            schema = self.slicer.metrics[metric_key]
+            display[metric_key] = {attr: getattr(schema, attr)
+                                   for attr in ['label', 'round', 'prefix', 'suffix']
+                                   if getattr(schema, attr) is not None}
+
+        for operation in operations:
+            metric_key = getattr(operation, 'metric_key')
+            if metric_key is None:
+                continue
+
+            key = '{}_{}'.format(metric_key, operation.key)
+            metric_schema = self.slicer.metrics[metric_key]
+            display[key] = {attr: getattr(metric_schema, attr)
+                            for attr in ['round', 'prefix', 'suffix']
+                            if getattr(metric_schema, attr) is not None}
+            display[key]['label'] = '{} {}'.format(metric_schema.label, operation.label)
+
+        return display
 
 
 class TransformerManager(object):

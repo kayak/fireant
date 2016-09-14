@@ -48,6 +48,15 @@ class SlicerSchemaTests(TestCase):
 
                 # Metric with custom label and definition
                 Metric('paddle', definition=fn.Sum(cls.test_join_table.paddle + cls.test_table.foo), joins=['join1']),
+
+                # Metric with rounding
+                Metric('decimal', round=2),
+
+                # Metric with prefix
+                Metric('dollar', prefix='$'),
+
+                # Metric with suffix
+                Metric('euro', suffix='€'),
             ],
 
             dimensions=[
@@ -775,226 +784,6 @@ class SlicerOperationSchemaTests(SlicerSchemaTests):
         self.assertListEqual([{'key': 'l2loss', 'metric': 'foo', 'target': 'bar'}], operation_schema)
 
 
-class SlicerDisplaySchemaTests(SlicerSchemaTests):
-    def test_metric_with_default_definition(self):
-        display_schema = self.test_slicer.manager.display_schema(
-            metrics=['foo'],
-        )
-
-        self.assertDictEqual(
-            {
-                'metrics': {'foo': 'Foo'},
-                'dimensions': {},
-                'references': {},
-            },
-            display_schema
-        )
-
-    def test_metric_with_custom_definition(self):
-        display_schema = self.test_slicer.manager.display_schema(
-            metrics=['bar'],
-        )
-
-        self.assertDictEqual(
-            {
-                'metrics': {'bar': 'FizBuz'},
-                'dimensions': {},
-                'references': {},
-            },
-            display_schema
-        )
-
-    def test_date_dimension_default_interval(self):
-        display_schema = self.test_slicer.manager.display_schema(
-            metrics=['foo'],
-            dimensions=['date'],
-        )
-
-        self.assertDictEqual(
-            {
-                'metrics': {'foo': 'Foo'},
-                'dimensions': {
-                    'date': {'label': 'Date'}
-                },
-                'references': {},
-            },
-            display_schema
-        )
-
-    def test_numeric_dimension_default_interval(self):
-        display_schema = self.test_slicer.manager.display_schema(
-            metrics=['foo'],
-            dimensions=['clicks'],
-        )
-
-        self.assertDictEqual(
-            {
-                'metrics': {'foo': 'Foo'},
-                'dimensions': {
-                    'clicks': {'label': 'My Clicks'}
-                },
-                'references': {},
-            },
-            display_schema
-        )
-
-    def test_categorical_dimension(self):
-        display_schema = self.test_slicer.manager.display_schema(
-            metrics=['foo'],
-            dimensions=['locale'],
-        )
-        self.assertDictEqual(
-            {
-                'metrics': {'foo': 'Foo'},
-                'dimensions': {
-                    'locale': {'label': 'Locale', 'display_options': {'us': 'United States', 'de': 'Germany'}},
-                },
-                'references': {},
-            },
-            display_schema
-        )
-
-    def test_unique_dimension(self):
-        display_schema = self.test_slicer.manager.display_schema(
-            metrics=['foo'],
-            dimensions=['account'],
-        )
-        self.assertDictEqual(
-            {
-                'metrics': {'foo': 'Foo'},
-                'dimensions': {
-                    'account': {'label': 'Account', 'display_field': 'account_display'},
-                },
-                'references': {},
-            },
-            display_schema
-        )
-
-    def test_multiple_metrics_and_dimensions(self):
-        display_schema = self.test_slicer.manager.display_schema(
-            metrics=['foo', 'bar'],
-            dimensions=[('date', DatetimeDimension.month), ('clicks', 50, 100), 'locale', 'account'],
-        )
-
-        self.assertDictEqual(
-            {
-                'metrics': {'foo': 'Foo', 'bar': 'FizBuz'},
-                'dimensions': {
-                    'date': {'label': 'Date'},
-                    'clicks': {'label': 'My Clicks'},
-                    'locale': {'label': 'Locale', 'display_options': {'us': 'United States', 'de': 'Germany'}},
-                    'account': {'label': 'Account', 'display_field': 'account_display'},
-                },
-                'references': {},
-            },
-            display_schema
-        )
-
-    def test_reference_wow_with_date(self):
-        display_schema = self.test_slicer.manager.display_schema(
-            metrics=['foo'],
-            dimensions=['date'],
-            references=[WoW('date')],
-        )
-
-        self.assertDictEqual(
-            {
-                'metrics': {'foo': 'Foo'},
-                'dimensions': {
-                    'date': {'label': 'Date'},
-                },
-                'references': {'wow': 'WoW'},
-            },
-            display_schema
-        )
-
-    def test_cumsum_operation(self):
-        display_schema = self.test_slicer.manager.display_schema(
-            operations=[CumSum('foo')],
-        )
-
-        self.assertDictEqual(
-            {
-                'metrics': {'foo_cumsum': 'Foo cum. sum'},
-                'dimensions': {},
-                'references': {},
-            },
-            display_schema
-        )
-
-    def test_cummean_operation(self):
-        display_schema = self.test_slicer.manager.display_schema(
-            operations=[CumMean('foo')],
-        )
-
-        self.assertDictEqual(
-            {
-                'metrics': {'foo_cummean': 'Foo cum. mean'},
-                'dimensions': {},
-                'references': {},
-            },
-            display_schema
-        )
-
-    def test_l1loss_operation(self):
-        display_schema = self.test_slicer.manager.display_schema(
-            operations=[L1Loss('foo', 'bar')],
-        )
-
-        self.assertDictEqual(
-            {
-                'metrics': {'foo_l1loss': 'Foo L1 loss'},
-                'dimensions': {},
-                'references': {},
-            },
-            display_schema
-        )
-
-    def test_l2loss_operation(self):
-        display_schema = self.test_slicer.manager.display_schema(
-            operations=[L2Loss('foo', 'bar')],
-        )
-
-        self.assertDictEqual(
-            {
-                'metrics': {'foo_l2loss': 'Foo L2 loss'},
-                'dimensions': {},
-                'references': {},
-            },
-            display_schema
-        )
-
-    def test_operation_with_metric(self):
-        display_schema = self.test_slicer.manager.display_schema(
-            metrics=['bar'],
-            operations=[CumSum('foo')],
-        )
-
-        self.assertDictEqual(
-            {
-                'metrics': {'bar': 'FizBuz', 'foo_cumsum': 'Foo cum. sum'},
-                'dimensions': {},
-                'references': {},
-            },
-            display_schema
-        )
-
-    def test_operation_with_same_metric(self):
-        display_schema = self.test_slicer.manager.display_schema(
-            metrics=['foo'],
-            operations=[CumSum('foo')],
-        )
-
-        self.assertDictEqual(
-            {
-                'metrics': {'foo': 'Foo', 'foo_cumsum': 'Foo cum. sum'},
-                'dimensions': {},
-                'references': {},
-            },
-            display_schema
-        )
-
-
 class SlicerSchemaJoinTests(SlicerSchemaTests):
     def test_metric_with_join(self):
         query_schema = self.test_slicer.manager.query_schema(
@@ -1040,3 +829,289 @@ class SlicerSchemaJoinTests(SlicerSchemaTests):
 
         self.assertSetEqual({'blah'}, set(query_schema['dimensions'].keys()))
         self.assertEqual('"join"."blah"', str(query_schema['dimensions']['blah']))
+
+
+class SlicerDisplaySchemaTests(SlicerSchemaTests):
+    def test_metric_with_default_definition(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            metrics=['foo'],
+        )
+
+        self.assertDictEqual(
+            {
+                'metrics': {'foo': {'label': 'Foo'}},
+                'dimensions': {},
+                'references': {},
+            },
+            display_schema
+        )
+
+    def test_metric_with_custom_definition(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            metrics=['bar'],
+        )
+
+        self.assertDictEqual(
+            {
+                'metrics': {'bar': {'label': 'FizBuz'}},
+                'dimensions': {},
+                'references': {},
+            },
+            display_schema
+        )
+
+    def test_date_dimension_default_interval(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            metrics=['foo'],
+            dimensions=['date'],
+        )
+
+        self.assertDictEqual(
+            {
+                'metrics': {'foo': {'label': 'Foo'}},
+                'dimensions': {
+                    'date': {'label': 'Date'}
+                },
+                'references': {},
+            },
+            display_schema
+        )
+
+    def test_numeric_dimension_default_interval(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            metrics=['foo'],
+            dimensions=['clicks'],
+        )
+
+        self.assertDictEqual(
+            {
+                'metrics': {'foo': {'label': 'Foo'}},
+                'dimensions': {
+                    'clicks': {'label': 'My Clicks'}
+                },
+                'references': {},
+            },
+            display_schema
+        )
+
+    def test_categorical_dimension(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            metrics=['foo'],
+            dimensions=['locale'],
+        )
+        self.assertDictEqual(
+            {
+                'metrics': {'foo': {'label': 'Foo'}},
+                'dimensions': {
+                    'locale': {'label': 'Locale', 'display_options': {'us': 'United States', 'de': 'Germany'}},
+                },
+                'references': {},
+            },
+            display_schema
+        )
+
+    def test_unique_dimension(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            metrics=['foo'],
+            dimensions=['account'],
+        )
+        self.assertDictEqual(
+            {
+                'metrics': {'foo': {'label': 'Foo'}},
+                'dimensions': {
+                    'account': {'label': 'Account', 'display_field': 'account_display'},
+                },
+                'references': {},
+            },
+            display_schema
+        )
+
+    def test_multiple_metrics_and_dimensions(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            metrics=['foo', 'bar'],
+            dimensions=[('date', DatetimeDimension.month), ('clicks', 50, 100), 'locale', 'account'],
+        )
+
+        self.assertDictEqual(
+            {
+                'metrics': {
+                    'foo': {'label': 'Foo'},
+                    'bar': {'label': 'FizBuz'},
+                },
+                'dimensions': {
+                    'date': {'label': 'Date'},
+                    'clicks': {'label': 'My Clicks'},
+                    'locale': {'label': 'Locale', 'display_options': {'us': 'United States', 'de': 'Germany'}},
+                    'account': {'label': 'Account', 'display_field': 'account_display'},
+                },
+                'references': {},
+            },
+            display_schema
+        )
+
+    def test_reference_wow_with_date(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            metrics=['foo'],
+            dimensions=['date'],
+            references=[WoW('date')],
+        )
+
+        self.assertDictEqual(
+            {
+                'metrics': {'foo': {'label': 'Foo'}},
+                'dimensions': {
+                    'date': {'label': 'Date'},
+                },
+                'references': {'wow': 'WoW'},
+            },
+            display_schema
+        )
+
+    def test_cumsum_operation(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            operations=[CumSum('foo')],
+        )
+
+        self.assertDictEqual(
+            {
+                'metrics': {'foo_cumsum': {'label': 'Foo cum. sum'}},
+                'dimensions': {},
+                'references': {},
+            },
+            display_schema
+        )
+
+    def test_cummean_operation(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            operations=[CumMean('foo')],
+        )
+
+        self.assertDictEqual(
+            {
+                'metrics': {'foo_cummean': {'label': 'Foo cum. mean'}},
+                'dimensions': {},
+                'references': {},
+            },
+            display_schema
+        )
+
+    def test_l1loss_operation(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            operations=[L1Loss('foo', 'bar')],
+        )
+
+        self.assertDictEqual(
+            {
+                'metrics': {'foo_l1loss': {'label': 'Foo L1 loss'}},
+                'dimensions': {},
+                'references': {},
+            },
+            display_schema
+        )
+
+    def test_l2loss_operation(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            operations=[L2Loss('foo', 'bar')],
+        )
+
+        self.assertDictEqual(
+            {
+                'metrics': {'foo_l2loss': {'label': 'Foo L2 loss'}},
+                'dimensions': {},
+                'references': {},
+            },
+            display_schema
+        )
+
+    def test_operation_with_metric(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            metrics=['bar'],
+            operations=[CumSum('foo')],
+        )
+
+        self.assertDictEqual(
+            {
+                'metrics': {
+                    'bar': {'label': 'FizBuz'},
+                    'foo_cumsum': {'label': 'Foo cum. sum'}
+                },
+                'dimensions': {},
+                'references': {},
+            },
+            display_schema
+        )
+
+    def test_operation_with_same_metric(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            metrics=['foo'],
+            operations=[CumSum('foo')],
+        )
+
+        self.assertDictEqual(
+            {
+                'metrics': {
+                    'foo': {'label': 'Foo'},
+                    'foo_cumsum': {'label': 'Foo cum. sum'}
+                },
+                'dimensions': {},
+                'references': {},
+            },
+            display_schema
+        )
+
+    def test_metric_with_rounding(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            metrics=['decimal'],
+            dimensions=['date'],
+        )
+
+        self.assertDictEqual(
+            {
+                'metrics': {
+                    'decimal': {'label': 'Decimal', 'round': 2},
+                },
+                'dimensions': {
+                    'date': {'label': 'Date'}
+                },
+                'references': {},
+            },
+            display_schema
+        )
+
+    def test_metric_with_prefix(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            metrics=['dollar'],
+            dimensions=['date'],
+        )
+
+        self.assertDictEqual(
+            {
+                'metrics': {
+                    'dollar': {'label': 'Dollar', 'prefix': '$'},
+                },
+                'dimensions': {
+                    'date': {'label': 'Date'}
+                },
+                'references': {},
+            },
+            display_schema
+        )
+
+    def test_metric_with_suffix(self):
+        display_schema = self.test_slicer.manager.display_schema(
+            metrics=['euro'],
+            dimensions=['date'],
+        )
+
+        self.assertDictEqual(
+            {
+                'metrics': {
+                    'euro': {'label': 'Euro', 'suffix': '€'},
+                },
+                'dimensions': {
+                    'date': {'label': 'Date'}
+                },
+                'references': {},
+            },
+            display_schema
+        )

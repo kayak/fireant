@@ -57,7 +57,7 @@ class DataTablesRowIndexTransformer(Transformer):
     def _render_column_level(self, metric_column, display_schema):
         metrics = display_schema['metrics']
         if not isinstance(metric_column, tuple):
-            return {'title': metrics[metric_column], 'data': metric_column}
+            return {'title': metrics[metric_column]['label'], 'data': metric_column}
 
         references = display_schema.get('references')
         metric_key_idx = 1 if references else 0
@@ -66,14 +66,14 @@ class DataTablesRowIndexTransformer(Transformer):
             metric_key = metric_column[1]
             data_keys = [reference_key, metric_key]
             metric_label = '{metric} {reference}'.format(
-                metric=metrics[metric_key],
+                metric=metrics[metric_key]['label'],
                 reference=display_schema['references'][reference_key]
             )
 
         else:
             metric_key = metric_column[metric_key_idx]
             data_keys = [metric_key]
-            metric_label = metrics[metric_key]
+            metric_label = metrics[metric_key]['label']
 
         return {
             'title': metric_label,
@@ -272,7 +272,7 @@ class CSVRowIndexTransformer(DataTablesRowIndexTransformer):
         return dimension_display
 
     def _format_columns(self, dataframe, metrics, dimensions):
-        return dataframe.rename(columns=lambda metric: metrics.get(metric, metric))
+        return dataframe.rename(columns=lambda metric: metrics[metric].get('label', metric))
 
     def _row_dimension_labels(self, dimensions):
         return [dimension['label']
@@ -312,10 +312,10 @@ class CSVColumnIndexTransformer(DataTablesColumnIndexTransformer, CSVRowIndexTra
 
             if dimension_displays:
                 column_display.append('{metric} ({dimensions})'.format(
-                    metric=metrics[metric_value],
+                    metric=metrics[metric_value]['label'],
                     dimensions=', '.join(dimension_displays),
                 ))
             else:
-                column_display.append(metrics[metric_value])
+                column_display.append(metrics[metric_value]['label'])
 
         return column_display
