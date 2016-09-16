@@ -296,3 +296,14 @@ rollup_cont_cat_cat_dims_multi_metric_schema = {
     'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
     'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_dim), ('cat2', cat2_dim)])
 }
+
+# Mock DF with single continuous dimension and two metric columns
+cont_dim_pretty_df = pd.DataFrame(
+    np.array([0.12345, 0.23456, 0.34567, 0.45678, 0.56789, 0.67891, 0.78912, 0.89123]).T,
+    columns=['pretty'],
+    index=cont_idx
+)
+cont_dim_pretty_schema = {
+    'metrics': OrderedDict([('pretty', {'label': 'One', 'prefix': '!', 'suffix': '~', 'round': 1})]),
+    'dimensions': OrderedDict([('cont', cont_dim)])
+}
