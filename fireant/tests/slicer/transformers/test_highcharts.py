@@ -20,12 +20,6 @@ class HighchartsLineTransformerTests(TestCase):
     """
     hc_tx = HighchartsLineTransformer()
 
-    def evaluate_result(self, df, result):
-        result_data = [series['data'] for series in result['series']]
-
-        for data, (_, row) in zip(result_data, df.iteritems()):
-            self.assertListEqual(list(row.iteritems()), data)
-
     def evaluate_chart_options(self, result, num_series=1, xaxis_type='linear', dash_style='Solid'):
         self.assertSetEqual({'title', 'series', 'chart', 'tooltip', 'xAxis', 'yAxis'}, set(result.keys()))
         self.assertEqual(num_series, len(result['series']))
@@ -39,7 +33,30 @@ class HighchartsLineTransformerTests(TestCase):
         self.assertEqual(xaxis_type, result['xAxis']['type'])
 
         for series in result['series']:
-            self.assertSetEqual({'name', 'data', 'yAxis', 'color', 'dashStyle'}, set(series.keys()))
+            self.assertSetEqual({'name', 'data', 'tooltip', 'yAxis', 'color', 'dashStyle'}, set(series.keys()))
+
+    def evaluate_result(self, df, result):
+        result_data = [series['data'] for series in result['series']]
+
+        for data, (_, row) in zip(result_data, df.iteritems()):
+            self.assertListEqual(list(row.iteritems()), data)
+
+    def evaluate_tooltip_options(self, series, prefix=None, suffix=None, precision=None):
+        self.assertIn('tooltip', series)
+
+        tooltip = series['tooltip']
+        if prefix is not None:
+            self.assertIn('valuePrefix', tooltip)
+            self.assertEqual(prefix, tooltip['valuePrefix'])
+        if suffix is not None:
+            self.assertIn('valueSuffix', tooltip)
+            self.assertEqual(suffix, tooltip['valueSuffix'])
+        if precision is not None:
+            self.assertIn('valueDecimals', tooltip)
+            self.assertEqual(precision, tooltip['valueDecimals'])
+
+        else:
+            self.assertSetEqual({'type'}, set(series['xAxis'].keys()))
 
     def test_series_single_metric(self):
         # Tests transformation of a single-metric, single-dimension result
@@ -197,6 +214,22 @@ class HighchartsLineTransformerTests(TestCase):
 
         self.evaluate_result(df.unstack(level=[1, 2]), result)
 
+    def test_cont_dim_pretty(self):
+        # Tests transformation of two metrics and a unique dimension
+        df = mock_df.cont_dim_pretty_df
+
+        result = self.hc_tx.transform(df, mock_df.cont_dim_pretty_schema)
+
+        self.evaluate_chart_options(result)
+
+        self.assertSetEqual(
+            {'One'},
+            {series['name'] for series in result['series']}
+        )
+
+        self.evaluate_tooltip_options(result['series'][0], prefix='!', suffix='~', precision=1)
+        self.evaluate_result(df, result)
+
 
 class HighchartsColumnTransformerTests(TestCase):
     """
@@ -216,14 +249,29 @@ class HighchartsColumnTransformerTests(TestCase):
 
         self.assertEqual(self.type, result['chart']['type'])
         self.assertEqual('categorical', result['xAxis']['type'])
+
         if categories:
             self.assertSetEqual({'type', 'categories'}, set(result['xAxis'].keys()))
 
-        else:
-            self.assertSetEqual({'type'}, set(result['xAxis'].keys()))
-
         for series in result['series']:
-            self.assertSetEqual({'name', 'data', 'yAxis', 'color'}, set(series.keys()))
+            self.assertSetEqual({'name', 'data', 'yAxis', 'color', 'tooltip'}, set(series.keys()))
+
+    def evaluate_tooltip_options(self, series, prefix=None, suffix=None, precision=None):
+        self.assertIn('tooltip', series)
+
+        tooltip = series['tooltip']
+        if prefix is not None:
+            self.assertIn('valuePrefix', tooltip)
+            self.assertEqual(prefix, tooltip['valuePrefix'])
+        if suffix is not None:
+            self.assertIn('valueSuffix', tooltip)
+            self.assertEqual(suffix, tooltip['valueSuffix'])
+        if precision is not None:
+            self.assertIn('valueDecimals', tooltip)
+            self.assertEqual(precision, tooltip['valueDecimals'])
+
+        else:
+            self.assertSetEqual({'type'}, set(series['xAxis'].keys()))
 
     @classmethod
     def setUpClass(cls):
@@ -322,6 +370,22 @@ class HighchartsColumnTransformerTests(TestCase):
             {series['name'] for series in result['series']}
         )
 
+        self.evaluate_result(df, result)
+
+    def test_cont_dim_pretty(self):
+        # Tests transformation of two metrics and a unique dimension
+        df = mock_df.cont_dim_pretty_df
+
+        result = self.hc_tx.transform(df, mock_df.cont_dim_pretty_schema)
+
+        self.evaluate_chart_options(result)
+
+        self.assertSetEqual(
+            {'One'},
+            {series['name'] for series in result['series']}
+        )
+
+        self.evaluate_tooltip_options(result['series'][0], prefix='!', suffix='~', precision=1)
         self.evaluate_result(df, result)
 
 

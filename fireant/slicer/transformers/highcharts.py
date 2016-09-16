@@ -107,9 +107,11 @@ class HighchartsLineTransformer(Transformer):
                 for i, (idx, item) in enumerate(dataframe.iteritems())]
 
     def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference, color='#000'):
+        metric_key = utils.slice_first(idx)
         return {
             'name': self._format_label(idx, dim_ordinal, display_schema, reference),
             'data': self._format_data(item),
+            'tooltip': self._format_tooltip(display_schema['metrics'][metric_key]),
             'yAxis': metrics.index(utils.slice_first(idx)),
             'color': color,
             'dashStyle': 'Dot' if reference else 'Solid'
@@ -118,6 +120,18 @@ class HighchartsLineTransformer(Transformer):
     @staticmethod
     def _make_categories(dataframe, dim_ordinal, display_schema):
         return None
+
+    def _format_tooltip(self, metric_schema):
+        tooltip = {}
+
+        if 'precision' in metric_schema:
+            tooltip['valueDecimals'] = metric_schema['precision']
+        if 'prefix' in metric_schema:
+            tooltip['valuePrefix'] = metric_schema['prefix']
+        if 'suffix' in metric_schema:
+            tooltip['valueSuffix'] = metric_schema['suffix']
+
+        return tooltip
 
     def _prepare_dataframe(self, dataframe, dim_ordinal, dimensions):
         # Replaces invalid values and unstacks the data frame for line charts.
@@ -137,10 +151,11 @@ class HighchartsLineTransformer(Transformer):
     def _format_label(self, idx, dim_ordinal, display_schema, reference):
         is_multidimensional = isinstance(idx, tuple)
         if is_multidimensional:
-            metric_label = display_schema['metrics'].get(idx[0], idx[0])
+            metric = display_schema['metrics'].get(idx[0], idx[0])
         else:
-            metric_label = display_schema['metrics'].get(idx, idx)
+            metric = display_schema['metrics'].get(idx, idx)
 
+        metric_label = metric['label']
         if reference:
             metric_label += ' {reference}'.format(
                 reference=display_schema['references'][reference]
@@ -218,12 +233,14 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
                                                                                               len(dimensions)))
 
     def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference, color='#000'):
+        metric_key = utils.slice_first(idx)
         return {
             'name': self._format_label(idx, dim_ordinal, display_schema, reference),
             'data': [_format_data_point(x)
                      for x in item
                      if not (isinstance(x, (float, int)) and np.isnan(x))],
-            'yAxis': metrics.index(utils.slice_first(idx)),
+            'tooltip': self._format_tooltip(display_schema['metrics'][metric_key]),
+            'yAxis': metrics.index(metric_key),
             'color': color,
         }
 

@@ -59,8 +59,10 @@ no_dims_multi_metric_df = pd.DataFrame(
     columns=['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'],
 )
 no_dims_multi_metric_schema = {
-    'metrics': OrderedDict([('one', 'One'), ('two', 'Two'), ('three', 'Three'), ('four', 'Four'),
-                            ('five', 'Five'), ('six', 'Six'), ('seven', 'Seven'), ('eight', 'Eight')]),
+    'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'}),
+                            ('three', {'label': 'Three'}), ('four', {'label': 'Four'}),
+                            ('five', {'label': 'Five'}), ('six', {'label': 'Six'}),
+                            ('seven', {'label': 'Seven'}), ('eight', {'label': 'Eight'})]),
     'dimensions': OrderedDict()
 }
 
@@ -73,7 +75,7 @@ cont_dim_single_metric_df = pd.DataFrame(
     index=cont_idx
 )
 cont_dim_single_metric_schema = {
-    'metrics': OrderedDict([('one', 'One')]),
+    'metrics': OrderedDict([('one', {'label': 'One'})]),
     'dimensions': OrderedDict([('cont', cont_dim)])
 }
 
@@ -87,7 +89,7 @@ cont_dim_multi_metric_df = pd.DataFrame(
     index=cont_idx
 )
 cont_dim_multi_metric_schema = {
-    'metrics': OrderedDict([('one', 'One'), ('two', 'Two')]),
+    'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
     'dimensions': OrderedDict([('cont', cont_dim)])
 }
 
@@ -100,7 +102,7 @@ uni_dim_single_metric_df = pd.DataFrame(
     index=uni_idx
 )
 uni_dim_single_metric_schema = {
-    'metrics': OrderedDict([('one', 'One')]),
+    'metrics': OrderedDict([('one', {'label': 'One'})]),
     'dimensions': OrderedDict([('uni', uni_dim)])
 }
 
@@ -114,7 +116,7 @@ uni_dim_multi_metric_df = pd.DataFrame(
     index=uni_idx
 )
 uni_dim_multi_metric_schema = {
-    'metrics': OrderedDict([('one', 'One'), ('two', 'Two')]),
+    'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
     'dimensions': OrderedDict([('uni', uni_dim)])
 }
 
@@ -127,7 +129,7 @@ cat_dim_single_metric_df = pd.DataFrame(
     index=cat1_idx
 )
 cat_dim_single_metric_schema = {
-    'metrics': OrderedDict([('one', 'One')]),
+    'metrics': OrderedDict([('one', {'label': 'One'})]),
     'dimensions': OrderedDict([('cat1', cat1_dim)])
 }
 
@@ -141,7 +143,7 @@ cat_dim_multi_metric_df = pd.DataFrame(
     index=cat1_idx
 )
 cat_dim_multi_metric_schema = {
-    'metrics': OrderedDict([('one', 'One'), ('two', 'Two')]),
+    'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
     'dimensions': OrderedDict([('cat1', cat1_dim)])
 }
 
@@ -154,7 +156,7 @@ time_dim_single_metric_df = pd.DataFrame(
     index=datetime_idx
 )
 time_dim_single_metric_schema = {
-    'metrics': OrderedDict([('one', 'One')]),
+    'metrics': OrderedDict([('one', {'label': 'One'})]),
     'dimensions': OrderedDict([('date', datetime_dim)])
 }
 time_dim_single_metric_ref_df = pd.DataFrame(
@@ -166,7 +168,7 @@ time_dim_single_metric_ref_df = pd.DataFrame(
     index=datetime_idx
 )
 time_dim_single_metric_ref_schema = {
-    'metrics': OrderedDict([('one', 'One')]),
+    'metrics': OrderedDict([('one', {'label': 'One'})]),
     'dimensions': OrderedDict([('date', datetime_dim)]),
     'references': {'wow': 'WoW'}
 }
@@ -180,7 +182,7 @@ cont_cat_dims_single_metric_df = pd.DataFrame(
     index=cont_cat_idx
 )
 cont_cat_dims_single_metric_schema = {
-    'metrics': OrderedDict([('one', 'One')]),
+    'metrics': OrderedDict([('one', {'label': 'One'})]),
     'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_dim)])
 }
 
@@ -194,7 +196,7 @@ cont_cat_dims_multi_metric_df = pd.DataFrame(
     index=cont_cat_idx
 )
 cont_cat_dims_multi_metric_schema = {
-    'metrics': OrderedDict([('one', 'One'), ('two', 'Two')]),
+    'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
     'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_dim)])
 }
 
@@ -211,14 +213,14 @@ for uni_id, label in uni_idx:
 cont_uni_dims_multi_metric_df = _cont_uni.set_index(['uni_label'], append=True)
 cont_uni_dims_multi_metric_df = pd.DataFrame(cont_uni_dims_multi_metric_df)
 cont_uni_dims_multi_metric_schema = {
-    'metrics': OrderedDict([('one', 'One'), ('two', 'Two')]),
+    'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
     'dimensions': OrderedDict([('cont', cont_dim), ('uni', uni_dim)])
 }
 
 # Mock DF with continuous and unique dimensions and one metric column
 cont_uni_dims_single_metric_df = pd.DataFrame(cont_uni_dims_multi_metric_df['one'])
 cont_uni_dims_single_metric_schema = {
-    'metrics': OrderedDict([('one', 'One')]),
+    'metrics': OrderedDict([('one', {'label': 'One'})]),
     'dimensions': OrderedDict([('cont', cont_dim), ('uni', uni_dim)])
 }
 
@@ -231,7 +233,7 @@ cat_cat_dims_single_metric_df = pd.DataFrame(
     index=cat_cat_idx,
 )
 cat_cat_dims_single_metric_schema = {
-    'metrics': OrderedDict([('one', 'One')]),
+    'metrics': OrderedDict([('one', {'label': 'One'})]),
     'dimensions': OrderedDict([('cat1', cat1_dim), ('cat2', cat2_dim)])
 }
 
@@ -245,7 +247,7 @@ cat_cat_dims_multi_metric_df = pd.DataFrame(
     index=cat_cat_idx,
 )
 cat_cat_dims_multi_metric_schema = {
-    'metrics': OrderedDict([('one', 'One'), ('two', 'Two')]),
+    'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
     'dimensions': OrderedDict([('cat1', cat1_dim), ('cat2', cat2_dim)])
 }
 
@@ -259,7 +261,7 @@ cont_cat_cat_dims_multi_metric_df = pd.DataFrame(
     index=cont_cat_cat_idx
 )
 cont_cat_cat_dims_multi_metric_schema = {
-    'metrics': OrderedDict([('one', 'One'), ('two', 'Two')]),
+    'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
     'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_dim), ('cat2', cat2_dim)])
 }
 
@@ -275,7 +277,7 @@ for uni_id, label in uni_idx:
 
 cont_cat_uni_dims_multi_metric_df = _cont_cat_uni.set_index('uni_label', append=True)
 cont_cat_uni_dims_multi_metric_schema = {
-    'metrics': OrderedDict([('one', 'One'), ('two', 'Two')]),
+    'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
     'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_dim), ('uni', uni_dim)])
 }
 
@@ -291,6 +293,17 @@ rollup_cont_cat_cat_dims_multi_metric_df = pd.DataFrame(
 rollup_cont_cat_cat_dims_multi_metric_df = rollup(rollup_cont_cat_cat_dims_multi_metric_df, [0, 1])
 rollup_cont_cat_cat_dims_multi_metric_df = rollup(rollup_cont_cat_cat_dims_multi_metric_df, [0])
 rollup_cont_cat_cat_dims_multi_metric_schema = {
-    'metrics': OrderedDict([('one', 'One'), ('two', 'Two')]),
+    'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
     'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_dim), ('cat2', cat2_dim)])
+}
+
+# Mock DF with single continuous dimension and two metric columns
+cont_dim_pretty_df = pd.DataFrame(
+    np.array([0.12345, 0.23456, 0.34567, 0.45678, 0.56789, 0.67891, 0.78912, 0.89123]).T,
+    columns=['pretty'],
+    index=cont_idx
+)
+cont_dim_pretty_schema = {
+    'metrics': OrderedDict([('pretty', {'label': 'One', 'prefix': '!', 'suffix': '~', 'precision': 1})]),
+    'dimensions': OrderedDict([('cont', cont_dim)])
 }

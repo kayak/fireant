@@ -10,7 +10,7 @@ from fireant.slicer.transformers import Transformer
 NO_TIME = time(0)
 
 
-def _format_data_point(value):
+def _safe(value):
     if isinstance(value, pd.Timestamp):
         if value.time() == NO_TIME:
             return value.strftime('%Y-%m-%d')
@@ -25,6 +25,17 @@ def _format_data_point(value):
         return int(value)
 
     return value
+
+
+def _pretty(value, schema):
+    if value and isinstance(value, float) and 'precision' in schema:
+        value = round(value, schema['precision'])
+
+    return '{prefix}{value}{suffix}'.format(
+        prefix=schema.get('prefix', ''),
+        value=str(value),
+        suffix=schema.get('suffix', ''),
+    )
 
 
 class DataTablesRowIndexTransformer(Transformer):
@@ -42,11 +53,9 @@ class DataTablesRowIndexTransformer(Transformer):
 
     def _render_columns(self, dataframe, display_schema):
         maxcols = settings.datatables_maxcols
-        dimensions = display_schema['dimensions']
-        dimension_columns = [{'title': dimensions[dimension_key]['label'],
-                              'data': '{}.display'.format(dimension_key)}
+        dimension_columns = [self._render_dimension_column(dimension_key, display_schema)
                              for dimension_key in dataframe.index.names[:maxcols]
-                             if dimension_key in dimensions]
+                             if dimension_key in display_schema['dimensions']]
 
         maxcols -= len(dimension_columns)
         metric_columns = [self._render_column_level(metric_column, display_schema)
@@ -54,10 +63,24 @@ class DataTablesRowIndexTransformer(Transformer):
 
         return dimension_columns + metric_columns
 
+    def _render_dimension_column(self, key, display_schema):
+        dimension = display_schema['dimensions'][key]
+        render = {
+            '_': 'value',
+        }
+        if 'display_field' in dimension or 'display_options' in dimension:
+            render['display'] = 'display'
+
+        return {'title': dimension['label'],
+                'data': '{}'.format(key),
+                'render': render}
+
     def _render_column_level(self, metric_column, display_schema):
         metrics = display_schema['metrics']
         if not isinstance(metric_column, tuple):
-            return {'title': metrics[metric_column], 'data': metric_column}
+            return {'title': metrics[metric_column]['label'],
+                    'data': metric_column,
+                    'render': {'_': 'value', 'display': 'display'}}
 
         references = display_schema.get('references')
         metric_key_idx = 1 if references else 0
@@ -66,18 +89,20 @@ class DataTablesRowIndexTransformer(Transformer):
             metric_key = metric_column[1]
             data_keys = [reference_key, metric_key]
             metric_label = '{metric} {reference}'.format(
-                metric=metrics[metric_key],
+                metric=metrics[metric_key]['label'],
                 reference=display_schema['references'][reference_key]
             )
 
         else:
             metric_key = metric_column[metric_key_idx]
             data_keys = [metric_key]
-            metric_label = metrics[metric_key]
+            metric_label = metrics[metric_key]['label']
 
+        path = '.'.join(map(str, data_keys))
         return {
             'title': metric_label,
-            'data': '.'.join(map(str, data_keys))
+            'data': path,
+            'render': {'_': 'value', 'display': 'display'}
         }
 
     def _render_data(self, dataframe, display_schema):
@@ -106,25 +131,25 @@ class DataTablesRowIndexTransformer(Transformer):
     def _render_dimension_data(self, idx, dimensions):
         i = 0
         for key, dimension in dimensions:
-            dimension_value = _format_data_point(idx[i])
+            dimension_value = _safe(idx[i])
 
             if 'display_field' in dimension:
                 i += 1
-                yield key, {'display': _format_data_point(idx[i]), 'value': dimension_value}
+                yield key, {'display': _safe(idx[i]), 'value': dimension_value}
 
             elif 'display_options' in dimension:
                 display = dimension['display_options'].get(dimension_value, dimension_value) or 'Total'
                 yield key, {'display': display, 'value': dimension_value}
 
             else:
-                yield key, {'display': dimension_value}
+                yield key, {'value': dimension_value}
 
             i += 1
 
     def _render_metric_data(self, df, dimensions, metrics, references):
         if not isinstance(df.index, pd.MultiIndex):
             for metric_key, label in metrics.items():
-                yield metric_key, _format_data_point(df[metric_key])
+                yield metric_key, self._format_value(df[metric_key], metrics[metric_key])
 
         if references:
             for reference in [''] + list(references):
@@ -139,8 +164,15 @@ class DataTablesRowIndexTransformer(Transformer):
         if reference:
             return [(reference, dict(self._recurse_dimensions(df, dimensions, metrics)))]
 
-        return [(metric_key, _format_data_point(df[metric_key]))
+        return [(metric_key, self._format_value(df[metric_key], metrics[metric_key]))
                 for metric_key, label in metrics.items()]
+
+    def _format_value(self, x, metric):
+        raw = _safe(x)
+        return {
+            'value': raw,
+            'display': _pretty(raw, metric)
+        }
 
 
 class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
@@ -204,7 +236,8 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
 
         return {
             'title': metric_label,
-            'data': data
+            'data': data,
+            'render': {'_': 'value', 'display': 'display'}
         }
 
     def _recurse_dimensions(self, df, dimensions, metrics, reference=None):
@@ -243,14 +276,14 @@ class CSVRowIndexTransformer(DataTablesRowIndexTransformer):
 
     def get_level_values(self, csv_df, key, dimension):
         if 'display_options' in dimension:
-            return [_format_data_point(dimension['display_options'].get(value, value))
+            return [_safe(dimension['display_options'].get(value, value))
                     for value in csv_df.index.get_level_values(key)]
 
         if 'display_field' in dimension:
-            return [_format_data_point(data_point)
+            return [_safe(data_point)
                     for data_point in csv_df.index.get_level_values(dimension['display_field'])]
 
-        return [_format_data_point(data_point)
+        return [_safe(data_point)
                 for data_point in csv_df.index.get_level_values(key)]
 
     @staticmethod
@@ -272,7 +305,7 @@ class CSVRowIndexTransformer(DataTablesRowIndexTransformer):
         return dimension_display
 
     def _format_columns(self, dataframe, metrics, dimensions):
-        return dataframe.rename(columns=lambda metric: metrics.get(metric, metric))
+        return dataframe.rename(columns=lambda metric: metrics[metric].get('label', metric))
 
     def _row_dimension_labels(self, dimensions):
         return [dimension['label']
@@ -305,17 +338,17 @@ class CSVColumnIndexTransformer(DataTablesColumnIndexTransformer, CSVRowIndexTra
                 else:
                     dimension_display = dimension_value
 
-                dimension_display = _format_data_point(dimension_display)
+                dimension_display = _safe(dimension_display)
 
                 if dimension_display is not None:
                     dimension_displays.append(dimension_display)
 
             if dimension_displays:
                 column_display.append('{metric} ({dimensions})'.format(
-                    metric=metrics[metric_value],
+                    metric=metrics[metric_value]['label'],
                     dimensions=', '.join(dimension_displays),
                 ))
             else:
-                column_display.append(metrics[metric_value])
+                column_display.append(metrics[metric_value]['label'])
 
         return column_display
