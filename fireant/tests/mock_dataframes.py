@@ -304,6 +304,6 @@ cont_dim_pretty_df = pd.DataFrame(
     index=cont_idx
 )
 cont_dim_pretty_schema = {
-    'metrics': OrderedDict([('pretty', {'label': 'One', 'prefix': '!', 'suffix': '~', 'round': 1})]),
+    'metrics': OrderedDict([('pretty', {'label': 'One', 'prefix': '!', 'suffix': '~', 'precision': 1})]),
     'dimensions': OrderedDict([('cont', cont_dim)])
 }

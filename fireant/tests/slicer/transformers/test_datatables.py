@@ -630,8 +630,8 @@ class DatatablesUtilityTests(TestCase):
         result = datatables._safe(pd.Timestamp(datetime(2000, 1, 1, 1)))
         self.assertEqual('2000-01-01T01:00:00', result)
 
-    def test_round(self):
-        result = datatables._pretty(0.123456789, {'round': 2})
+    def test_precision(self):
+        result = datatables._pretty(0.123456789, {'precision': 2})
         self.assertEqual('0.12', result)
 
     def test_prefix(self):

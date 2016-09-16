@@ -41,7 +41,7 @@ class HighchartsLineTransformerTests(TestCase):
         for data, (_, row) in zip(result_data, df.iteritems()):
             self.assertListEqual(list(row.iteritems()), data)
 
-    def evaluate_tooltip_options(self, series, prefix=None, suffix=None, round=None):
+    def evaluate_tooltip_options(self, series, prefix=None, suffix=None, precision=None):
         self.assertIn('tooltip', series)
 
         tooltip = series['tooltip']
@@ -51,9 +51,9 @@ class HighchartsLineTransformerTests(TestCase):
         if suffix is not None:
             self.assertIn('valueSuffix', tooltip)
             self.assertEqual(suffix, tooltip['valueSuffix'])
-        if round is not None:
+        if precision is not None:
             self.assertIn('valueDecimals', tooltip)
-            self.assertEqual(round, tooltip['valueDecimals'])
+            self.assertEqual(precision, tooltip['valueDecimals'])
 
         else:
             self.assertSetEqual({'type'}, set(series['xAxis'].keys()))
@@ -227,7 +227,7 @@ class HighchartsLineTransformerTests(TestCase):
             {series['name'] for series in result['series']}
         )
 
-        self.evaluate_tooltip_options(result['series'][0], prefix='!', suffix='~', round=1)
+        self.evaluate_tooltip_options(result['series'][0], prefix='!', suffix='~', precision=1)
         self.evaluate_result(df, result)
 
 
@@ -256,7 +256,7 @@ class HighchartsColumnTransformerTests(TestCase):
         for series in result['series']:
             self.assertSetEqual({'name', 'data', 'yAxis', 'color', 'tooltip'}, set(series.keys()))
 
-    def evaluate_tooltip_options(self, series, prefix=None, suffix=None, round=None):
+    def evaluate_tooltip_options(self, series, prefix=None, suffix=None, precision=None):
         self.assertIn('tooltip', series)
 
         tooltip = series['tooltip']
@@ -266,9 +266,9 @@ class HighchartsColumnTransformerTests(TestCase):
         if suffix is not None:
             self.assertIn('valueSuffix', tooltip)
             self.assertEqual(suffix, tooltip['valueSuffix'])
-        if round is not None:
+        if precision is not None:
             self.assertIn('valueDecimals', tooltip)
-            self.assertEqual(round, tooltip['valueDecimals'])
+            self.assertEqual(precision, tooltip['valueDecimals'])
 
         else:
             self.assertSetEqual({'type'}, set(series['xAxis'].keys()))
@@ -385,7 +385,7 @@ class HighchartsColumnTransformerTests(TestCase):
             {series['name'] for series in result['series']}
         )
 
-        self.evaluate_tooltip_options(result['series'][0], prefix='!', suffix='~', round=1)
+        self.evaluate_tooltip_options(result['series'][0], prefix='!', suffix='~', precision=1)
         self.evaluate_result(df, result)
 
 

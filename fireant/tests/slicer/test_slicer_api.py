@@ -50,7 +50,7 @@ class SlicerSchemaTests(TestCase):
                 Metric('paddle', definition=fn.Sum(cls.test_join_table.paddle + cls.test_table.foo), joins=['join1']),
 
                 # Metric with rounding
-                Metric('decimal', round=2),
+                Metric('decimal', precision=2),
 
                 # Metric with prefix
                 Metric('dollar', prefix='$'),
@@ -1068,7 +1068,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         self.assertDictEqual(
             {
                 'metrics': {
-                    'decimal': {'label': 'Decimal', 'round': 2},
+                    'decimal': {'label': 'Decimal', 'precision': 2},
                 },
                 'dimensions': {
                     'date': {'label': 'Date'}

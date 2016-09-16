@@ -269,7 +269,7 @@ class SlicerManager(QueryManager, OperationManager):
         for metric_key in metrics:
             schema = self.slicer.metrics[metric_key]
             display[metric_key] = {attr: getattr(schema, attr)
-                                   for attr in ['label', 'round', 'prefix', 'suffix']
+                                   for attr in ['label', 'precision', 'prefix', 'suffix']
                                    if getattr(schema, attr) is not None}
 
         for operation in operations:
@@ -280,7 +280,7 @@ class SlicerManager(QueryManager, OperationManager):
             key = '{}_{}'.format(metric_key, operation.key)
             metric_schema = self.slicer.metrics[metric_key]
             display[key] = {attr: getattr(metric_schema, attr)
-                            for attr in ['round', 'prefix', 'suffix']
+                            for attr in ['precision', 'prefix', 'suffix']
                             if getattr(metric_schema, attr) is not None}
             display[key]['label'] = '{} {}'.format(metric_schema.label, operation.label)
 

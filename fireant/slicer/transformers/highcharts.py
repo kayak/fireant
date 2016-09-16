@@ -124,8 +124,8 @@ class HighchartsLineTransformer(Transformer):
     def _format_tooltip(self, metric_schema):
         tooltip = {}
 
-        if 'round' in metric_schema:
-            tooltip['valueDecimals'] = metric_schema['round']
+        if 'precision' in metric_schema:
+            tooltip['valueDecimals'] = metric_schema['precision']
         if 'prefix' in metric_schema:
             tooltip['valuePrefix'] = metric_schema['prefix']
         if 'suffix' in metric_schema:
