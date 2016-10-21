@@ -2,7 +2,6 @@
 from datetime import date
 from unittest import TestCase
 
-from fireant import settings
 from fireant.slicer import *
 from fireant.slicer.operations import *
 from fireant.slicer.references import *
@@ -17,13 +16,14 @@ class SlicerSchemaTests(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        settings.database = TestDatabase()
         cls.test_table, cls.test_join_table = Tables('test_table', 'test_join_table')
         cls.test_table.alias = 'test'
         cls.test_join_table.alias = 'join'
+        cls.test_db = TestDatabase()
 
         cls.test_slicer = Slicer(
-            cls.test_table,
+            table=cls.test_table,
+            database=cls.test_db,
 
             joins=[
                 Join('join1', cls.test_join_table, cls.test_table.join_id == cls.test_join_table.id)
