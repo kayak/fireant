@@ -84,7 +84,7 @@ class ContinuousDimension(Dimension):
         super(ContinuousDimension, self).__init__(key=key, label=label, definition=definition, joins=joins)
         self.default_interval = default_interval
 
-    def schemas(self, *args):
+    def schemas(self, *args, **kwargs):
         size, offset = args if args else (self.default_interval.size, self.default_interval.offset)
         return [(self.key, Mod(self.definition + offset, size))]
 
