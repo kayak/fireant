@@ -1,5 +1,4 @@
 # coding: utf-8
-from fireant import settings
 from fireant.slicer import transformers
 from fireant.slicer.managers import SlicerManager, TransformerManager
 from pypika import JoinType
@@ -35,7 +34,7 @@ class SlicerElement(object):
     def __repr__(self):
         return self.key
 
-    def schemas(self, *args):
+    def schemas(self, *args, **kwargs):
         return [
             (self.key, self.definition)
         ]
@@ -116,9 +115,9 @@ class DatetimeDimension(ContinuousDimension):
         super(DatetimeDimension, self).__init__(key=key, label=label, definition=definition, joins=joins,
                                                 default_interval=default_interval)
 
-    def schemas(self, *args):
+    def schemas(self, *args, database=None, **kwargs):
         interval = args[0] if args else self.default_interval
-        return [(self.key, settings.database.round_date(self.definition, interval.size))]
+        return [(self.key, database.round_date(self.definition, interval.size))]
 
 
 class CategoricalDimension(Dimension):
@@ -132,7 +131,7 @@ class UniqueDimension(Dimension):
         super(UniqueDimension, self).__init__(key=key, label=label, definition=definition, joins=joins)
         self.display_field = display_field
 
-    def schemas(self, *args):
+    def schemas(self, *args, **kwargs):
         id_field_schemas = [('{key}'.format(key=self.key), self.definition)]
         return id_field_schemas + [('{key}_display'.format(key=self.key), self.display_field)]
 
@@ -166,8 +165,9 @@ class Join(object):
 
 
 class Slicer(object):
-    def __init__(self, table, metrics=tuple(), dimensions=tuple(), joins=tuple()):
+    def __init__(self, table, database, metrics=tuple(), dimensions=tuple(), joins=tuple()):
         self.table = table
+        self.database = database
 
         self.metrics = {metric.key: metric for metric in metrics}
         self.dimensions = {dimension.key: dimension for dimension in dimensions}

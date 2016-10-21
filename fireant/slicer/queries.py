@@ -3,7 +3,6 @@ import logging
 
 import pandas as pd
 
-from fireant import settings
 from pypika import Query, Interval, JoinType
 
 logger = logging.Logger('fireant')
@@ -21,7 +20,7 @@ reference_metric_mappers = {
 
 
 class QueryManager(object):
-    def query_data(self, table, joins=None,
+    def query_data(self, database, table, joins=None,
                    metrics=None, dimensions=None,
                    mfilters=None, dfilters=None,
                    references=None, rollup=None):
@@ -114,7 +113,7 @@ class QueryManager(object):
         querystring = str(query)
         logger.info("Executing query:\n----START----\n{query}\n-----END-----".format(query=querystring))
 
-        dataframe = settings.database.fetch_dataframe(querystring)
+        dataframe = database.fetch_dataframe(querystring)
         dataframe.columns = [col.decode('utf-8') if isinstance(col, bytes) else col
                              for col in dataframe.columns]
         dataframe = dataframe.set_index(

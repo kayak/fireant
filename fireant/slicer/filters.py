@@ -13,7 +13,7 @@ class EqualityFilter(Filter):
         self.operator = operator
         self.value = value
 
-    def schemas(self, element):
+    def schemas(self, element, **kwargs):
         element = utils.wrap_list(element)
         value = utils.wrap_list(self.value)
 

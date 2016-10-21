@@ -7,6 +7,7 @@ from mock import Mock, MagicMock, patch, call, ANY
 from fireant.dashboards import *
 from fireant.slicer import *
 from fireant.slicer.references import WoW
+from fireant.tests.database.mock_database import TestDatabase
 from pypika import Table, functions as fn
 
 
@@ -17,7 +18,8 @@ class DashboardTests(TestCase):
     def setUpClass(cls):
         test_table = Table('test_table')
         cls.test_slicer = Slicer(
-            test_table,
+            table=test_table,
+            database=TestDatabase(),
 
             metrics=[
                 # Metric with defaults

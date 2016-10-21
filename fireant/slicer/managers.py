@@ -51,18 +51,13 @@ class SlicerManager(QueryManager, OperationManager):
         :return:
             A transformed response that is queried based on the slicer and the format.
         """
-        from fireant import settings
-        if settings.database is None:
-            raise SlicerException('Unable to execute queries until a database is configured.  Please import '
-                                  '`fireant.settings` and set some value to `settings.database`.')
-
         metrics = utils.filter_duplicates(metrics)
         dimensions = utils.filter_duplicates(dimensions)
 
         query_schema = self.query_schema(metrics=metrics, dimensions=dimensions,
                                          metric_filters=metric_filters, dimension_filters=dimension_filters,
                                          references=references, operations=operations)
-        dataframe = self.query_data(**query_schema)
+        dataframe = self.query_data(database=self.slicer.database, **query_schema)
 
         operation_schema = self.operation_schema(operations)
         return self.post_process(dataframe, operation_schema)
@@ -175,7 +170,7 @@ class SlicerManager(QueryManager, OperationManager):
 
             schema_dimension = self.slicer.dimensions.get(dimension)
 
-            for key, definition in schema_dimension.schemas(*args):
+            for key, definition in schema_dimension.schemas(*args, database=self.slicer.database):
                 dimensions[key] = definition or self._default_dimension_definition(key)
 
             if schema_dimension.joins:

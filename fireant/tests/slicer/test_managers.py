@@ -6,14 +6,17 @@ from mock import patch, MagicMock
 from fireant.slicer import *
 from fireant.slicer.managers import SlicerManager
 from fireant.slicer.transformers import *
+from fireant.tests.database.mock_database import TestDatabase
 from pypika import Table
 
 
 class ManagerInitializationTests(TestCase):
     def setUp(self):
-        table = Table('test')
+        self.test_table = Table('test')
+        self.test_database = TestDatabase()
         self.slicer = Slicer(
-            table,
+            self.test_table,
+            self.test_database,
 
             metrics=[
                 Metric('foo'),
@@ -24,7 +27,7 @@ class ManagerInitializationTests(TestCase):
                 ContinuousDimension('cont'),
                 DatetimeDimension('date'),
                 CategoricalDimension('cat'),
-                UniqueDimension('uni', display_field=table.uni_label),
+                UniqueDimension('uni', display_field=self.test_table.uni_label),
             ]
         )
 
@@ -50,8 +53,7 @@ class ManagerInitializationTests(TestCase):
     @patch('fireant.slicer.managers.SlicerManager.query_data')
     @patch('fireant.slicer.managers.SlicerManager.operation_schema')
     @patch('fireant.slicer.managers.SlicerManager.query_schema')
-    @patch('fireant.settings.database')
-    def test_data(self, mock_db, mock_query_schema, mock_operation_schema, mock_query_data, mock_post_process):
+    def test_data(self, mock_query_schema, mock_operation_schema, mock_query_data, mock_post_process):
         mock_args = {'metrics': [0], 'dimensions': [1],
                      'metric_filters': [2], 'dimension_filters': [3],
                      'references': [4], 'operations': [5]}
@@ -64,7 +66,7 @@ class ManagerInitializationTests(TestCase):
 
         self.assertEqual('OK', result)
         mock_query_schema.assert_called_once_with(**mock_args)
-        mock_query_data.assert_called_once_with(a=1, b=2)
+        mock_query_data.assert_called_once_with(a=1, b=2, database=self.test_database)
         mock_post_process.assert_called_once_with('dataframe', 'op_schema')
         mock_operation_schema.assert_called_once_with(mock_args['operations'])
 
@@ -235,8 +237,7 @@ class ManagerInitializationTests(TestCase):
 
     @patch.object(SlicerManager, 'query_data')
     @patch.object(SlicerManager, 'query_schema')
-    @patch('fireant.settings.database')
-    def test_remove_duplicate_metric_keys(self, mock_database, mock_query_schema, mock_query_data):
+    def test_remove_duplicate_metric_keys(self, mock_query_schema, mock_query_data):
         self.slicer.manager.data(
             metrics=['foo', 'foo']
         )
@@ -250,8 +251,7 @@ class ManagerInitializationTests(TestCase):
 
     @patch.object(SlicerManager, 'query_data')
     @patch.object(SlicerManager, 'query_schema')
-    @patch('fireant.settings.database')
-    def test_remove_duplicate_dimension_keys(self, mock_database, mock_query_schema, mock_query_data):
+    def test_remove_duplicate_dimension_keys(self, mock_query_schema, mock_query_data):
         self.slicer.manager.data(
             metrics=['foo'],
             dimensions=['fizz', 'fizz'],
@@ -266,8 +266,7 @@ class ManagerInitializationTests(TestCase):
 
     @patch.object(SlicerManager, 'query_data')
     @patch.object(SlicerManager, 'query_schema')
-    @patch('fireant.settings.database')
-    def test_remove_duplicate_dimension_keys_with_interval(self, mock_database, mock_query_schema, mock_query_data):
+    def test_remove_duplicate_dimension_keys_with_interval(self, mock_query_schema, mock_query_data):
         self.slicer.manager.data(
             metrics=['foo'],
             dimensions=['fizz', ('fizz', DatetimeDimension.week)],
@@ -282,9 +281,7 @@ class ManagerInitializationTests(TestCase):
 
     @patch.object(SlicerManager, 'query_data')
     @patch.object(SlicerManager, 'query_schema')
-    @patch('fireant.settings.database')
-    def test_remove_duplicate_dimension_keys_with_interval_backwards(self, mock_database, mock_query_schema,
-                                                                     mock_query_data):
+    def test_remove_duplicate_dimension_keys_with_interval_backwards(self, mock_query_schema, mock_query_data):
         mock_query_schema.reset()
         self.slicer.manager.data(
             metrics=['foo'],
