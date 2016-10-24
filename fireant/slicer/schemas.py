@@ -115,9 +115,9 @@ class DatetimeDimension(ContinuousDimension):
         super(DatetimeDimension, self).__init__(key=key, label=label, definition=definition, joins=joins,
                                                 default_interval=default_interval)
 
-    def schemas(self, *args, database=None, **kwargs):
+    def schemas(self, *args, **kwargs):
         interval = args[0] if args else self.default_interval
-        return [(self.key, database.round_date(self.definition, interval.size))]
+        return [(self.key, kwargs['database'].round_date(self.definition, interval.size))]
 
 
 class CategoricalDimension(Dimension):
