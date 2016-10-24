@@ -57,9 +57,9 @@ class SlicerManager(QueryManager, OperationManager):
         query_schema = self.query_schema(metrics=metrics, dimensions=dimensions,
                                          metric_filters=metric_filters, dimension_filters=dimension_filters,
                                          references=references, operations=operations)
-        dataframe = self.query_data(database=self.slicer.database, **query_schema)
-
         operation_schema = self.operation_schema(operations)
+
+        dataframe = self.query_data(database=self.slicer.database, **query_schema)
         return self.post_process(dataframe, operation_schema)
 
     def query_schema(self, metrics=(), dimensions=(),

@@ -61,7 +61,7 @@ class ExampleTests(QueryTests):
 
         See pypika documentation for more examples of query expressions: http://pypika.readthedocs.io/en/latest/
         """
-        query = self.manager._build_query(
+        query = self.manager._build_data_query(
             table=self.mock_table,
             joins=[
                 (self.mock_join1, self.mock_table.join1_id == self.mock_join1.id, JoinType.inner),
@@ -150,7 +150,7 @@ class ExampleTests(QueryTests):
 
 class MetricsTests(QueryTests):
     def test_metrics(self):
-        query = self.manager._build_query(
+        query = self.manager._build_data_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -168,7 +168,7 @@ class MetricsTests(QueryTests):
                          'FROM "test_table"', str(query))
 
     def test_metrics_dimensions(self):
-        query = self.manager._build_query(
+        query = self.manager._build_data_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -191,7 +191,7 @@ class MetricsTests(QueryTests):
             'ORDER BY "device_type"', str(query))
 
     def test_metrics_filters(self):
-        query = self.manager._build_query(
+        query = self.manager._build_data_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -217,7 +217,7 @@ class MetricsTests(QueryTests):
             'ORDER BY "device_type"', str(query))
 
     def test_metrics_dimensions_filters(self):
-        query = self.manager._build_query(
+        query = self.manager._build_data_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -252,7 +252,7 @@ class DimensionTests(QueryTests):
     def _test_rounded_timeseries(self, increment):
         rounded_dt = settings.database.round_date(self.mock_table.dt, increment)
 
-        return self.manager._build_query(
+        return self.manager._build_data_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -323,7 +323,7 @@ class DimensionTests(QueryTests):
             'ORDER BY ROUND("dt",\'YEAR\')', str(query))
 
     def test_multidimension_categorical(self):
-        query = self.manager._build_query(
+        query = self.manager._build_data_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -351,7 +351,7 @@ class DimensionTests(QueryTests):
         rounded_dt = settings.database.round_date(self.mock_table.dt, 'DD')
         device_type = self.mock_table.device_type
 
-        query = self.manager._build_query(
+        query = self.manager._build_data_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -379,7 +379,7 @@ class DimensionTests(QueryTests):
         rounded_dt = settings.database.round_date(self.mock_table.dt, 'DD')
         locale = self.mock_table.locale
 
-        query = self.manager._build_query(
+        query = self.manager._build_data_query(
             table=self.mock_table,
             joins=[
                 (self.mock_join1, self.mock_table.hotel_id == self.mock_join1.hotel_id, JoinType.left),
@@ -416,7 +416,7 @@ class DimensionTests(QueryTests):
 
 class FilterTests(QueryTests):
     def test_single_dimension_filter(self):
-        query = self.manager._build_query(
+        query = self.manager._build_data_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -444,7 +444,7 @@ class FilterTests(QueryTests):
                          'ORDER BY "locale"', str(query))
 
     def test_multi_dimension_filter(self):
-        query = self.manager._build_query(
+        query = self.manager._build_data_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -476,7 +476,7 @@ class FilterTests(QueryTests):
                          'ORDER BY "locale"', str(query))
 
     def test_single_metric_filter(self):
-        query = self.manager._build_query(
+        query = self.manager._build_data_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -504,7 +504,7 @@ class FilterTests(QueryTests):
                          'ORDER BY "locale"', str(query))
 
     def test_multi_metric_filter(self):
-        query = self.manager._build_query(
+        query = self.manager._build_data_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -547,7 +547,7 @@ class ComparisonTests(QueryTests):
     def _get_compare_query(self, compare_type):
         rounded_dt = settings.database.round_date(self.mock_table.dt, 'DD')
         device_type = self.mock_table.device_type
-        query = self.manager._build_query(
+        query = self.manager._build_data_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -716,7 +716,7 @@ class TotalsQueryTests(QueryTests):
         rounded_dt = settings.database.round_date(self.mock_table.dt, 'DD')
         locale = self.mock_table.locale
 
-        query = self.manager._build_query(
+        query = self.manager._build_data_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -745,7 +745,7 @@ class TotalsQueryTests(QueryTests):
         locale = self.mock_table.locale
         device_type = self.mock_table.device_type
 
-        query = self.manager._build_query(
+        query = self.manager._build_data_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -777,7 +777,7 @@ class TotalsQueryTests(QueryTests):
         locale = self.mock_table.locale
         device_type = self.mock_table.device_type
 
-        query = self.manager._build_query(
+        query = self.manager._build_data_query(
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -802,3 +802,101 @@ class TotalsQueryTests(QueryTests):
                          'FROM "test_table" '
                          'GROUP BY ROUND("dt",\'DD\'),"device_type",ROLLUP("locale") '
                          'ORDER BY ROUND("dt",\'DD\'),"locale","device_type"', str(query))
+
+
+class DimensionOptionTests(QueryTests):
+    def test_dimension_options(self):
+        locale = self.mock_table.locale
+
+        query = self.manager._build_dimension_query(
+            table=self.mock_table,
+            joins=[],
+            dimensions=OrderedDict([
+                ('locale', locale),
+            ]),
+            filters=[],
+        )
+
+        self.assertEqual('SELECT distinct '
+                         '"locale" "locale" '
+                         'FROM "test_table"', str(query))
+
+    def test_dimension_options_with_query_with_limit(self):
+        locale = self.mock_table.locale
+
+        query = self.manager._build_dimension_query(
+            table=self.mock_table,
+            joins=[],
+            dimensions=OrderedDict([
+                ('locale', locale),
+            ]),
+            filters=[],
+            limit=10,
+        )
+
+        self.assertEqual('SELECT distinct '
+                         '"locale" "locale" '
+                         'FROM "test_table" '
+                         'LIMIT 10', str(query))
+
+    def test_dimension_options_with_query_with_filter(self):
+        locale = self.mock_table.locale
+
+        query = self.manager._build_dimension_query(
+            table=self.mock_table,
+            joins=[],
+            dimensions=OrderedDict([
+                ('locale', locale),
+            ]),
+            filters=[
+                self.mock_table.device_type == 'desktop',
+            ],
+        )
+
+        self.assertEqual('SELECT distinct '
+                         '"locale" "locale" '
+                         'FROM "test_table" '
+                         'WHERE "device_type"=\'desktop\'', str(query))
+
+    def test_dimension_options_with_multiple_dimensions(self):
+        account_id = self.mock_table.account_id
+        account_name = self.mock_table.account_name
+
+        query = self.manager._build_dimension_query(
+            table=self.mock_table,
+            joins=[],
+            dimensions=OrderedDict([
+                ('account_id', account_id),
+                ('account_name', account_name),
+            ]),
+            filters=[],
+            limit=10
+        )
+
+        self.assertEqual('SELECT distinct '
+                         '"account_id" "account_id",'
+                         '"account_name" "account_name" '
+                         'FROM "test_table" '
+                         'LIMIT 10', str(query))
+
+    def test_dimension_options_with_joins(self):
+        account_id = self.mock_table.account_id
+
+        query = self.manager._build_dimension_query(
+            table=self.mock_table,
+            joins=[
+                (self.mock_join1, account_id == self.mock_join1.account_id, JoinType.left),
+            ],
+            dimensions=OrderedDict([
+                ('account_id', account_id),
+                ('account_name', self.mock_join1.account_name),
+            ]),
+            filters=[],
+        )
+
+        self.assertEqual('SELECT distinct '
+                         '"test_table"."account_id" "account_id",'
+                         '"test_join1"."account_name" "account_name" '
+                         'FROM "test_table" '
+                         'LEFT JOIN "test_join1" '
+                         'ON "test_table"."account_id"="test_join1"."account_id"', str(query))

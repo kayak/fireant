@@ -107,8 +107,8 @@ class QueryManager(object):
         :return:
             A pd.DataFrame indexed by the provided dimensions paramaters containing columns for each metrics parameter.
         """
-        query = self._build_query(table, joins or dict(), metrics or dict(), dimensions or dict(),
-                                  dfilters or dict(), mfilters or dict(), references or dict(), rollup or dict())
+        query = self._build_data_query(table, joins or dict(), metrics or dict(), dimensions or dict(),
+                                       dfilters or dict(), mfilters or dict(), references or dict(), rollup or dict())
 
         querystring = str(query)
         logger.info("Executing query:\n----START----\n{query}\n-----END-----".format(query=querystring))
@@ -126,7 +126,7 @@ class QueryManager(object):
 
         return dataframe
 
-    def _build_query(self, table, joins, metrics, dimensions, dfilters, mfilters, references, rollup):
+    def _build_data_query(self, table, joins, metrics, dimensions, dfilters, mfilters, references, rollup):
         args = (table, joins, metrics, dimensions, dfilters, mfilters, rollup)
         query = self._build_query_inner(*args)
 
@@ -164,6 +164,19 @@ class QueryManager(object):
             )
 
         return self._add_sorting(wrapper_query, [query.field(dkey) for dkey in dimensions.keys()])
+
+    def _build_dimension_query(self, table, joins, dimensions, filters, limit=None):
+        query = Query.from_(table).distinct()
+        query = self._add_joins(joins, query)
+        query = self._add_filters(query, filters, [])
+
+        for key, dimension in dimensions.items():
+            query = query.select(dimension.as_(key))
+
+        if limit:
+            query = query[:limit]
+            
+        return query
 
     def _build_query_inner(self, table, joins, metrics, dimensions, dfilters, mfilters, rollup):
         query = Query.from_(table)
