@@ -59,8 +59,12 @@ class SlicerManager(QueryManager, OperationManager):
                                          references=references, operations=operations)
         operation_schema = self.operation_schema(operations)
 
-        dataframe = self.query_data(database=self.slicer.database, **query_schema)
+        dataframe = self.query_data(**query_schema)
         return self.post_process(dataframe, operation_schema)
+
+    def dimension_options(self, dimension, filters, limit=None):
+        dimopt_schema = self.dimension_option_schema(dimension, filters, limit)
+        return self.query_dimension_options(**dimopt_schema)
 
     def query_schema(self, metrics=(), dimensions=(),
                      metric_filters=(), dimension_filters=(),
@@ -70,6 +74,7 @@ class SlicerManager(QueryManager, OperationManager):
         schema_joins = self._joins_schema(metrics_joins | dimensions_joins)
 
         return {
+            'database': self.slicer.database,
             'table': self.slicer.table,
             'joins': schema_joins,
             'metrics': schema_metrics,
@@ -84,6 +89,20 @@ class SlicerManager(QueryManager, OperationManager):
                        if 'totals' == operation.key
                        for dimension in operation.dimension_keys
                        for level in self.slicer.dimensions[dimension].levels()],
+        }
+
+    def dimension_option_schema(self, dimension, filters, limit=None):
+        schema_dimensions, dimensions_joins = self._dimensions_schema([dimension])
+        schema_joins = self._joins_schema(dimensions_joins)
+
+        return {
+            'database': self.slicer.database,
+            'table': self.slicer.hint_table or self.slicer.table,
+            'joins': schema_joins,
+            'dimensions': schema_dimensions,
+            'filters': self._filters_schema(self.slicer.dimensions, filters,
+                                            self._default_dimension_definition),
+            'limit': limit,
         }
 
     def display_schema(self, metrics=(), dimensions=(), references=(), operations=()):

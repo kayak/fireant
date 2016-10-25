@@ -27,6 +27,9 @@ class QueryManager(object):
         """
         Loads a pandas data frame given a table and a description of the request.
 
+        :param database:
+            The database interface to use to execute the connection
+
        :param table:
             Type: pypika.Table
             (Required) The primary table to select data from.  In SQL, this is the table in the FROM clause.
@@ -126,6 +129,34 @@ class QueryManager(object):
 
         return dataframe
 
+    def query_dimension_options(self, database, table, joins=None, dimensions=None, filters=None, limit=None):
+        """
+        Builds and executes a query to retrieve possible dimension options given a set of filters.
+
+        :param database:
+            The database interface to use to execute the connection
+        :param table:
+            See above
+
+        :param joins:
+            See above
+
+        :param dimensions:
+            See above
+
+        :param filters:
+            See above
+
+        :param limit:
+            An optional limit to the number of results returned.
+
+        :return:
+        """
+        query = self._build_dimension_query(table, joins, dimensions, filters, limit)
+        results = database.fetch(str(query))
+        return [{k: v for k, v in zip(dimensions.keys(), result)}
+                for result in results]
+
     def _build_data_query(self, table, joins, metrics, dimensions, dfilters, mfilters, references, rollup):
         args = (table, joins, metrics, dimensions, dfilters, mfilters, rollup)
         query = self._build_query_inner(*args)
@@ -175,7 +206,7 @@ class QueryManager(object):
 
         if limit:
             query = query[:limit]
-            
+
         return query
 
     def _build_query_inner(self, table, joins, metrics, dimensions, dfilters, mfilters, rollup):
