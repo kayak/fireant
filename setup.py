@@ -3,7 +3,7 @@
 from setuptools import setup
 
 __major_version__ = 0
-__minor_version__ = 3
+__minor_version__ = 4
 __patch_version__ = 0
 
 setup(
@@ -58,7 +58,7 @@ setup(
     install_requires=[
         'six',
         'pandas==0.18.1',
-        'pypika==0.1.0'
+        'pypika==0.1.1'
     ],
     tests_require=[
         'mock'
