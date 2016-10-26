@@ -2,10 +2,10 @@ The Slicer
 ==========
 
 .. include:: ../README.rst
-    :start-after: _appendix_start:
+:start-after: _appendix_start:
     :end-before:  _appendix_end:
 
-The |FeatureSlicer| is the core component of |Brand| which defines a schema and an API. With a small amount of configuration, it becomes a powerful tool which can be used to quickly query data from a database and transform it into a chart, table, or other widget. The slicer can be used directly in python in Notebooks or in a python shell and provides a rich API for building quick, ad hoc queries. The |FeatureSlicer| underlies the |FeatureWidgetGroup| feature, providing a simple abstraction for building complex reports and dashboards.
+    The |FeatureSlicer| is the core component of |Brand| which defines a schema and an API. With a small amount of configuration, it becomes a powerful tool which can be used to quickly query data from a database and transform it into a chart, table, or other widget. The slicer can be used directly in python in Notebooks or in a python shell and provides a rich API for building quick, ad hoc queries. The |FeatureSlicer| underlies the |FeatureWidgetGroup| feature, providing a simple abstraction for building complex reports and dashboards.
 
 Metrics
 -------
@@ -59,11 +59,11 @@ Configuring a Slicer
 Here is a concrete example of a |FeatureSlicer| configuration. It includes a parameter ``metrics`` which is a list of |ClassMetric|.  Below that is the list of |ClassDimension| with a |ClassDateDimension|, |ClassCatDimension| and |ClassUniqueDimension|.
 
 .. include:: ../README.rst
-    :start-after: _slicer_example_start:
+:start-after: _slicer_example_start:
     :end-before:  _slicer_example_end:
 
 
-In our example, the first couple of metrics pass ``key`` and ``label`` parameters.  The key is a unique identifier for the |FeatureSlicer| and cannot be shared by other |FeatureSlicer| elements.  The label is used as a name for metric in the component.  The last three metrics also provide a ``definition`` parameter which is a PyPika_ expression used to select the data from the database.  When a ``definition`` parameter is not supplied, the key of the metric is wrapped in a ``Sum`` function as a default.  The metric for ``impressions`` will get the definition ``fn.Sum(analytics.impressions)``.
+    In our example, the first couple of metrics pass ``key`` and ``label`` parameters.  The key is a unique identifier for the |FeatureSlicer| and cannot be shared by other |FeatureSlicer| elements.  The label is used as a name for metric in the component.  The last three metrics also provide a ``definition`` parameter which is a PyPika_ expression used to select the data from the database.  When a ``definition`` parameter is not supplied, the key of the metric is wrapped in a ``Sum`` function as a default.  The metric for ``impressions`` will get the definition ``fn.Sum(analytics.impressions)``.
 
 Here a few dimensions as also defined.  A |ClassDateDimension| is used with a custom definition which maps to the ``dt`` column in the database.  The Device dimension uses the column with the same name as the key ``device`` as a default. There are three possible values for a device: 'desktop', 'tablet', or 'mobile', so a  |ClassCatDimension| is a good fit. Last there is a  |ClassUniqueDimension| which uses the column ``account_id`` as an identifier but the column ``account_name`` as a display field for each account value.  Both columns will be included in the query.
 
@@ -112,7 +112,7 @@ The |FeatureSlicer| expose different managers for different types of request.  T
 The ``notebooks`` transformer manager is the default one which is intended for use in Jupyter_ notebookss.  In this tutorial it will be used exclusively.  All transformer managers expose different methods for different types of results, but the methods always have the same signature.
 
 .. include:: ../README.rst
-    :start-after: _manager_api_start:
+:start-after: _manager_api_start:
     :end-before:  _manager_api_end:
 
 
@@ -226,8 +226,8 @@ So far all of the examples will display a result that queries all of the data in
 
     Filters can be used for either metrics or dimensions.  Filtering metrics is synonymous to the ``HAVING`` clause in SQL whereas dimensions is synoymous with the ``WHERE`` clause.
 
-Equalities and Inequalities
-"""""""""""""""""""""""""""
+Equality and Inequality Filters
+"""""""""""""""""""""""""""""""
 
 The most basic type of filtering uses a equality/inequality expression such as `a=b` or `a>b`.
 
@@ -254,8 +254,8 @@ The most basic type of filtering uses a equality/inequality expression such as `
     )
 
 
-Multiple Choice
-"""""""""""""""
+Multiple Choice Filters
+"""""""""""""""""""""""
 
 When a column should be equal to one of a set of values, a `Contains` filter can be used.
 
@@ -270,8 +270,8 @@ When a column should be equal to one of a set of values, a `Contains` filter can
     )
 
 
-Windows
-"""""""
+Range Filters
+"""""""""""""
 
 `Range` filters are used to restrict the query to a window of values.
 
@@ -285,8 +285,8 @@ Windows
         dimension_filters=[RangeFilter('date', date.today() - timedelta(days=60), date.today())],
     )
 
-Wildcard Matching
-"""""""""""""""""
+Wildcard Filters
+""""""""""""""""
 
 For pattern matching a `Fuzzy` can be used which parallels ``LIKE`` expressions in SQL.
 
@@ -297,7 +297,30 @@ For pattern matching a `Fuzzy` can be used which parallels ``LIKE`` expressions 
     slicer.notebooks.column_index_table(
         metrics=['clicks', 'conversions'],
         dimensions=['date'],
-        dimension_filters=[WildcardFilter('account', 'abc%')],
+        dimension_filters=[WildcardFilter('device_type', 'tab%')],
+    )
+
+Filter Unique Dimensions
+""""""""""""""""""""""""
+
+Unique dimensions are a special case since they have both a definition field as well as a display field.  Filtering can be performed on either of these fields.  The default behavior filters using the definition, as in other dimensions.  To filter using the display_field, pass a ``tuple`` like ``(key, "display")`` for the ``element_key`` parameter.
+
+.. code-block:: python
+
+    from fireant.slicer import EqualityFilter, WildcardFilter
+
+    # Filters by account ID
+    slicer.notebooks.column_index_table(
+        metrics=['clicks', 'conversions'],
+        dimensions=['date'],
+        dimension_filters=[EqualityFilter('account', 'eq', 42)],
+    )
+
+    # Filters by account Name
+    slicer.notebooks.column_index_table(
+        metrics=['clicks', 'conversions'],
+        dimensions=['date'],
+        dimension_filters=[WildcardFilter(('account', 'display'), 'abc%')],
     )
 
 
