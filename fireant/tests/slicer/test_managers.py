@@ -66,7 +66,7 @@ class ManagerInitializationTests(TestCase):
 
         self.assertEqual('OK', result)
         mock_query_schema.assert_called_once_with(**mock_args)
-        mock_query_data.assert_called_once_with(a=1, b=2, database=self.test_database)
+        mock_query_data.assert_called_once_with(a=1, b=2)
         mock_post_process.assert_called_once_with('dataframe', 'op_schema')
         mock_operation_schema.assert_called_once_with(mock_args['operations'])
 

@@ -8,7 +8,8 @@ from fireant.slicer.references import *
 from fireant.tests.database.mock_database import TestDatabase
 from pypika import functions as fn, Tables, Case
 
-QUERY_BUILDER_PARAMS = {'table', 'joins', 'metrics', 'dimensions', 'mfilters', 'dfilters', 'references', 'rollup'}
+QUERY_BUILDER_PARAMS = {'table', 'database', 'joins', 'metrics', 'dimensions', 'mfilters', 'dfilters', 'references',
+                        'rollup'}
 
 
 class SlicerSchemaTests(TestCase):
