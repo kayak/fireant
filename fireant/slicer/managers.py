@@ -54,9 +54,9 @@ class SlicerManager(QueryManager, OperationManager):
         metrics = utils.filter_duplicates(metrics)
         dimensions = utils.filter_duplicates(dimensions)
 
-        query_schema = self.query_schema(metrics=metrics, dimensions=dimensions,
-                                         metric_filters=metric_filters, dimension_filters=dimension_filters,
-                                         references=references, operations=operations)
+        query_schema = self.data_query_schema(metrics=metrics, dimensions=dimensions,
+                                              metric_filters=metric_filters, dimension_filters=dimension_filters,
+                                              references=references, operations=operations)
         operation_schema = self.operation_schema(operations)
 
         dataframe = self.query_data(**query_schema)
@@ -66,24 +66,45 @@ class SlicerManager(QueryManager, OperationManager):
         dimopt_schema = self.dimension_option_schema(dimension, filters, limit)
         return self.query_dimension_options(**dimopt_schema)
 
-    def query_schema(self, metrics=(), dimensions=(),
-                     metric_filters=(), dimension_filters=(),
-                     references=(), operations=()):
-        schema_metrics, metrics_joins = self._metrics_schema(metrics, operations)
-        schema_dimensions, dimensions_joins = self._dimensions_schema(dimensions)
-        schema_joins = self._joins_schema(metrics_joins | dimensions_joins)
+    def data_query_schema(self, metrics=(), dimensions=(),
+                          metric_filters=(), dimension_filters=(),
+                          references=(), operations=()):
+        """
+        Builds a `dict` model of the schema parts required for executing a data query given a request.
 
+        :param metrics:
+        :param dimensions:
+        :param metric_filters:
+        :param dimension_filters:
+        :param references:
+        :param operations:
+
+        :return:
+        """
+        metrics_schema = self._metrics_schema(metrics, operations)
+        dimensions_schema = self._dimensions_schema(dimensions)
+
+        mfilters_schema = self._filters_schema(self.slicer.metrics, metric_filters, self._default_metric_definition,
+                                               element_label='metric')
+        dfilters_schmea = self._filters_schema(self.slicer.dimensions, dimension_filters,
+                                               self._default_dimension_definition)
+
+        metric_joins_schema = self._joins_schema(set(metrics) | {mf.element_key for mf in metric_filters},
+                                                 self.slicer.metrics)
+        dimension_joins_schema = self._joins_schema(set(dimensions) | {df.element_key for df in dimension_filters},
+                                                    self.slicer.dimensions)
         return {
             'database': self.slicer.database,
             'table': self.slicer.table,
-            'joins': schema_joins,
-            'metrics': schema_metrics,
-            'dimensions': schema_dimensions,
-            'mfilters': self._filters_schema(self.slicer.metrics, metric_filters,
-                                             self._default_metric_definition, element_label='metric'),
-            'dfilters': self._filters_schema(self.slicer.dimensions, dimension_filters,
-                                             self._default_dimension_definition),
-            'references': self._references_schema(references, dimensions, schema_dimensions),
+
+            'metrics': metrics_schema,
+            'dimensions': dimensions_schema,
+
+            'mfilters': mfilters_schema,
+            'dfilters': dfilters_schmea,
+
+            'joins': list(metric_joins_schema | dimension_joins_schema),
+            'references': self._references_schema(references, dimensions, dimensions_schema),
             'rollup': [level
                        for operation in operations
                        if 'totals' == operation.key
@@ -92,16 +113,19 @@ class SlicerManager(QueryManager, OperationManager):
         }
 
     def dimension_option_schema(self, dimension, filters, limit=None):
-        schema_dimensions, dimensions_joins = self._dimensions_schema([dimension])
-        schema_joins = self._joins_schema(dimensions_joins)
+        dimensions = [dimension]
+
+        schema_dimensions = self._dimensions_schema(dimensions)
+        schema_filters = self._filters_schema(self.slicer.dimensions, filters, self._default_dimension_definition)
+        schema_joins = self._joins_schema(set(dimensions) | {df.element_key for df in filters},
+                                          self.slicer.dimensions)
 
         return {
             'database': self.slicer.database,
             'table': self.slicer.hint_table or self.slicer.table,
             'joins': schema_joins,
             'dimensions': schema_dimensions,
-            'filters': self._filters_schema(self.slicer.dimensions, filters,
-                                            self._default_dimension_definition),
+            'filters': schema_filters,
             'limit': limit,
         }
 
@@ -156,7 +180,6 @@ class SlicerManager(QueryManager, OperationManager):
             raise SlicerException('Invalid metrics included in request: '
                                   '[%s]' % ', '.join(invalid_metrics))
 
-        joins = set()
         metrics = {}
         for key in keys:
             schema_metric = self.slicer.metrics.get(key)
@@ -164,10 +187,7 @@ class SlicerManager(QueryManager, OperationManager):
             for key, definition in schema_metric.schemas():
                 metrics[key] = definition or self._default_metric_definition(key)
 
-            if schema_metric.joins:
-                joins |= set(schema_metric.joins)
-
-        return metrics, joins
+        return metrics
 
     def _dimensions_schema(self, keys):
         invalid_dimensions = {key[0]
@@ -178,7 +198,6 @@ class SlicerManager(QueryManager, OperationManager):
             raise SlicerException('Invalid dimensions included in request: '
                                   '[%s]' % ', '.join(invalid_dimensions))
 
-        joins = set()
         dimensions = {}
         for dimension in keys:
             # unpack tuples for args
@@ -192,20 +211,35 @@ class SlicerManager(QueryManager, OperationManager):
             for key, definition in schema_dimension.schemas(*args, database=self.slicer.database):
                 dimensions[key] = definition or self._default_dimension_definition(key)
 
-            if schema_dimension.joins:
-                joins |= set(schema_dimension.joins)
+        return dimensions
 
-        return dimensions, joins
+    def _joins_schema(self, keys, elements):
+        """
 
-    def _joins_schema(self, keys):
-        return [(self.slicer.joins[key].table, self.slicer.joins[key].criterion, self.slicer.joins[key].join_type)
-                for key in keys]
+        :param keys:
+            The keys of the schema elements to retrieve joins for.
+        :param elements:
+            The elements to retrieve the joins from, either slicer.metrics or slicer.dimensions.
+        :return:
+            A `set` of join schemas containing the join table and the join criterion.
+        """
+        joins = set()
+
+        for key in keys:
+            schema_metric = elements.get(utils.slice_first(key))
+            if schema_metric.joins:
+                joins |= set(schema_metric.joins)
+
+        return {(self.slicer.joins[key].table,
+                 self.slicer.joins[key].criterion,
+                 self.slicer.joins[key].join_type)
+                for key in joins}
 
     def _filters_schema(self, elements, filters, default_value_func, element_label='dimension'):
         filters_schema = []
         for f in filters:
-            if '.' in f.element_key:
-                element_key, modifier = f.element_key.split('.')
+            if isinstance(f.element_key, (tuple, list)):
+                element_key, modifier = f.element_key
             else:
                 element_key, modifier = f.element_key, None
 
