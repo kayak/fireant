@@ -119,10 +119,12 @@ class QueryManager(object):
         dataframe = database.fetch_dataframe(querystring)
         dataframe.columns = [col.decode('utf-8') if isinstance(col, bytes) else col
                              for col in dataframe.columns]
-        dataframe = dataframe.set_index(
-            # Removed the reference keys for now
-            list(dimensions.keys())  # + ['{1}_{0}'.format(*ref) for ref in references.items()]
-        ).sort_index()
+
+        if dimensions:
+            dataframe = dataframe.set_index(
+                # Removed the reference keys for now
+                list(dimensions.keys())  # + ['{1}_{0}'.format(*ref) for ref in references.items()]
+            ).sort_index()
 
         if references:
             dataframe.columns = pd.MultiIndex.from_product([[''] + list(references.keys()), list(metrics.keys())])
