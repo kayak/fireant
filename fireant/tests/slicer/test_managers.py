@@ -52,7 +52,7 @@ class ManagerInitializationTests(TestCase):
     @patch('fireant.slicer.managers.SlicerManager.post_process')
     @patch('fireant.slicer.managers.SlicerManager.query_data')
     @patch('fireant.slicer.managers.SlicerManager.operation_schema')
-    @patch('fireant.slicer.managers.SlicerManager.query_schema')
+    @patch('fireant.slicer.managers.SlicerManager.data_query_schema')
     def test_data(self, mock_query_schema, mock_operation_schema, mock_query_data, mock_post_process):
         mock_args = {'metrics': [0], 'dimensions': [1],
                      'metric_filters': [2], 'dimension_filters': [3],
@@ -236,7 +236,7 @@ class ManagerInitializationTests(TestCase):
         self._test_transform(self.slicer.datatables.column_index_csv, mock_transform, request)
 
     @patch.object(SlicerManager, 'query_data')
-    @patch.object(SlicerManager, 'query_schema')
+    @patch.object(SlicerManager, 'data_query_schema')
     def test_remove_duplicate_metric_keys(self, mock_query_schema, mock_query_data):
         self.slicer.manager.data(
             metrics=['foo', 'foo']
@@ -250,7 +250,7 @@ class ManagerInitializationTests(TestCase):
         )
 
     @patch.object(SlicerManager, 'query_data')
-    @patch.object(SlicerManager, 'query_schema')
+    @patch.object(SlicerManager, 'data_query_schema')
     def test_remove_duplicate_dimension_keys(self, mock_query_schema, mock_query_data):
         self.slicer.manager.data(
             metrics=['foo'],
@@ -265,7 +265,7 @@ class ManagerInitializationTests(TestCase):
         )
 
     @patch.object(SlicerManager, 'query_data')
-    @patch.object(SlicerManager, 'query_schema')
+    @patch.object(SlicerManager, 'data_query_schema')
     def test_remove_duplicate_dimension_keys_with_interval(self, mock_query_schema, mock_query_data):
         self.slicer.manager.data(
             metrics=['foo'],
@@ -280,7 +280,7 @@ class ManagerInitializationTests(TestCase):
         )
 
     @patch.object(SlicerManager, 'query_data')
-    @patch.object(SlicerManager, 'query_schema')
+    @patch.object(SlicerManager, 'data_query_schema')
     def test_remove_duplicate_dimension_keys_with_interval_backwards(self, mock_query_schema, mock_query_data):
         mock_query_schema.reset()
         self.slicer.manager.data(
