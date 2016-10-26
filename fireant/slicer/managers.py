@@ -115,7 +115,7 @@ class SlicerManager(QueryManager, OperationManager):
     def dimension_option_schema(self, dimension, filters, limit=None):
         dimensions = [dimension]
 
-        schema_dimensions, dimensions_joins = self._dimensions_schema(dimensions)
+        schema_dimensions = self._dimensions_schema(dimensions)
         schema_filters = self._filters_schema(self.slicer.dimensions, filters, self._default_dimension_definition)
         schema_joins = self._joins_schema(set(dimensions) | {df.element_key for df in filters},
                                           self.slicer.dimensions)
