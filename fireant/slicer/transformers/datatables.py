@@ -65,11 +65,16 @@ class DataTablesRowIndexTransformer(Transformer):
 
     def _render_dimension_column(self, key, display_schema):
         dimension = display_schema['dimensions'][key]
-        render = {
-            '_': 'value',
-        }
+
         if 'display_field' in dimension or 'display_options' in dimension:
-            render['display'] = 'display'
+            render = {
+                '_': 'display',
+                'type': 'value',
+            }
+        else:
+            render = {
+                '_': 'value',
+            }
 
         return {'title': dimension['label'],
                 'data': '{}'.format(key),
@@ -80,7 +85,7 @@ class DataTablesRowIndexTransformer(Transformer):
         if not isinstance(metric_column, tuple):
             return {'title': metrics[metric_column]['label'],
                     'data': metric_column,
-                    'render': {'_': 'value', 'display': 'display'}}
+                    'render': {'type': 'value', '_': 'display'}}
 
         references = display_schema.get('references')
         metric_key_idx = 1 if references else 0
@@ -102,7 +107,7 @@ class DataTablesRowIndexTransformer(Transformer):
         return {
             'title': metric_label,
             'data': path,
-            'render': {'_': 'value', 'display': 'display'}
+            'render': {'type': 'value', '_': 'display'}
         }
 
     def _render_data(self, dataframe, display_schema):
@@ -237,7 +242,7 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
         return {
             'title': metric_label,
             'data': data,
-            'render': {'_': 'value', 'display': 'display'}
+            'render': {'type': 'value', '_': 'display'}
         }
 
     def _recurse_dimensions(self, df, dimensions, metrics, reference=None):
