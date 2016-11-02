@@ -3,7 +3,7 @@ import logging
 
 import pandas as pd
 
-from pypika import Query, Interval, JoinType
+from pypika import Query, Interval, JoinType, functions as fn
 
 logger = logging.Logger('fireant')
 
@@ -15,7 +15,7 @@ reference_dimension_mappers = {
 }
 reference_metric_mappers = {
     'd': lambda field, join_field: (field - join_field),
-    'p': lambda field, join_field: ((field - join_field) / join_field),
+    'p': lambda field, join_field: ((field - join_field) / fn.NullIf(join_field, 0)),
 }
 
 
