@@ -329,14 +329,14 @@ class QueryManager(object):
                 cx &= dimension == dimension.for_(query)
         return cx
 
-    def _replace_dim_for_ref(self, dfilters, dimension_key, dimensions, dimension_f):
+    @staticmethod
+    def _replace_dim_for_ref(dfilters, dimension_key, dimensions, dimension_f):
         """
         Replaces the dimension used by a reference in the dimension schema and dimension filter schema.
 
         We do this in order to build the same query with a shifted date instead of the actual date.
         """
         target_dimension = dimensions[dimension_key]
-        reference_dimension = dimension_f(target_dimension)
 
         new_dimensions = copy.deepcopy(dimensions)
         new_dimensions[dimension_key] = dimension_f(target_dimension)
@@ -350,7 +350,7 @@ class QueryManager(object):
                 if dfilter.term.fields()[0] is target_dimension.fields()[0]:
                     dfilter = copy.deepcopy(dfilter)
                     dfilter.term = dimension_f(dfilter.term)
-            except:
+            except (AttributeError, IndexError):
                 pass  # If the above if-expression cannot be evaluated, then its not the filter we are looking for
 
             new_dfilters.append(dfilter)
