@@ -762,37 +762,37 @@ class SlicerSchemaReferenceTests(SlicerSchemaTests):
         self._reference_test_with_date(WoW('date'))
 
     def test_reference_wow_d_with_date(self):
-        self._reference_test_with_date(Delta.WoW('date'))
+        self._reference_test_with_date(Delta(WoW('date')))
 
     def test_reference_wow_p_with_date(self):
-        self._reference_test_with_date(DeltaPercentage.WoW('date'))
+        self._reference_test_with_date(DeltaPercentage(WoW('date')))
 
     def test_reference_mom_with_date(self):
         self._reference_test_with_date(MoM('date'))
 
     def test_reference_mom_d_with_date(self):
-        self._reference_test_with_date(Delta.MoM('date'))
+        self._reference_test_with_date(Delta(MoM('date')))
 
     def test_reference_mom_p_with_date(self):
-        self._reference_test_with_date(DeltaPercentage.MoM('date'))
+        self._reference_test_with_date(DeltaPercentage(MoM('date')))
 
     def test_reference_qoq_with_date(self):
         self._reference_test_with_date(QoQ('date'))
 
     def test_reference_qoq_d_with_date(self):
-        self._reference_test_with_date(Delta.QoQ('date'))
+        self._reference_test_with_date(Delta(QoQ('date')))
 
     def test_reference_qoq_p_with_date(self):
-        self._reference_test_with_date(DeltaPercentage.QoQ('date'))
+        self._reference_test_with_date(DeltaPercentage(QoQ('date')))
 
     def test_reference_yoy_with_date(self):
         self._reference_test_with_date(YoY('date'))
 
     def test_reference_yoy_d_with_date(self):
-        self._reference_test_with_date(Delta.YoY('date'))
+        self._reference_test_with_date(Delta(YoY('date')))
 
     def test_reference_yoy_p_with_date(self):
-        self._reference_test_with_date(DeltaPercentage.YoY('date'))
+        self._reference_test_with_date(DeltaPercentage(YoY('date')))
 
     def test_reference_missing_dimension(self):
         # Reference dimension is required in order to use a reference with it

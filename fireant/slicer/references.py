@@ -25,37 +25,15 @@ class YoY(Reference):
     label = 'YoY'
 
 
-class Delta(object):
-    class WoW(Reference):
-        key = 'wow_d'
-        label = 'ΔWoW'
-
-    class MoM(Reference):
-        key = 'mom_d'
-        label = 'ΔMoM'
-
-    class QoQ(Reference):
-        key = 'qoq_d'
-        label = 'ΔQoQ'
-
-    class YoY(Reference):
-        key = 'yoy_d'
-        label = 'ΔYoY'
+class Delta(Reference):
+    def __init__(self, reference):
+        super(Delta, self).__init__(reference.element_key)
+        self.key = '%s_d' % reference.key
+        self.label = '%s Δ' % reference.label
 
 
-class DeltaPercentage(object):
-    class WoW(Reference):
-        key = 'wow_p'
-        label = 'ΔWoW%'
-
-    class MoM(Reference):
-        key = 'mom_p'
-        label = 'ΔMoM%'
-
-    class QoQ(Reference):
-        key = 'qoq_p'
-        label = 'ΔQoQ%'
-
-    class YoY(Reference):
-        key = 'yoy_p'
-        label = 'ΔYoY%'
+class DeltaPercentage(Reference):
+    def __init__(self, reference):
+        super(DeltaPercentage, self).__init__(reference.element_key)
+        self.key = '%s_p' % reference.key
+        self.label = '%s Δ%%' % reference.label
