@@ -58,7 +58,7 @@ setup(
     install_requires=[
         'six',
         'pandas==0.18.1',
-        'pypika==0.1.1'
+        'pypika==0.1.2'
     ],
     tests_require=[
         'mock'
