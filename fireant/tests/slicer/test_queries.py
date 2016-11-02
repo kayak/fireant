@@ -61,6 +61,7 @@ class ExampleTests(QueryTests):
 
         See pypika documentation for more examples of query expressions: http://pypika.readthedocs.io/en/latest/
         """
+        dt = self.mock_table.dt
         query = self.manager._build_data_query(
             table=self.mock_table,
             joins=[
@@ -82,7 +83,7 @@ class ExampleTests(QueryTests):
             ]),
             dimensions=OrderedDict([
                 # Example of using a continuous datetime dimension, where the values are rounded up to the nearest day
-                ('dt', settings.database.round_date(self.mock_table.dt, 'DD')),
+                ('date', settings.database.round_date(dt, 'DD')),
 
                 # Example of using a categorical dimension from a joined table
                 ('fiz', self.mock_join2.fiz),
@@ -92,21 +93,21 @@ class ExampleTests(QueryTests):
             ],
             dfilters=[
                 # Example of filtering the query to a date range
-                self.mock_table.dt[date(2016, 1, 1):date(2016, 12, 31)],
+                dt[date(2016, 1, 1):date(2016, 12, 31)],
 
                 # Example of filtering the query to certain categories
                 self.mock_join2.fiz.isin(['a', 'b', 'c']),
             ],
             references=OrderedDict([
                 # Example of adding a Week-over-Week comparison to the query
-                ('wow', 'dt')
+                ('wow', 'date')
             ]),
             rollup=[],
         )
 
         self.assertEqual('SELECT '
                          # Dimensions
-                         '"sq0"."dt" "dt","sq0"."fiz" "fiz",'
+                         '"sq0"."date" "date","sq0"."fiz" "fiz",'
                          # Metrics
                          '"sq0"."foo" "foo","sq0"."bar" "bar","sq0"."ratio" "ratio",'
                          # Reference Dimension
@@ -117,7 +118,7 @@ class ExampleTests(QueryTests):
                          'FROM ('
                          # Main Query
                          'SELECT '
-                         'ROUND("test_table"."dt",\'DD\') "dt","test_join2"."fiz" "fiz",'
+                         'ROUND("test_table"."dt",\'DD\') "date","test_join2"."fiz" "fiz",'
                          'SUM("test_table"."foo") "foo",'
                          'AVG("test_join1"."bar") "bar",'
                          'SUM("test_table"."numerator")/SUM("test_table"."denominator") "ratio" '
@@ -132,7 +133,7 @@ class ExampleTests(QueryTests):
                          'LEFT JOIN ('
                          # Reference Query
                          'SELECT '
-                         'ROUND("test_table"."dt",\'DD\') "dt","test_join2"."fiz" "fiz",'
+                         'ROUND("test_table"."dt",\'DD\')+INTERVAL \'1 WEEK\' "date","test_join2"."fiz" "fiz",'
                          'SUM("test_table"."foo") "foo",'
                          'AVG("test_join1"."bar") "bar",'
                          'SUM("test_table"."numerator")/SUM("test_table"."denominator") "ratio" '
@@ -141,11 +142,11 @@ class ExampleTests(QueryTests):
                          'LEFT JOIN "test_join2" ON "test_table"."join2_id"="test_join2"."id" '
                          'WHERE "test_table"."dt"+INTERVAL \'1 WEEK\' BETWEEN \'2016-01-01\' AND \'2016-12-31\' '
                          'AND "test_join2"."fiz" IN (\'a\',\'b\',\'c\') '
-                         'GROUP BY ROUND("test_table"."dt",\'DD\'),"test_join2"."fiz" '
+                         'GROUP BY ROUND("test_table"."dt",\'DD\')+INTERVAL \'1 WEEK\',"test_join2"."fiz" '
                          'HAVING SUM("test_join2"."buz")>100'
-                         ') "sq1" ON "sq0"."dt"="sq1"."dt"+INTERVAL \'1 WEEK\' '
+                         ') "sq1" ON "sq0"."date"="sq1"."date" '
                          'AND "sq0"."fiz"="sq1"."fiz" '
-                         'ORDER BY "sq0"."dt","sq0"."fiz"', str(query))
+                         'ORDER BY "sq0"."date","sq0"."fiz"', str(query))
 
 
 class MetricsTests(QueryTests):
@@ -260,7 +261,7 @@ class DimensionTests(QueryTests):
                 ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions=OrderedDict([
-                ('dt', rounded_dt)
+                ('date', rounded_dt)
             ]),
             mfilters=[],
             dfilters=[],
@@ -272,7 +273,7 @@ class DimensionTests(QueryTests):
         query = self._test_rounded_timeseries('HH')
 
         self.assertEqual(
-            'SELECT ROUND("dt",\'HH\') "dt",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'SELECT ROUND("dt",\'HH\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'GROUP BY ROUND("dt",\'HH\') '
             'ORDER BY ROUND("dt",\'HH\')', str(query))
@@ -281,7 +282,7 @@ class DimensionTests(QueryTests):
         query = self._test_rounded_timeseries('DD')
 
         self.assertEqual(
-            'SELECT ROUND("dt",\'DD\') "dt",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'SELECT ROUND("dt",\'DD\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'GROUP BY ROUND("dt",\'DD\') '
             'ORDER BY ROUND("dt",\'DD\')', str(query))
@@ -290,7 +291,7 @@ class DimensionTests(QueryTests):
         query = self._test_rounded_timeseries('WW')
 
         self.assertEqual(
-            'SELECT ROUND("dt",\'WW\') "dt",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'SELECT ROUND("dt",\'WW\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'GROUP BY ROUND("dt",\'WW\') '
             'ORDER BY ROUND("dt",\'WW\')', str(query))
@@ -299,7 +300,7 @@ class DimensionTests(QueryTests):
         query = self._test_rounded_timeseries('MONTH')
 
         self.assertEqual(
-            'SELECT ROUND("dt",\'MONTH\') "dt",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'SELECT ROUND("dt",\'MONTH\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'GROUP BY ROUND("dt",\'MONTH\') '
             'ORDER BY ROUND("dt",\'MONTH\')', str(query))
@@ -308,7 +309,7 @@ class DimensionTests(QueryTests):
         query = self._test_rounded_timeseries('Q')
 
         self.assertEqual(
-            'SELECT ROUND("dt",\'Q\') "dt",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'SELECT ROUND("dt",\'Q\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'GROUP BY ROUND("dt",\'Q\') '
             'ORDER BY ROUND("dt",\'Q\')', str(query))
@@ -317,7 +318,7 @@ class DimensionTests(QueryTests):
         query = self._test_rounded_timeseries('YEAR')
 
         self.assertEqual(
-            'SELECT ROUND("dt",\'YEAR\') "dt",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'SELECT ROUND("dt",\'YEAR\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'GROUP BY ROUND("dt",\'YEAR\') '
             'ORDER BY ROUND("dt",\'YEAR\')', str(query))
@@ -359,7 +360,7 @@ class DimensionTests(QueryTests):
                 ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions=OrderedDict([
-                ('dt', rounded_dt),
+                ('date', rounded_dt),
                 ('device_type', device_type),
             ]),
             mfilters=[],
@@ -369,7 +370,7 @@ class DimensionTests(QueryTests):
         )
 
         self.assertEqual(
-            'SELECT ROUND("dt",\'DD\') "dt","device_type" "device_type",'
+            'SELECT ROUND("dt",\'DD\') "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'GROUP BY ROUND("dt",\'DD\'),"device_type" '
@@ -393,7 +394,7 @@ class DimensionTests(QueryTests):
                 ('city_name', self.mock_join1.city_name),
             ]),
             dimensions=OrderedDict([
-                ('dt', rounded_dt),
+                ('date', rounded_dt),
                 ('locale', locale),
             ]),
             mfilters=[],
@@ -403,7 +404,7 @@ class DimensionTests(QueryTests):
         )
 
         self.assertEqual('SELECT '
-                         'ROUND("test_table"."dt",\'DD\') "dt","test_table"."locale" "locale",'
+                         'ROUND("test_table"."dt",\'DD\') "date","test_table"."locale" "locale",'
                          'SUM("test_table"."clicks") "clicks",'
                          'SUM("test_table"."revenue")/SUM("test_table"."cost") "roi",'
                          '"test_join1"."hotel_name" "hotel_name","test_join1"."address" "hotel_address",'
@@ -545,7 +546,7 @@ class ComparisonTests(QueryTests):
     }
 
     def _get_compare_query(self, compare_type):
-        rounded_dt = settings.database.round_date(self.mock_table.dt, 'DD')
+        dt = self.mock_table.dt
         device_type = self.mock_table.device_type
         query = self.manager._build_data_query(
             table=self.mock_table,
@@ -555,15 +556,16 @@ class ComparisonTests(QueryTests):
                 ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions=OrderedDict([
-                ('dt', rounded_dt),
+                ('date', settings.database.round_date(dt, 'DD')),
                 ('device_type', device_type),
             ]),
             mfilters=[],
             dfilters=[
-                self.mock_table.dt[date(2000, 1, 1):date(2000, 3, 1)]
+                # rounded_dt[date(2000, 1, 1):date(2000, 3, 1)]
+                dt[date(2000, 1, 1):date(2000, 3, 1)]
             ],
             references=OrderedDict([
-                (compare_type, 'dt')
+                (compare_type, 'date')
             ]),
             rollup=[],
         )
@@ -572,14 +574,14 @@ class ComparisonTests(QueryTests):
     def assert_reference(self, query, key):
         self.assertEqual(
             'SELECT '
-            '"sq0"."dt" "dt","sq0"."device_type" "device_type",'
+            '"sq0"."date" "date","sq0"."device_type" "device_type",'
             '"sq0"."clicks" "clicks","sq0"."roi" "roi",'
             # '"sq1"."dt" "dt_{key}",'
             '"sq1"."clicks" "clicks_{key}",'
             '"sq1"."roi" "roi_{key}" '
             'FROM ('
             'SELECT '
-            'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
+            'ROUND("dt",\'DD\') "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
@@ -587,14 +589,14 @@ class ComparisonTests(QueryTests):
             ') "sq0" '
             'LEFT JOIN ('
             'SELECT '
-            'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
+            'ROUND("dt",\'DD\')+INTERVAL \'{expr}\' "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY ROUND("dt",\'DD\'),"device_type"'
-            ') "sq1" ON "sq0"."dt"="sq1"."dt"+INTERVAL \'{expr}\' '
+            'GROUP BY ROUND("dt",\'DD\')+INTERVAL \'{expr}\',"device_type"'
+            ') "sq1" ON "sq0"."date"="sq1"."date" '
             'AND "sq0"."device_type"="sq1"."device_type" '
-            'ORDER BY "sq0"."dt","sq0"."device_type"'.format(
+            'ORDER BY "sq0"."date","sq0"."device_type"'.format(
                 key=key,
                 expr=self.intervals[key]
             ), str(query)
@@ -603,14 +605,14 @@ class ComparisonTests(QueryTests):
     def assert_reference_d(self, query, key):
         self.assertEqual(
             'SELECT '
-            '"sq0"."dt" "dt","sq0"."device_type" "device_type",'
+            '"sq0"."date" "date","sq0"."device_type" "device_type",'
             '"sq0"."clicks" "clicks","sq0"."roi" "roi",'
             # '"sq1"."dt" "dt_{key}_d",'
             '"sq0"."clicks"-"sq1"."clicks" "clicks_{key}_d",'
             '"sq0"."roi"-"sq1"."roi" "roi_{key}_d" '
             'FROM ('
             'SELECT '
-            'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
+            'ROUND("dt",\'DD\') "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
@@ -618,14 +620,14 @@ class ComparisonTests(QueryTests):
             ') "sq0" '
             'LEFT JOIN ('
             'SELECT '
-            'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
+            'ROUND("dt",\'DD\')+INTERVAL \'{expr}\' "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY ROUND("dt",\'DD\'),"device_type"'
-            ') "sq1" ON "sq0"."dt"="sq1"."dt"+INTERVAL \'{expr}\' '
+            'GROUP BY ROUND("dt",\'DD\')+INTERVAL \'{expr}\',"device_type"'
+            ') "sq1" ON "sq0"."date"="sq1"."date" '
             'AND "sq0"."device_type"="sq1"."device_type" '
-            'ORDER BY "sq0"."dt","sq0"."device_type"'.format(
+            'ORDER BY "sq0"."date","sq0"."device_type"'.format(
                 key=key,
                 expr=self.intervals[key]
             ), str(query)
@@ -634,14 +636,14 @@ class ComparisonTests(QueryTests):
     def assert_reference_p(self, query, key):
         self.assertEqual(
             'SELECT '
-            '"sq0"."dt" "dt","sq0"."device_type" "device_type",'
+            '"sq0"."date" "date","sq0"."device_type" "device_type",'
             '"sq0"."clicks" "clicks","sq0"."roi" "roi",'
             # '"sq1"."dt" "dt_{key}_p",'
             '("sq0"."clicks"-"sq1"."clicks")/NULLIF("sq1"."clicks",0) "clicks_{key}_p",'
             '("sq0"."roi"-"sq1"."roi")/NULLIF("sq1"."roi",0) "roi_{key}_p" '
             'FROM ('
             'SELECT '
-            'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
+            'ROUND("dt",\'DD\') "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
@@ -649,14 +651,14 @@ class ComparisonTests(QueryTests):
             ') "sq0" '
             'LEFT JOIN ('
             'SELECT '
-            'ROUND("dt",\'DD\') "dt","device_type" "device_type",'
+            'ROUND("dt",\'DD\')+INTERVAL \'{expr}\' "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY ROUND("dt",\'DD\'),"device_type"'
-            ') "sq1" ON "sq0"."dt"="sq1"."dt"+INTERVAL \'{expr}\' '
+            'GROUP BY ROUND("dt",\'DD\')+INTERVAL \'{expr}\',"device_type"'
+            ') "sq1" ON "sq0"."date"="sq1"."date" '
             'AND "sq0"."device_type"="sq1"."device_type" '
-            'ORDER BY "sq0"."dt","sq0"."device_type"'.format(
+            'ORDER BY "sq0"."date","sq0"."device_type"'.format(
                 key=key,
                 expr=self.intervals[key]
             ), str(query)
@@ -724,7 +726,7 @@ class TotalsQueryTests(QueryTests):
                 ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions=OrderedDict([
-                ('dt', rounded_dt),
+                ('date', rounded_dt),
                 ('locale', locale),
             ]),
             mfilters=[],
@@ -734,7 +736,7 @@ class TotalsQueryTests(QueryTests):
         )
 
         self.assertEqual('SELECT '
-                         'ROUND("dt",\'DD\') "dt","locale" "locale",'
+                         'ROUND("dt",\'DD\') "date","locale" "locale",'
                          'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
                          'FROM "test_table" '
                          'GROUP BY ROUND("dt",\'DD\'),ROLLUP("locale") '
@@ -753,7 +755,7 @@ class TotalsQueryTests(QueryTests):
                 ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions=OrderedDict([
-                ('dt', rounded_dt),
+                ('date', rounded_dt),
                 ('locale', locale),
                 ('device_type', device_type),
             ]),
@@ -764,7 +766,7 @@ class TotalsQueryTests(QueryTests):
         )
 
         self.assertEqual('SELECT '
-                         'ROUND("dt",\'DD\') "dt",'
+                         'ROUND("dt",\'DD\') "date",'
                          '"locale" "locale",'
                          '"device_type" "device_type",'
                          'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
@@ -785,7 +787,7 @@ class TotalsQueryTests(QueryTests):
                 ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions=OrderedDict([
-                ('dt', rounded_dt),
+                ('date', rounded_dt),
                 ('locale', locale),
                 ('device_type', device_type),
             ]),
@@ -795,7 +797,7 @@ class TotalsQueryTests(QueryTests):
             rollup=['locale'],
         )
         self.assertEqual('SELECT '
-                         'ROUND("dt",\'DD\') "dt",'
+                         'ROUND("dt",\'DD\') "date",'
                          '"device_type" "device_type",'
                          '"locale" "locale",'  # Order is changed, rollup dims move to end
                          'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
