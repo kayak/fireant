@@ -1,4 +1,5 @@
 # coding: utf-8
+import copy
 import logging
 
 import pandas as pd
@@ -175,12 +176,12 @@ class QueryManager(object):
         for reference_key, dimension_key in references.items():
             dimension_f, metric_f = self._get_reference_mappers(reference_key)
 
-            dfilters = self._hack_dfilters(dfilters, dimension_key, dimension_f)
+            dimensions, dfilters = self._replace_dim_for_ref(dfilters, dimension_key, dimensions,
+                                                             dimension_f)
             ref_query = self._build_query_inner(table, joins, metrics, dimensions,
                                                 dfilters, mfilters, rollup)
 
-            ref_dimension = ref_query.field(dimension_key)
-            ref_criteria = query.field(dimension_key) == dimension_f(ref_dimension)
+            ref_criteria = query.field(dimension_key) == ref_query.field(dimension_key)
             for dkey in set(dimensions.keys()) - {dimension_key}:
                 ref_criteria &= query.field(dkey) == ref_query.field(dkey)
 
@@ -328,12 +329,30 @@ class QueryManager(object):
                 cx &= dimension == dimension.for_(query)
         return cx
 
-    def _hack_dfilters(self, dfilters, dimension_key, dimension_f):
-        # FIXME Hacky solution for replacing reference filters with shifted values
+    def _replace_dim_for_ref(self, dfilters, dimension_key, dimensions, dimension_f):
+        """
+        Replaces the dimension used by a reference in the dimension schema and dimension filter schema.
+
+        We do this in order to build the same query with a shifted date instead of the actual date.
+        """
+        target_dimension = dimensions[dimension_key]
+        reference_dimension = dimension_f(target_dimension)
+
+        new_dimensions = copy.deepcopy(dimensions)
+        new_dimensions[dimension_key] = dimension_f(target_dimension)
+
+        new_dfilters = []
         for dfilter in dfilters:
-            if not getattr(dfilter, 'term') or not dfilter.term.name == dimension_key:
-                continue
+            # This is a very hack way of doing this.  This expects the dfilter to use the exact same reference to
+            # the dimension's definition, which the slicer manager guarentees and the unit tests simulate.
+            # TODO provide a utility in pypika for checking if these are the same
+            try:
+                if dfilter.term.fields()[0] is target_dimension.fields()[0]:
+                    dfilter = copy.deepcopy(dfilter)
+                    dfilter.term = dimension_f(dfilter.term)
+            except:
+                pass  # If the above if-expression cannot be evaluated, then its not the filter we are looking for
 
-            dfilter.term = dimension_f(dfilter.term)
+            new_dfilters.append(dfilter)
 
-        return dfilters
+        return new_dimensions, new_dfilters
