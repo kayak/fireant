@@ -2,7 +2,8 @@
 from datetime import date
 from unittest import TestCase
 
-from mock import Mock, MagicMock, patch, call, ANY
+import pandas as pd
+from mock import Mock, patch, call
 
 from fireant.dashboards import *
 from fireant.slicer import *
@@ -48,8 +49,8 @@ class DashboardTests(TestCase):
             ]
         )
 
-        cls.mock_dataframe = MagicMock()
-        cls.test_slicer.manager.data = Mock(return_value=cls.mock_dataframe)
+        cls.test_slicer.manager.data = Mock()
+        cls.test_slicer.manager.display_schema = Mock()
 
     def assert_slicer_queried(self, metrics, dimensions=None, mfilters=None, dfilters=None,
                               references=None, operations=None):
@@ -62,7 +63,7 @@ class DashboardTests(TestCase):
             operations=operations or [],
         )
 
-    def assert_result_transformed(self, widgets, dimensions, mock_transformer, tx_generator):
+    def assert_result_transformed(self, widgets, dimensions, mock_transformer, tx_generator, references=[]):
         # Assert that there is a result for each widget
         self.assertEqual(len(widgets), len(list(tx_generator)))
 
@@ -70,109 +71,128 @@ class DashboardTests(TestCase):
             [call(
                 dimensions=dimensions or [],
                 metrics=widget.metrics,
+                references=references,
             ) for widget in widgets]
         )
 
-        # Assert that dataframe was sliced for each widget with the right metrics
-        self.mock_dataframe.__getitem__.assert_has_calls(
-            [call(widget.metrics)
-             for widget in widgets],
-            any_order=True
-        )
-
         # Assert that a transformation was performed for each widget
-        mock_transformer.transform.assert_has_calls(
-            [call(
-                self.mock_dataframe[widget.metrics].__getitem__(),
-                ANY
-            ) for widget in widgets],
-            any_order=True
-        )
+        self.assertEqual(len(mock_transformer.transform.call_args), len(widgets))
+
+        for idx, widget in enumerate(widgets):
+            self.assertIsInstance(mock_transformer.transform.call_args_list[idx][0][0], pd.DataFrame)
+
+            metrics = widget.metrics
+            if references:
+                metrics = [(reference.key if reference else '', metric)
+                           for reference in [None] + references
+                           for metric in metrics]
+
+            self.assertListEqual(list(mock_transformer.transform.call_args_list[idx][0][0].columns), metrics)
 
 
 class DashboardSchemaTests(DashboardTests):
     @patch('fireant.dashboards.LineChartWidget.transformer')
     def test_metric_widgets(self, mock_transformer):
-        self.test_slicer.manager.display_schema = Mock(return_value={'metrics': ['clicks', 'conversions'],
-                                                                     'dimensions': []})
+        metrics = ['clicks', 'conversions']
+        dimensions = []
+        self.test_slicer.manager.data.return_value = pd.DataFrame(columns=metrics)
+        self.test_slicer.manager.display_schema.side_effect = [
+            {'metrics': metrics[:1], 'dimensions': dimensions, 'references': []},
+            {'metrics': metrics[1:], 'dimensions': dimensions, 'references': []},
+        ]
 
         test_render = WidgetGroup(
             slicer=self.test_slicer,
 
             widgets=[
-                LineChartWidget(metrics=['clicks']),
-                LineChartWidget(metrics=['conversions']),
+                LineChartWidget(metrics=metrics[:1]),
+                LineChartWidget(metrics=metrics[1:]),
             ]
         )
 
         result = test_render.manager.render()
 
         self.assert_slicer_queried(
-            ['clicks', 'conversions'],
+            metrics,
         )
         self.assert_result_transformed(test_render.widgets, [], mock_transformer, result)
 
     @patch('fireant.dashboards.LineChartWidget.transformer')
     def test_categorical_dim(self, mock_transformer):
-        self.test_slicer.manager.display_schema = Mock(return_value={'metrics': ['clicks', 'conversions'],
-                                                                     'dimensions': ['locale']})
+        metrics = ['clicks', 'conversions']
+        dimensions = ['locale']
+        self.test_slicer.manager.data.return_value = pd.DataFrame(columns=metrics)
+        self.test_slicer.manager.display_schema.side_effect = [
+            {'metrics': metrics[:1], 'dimensions': dimensions, 'references': []},
+            {'metrics': metrics[1:], 'dimensions': dimensions, 'references': []},
+        ]
 
         test_render = WidgetGroup(
             slicer=self.test_slicer,
 
             widgets=[
-                LineChartWidget(metrics=['clicks']),
-                LineChartWidget(metrics=['conversions']),
+                LineChartWidget(metrics=metrics[:1]),
+                LineChartWidget(metrics=metrics[1:]),
             ],
 
-            dimensions=['locale'],
+            dimensions=dimensions,
         )
 
         result = test_render.manager.render()
 
         self.assert_slicer_queried(
             ['clicks', 'conversions'],
-            dimensions=['locale'],
+            dimensions=dimensions,
         )
-        self.assert_result_transformed(test_render.widgets, ['locale'], mock_transformer, result)
+        self.assert_result_transformed(test_render.widgets, dimensions, mock_transformer, result)
 
     @patch('fireant.dashboards.LineChartWidget.transformer')
     def test_datetime_dim(self, mock_transformer):
-        self.test_slicer.manager.display_schema = Mock(return_value={'metrics': ['clicks', 'conversions'],
-                                                                     'dimensions': [('date', DatetimeDimension.week)]})
+        metrics = ['clicks', 'conversions']
+        dimensions = [('date', DatetimeDimension.week)]
+        self.test_slicer.manager.data.return_value = pd.DataFrame(columns=metrics)
+        self.test_slicer.manager.display_schema.side_effect = [
+            {'metrics': metrics[:1], 'dimensions': dimensions, 'references': []},
+            {'metrics': metrics[1:], 'dimensions': dimensions, 'references': []},
+        ]
 
         test_render = WidgetGroup(
             slicer=self.test_slicer,
 
             widgets=[
-                LineChartWidget(metrics=['clicks']),
-                LineChartWidget(metrics=['conversions']),
+                LineChartWidget(metrics=metrics[:1]),
+                LineChartWidget(metrics=metrics[1:]),
             ],
 
-            dimensions=[('date', DatetimeDimension.week)],
+            dimensions=dimensions,
         )
 
         result = test_render.manager.render()
 
         self.assert_slicer_queried(
             ['clicks', 'conversions'],
-            dimensions=[('date', DatetimeDimension.week)],
+            dimensions=dimensions,
         )
-        self.assert_result_transformed(test_render.widgets, [('date', DatetimeDimension.week)], mock_transformer,
+        self.assert_result_transformed(test_render.widgets, dimensions, mock_transformer,
                                        result)
 
     @patch('fireant.dashboards.LineChartWidget.transformer')
     def test_eq_filter_dim(self, mock_transformer):
-        self.test_slicer.manager.display_schema = Mock(return_value={'metrics': ['clicks', 'conversions'],
-                                                                     'dimensions': []})
+        metrics = ['clicks', 'conversions']
+        dimensions = []
+        self.test_slicer.manager.data.return_value = pd.DataFrame(columns=metrics)
+        self.test_slicer.manager.display_schema.side_effect = [
+            {'metrics': metrics[:1], 'dimensions': dimensions, 'references': []},
+            {'metrics': metrics[1:], 'dimensions': dimensions, 'references': []},
+        ]
 
         eq_filter = EqualityFilter('device_type', EqualityOperator.eq, 'desktop')
         test_render = WidgetGroup(
             slicer=self.test_slicer,
 
             widgets=[
-                LineChartWidget(metrics=['clicks']),
-                LineChartWidget(metrics=['conversions']),
+                LineChartWidget(metrics=metrics[:1]),
+                LineChartWidget(metrics=metrics[1:]),
             ],
 
             dimension_filters=[eq_filter],
@@ -181,23 +201,28 @@ class DashboardSchemaTests(DashboardTests):
         result = test_render.manager.render()
 
         self.assert_slicer_queried(
-            ['clicks', 'conversions'],
+            metrics,
             dfilters=[eq_filter],
         )
-        self.assert_result_transformed(test_render.widgets, [], mock_transformer, result)
+        self.assert_result_transformed(test_render.widgets, dimensions, mock_transformer, result)
 
     @patch('fireant.dashboards.LineChartWidget.transformer')
     def test_contains_filter_dim(self, mock_transformer):
-        self.test_slicer.manager.display_schema = Mock(return_value={'metrics': ['clicks', 'conversions'],
-                                                                     'dimensions': []})
+        metrics = ['clicks', 'conversions']
+        dimensions = []
+        self.test_slicer.manager.data.return_value = pd.DataFrame(columns=metrics)
+        self.test_slicer.manager.display_schema.side_effect = [
+            {'metrics': metrics[:1], 'dimensions': dimensions, 'references': []},
+            {'metrics': metrics[1:], 'dimensions': dimensions, 'references': []},
+        ]
 
         contains_filter = ContainsFilter('device_type', ['desktop', 'mobile'])
         test_render = WidgetGroup(
             slicer=self.test_slicer,
 
             widgets=[
-                LineChartWidget(metrics=['clicks']),
-                LineChartWidget(metrics=['conversions']),
+                LineChartWidget(metrics=metrics[:1]),
+                LineChartWidget(metrics=metrics[1:]),
             ],
 
             dimension_filters=[contains_filter],
@@ -206,23 +231,28 @@ class DashboardSchemaTests(DashboardTests):
         result = test_render.manager.render()
 
         self.assert_slicer_queried(
-            ['clicks', 'conversions'],
+            metrics,
             dfilters=[contains_filter],
         )
-        self.assert_result_transformed(test_render.widgets, [], mock_transformer, result)
+        self.assert_result_transformed(test_render.widgets, dimensions, mock_transformer, result)
 
     @patch('fireant.dashboards.LineChartWidget.transformer')
     def test_range_filter_date(self, mock_transformer):
-        self.test_slicer.manager.display_schema = Mock(return_value={'metrics': ['clicks', 'conversions'],
-                                                                     'dimensions': []})
+        metrics = ['clicks', 'conversions']
+        dimensions = []
+        self.test_slicer.manager.data.return_value = pd.DataFrame(columns=metrics)
+        self.test_slicer.manager.display_schema.side_effect = [
+            {'metrics': metrics[:1], 'dimensions': dimensions, 'references': []},
+            {'metrics': metrics[1:], 'dimensions': dimensions, 'references': []},
+        ]
 
         range_filter = RangeFilter('date', date(2000, 1, 1), date(2000, 3, 1))
         test_render = WidgetGroup(
             slicer=self.test_slicer,
 
             widgets=[
-                LineChartWidget(metrics=['clicks']),
-                LineChartWidget(metrics=['conversions']),
+                LineChartWidget(metrics=metrics[:1]),
+                LineChartWidget(metrics=metrics[1:]),
             ],
 
             dimension_filters=[range_filter],
@@ -231,23 +261,28 @@ class DashboardSchemaTests(DashboardTests):
         result = test_render.manager.render()
 
         self.assert_slicer_queried(
-            ['clicks', 'conversions'],
+            metrics,
             dfilters=[range_filter],
         )
-        self.assert_result_transformed(test_render.widgets, [], mock_transformer, result)
+        self.assert_result_transformed(test_render.widgets, dimensions, mock_transformer, result)
 
     @patch('fireant.dashboards.LineChartWidget.transformer')
     def test_wildcard_filter_date(self, mock_transformer):
-        self.test_slicer.manager.display_schema = Mock(return_value={'metrics': ['clicks', 'conversions'],
-                                                                     'dimensions': []})
+        metrics = ['clicks', 'conversions']
+        dimensions = []
+        self.test_slicer.manager.data.return_value = pd.DataFrame(columns=metrics)
+        self.test_slicer.manager.display_schema.side_effect = [
+            {'metrics': metrics[:1], 'dimensions': dimensions, 'references': []},
+            {'metrics': metrics[1:], 'dimensions': dimensions, 'references': []},
+        ]
 
         wildcard_filter = WildcardFilter('locale', 'U%')
         test_render = WidgetGroup(
             slicer=self.test_slicer,
 
             widgets=[
-                LineChartWidget(metrics=['clicks']),
-                LineChartWidget(metrics=['conversions']),
+                LineChartWidget(metrics=metrics[:1]),
+                LineChartWidget(metrics=metrics[1:]),
             ],
 
             dimension_filters=[wildcard_filter],
@@ -256,77 +291,125 @@ class DashboardSchemaTests(DashboardTests):
         result = test_render.manager.render()
 
         self.assert_slicer_queried(
-            ['clicks', 'conversions'],
+            metrics,
             dfilters=[wildcard_filter],
         )
-        self.assert_result_transformed(test_render.widgets, [], mock_transformer, result)
+        self.assert_result_transformed(test_render.widgets, dimensions, mock_transformer, result)
 
     @patch('fireant.dashboards.LineChartWidget.transformer')
     def test_reference_with_dim(self, mock_transformer):
-        self.test_slicer.manager.display_schema = Mock(return_value={'metrics': ['clicks', 'conversions'],
-                                                                     'dimensions': ['date']})
+        metrics = ['clicks', 'conversions']
+        dimensions = ['date']
+        references = [WoW('date')]
+        self.test_slicer.manager.data.return_value = pd.DataFrame(columns=[(ref, metric)
+                                                                           for ref in ['', 'wow']
+                                                                           for metric in metrics])
+        self.test_slicer.manager.display_schema.side_effect = [
+            {'metrics': metrics[:1], 'dimensions': dimensions, 'references': {'wow': 'date'}},
+            {'metrics': metrics[1:], 'dimensions': dimensions, 'references': {'wow': 'date'}},
+        ]
 
-        reference = WoW('date')
         test_render = WidgetGroup(
             slicer=self.test_slicer,
 
             widgets=[
-                LineChartWidget(metrics=['clicks']),
-                LineChartWidget(metrics=['conversions']),
+                LineChartWidget(metrics=metrics[:1]),
+                LineChartWidget(metrics=metrics[1:]),
             ],
 
-            dimensions=['date'],
+            dimensions=dimensions,
+        )
 
-            references=[reference],
+        result = test_render.manager.render(references=references)
+
+        self.assert_slicer_queried(
+            metrics,
+            dimensions=dimensions,
+            references=references,
+        )
+        self.assert_result_transformed(test_render.widgets, dimensions, mock_transformer, result, references)
+
+    @patch('fireant.dashboards.LineChartWidget.transformer')
+    def test_reference_in_widgetgroup(self, mock_transformer):
+        metrics = ['clicks', 'conversions']
+        dimensions = ['date']
+        references = [WoW('date')]
+        self.test_slicer.manager.data.return_value = pd.DataFrame(columns=[(ref, metric)
+                                                                           for ref in ['', 'wow']
+                                                                           for metric in metrics])
+        self.test_slicer.manager.display_schema.side_effect = [
+            {'metrics': metrics[:1], 'dimensions': dimensions, 'references': {'wow': 'date'}},
+            {'metrics': metrics[1:], 'dimensions': dimensions, 'references': {'wow': 'date'}},
+        ]
+
+        test_render = WidgetGroup(
+            slicer=self.test_slicer,
+
+            widgets=[
+                LineChartWidget(metrics=metrics[:1]),
+                LineChartWidget(metrics=metrics[1:]),
+            ],
+
+            dimensions=dimensions,
+            references=references,
         )
 
         result = test_render.manager.render()
 
         self.assert_slicer_queried(
-            ['clicks', 'conversions'],
-            dimensions=['date'],
-            references=[reference],
+            metrics,
+            dimensions=dimensions,
+            references=references,
         )
-        self.assert_result_transformed(test_render.widgets, ['date'], mock_transformer, result)
+        self.assert_result_transformed(test_render.widgets, dimensions, mock_transformer, result, references)
 
 
 class DashboardAPITests(DashboardTests):
     @patch('fireant.dashboards.LineChartWidget.transformer')
     def test_api_with_dimension(self, mock_transformer):
-        self.test_slicer.manager.display_schema = Mock(return_value={'metrics': ['clicks', 'conversions'],
-                                                                     'dimensions': ['date']})
+        metrics = ['clicks', 'conversions']
+        dimensions = ['date']
+        self.test_slicer.manager.data.return_value = pd.DataFrame(columns=metrics)
+        self.test_slicer.manager.display_schema.side_effect = [
+            {'metrics': metrics[:1], 'dimensions': dimensions, 'references': []},
+            {'metrics': metrics[1:], 'dimensions': dimensions, 'references': []},
+        ]
 
         test_render = WidgetGroup(
             slicer=self.test_slicer,
 
             widgets=[
-                LineChartWidget(metrics=['clicks']),
-                LineChartWidget(metrics=['conversions']),
+                LineChartWidget(metrics=metrics[:1]),
+                LineChartWidget(metrics=metrics[1:]),
             ]
         )
 
         result = test_render.manager.render(
-            dimensions=['date'],
+            dimensions=dimensions,
         )
 
         self.assert_slicer_queried(
-            ['clicks', 'conversions'],
-            dimensions=['date'],
+            metrics,
+            dimensions=dimensions,
         )
-        self.assert_result_transformed(test_render.widgets, ['date'], mock_transformer, result)
+        self.assert_result_transformed(test_render.widgets, dimensions, mock_transformer, result)
 
     @patch('fireant.dashboards.LineChartWidget.transformer')
     def test_api_with_filter(self, mock_transformer):
-        self.test_slicer.manager.display_schema = Mock(return_value={'metrics': ['clicks', 'conversions'],
-                                                                     'dimensions': []})
+        metrics = ['clicks', 'conversions']
+        dimensions = []
+        self.test_slicer.manager.display_schema.side_effect = [
+            {'metrics': metrics[:1], 'dimensions': dimensions, 'references': []},
+            {'metrics': metrics[1:], 'dimensions': dimensions, 'references': []},
+        ]
 
         eq_filter = EqualityFilter('device_type', EqualityOperator.eq, 'desktop')
         test_render = WidgetGroup(
             slicer=self.test_slicer,
 
             widgets=[
-                LineChartWidget(metrics=['clicks']),
-                LineChartWidget(metrics=['conversions']),
+                LineChartWidget(metrics=metrics[:1]),
+                LineChartWidget(metrics=metrics[1:]),
             ]
         )
 
@@ -338,25 +421,28 @@ class DashboardAPITests(DashboardTests):
             ['clicks', 'conversions'],
             dfilters=[eq_filter],
         )
-        self.assert_result_transformed(test_render.widgets, [], mock_transformer, result)
+        self.assert_result_transformed(test_render.widgets, dimensions, mock_transformer, result)
 
     @patch('fireant.dashboards.LineChartWidget.transformer')
     def test_api_with_reference(self, mock_transformer):
-        self.test_slicer.manager.display_schema = Mock(return_value={'metrics': ['clicks', 'conversions'],
-                                                                     'dimensions': ['date']})
+        metrics = ['clicks', 'conversions']
+        dimensions = ['date']
+        self.test_slicer.manager.data.return_value = pd.DataFrame(columns=metrics)
+        self.test_slicer.manager.display_schema.side_effect = [
+            {'metrics': metrics[:1], 'dimensions': dimensions, 'references': []},
+            {'metrics': metrics[1:], 'dimensions': dimensions, 'references': []},
+        ]
 
         reference = WoW('date')
         test_render = WidgetGroup(
             slicer=self.test_slicer,
 
             widgets=[
-                LineChartWidget(metrics=['clicks']),
-                LineChartWidget(metrics=['conversions']),
+                LineChartWidget(metrics=metrics[:1]),
+                LineChartWidget(metrics=metrics[1:]),
             ],
 
-            dimensions=[
-                'date'
-            ]
+            dimensions=dimensions
         )
 
         result = test_render.manager.render(
@@ -364,50 +450,59 @@ class DashboardAPITests(DashboardTests):
         )
 
         self.assert_slicer_queried(
-            ['clicks', 'conversions'],
-            dimensions=['date'],
+            metrics,
+            dimensions=dimensions,
             references=[reference],
         )
-        self.assert_result_transformed(test_render.widgets, ['date'], mock_transformer, result)
+        self.assert_result_transformed(test_render.widgets, dimensions, mock_transformer, result)
 
     @patch('fireant.dashboards.LineChartWidget.transformer')
     def test_remove_duplicated_dimension_keys(self, mock_transformer):
-        self.test_slicer.manager.display_schema = Mock(return_value={'metrics': ['clicks', 'conversions'],
-                                                                     'dimensions': ['date']})
+        metrics = ['clicks', 'conversions']
+        dimensions = ['date']
+        self.test_slicer.manager.data.return_value = pd.DataFrame(columns=metrics)
+        self.test_slicer.manager.display_schema.side_effect = [
+            {'metrics': metrics[:1], 'dimensions': dimensions, 'references': []},
+            {'metrics': metrics[1:], 'dimensions': dimensions, 'references': []},
+        ]
 
         test_render = WidgetGroup(
             slicer=self.test_slicer,
 
             widgets=[
-                LineChartWidget(metrics=['clicks']),
-                LineChartWidget(metrics=['conversions']),
+                LineChartWidget(metrics=metrics[:1]),
+                LineChartWidget(metrics=metrics[1:]),
             ],
 
-            dimensions=['date'],
+            dimensions=dimensions,
         )
 
         result = test_render.manager.render(
-            dimensions=['date'],
+            dimensions=dimensions,
         )
 
         self.assert_slicer_queried(
-            ['clicks', 'conversions'],
-            dimensions=['date'],
+            metrics,
+            dimensions=dimensions,
         )
-        self.assert_result_transformed(test_render.widgets, ['date'], mock_transformer, result)
+        self.assert_result_transformed(test_render.widgets, dimensions, mock_transformer, result)
 
     @patch('fireant.dashboards.LineChartWidget.transformer')
     def test_remove_duplicated_dimension_keys_with_intervals_in_schema(self, mock_transformer):
+        metrics = ['clicks', 'conversions']
         dimensions = [('date', DatetimeDimension.day)]
-        self.test_slicer.manager.display_schema = Mock(return_value={'metrics': ['clicks', 'conversions'],
-                                                                     'dimensions': dimensions})
+        self.test_slicer.manager.data.return_value = pd.DataFrame(columns=metrics)
+        self.test_slicer.manager.display_schema.side_effect = [
+            {'metrics': metrics[:1], 'dimensions': dimensions, 'references': []},
+            {'metrics': metrics[1:], 'dimensions': dimensions, 'references': []},
+        ]
 
         test_render = WidgetGroup(
             slicer=self.test_slicer,
 
             widgets=[
-                LineChartWidget(metrics=['clicks']),
-                LineChartWidget(metrics=['conversions']),
+                LineChartWidget(metrics=metrics[:1]),
+                LineChartWidget(metrics=metrics[1:]),
             ],
 
             dimensions=dimensions,
@@ -418,23 +513,27 @@ class DashboardAPITests(DashboardTests):
         )
 
         self.assert_slicer_queried(
-            ['clicks', 'conversions'],
+            metrics,
             dimensions=dimensions,
         )
         self.assert_result_transformed(test_render.widgets, dimensions, mock_transformer, result)
 
     @patch('fireant.dashboards.LineChartWidget.transformer')
     def test_remove_duplicated_dimension_keys_with_intervals_in_api(self, mock_transformer):
+        metrics = ['clicks', 'conversions']
         dimensions = [('date', DatetimeDimension.day)]
-        self.test_slicer.manager.display_schema = Mock(return_value={'metrics': ['clicks', 'conversions'],
-                                                                     'dimensions': dimensions})
+        self.test_slicer.manager.data.return_value = pd.DataFrame(columns=metrics)
+        self.test_slicer.manager.display_schema.side_effect = [
+            {'metrics': metrics[:1], 'dimensions': dimensions, 'references': []},
+            {'metrics': metrics[1:], 'dimensions': dimensions, 'references': []},
+        ]
 
         test_render = WidgetGroup(
             slicer=self.test_slicer,
 
             widgets=[
-                LineChartWidget(metrics=['clicks']),
-                LineChartWidget(metrics=['conversions']),
+                LineChartWidget(metrics=metrics[:1]),
+                LineChartWidget(metrics=metrics[1:]),
             ],
 
             dimensions=dimensions,
@@ -445,25 +544,30 @@ class DashboardAPITests(DashboardTests):
         )
 
         self.assert_slicer_queried(
-            ['clicks', 'conversions'],
+            metrics,
             dimensions=dimensions,
         )
         self.assert_result_transformed(test_render.widgets, dimensions, mock_transformer, result)
 
     @patch('fireant.dashboards.LineChartWidget.transformer')
     def test_remove_duplicated_dimension_keys_with_intervals_in_api2(self, mock_transformer):
-        self.test_slicer.manager.display_schema = Mock(return_value={'metrics': ['clicks', 'conversions'],
-                                                                     'dimensions': ['date']})
+        metrics = ['clicks', 'conversions']
+        dimensions = ['date']
+        self.test_slicer.manager.data.return_value = pd.DataFrame(columns=metrics)
+        self.test_slicer.manager.display_schema.side_effect = [
+            {'metrics': metrics[:1], 'dimensions': dimensions, 'references': []},
+            {'metrics': metrics[1:], 'dimensions': dimensions, 'references': []},
+        ]
 
         test_render = WidgetGroup(
             slicer=self.test_slicer,
 
             widgets=[
-                LineChartWidget(metrics=['clicks']),
-                LineChartWidget(metrics=['conversions']),
+                LineChartWidget(metrics=metrics[:1]),
+                LineChartWidget(metrics=metrics[1:]),
             ],
 
-            dimensions=['date'],
+            dimensions=dimensions,
         )
 
         result = test_render.manager.render(
@@ -471,7 +575,7 @@ class DashboardAPITests(DashboardTests):
         )
 
         self.assert_slicer_queried(
-            ['clicks', 'conversions'],
-            dimensions=['date'],
+            metrics,
+            dimensions=dimensions,
         )
-        self.assert_result_transformed(test_render.widgets, ['date'], mock_transformer, result)
+        self.assert_result_transformed(test_render.widgets, dimensions, mock_transformer, result)

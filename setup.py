@@ -4,7 +4,7 @@ from setuptools import setup
 
 __major_version__ = 0
 __minor_version__ = 4
-__patch_version__ = 2
+__patch_version__ = 3
 
 setup(
     name='fireant',
