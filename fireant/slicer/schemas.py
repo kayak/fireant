@@ -1,7 +1,7 @@
 # coding: utf-8
 from fireant.slicer import transformers
 from fireant.slicer.managers import SlicerManager, TransformerManager
-from pypika import JoinType, functions as fn
+from pypika import JoinType
 from pypika.terms import Mod
 
 
@@ -132,10 +132,12 @@ class UniqueDimension(Dimension):
         self.display_field = display_field
 
     def schemas(self, *args, **kwargs):
-        return [
-            ('{key}'.format(key=self.key), self.definition),
-            ('{key}_display'.format(key=self.key), self.display_field)
-        ]
+        schemas = [('{key}'.format(key=self.key), self.definition)]
+
+        if self.display_field:
+            schemas.append(('{key}_display'.format(key=self.key), self.display_field))
+
+        return schemas
 
     def levels(self):
         if self.display_field is not None:
