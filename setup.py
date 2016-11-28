@@ -4,7 +4,7 @@ from setuptools import setup
 
 __major_version__ = 0
 __minor_version__ = 4
-__patch_version__ = 5
+__patch_version__ = 6
 
 setup(
     name='fireant',
@@ -58,7 +58,7 @@ setup(
     install_requires=[
         'six',
         'pandas==0.18.1',
-        'pypika==0.1.2'
+        'pypika==0.1.4'
     ],
     tests_require=[
         'mock'
