@@ -276,7 +276,7 @@ class SlicerManager(QueryManager, OperationManager):
                 display_dim['display_options'] = {opt.key: opt.label
                                                   for opt in dimension.display_options}
 
-            if hasattr(dimension, 'display_field'):
+            if hasattr(dimension, 'display_field') and dimension.display_field:
                 display_dim['display_field'] = '%s_display' % dimension.key
 
             display_dims[key] = display_dim
