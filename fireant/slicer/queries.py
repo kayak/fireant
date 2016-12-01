@@ -130,7 +130,7 @@ class QueryManager(object):
         if references:
             dataframe.columns = pd.MultiIndex.from_product([[''] + list(references.keys()), list(metrics.keys())])
 
-        return dataframe
+        return dataframe.fillna(0)
 
     def query_dimension_options(self, database, table, joins=None, dimensions=None, filters=None, limit=None):
         """
