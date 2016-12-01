@@ -278,16 +278,21 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
             return None
 
         category_dimension = list(display_schema['dimensions'].values())[0]
-        if 'display_options' in category_dimension:
-            return [category_dimension['display_options'].get(dim, dim)
-                    # Pandas gives both NaN or None in the index depending on whether a level was unstacked
-                    if dim and not (isinstance(dim, (float, int)) and np.isnan(dim))
-                    else 'Totals'
-                    for dim in dataframe.index]
 
         if 'display_field' in category_dimension:
             display_field = category_dimension['display_field']
-            return dataframe.index.get_level_values(display_field).unique().tolist()
+            return dataframe.index.get_level_values(display_field).tolist()
+
+        if isinstance(dataframe.index, pd.Timestamp):
+            if any(value.time() for value in dataframe.index):
+                return [value.isoformat() for value in dataframe.index]
+            return [value.strftime("%y-%m-%d") for value in dataframe.index]
+
+        display_options = category_dimension.get('category_dimension', {})
+        return [display_options.get(value, value)
+                if value and not (isinstance(value, (float, int)) and np.isnan(value))
+                else 'Totals'
+                for value in dataframe.index]
 
 
 class HighchartsBarTransformer(HighchartsColumnTransformer):
