@@ -2,15 +2,11 @@
 
 from setuptools import setup
 
-__major_version__ = 0
-__minor_version__ = 4
-__patch_version__ = 8
+from fireant import __version__
 
 setup(
     name='fireant',
-    version='{major}.{minor}.{patch}'.format(major=__major_version__,
-                                             minor=__minor_version__,
-                                             patch=__patch_version__),
+    version=__version__,
 
     author='KAYAK, GmbH',
     author_email='bandit@kayak.com',
