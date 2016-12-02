@@ -283,7 +283,7 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
             display_field = category_dimension['display_field']
             return dataframe.index.get_level_values(display_field).tolist()
 
-        if isinstance(dataframe.index, pd.Timestamp):
+        if isinstance(dataframe.index, pd.DatetimeIndex):
             if any(value.time() for value in dataframe.index):
                 return [value.isoformat() for value in dataframe.index]
             return [value.strftime("%y-%m-%d") for value in dataframe.index]
