@@ -302,7 +302,11 @@ class SlicerManager(QueryManager, OperationManager):
                     'Dimension [{dimension}] must be a DatetimeDimension.'.format(reference=str(reference),
                                                                                   dimension=reference.element_key))
 
-            schema_references[reference.key] = reference.element_key
+            schema_references[reference.key] = {
+                'dimension': reference.element_key,
+                'interval': reference.interval,
+                'modifier': reference.modifier,
+            }
 
         return schema_references
 
