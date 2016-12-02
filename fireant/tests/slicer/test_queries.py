@@ -4,6 +4,7 @@ from collections import OrderedDict
 from datetime import date
 
 from fireant import settings
+from fireant.slicer import references
 from fireant.slicer.queries import QueryManager
 from fireant.tests.database.mock_database import TestDatabase
 from pypika import Tables, functions as fn, JoinType
@@ -100,7 +101,10 @@ class ExampleTests(QueryTests):
             ],
             references=OrderedDict([
                 # Example of adding a Week-over-Week comparison to the query
-                ('wow', 'date')
+                (references.WoW.key, {
+                    'dimension': 'date',
+                    'interval': references.WoW.interval,
+                })
             ]),
             rollup=[],
         )
@@ -539,13 +543,14 @@ class FilterTests(QueryTests):
 
 class ComparisonTests(QueryTests):
     intervals = {
-        'yoy': '52 WEEK',
+        'yoy': '1 YEAR',
         'qoq': '1 QUARTER',
-        'mom': '4 WEEK',
+        'mom': '1 MONTH',
         'wow': '1 WEEK',
+        'dod': '1 DAY',
     }
 
-    def _get_compare_query(self, compare_type):
+    def _get_compare_query(self, ref):
         dt = self.mock_table.dt
         device_type = self.mock_table.device_type
         query = self.manager._build_data_query(
@@ -565,7 +570,7 @@ class ComparisonTests(QueryTests):
                 dt[date(2000, 1, 1):date(2000, 3, 1)]
             ],
             references=OrderedDict([
-                (compare_type, 'date')
+                (ref.key, {'dimension': ref.element_key, 'interval': ref.interval, 'modifier': ref.modifier})
             ]),
             rollup=[],
         )
@@ -665,52 +670,80 @@ class ComparisonTests(QueryTests):
         )
 
     def test_metrics_dimensions_filters_references__yoy(self):
-        query = self._get_compare_query('yoy')
-        self.assert_reference(query, 'yoy')
+        reference = references.YoY('date')
+        query = self._get_compare_query(reference)
+        self.assert_reference(query, reference.key)
 
     def test_metrics_dimensions_filters_references__qoq(self):
-        query = self._get_compare_query('qoq')
-        self.assert_reference(query, 'qoq')
+        reference = references.QoQ('date')
+        query = self._get_compare_query(reference)
+        self.assert_reference(query, reference.key)
 
     def test_metrics_dimensions_filters_references__mom(self):
-        query = self._get_compare_query('mom')
-        self.assert_reference(query, 'mom')
+        reference = references.MoM('date')
+        query = self._get_compare_query(reference)
+        self.assert_reference(query, reference.key)
 
     def test_metrics_dimensions_filters_references__wow(self):
-        query = self._get_compare_query('wow')
-        self.assert_reference(query, 'wow')
+        reference = references.WoW('date')
+        query = self._get_compare_query(reference)
+        self.assert_reference(query, reference.key)
+
+    def test_metrics_dimensions_filters_references__dod(self):
+        reference = references.DoD('date')
+        query = self._get_compare_query(reference)
+        self.assert_reference(query, reference.key)
 
     def test_metrics_dimensions_filters_references__yoy_d(self):
-        query = self._get_compare_query('yoy_d')
-        self.assert_reference_d(query, 'yoy')
+        reference = references.YoY('date')
+        query = self._get_compare_query(references.Delta(reference))
+        self.assert_reference_d(query, reference.key)
 
     def test_metrics_dimensions_filters_references__qoq_d(self):
-        query = self._get_compare_query('qoq_d')
-        self.assert_reference_d(query, 'qoq')
+        reference = references.QoQ('date')
+        query = self._get_compare_query(references.Delta(reference))
+        self.assert_reference_d(query, reference.key)
 
     def test_metrics_dimensions_filters_references__mom_d(self):
-        query = self._get_compare_query('mom_d')
-        self.assert_reference_d(query, 'mom')
+        reference = references.MoM('date')
+        query = self._get_compare_query(references.Delta(reference))
+        self.assert_reference_d(query, reference.key)
 
     def test_metrics_dimensions_filters_references__wow_d(self):
-        query = self._get_compare_query('wow_d')
-        self.assert_reference_d(query, 'wow')
+        reference = references.WoW('date')
+        query = self._get_compare_query(references.Delta(reference))
+        self.assert_reference_d(query, reference.key)
+
+    def test_metrics_dimensions_filters_references__dod_d(self):
+        reference = references.DoD('date')
+        query = self._get_compare_query(references.Delta(reference))
+        self.assert_reference_d(query, reference.key)
 
     def test_metrics_dimensions_filters_references__yoy_p(self):
-        query = self._get_compare_query('yoy_p')
-        self.assert_reference_p(query, 'yoy')
+        reference = references.YoY('date')
+        query = self._get_compare_query(references.DeltaPercentage(reference))
+        self.assert_reference_p(query, reference.key)
 
     def test_metrics_dimensions_filters_references__qoq_p(self):
-        query = self._get_compare_query('qoq_p')
-        self.assert_reference_p(query, 'qoq')
+        reference = references.QoQ('date')
+        query = self._get_compare_query(references.DeltaPercentage(reference))
+        self.assert_reference_p(query, reference.key)
 
     def test_metrics_dimensions_filters_references__mom_p(self):
-        query = self._get_compare_query('mom_p')
-        self.assert_reference_p(query, 'mom')
+        reference = references.MoM('date')
+        query = self._get_compare_query(references.DeltaPercentage(reference))
+        self.assert_reference_p(query, reference.key)
 
     def test_metrics_dimensions_filters_references__wow_p(self):
-        query = self._get_compare_query('wow_p')
-        self.assert_reference_p(query, 'wow')
+        reference = references.WoW('date')
+        query = self._get_compare_query(references.DeltaPercentage(reference))
+        self.assert_reference_p(query, reference.key)
+
+
+    def test_metrics_dimensions_filters_references__DoD_p(self):
+        reference = references.DoD('date')
+        query = self._get_compare_query(references.DeltaPercentage(reference))
+        self.assert_reference_p(query, reference.key)
 
 
 class TotalsQueryTests(QueryTests):

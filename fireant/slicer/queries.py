@@ -4,20 +4,9 @@ import logging
 
 import pandas as pd
 
-from pypika import Query, Interval, JoinType, functions as fn
+from pypika import Query, JoinType
 
 logger = logging.Logger('fireant')
-
-reference_dimension_mappers = {
-    'yoy': lambda join_key: join_key + Interval(weeks=52),
-    'qoq': lambda join_key: join_key + Interval(quarters=1),
-    'mom': lambda join_key: join_key + Interval(weeks=4),
-    'wow': lambda join_key: join_key + Interval(weeks=1),
-}
-reference_metric_mappers = {
-    'd': lambda field, join_field: (field - join_field),
-    'p': lambda field, join_field: ((field - join_field) / fn.NullIf(join_field, 0)),
-}
 
 
 class QueryManager(object):
@@ -173,28 +162,41 @@ class QueryManager(object):
         wrapper_query = Query.from_(query).select(*[query.field(key).as_(key)
                                                     for key in list(dimensions.keys()) + list(metrics.keys())])
 
-        for reference_key, dimension_key in references.items():
-            dimension_f, metric_f = self._get_reference_mappers(reference_key)
+        for reference_key, schema in references.items():
+            dimension_key = schema['dimension']
 
-            dimensions, dfilters = self._replace_dim_for_ref(dfilters, dimension_key, dimensions,
-                                                             dimension_f)
-            ref_query = self._build_query_inner(table, joins, metrics, dimensions,
-                                                dfilters, mfilters, rollup)
+            dimensions, dfilters = self._replace_dim_for_ref(dfilters, dimension_key, dimensions, schema['interval'])
+            ref_query = self._build_query_inner(table, joins, metrics, dimensions, dfilters, mfilters, rollup)
 
             ref_criteria = query.field(dimension_key) == ref_query.field(dimension_key)
             for dkey in set(dimensions.keys()) - {dimension_key}:
                 ref_criteria &= query.field(dkey) == ref_query.field(dkey)
 
+            # Optional modifier function to modify the metric in the reference query.
+            # This is for delta and delta percentage references. It is None for normal references and this default should be used
+            modifier = schema.get('modifier')
+
+            reference_metrics = [
+                modifier(query.field(key), ref_query.field(key)).as_(self._suffix(key, reference_key))
+                for key in metrics.keys()
+                ] if modifier else [
+                ref_query.field(key).as_(self._suffix(key, reference_key))
+                for key in metrics.keys()]
+
             # Join the reference query and select the reference dimension and all metrics
             # This ignores additional dimensions since they are identical to the primary results
             wrapper_query = (
-                wrapper_query.join(ref_query, JoinType.left)
-                    .on(ref_criteria)
+                wrapper_query.join(ref_query, JoinType.left).on(ref_criteria)
                     # Don't select this for now
                     # .select(ref_dimension.as_(self._suffix(dimension_key, reference_key)))
-                    .select(
-                    *[metric_f(query.field(key), ref_query.field(key)).as_(self._suffix(key, reference_key))
-                      for key in metrics.keys()])
+                    .select(*[
+                    # Select the metrics after applying the modifier (such as Delta/Delta Percentage) if there is one
+                    modifier(query.field(key), ref_query.field(key)).as_(self._suffix(key, reference_key))
+                    for key in metrics.keys()
+                    ] if modifier else [
+                    # If no modifier, just select the metric from the subquery
+                    ref_query.field(key).as_(self._suffix(key, reference_key))
+                    for key in metrics.keys()])
             )
 
         return self._add_sorting(wrapper_query, [query.field(dkey) for dkey in dimensions.keys()])
@@ -269,68 +271,7 @@ class QueryManager(object):
         return '%s_%s' % (key, suffix) if suffix else key
 
     @staticmethod
-    def _get_reference_mappers(reference_key):
-        """
-        Selects the mapper functions for a reference operation.
-
-        :param reference_key:
-            A string identifier that maps to the reference operations.  This contains one to two parts separated by an
-            underscore '_' character.  The first part is required and maps to a reference criteria from the dict
-            reference_criterion.  The second part is optional and maps to a reference field from the dict
-            reference_field.
-
-            The reference criteria is the criteria used to link the values from the original query to the comparison
-            values.  For example, in wow (Week over Week), the criteria maps a date field to the same date field minus one
-            week.
-
-            The reference field is an optional part that modifies the selected field in the final results.  For example,
-            in wow_p (Week over Week change as a Percentage), the final field is the query field minus the comparison
-            field as a ratio of the join field.  This gives the change in value over the last week as a percentage of
-            the current value.  If the reference key does not contain two parts (no '_' character), then a function will
-            still be returned for metric_mapper, however it will not modify the final field.
-
-            Concretely, if the field is clicks and current value is 105 and the wow value is 100, then the change is
-            (105 - 100) = 5 clicks, then the wow-p value is (105 - 100) / 100 = 0.05.
-        :return:
-            Type: Tuple
-            (dimension_mapper, metric_mapper)
-        """
-        split_ref = reference_key.split('_')
-        if 1 < len(split_ref):
-            reference_key, opt_parts = split_ref[0], split_ref[1]
-        else:
-            reference_key, opt_parts = split_ref[0], None
-
-        return (
-            reference_dimension_mappers.get(reference_key, lambda join_key: join_key),
-            reference_metric_mappers.get(opt_parts, lambda field, join_field: join_field)
-        )
-
-    @staticmethod
-    def _build_reference_join_criterion(query, dimensions, criterion_f, dimension_key):
-        """
-        Returns join criterion for joining a reference query.
-
-        :param query:
-
-        :param dimensions:
-
-        :param criterion_f:
-
-        :param dimension_key:
-
-        :return:
-            join criterion for joining a reference query.
-        """
-        compared_dimension = dimensions[dimension_key]
-        cx = criterion_f(compared_dimension, query.field(dimension_key))
-        for dimension in dimensions.values():
-            if dimension is not compared_dimension:
-                cx &= dimension == dimension.for_(query)
-        return cx
-
-    @staticmethod
-    def _replace_dim_for_ref(dfilters, dimension_key, dimensions, dimension_f):
+    def _replace_dim_for_ref(dfilters, dimension_key, dimensions, interval):
         """
         Replaces the dimension used by a reference in the dimension schema and dimension filter schema.
 
@@ -339,7 +280,7 @@ class QueryManager(object):
         target_dimension = dimensions[dimension_key]
 
         new_dimensions = copy.deepcopy(dimensions)
-        new_dimensions[dimension_key] = dimension_f(target_dimension)
+        new_dimensions[dimension_key] = target_dimension + interval
 
         new_dfilters = []
         for dfilter in dfilters:
@@ -349,7 +290,8 @@ class QueryManager(object):
             try:
                 if dfilter.term.fields()[0] is target_dimension.fields()[0]:
                     dfilter = copy.deepcopy(dfilter)
-                    dfilter.term = dimension_f(dfilter.term)
+                    dfilter.term = dfilter.term + interval
+
             except (AttributeError, IndexError):
                 pass  # If the above if-expression cannot be evaluated, then its not the filter we are looking for
 
