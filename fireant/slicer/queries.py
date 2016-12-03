@@ -33,15 +33,15 @@ class QueryManager(object):
 
         :param metrics:
             Type: dict[str: pypika.Field]]
-            A dict containing metrics fields to query.  This value is required to contain at least one entry.  The key used
-            will match the corresponding column in the returned pd.DataFrame.
+            A dict containing metrics fields to query.  This value is required to contain at least one entry.  The key
+            used will match the corresponding column in the returned pd.DataFrame.
 
         :param dimensions:
             Type: OrderedDict[str: pypika.Field]]
-            (Optional) An OrderedDict containing indices to query.  If empty, a pd.Series will be returned containing one
-            value per metric.  If given one entry, a pd.DataFrame with a single index will be returned.  If more than one
-            value is given, then a pd.DataFrame with a multi-index will be returned.  The key used will match the
-            corresponding index level in the returned DataFrame.
+            (Optional) An OrderedDict containing indices to query.  If empty, a pd.Series will be returned containing
+            one value per metric.  If given one entry, a pd.DataFrame with a single index will be returned.  If more
+            than one value is given, then a pd.DataFrame with a multi-index will be returned.  The key used will match
+            the corresponding index level in the returned DataFrame.
 
             If a dict is used instead of an OrderedDict, then the index levels cannot be guarenteed, so in most cases an
             OrderedDict should be used.
@@ -80,7 +80,8 @@ class QueryManager(object):
             Valid modifier types are as follows:
 
             - *d*: Delta - difference between previous value and current
-            - *p*: Delta Percentage - difference between previous value and current as a percentage of the previous value.
+            - *p*: Delta Percentage - difference between previous value and current as a percentage of the previous
+                    value.
 
             Examples:
 
@@ -172,8 +173,8 @@ class QueryManager(object):
             for dkey in set(dimensions.keys()) - {dimension_key}:
                 ref_criteria &= query.field(dkey) == ref_query.field(dkey)
 
-            # Optional modifier function to modify the metric in the reference query.
-            # This is for delta and delta percentage references. It is None for normal references and this default should be used
+            # Optional modifier function to modify the metric in the reference query. This is for delta and delta
+            # percentage references. It is None for normal references and this default should be used
             modifier = schema.get('modifier')
 
             reference_metrics = [

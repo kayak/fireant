@@ -1,22 +1,28 @@
 # coding: utf-8
 
-from .base import Transformer, TransformationException
-from .datatables import DataTablesRowIndexTransformer, DataTablesColumnIndexTransformer
-from .datatables import (DataTablesRowIndexTransformer, DataTablesColumnIndexTransformer, CSVRowIndexTransformer,
+from .base import (Transformer,
+                   TransformationException)
+from .datatables import (DataTablesRowIndexTransformer,
+                         DataTablesColumnIndexTransformer)
+from .datatables import (DataTablesRowIndexTransformer,
+                         DataTablesColumnIndexTransformer,
+                         CSVRowIndexTransformer,
                          CSVColumnIndexTransformer)
-from .highcharts import HighchartsLineTransformer, HighchartsColumnTransformer, HighchartsBarTransformer
-from .notebooks import (PandasRowIndexTransformer, PandasColumnIndexTransformer, MatplotlibLineChartTransformer,
+from .highcharts import (HighchartsLineTransformer,
+                         HighchartsColumnTransformer,
+                         HighchartsBarTransformer)
+from .notebooks import (PandasRowIndexTransformer,
+                        PandasColumnIndexTransformer,
+                        MatplotlibLineChartTransformer,
                         MatplotlibBarChartTransformer)
 
-notebooks_tx = {
-    'row_index_table': PandasRowIndexTransformer(),
-    'column_index_table': PandasColumnIndexTransformer(),
-    'line_chart': MatplotlibLineChartTransformer(),
-    'bar_chart': MatplotlibBarChartTransformer(),
-}
-
-bundles = {
-    'notebooks': notebooks_tx,
+BUNDLES = {
+    'notebooks': {
+        'row_index_table': PandasRowIndexTransformer(),
+        'column_index_table': PandasColumnIndexTransformer(),
+        'line_chart': MatplotlibLineChartTransformer(),
+        'bar_chart': MatplotlibBarChartTransformer(),
+    },
     'highcharts': {
         'line_chart': HighchartsLineTransformer(),
         'column_chart': HighchartsColumnTransformer(),

@@ -104,7 +104,7 @@ class SlicerManager(QueryManager, OperationManager):
             'dfilters': dfilters_schmea,
 
             'joins': list(metric_joins_schema | dimension_joins_schema),
-            'references': self._references_schema(references, dimensions, dimensions_schema),
+            'references': self._references_schema(references, dimensions),
             'rollup': [level
                        for operation in operations
                        if 'totals' == operation.key
@@ -237,20 +237,20 @@ class SlicerManager(QueryManager, OperationManager):
 
     def _filters_schema(self, elements, filters, default_value_func, element_label='dimension'):
         filters_schema = []
-        for f in filters:
-            if isinstance(f.element_key, (tuple, list)):
-                element_key, modifier = f.element_key
+        for filter in filters:
+            if isinstance(filter.element_key, (tuple, list)):
+                element_key, modifier = filter.element_key
             else:
-                element_key, modifier = f.element_key, None
+                element_key, modifier = filter.element_key, None
 
             element = elements.get(element_key)
             if not element:
                 raise SlicerException(
                     'Unable to apply filter [{filter}].  '
                     'No such {element} with key [{key}].'.format(
-                        filter=f,
+                        filter=filter,
                         element=element_label,
-                        key=f.element_key
+                        key=filter.element_key
                     ))
 
             if hasattr(element, 'display_field') and 'display' == modifier:
@@ -259,7 +259,7 @@ class SlicerManager(QueryManager, OperationManager):
             else:
                 definition = element.definition or default_value_func(element.key)
 
-            filters_schema.append(f.schemas(definition))
+            filters_schema.append(filter.schemas(definition))
 
         return filters_schema
 
@@ -283,7 +283,7 @@ class SlicerManager(QueryManager, OperationManager):
 
         return display_dims
 
-    def _references_schema(self, references, dimensions, schema_dimensions):
+    def _references_schema(self, references, dimensions):
         dimension_keys = {dimension[0] if isinstance(dimension, (list, tuple, set)) else dimension
                           for dimension in dimensions}
 
@@ -392,12 +392,12 @@ class TransformerManager(object):
                                references=references, operations=operations)
 
         # Loads data and transforms it with a given transformer.
-        df = self.manager.data(metrics=metrics, dimensions=dimensions,
-                               metric_filters=metric_filters, dimension_filters=dimension_filters,
-                               references=references, operations=operations)
+        dataframe = self.manager.data(metrics=metrics, dimensions=dimensions,
+                                      metric_filters=metric_filters, dimension_filters=dimension_filters,
+                                      references=references, operations=operations)
 
         display_schema = self.manager.display_schema(metrics, dimensions, references, operations)
 
-        df = utils.correct_dimension_level_order(df, display_schema)
+        dataframe = utils.correct_dimension_level_order(dataframe, display_schema)
 
-        return tx.transform(df, display_schema)
+        return tx.transform(dataframe, display_schema)

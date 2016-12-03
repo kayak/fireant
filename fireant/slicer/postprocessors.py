@@ -23,17 +23,11 @@ def get_loss_metric(dataframe, schema, reference=None):
     return error_series
 
 
-value_functions = {
-    'cumsum': get_cum_metric,
-    'cummean': get_cum_metric,
-    'l1loss': get_loss_metric,
-    'l2loss': get_loss_metric,
-}
-operation_functions = {
-    'cumsum': lambda x: x.expanding(min_periods=1).sum(),
-    'cummean': lambda x: x.expanding(min_periods=1).mean(),
-    'l1loss': lambda x: x.abs().expanding(min_periods=1).mean(),
-    'l2loss': lambda x: x.pow(2).expanding(min_periods=1).mean(),
+FUNCTIONS = {
+    'cumsum': (get_cum_metric, lambda x: x.expanding(min_periods=1).sum()),
+    'cummean': (get_cum_metric, lambda x: x.expanding(min_periods=1).mean()),
+    'l1loss': (get_loss_metric, lambda x: x.abs().expanding(min_periods=1).mean()),
+    'l2loss': (get_loss_metric, lambda x: x.pow(2).expanding(min_periods=1).mean()),
 }
 
 
@@ -44,7 +38,7 @@ class OperationManager(object):
         for schema in operation_schema:
             key = schema['key']
 
-            value_func, operation_func = value_functions.get(key), operation_functions.get(schema['key'])
+            value_func, operation_func = FUNCTIONS.get(schema['key'])
             if not value_func or not operation_func:
                 continue
 

@@ -5,7 +5,7 @@ import pandas as pd
 from fireant import settings, utils
 from .base import Transformer, TransformationException
 
-colors = {
+COLORS = {
     'kayak': ['#FF690F', '#1A1A1A', '#3083F0', '#00B86B', '#D10244', '#FFDBE5', '#7B4F4B', '#B903AA', '#B05B6F'],
     'dark-blue': ["#DDDF0D", "#55BF3B", "#DF5353", "#7798BF", "#AAEEEE", "#FF0066", "#EEAAEE",
                   "#55BF3B", "#DF5353", "#7798BF", "#AAEEEE"],
@@ -100,7 +100,7 @@ class HighchartsLineTransformer(Transformer):
                        if isinstance(dataframe.columns, pd.MultiIndex)
                        else dataframe.columns)
 
-        color = colors.get(settings.highcharts_colors, 'grid')
+        color = COLORS.get(settings.highcharts_colors, 'grid')
         n_colors = len(color)
 
         return [self._make_series_item(idx, item, dim_ordinal, display_schema, metrics, reference, color[i % n_colors])

@@ -38,6 +38,40 @@ def _pretty(value, schema):
     )
 
 
+def _format_value(value, metric):
+    raw_value = _safe(value)
+    return {'value': raw_value, 'display': _pretty(raw_value, metric)}
+
+
+def _format_column_display(csv_df, metrics, dimensions):
+    column_display = []
+    for idx in list(csv_df.columns):
+        metric_value, dimension_values = idx[0], idx[1:]
+
+        dimension_displays = []
+        for dimension_level, dimension_value in zip(csv_df.columns.names[1:], dimension_values):
+            if 'display_options' in dimensions[dimension_level]:
+                dimension_display = dimensions[dimension_level]['display_options'].get(dimension_value,
+                                                                                       dimension_value)
+            else:
+                dimension_display = dimension_value
+
+            dimension_display = _safe(dimension_display)
+
+            if dimension_display is not None:
+                dimension_displays.append(dimension_display)
+
+        if dimension_displays:
+            column_display.append('{metric} ({dimensions})'.format(
+                metric=metrics[metric_value]['label'],
+                dimensions=', '.join(dimension_displays),
+            ))
+        else:
+            column_display.append(metrics[metric_value]['label'])
+
+    return column_display
+
+
 class DataTablesRowIndexTransformer(Transformer):
     def transform(self, dataframe, display_schema):
         dataframe = self._prepare_dataframe(dataframe, display_schema['dimensions'])
@@ -151,33 +185,27 @@ class DataTablesRowIndexTransformer(Transformer):
 
             i += 1
 
-    def _render_metric_data(self, df, dimensions, metrics, references):
-        if not isinstance(df.index, pd.MultiIndex):
+    def _render_metric_data(self, dataframe, dimensions, metrics, references):
+        if not isinstance(dataframe.index, pd.MultiIndex):
             for metric_key, label in metrics.items():
-                yield metric_key, self._format_value(df[metric_key], metrics[metric_key])
+                yield metric_key, _format_value(dataframe[metric_key], metrics[metric_key])
 
         if references:
             for reference in [''] + list(references):
-                for key, value in self._recurse_dimensions(df[reference], dimensions, metrics, reference or None):
+                for key, value in self._recurse_dimensions(dataframe[reference], dimensions, metrics,
+                                                           reference or None):
                     yield key, value
             return
 
-        for key, value in self._recurse_dimensions(df, dimensions, metrics):
+        for key, value in self._recurse_dimensions(dataframe, dimensions, metrics):
             yield key, value
 
-    def _recurse_dimensions(self, df, dimensions, metrics, reference=None):
+    def _recurse_dimensions(self, dataframe, dimensions, metrics, reference=None):
         if reference:
-            return [(reference, dict(self._recurse_dimensions(df, dimensions, metrics)))]
+            return [(reference, dict(self._recurse_dimensions(dataframe, dimensions, metrics)))]
 
-        return [(metric_key, self._format_value(df[metric_key], metrics[metric_key]))
+        return [(metric_key, _format_value(dataframe[metric_key], metrics[metric_key]))
                 for metric_key, label in metrics.items()]
-
-    def _format_value(self, x, metric):
-        raw = _safe(x)
-        return {
-            'value': raw,
-            'display': _pretty(raw, metric)
-        }
 
 
 class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
@@ -202,7 +230,7 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
         # Iterate through the pivoted levels
         i = 2 if display_schema.get('references') else 1
         data_keys, levels = [], []
-        for dimension_key, dimension in list(display_schema['dimensions'].items())[1:]:
+        for dimension in list(display_schema['dimensions'].values())[1:]:
             if 'display_options' in dimension:
                 level_key = metric_column[i]
                 level_display = (dimension['display_options'].get(level_key, None)
@@ -245,16 +273,17 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
             'render': {'type': 'value', '_': 'display'}
         }
 
-    def _recurse_dimensions(self, df, dimensions, metrics, reference=None):
+    def _recurse_dimensions(self, dataframe, dimensions, metrics, reference=None):
         if reference or not dimensions:
-            return super(DataTablesColumnIndexTransformer, self)._recurse_dimensions(df, dimensions, metrics, reference)
+            return super(DataTablesColumnIndexTransformer, self)._recurse_dimensions(dataframe, dimensions, metrics,
+                                                                                     reference)
 
         if 'display_field' in dimensions[0][1]:
-            return [(key, dict(self._recurse_dimensions(df[:, key, display], dimensions[1:], metrics)))
-                    for key, display in zip(*df.index.levels[1:3])]
+            return [(key, dict(self._recurse_dimensions(dataframe[:, key, display], dimensions[1:], metrics)))
+                    for key, display in zip(*dataframe.index.levels[1:3])]
 
-        return [(str(level), dict(self._recurse_dimensions(df[:, level], dimensions[1:], metrics)))
-                for level in df.index.levels[1]]
+        return [(str(level), dict(self._recurse_dimensions(dataframe[:, level], dimensions[1:], metrics)))
+                for level in dataframe.index.levels[1]]
 
 
 class CSVRowIndexTransformer(DataTablesRowIndexTransformer):
@@ -267,7 +296,7 @@ class CSVRowIndexTransformer(DataTablesRowIndexTransformer):
 
         csv_df = self._format_index(csv_df, display_schema['dimensions'])
 
-        row_dimension_labels = self._row_dimension_labels(display_schema['dimensions'])
+        row_dimension_labels = self._format_row_dimension_labels(display_schema['dimensions'])
         return csv_df.to_csv(index_label=row_dimension_labels)
 
     def _format_index(self, csv_df, dimensions):
@@ -312,7 +341,7 @@ class CSVRowIndexTransformer(DataTablesRowIndexTransformer):
     def _format_columns(self, dataframe, metrics, dimensions):
         return dataframe.rename(columns=lambda metric: metrics[metric].get('label', metric))
 
-    def _row_dimension_labels(self, dimensions):
+    def _format_row_dimension_labels(self, dimensions):
         return [dimension['label']
                 for dimension in dimensions.values()]
 
@@ -321,39 +350,11 @@ class CSVColumnIndexTransformer(DataTablesColumnIndexTransformer, CSVRowIndexTra
     def _format_columns(self, dataframe, metrics, dimensions):
         if 1 < len(dimensions):
             csv_df = self._prepare_dataframe(dataframe, dimensions)
-            csv_df.columns = self._format_column_display(csv_df, metrics, dimensions)
+            csv_df.columns = _format_column_display(csv_df, metrics, dimensions)
             return csv_df
 
         return super(CSVColumnIndexTransformer, self)._format_columns(dataframe, metrics, dimensions)
 
-    def _row_dimension_labels(self, dimensions):
+    def _format_row_dimension_labels(self, dimensions):
         return [dimension['label']
                 for dimension in list(dimensions.values())[:1]]
-
-    def _format_column_display(self, csv_df, metrics, dimensions):
-        column_display = []
-        for idx in list(csv_df.columns):
-            metric_value, dimension_values = idx[0], idx[1:]
-
-            dimension_displays = []
-            for dimension_level, dimension_value in zip(csv_df.columns.names[1:], dimension_values):
-                if 'display_options' in dimensions[dimension_level]:
-                    dimension_display = dimensions[dimension_level]['display_options'].get(dimension_value,
-                                                                                           dimension_value)
-                else:
-                    dimension_display = dimension_value
-
-                dimension_display = _safe(dimension_display)
-
-                if dimension_display is not None:
-                    dimension_displays.append(dimension_display)
-
-            if dimension_displays:
-                column_display.append('{metric} ({dimensions})'.format(
-                    metric=metrics[metric_value]['label'],
-                    dimensions=', '.join(dimension_displays),
-                ))
-            else:
-                column_display.append(metrics[metric_value]['label'])
-
-        return column_display

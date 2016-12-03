@@ -5,6 +5,13 @@ from fireant import settings
 from . import Transformer, TransformationException
 
 
+def _format_dimension_labels(dimension):
+    if 'display_field' in dimension:
+        return ['%s ID' % dimension['label'], dimension['label']]
+
+    return [dimension['label']]
+
+
 class PandasRowIndexTransformer(Transformer):
     def transform(self, dataframe, display_schema):
         dataframe = self._set_display_options(dataframe, display_schema)
@@ -40,7 +47,7 @@ class PandasRowIndexTransformer(Transformer):
         dataframe = dataframe.copy()
         dataframe.index.names = [label
                                  for key, dimension in dimensions.items()
-                                 for label in self._dimension_labels(dimension)]
+                                 for label in _format_dimension_labels(dimension)]
 
         return dataframe
 
@@ -58,13 +65,6 @@ class PandasRowIndexTransformer(Transformer):
             dataframe.columns = labels
 
         return dataframe
-
-    def _dimension_labels(self, dimension):
-        if 'display_field' in dimension:
-            return ['%s ID' % dimension['label'], dimension['label']]
-
-        return [dimension['label']]
-
 
 class PandasColumnIndexTransformer(PandasRowIndexTransformer):
     def transform(self, dataframe, display_schema):

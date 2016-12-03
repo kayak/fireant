@@ -204,7 +204,7 @@ class Slicer(object):
         self.hint_table = hint_table
 
         self.manager = SlicerManager(self)
-        for name, bundle in transformers.bundles.items():
+        for name, bundle in transformers.BUNDLES.items():
             setattr(self, name, TransformerManager(self.manager, bundle))
 
 
