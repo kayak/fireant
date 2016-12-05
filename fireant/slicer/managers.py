@@ -173,7 +173,7 @@ class SlicerManager(QueryManager, OperationManager):
             raise SlicerException('Invalid metrics included in request: '
                                   '[%s]' % ', '.join(invalid_metrics))
 
-        metrics = {}
+        metrics = OrderedDict()
         for key in keys:
             schema_metric = self.slicer.metrics.get(key)
 
@@ -188,7 +188,7 @@ class SlicerManager(QueryManager, OperationManager):
             raise SlicerException('Invalid dimensions included in request: '
                                   '[%s]' % ', '.join(invalid_dimensions))
 
-        dimensions = {}
+        dimensions = OrderedDict()
         for dimension in keys:
             # unpack tuples for args
             if isinstance(dimension, (list, tuple)):
@@ -401,9 +401,6 @@ class TransformerManager(object):
         dataframe = self.manager.data(metrics=metrics, dimensions=dimensions,
                                       metric_filters=metric_filters, dimension_filters=dimension_filters,
                                       references=references, operations=operations)
-
         display_schema = self.manager.display_schema(metrics, dimensions, references, operations)
-
-        dataframe = utils.correct_dimension_level_order(dataframe, display_schema)
 
         return tx.transform(dataframe, display_schema)
