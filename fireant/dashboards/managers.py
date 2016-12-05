@@ -35,11 +35,14 @@ class WidgetGroupManager(object):
                 references=references,
             )
 
-            if display_schema['references']:
-                widget_columns = [(reference, metric)
-                                  for reference in [''] + list(display_schema['references'].keys())
-                                  for metric in widget.metrics]
-            else:
-                widget_columns = widget.metrics
+            if references:
+                # This escapes a pandas bug where a data frame subset of columns still returns the columns of the
+                # original data frame
+                reference_keys = [''] + [ref.key for ref in references]
+                subset_columns = pd.MultiIndex.from_product([reference_keys, widget.metrics])
+                subset = pd.DataFrame(dataframe[subset_columns], columns=subset_columns)
 
-            yield widget.transformer.transform(dataframe[widget_columns], display_schema)
+            else:
+                subset = dataframe[widget.metrics]
+
+            yield widget.transformer.transform(subset, display_schema)
