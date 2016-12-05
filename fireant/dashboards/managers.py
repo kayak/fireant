@@ -42,5 +42,4 @@ class WidgetGroupManager(object):
             else:
                 widget_columns = widget.metrics
 
-            widget_df = utils.correct_dimension_level_order(pd.DataFrame(dataframe[widget_columns]), display_schema)
-            yield widget.transformer.transform(widget_df, display_schema)
+            yield widget.transformer.transform(dataframe[widget_columns], display_schema)
