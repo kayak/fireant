@@ -81,13 +81,6 @@ class SlicerManager(QueryManager, OperationManager):
 
         :return:
         """
-        metrics_schema = self._metrics_schema(metrics, operations)
-        dimensions_schema = self._dimensions_schema(dimensions)
-
-        mfilters_schema = self._filters_schema(self.slicer.metrics, metric_filters, self._default_metric_definition,
-                                               element_label='metric')
-        dfilters_schmea = self._filters_schema(self.slicer.dimensions, dimension_filters,
-                                               self._default_dimension_definition)
 
         metric_joins_schema = self._joins_schema(set(metrics) | {mf.element_key for mf in metric_filters},
                                                  self.slicer.metrics)
@@ -97,19 +90,19 @@ class SlicerManager(QueryManager, OperationManager):
             'database': self.slicer.database,
             'table': self.slicer.table,
 
-            'metrics': metrics_schema,
-            'dimensions': dimensions_schema,
+            'metrics': self._metrics_schema(metrics, operations),
+            'dimensions': self._dimensions_schema(dimensions),
 
-            'mfilters': mfilters_schema,
-            'dfilters': dfilters_schmea,
+            'mfilters': self._filters_schema(self.slicer.metrics, metric_filters,
+                                             self._default_metric_definition,
+                                             element_label='metric'),
+            'dfilters': self._filters_schema(self.slicer.dimensions,
+                                             dimension_filters,
+                                             self._default_dimension_definition),
 
             'joins': list(metric_joins_schema | dimension_joins_schema),
             'references': self._references_schema(references, dimensions),
-            'rollup': [level
-                       for operation in operations
-                       if 'totals' == operation.key
-                       for dimension in operation.dimension_keys
-                       for level in self.slicer.dimensions[dimension].levels()],
+            'rollup': self._totals_schema(dimensions, operations),
         }
 
     def dimension_option_schema(self, dimension, filters, limit=None):
@@ -190,10 +183,7 @@ class SlicerManager(QueryManager, OperationManager):
         return metrics
 
     def _dimensions_schema(self, keys):
-        invalid_dimensions = {key[0]
-                              if isinstance(key, (tuple, list))
-                              else key
-                              for key in keys} - set(self.slicer.dimensions)
+        invalid_dimensions = {utils.slice_first(key) for key in keys} - set(self.slicer.dimensions)
         if invalid_dimensions:
             raise SlicerException('Invalid dimensions included in request: '
                                   '[%s]' % ', '.join(invalid_dimensions))
@@ -227,7 +217,7 @@ class SlicerManager(QueryManager, OperationManager):
 
         for key in keys:
             schema_metric = elements.get(utils.slice_first(key))
-            if schema_metric.joins:
+            if schema_metric and schema_metric.joins:
                 joins |= set(schema_metric.joins)
 
         return {(self.slicer.joins[key].table,
@@ -284,8 +274,7 @@ class SlicerManager(QueryManager, OperationManager):
         return display_dims
 
     def _references_schema(self, references, dimensions):
-        dimension_keys = {dimension[0] if isinstance(dimension, (list, tuple, set)) else dimension
-                          for dimension in dimensions}
+        dimension_keys = {utils.slice_first(dimension) for dimension in dimensions}
 
         schema_references = OrderedDict()
         for reference in references:
@@ -325,7 +314,7 @@ class SlicerManager(QueryManager, OperationManager):
                                    if getattr(schema, attr) is not None}
 
         for operation in operations:
-            metric_key = getattr(operation, 'metric_key')
+            metric_key = getattr(operation, 'metric_key', None)
             if metric_key is None:
                 continue
 
@@ -337,6 +326,23 @@ class SlicerManager(QueryManager, OperationManager):
             display[key]['label'] = '{} {}'.format(metric_schema.label, operation.label)
 
         return display
+
+    def _totals_schema(self, dimensions, operations):
+        dimension_set = set(utils.slice_first(dimension) for dimension in dimensions)
+        totals, missing_dimensions = [], set()
+        for operation in operations:
+            if 'totals' != operation.key:
+                continue
+
+            missing_dimensions |= set(operation.dimension_keys) - dimension_set
+            totals += [level
+                       for dimension in operation.dimension_keys
+                       for level in self.slicer.dimensions[dimension].levels()]
+
+        if missing_dimensions:
+            raise SlicerException("Missing dimensions with keys: {}".format(", ".join(missing_dimensions)))
+
+        return totals
 
 
 class TransformerManager(object):
