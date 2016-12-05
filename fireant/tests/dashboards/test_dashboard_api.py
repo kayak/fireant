@@ -301,9 +301,9 @@ class DashboardSchemaTests(DashboardTests):
         metrics = ['clicks', 'conversions']
         dimensions = ['date']
         references = [WoW('date')]
-        self.test_slicer.manager.data.return_value = pd.DataFrame(columns=[(ref, metric)
-                                                                           for ref in ['', 'wow']
-                                                                           for metric in metrics])
+        self.test_slicer.manager.data.return_value = pd.DataFrame(
+            columns=pd.MultiIndex.from_product([['', 'wow'], metrics])
+        )
         self.test_slicer.manager.display_schema.side_effect = [
             {'metrics': metrics[:1], 'dimensions': dimensions, 'references': {'wow': 'date'}},
             {'metrics': metrics[1:], 'dimensions': dimensions, 'references': {'wow': 'date'}},
@@ -334,9 +334,9 @@ class DashboardSchemaTests(DashboardTests):
         metrics = ['clicks', 'conversions']
         dimensions = ['date']
         references = [WoW('date')]
-        self.test_slicer.manager.data.return_value = pd.DataFrame(columns=[(ref, metric)
-                                                                           for ref in ['', 'wow']
-                                                                           for metric in metrics])
+        self.test_slicer.manager.data.return_value = pd.DataFrame(
+            columns=pd.MultiIndex.from_product([['', 'wow'], metrics])
+        )
         self.test_slicer.manager.display_schema.side_effect = [
             {'metrics': metrics[:1], 'dimensions': dimensions, 'references': {'wow': 'date'}},
             {'metrics': metrics[1:], 'dimensions': dimensions, 'references': {'wow': 'date'}},
@@ -427,13 +427,15 @@ class DashboardAPITests(DashboardTests):
     def test_api_with_reference(self, mock_transformer):
         metrics = ['clicks', 'conversions']
         dimensions = ['date']
-        self.test_slicer.manager.data.return_value = pd.DataFrame(columns=metrics)
+        self.test_slicer.manager.data.return_value = pd.DataFrame(
+            columns=pd.MultiIndex.from_product([['', 'wow'], metrics])
+        )
         self.test_slicer.manager.display_schema.side_effect = [
-            {'metrics': metrics[:1], 'dimensions': dimensions, 'references': []},
-            {'metrics': metrics[1:], 'dimensions': dimensions, 'references': []},
+            {'metrics': metrics[:1], 'dimensions': dimensions, 'references': {}},
+            {'metrics': metrics[1:], 'dimensions': dimensions, 'references': {}},
         ]
 
-        reference = WoW('date')
+        references = [WoW('date')]
         test_render = WidgetGroup(
             slicer=self.test_slicer,
 
@@ -446,15 +448,15 @@ class DashboardAPITests(DashboardTests):
         )
 
         result = test_render.manager.render(
-            references=[reference],
+            references=references,
         )
 
         self.assert_slicer_queried(
             metrics,
             dimensions=dimensions,
-            references=[reference],
+            references=references,
         )
-        self.assert_result_transformed(test_render.widgets, dimensions, mock_transformer, result)
+        self.assert_result_transformed(test_render.widgets, dimensions, mock_transformer, result, references)
 
     @patch('fireant.dashboards.LineChartWidget.transformer')
     def test_remove_duplicated_dimension_keys(self, mock_transformer):
