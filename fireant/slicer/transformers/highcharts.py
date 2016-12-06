@@ -50,10 +50,6 @@ class HighchartsLineTransformer(Transformer):
     def prevalidate_request(self, slicer, metrics, dimensions,
                             metric_filters, dimension_filters,
                             references, operations):
-        super(HighchartsLineTransformer, self).prevalidate_request(slicer, metrics, dimensions,
-                                                                   metric_filters, dimension_filters,
-                                                                   references, operations)
-
         if not dimensions or not slicer.dimensions:
             raise TransformationException(MISSING_CONT_DIM_MESSAGE)
 
@@ -221,10 +217,6 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
     def prevalidate_request(self, slicer, metrics, dimensions,
                             metric_filters, dimension_filters,
                             references, operations):
-        super(HighchartsColumnTransformer, self).prevalidate_request(slicer, metrics, dimensions,
-                                                                     metric_filters, dimension_filters,
-                                                                     references, operations)
-
         if dimensions and 2 < len(dimensions):
             # Too many dimensions
             raise TransformationException('Highcharts bar and column charts support at a maximum two dimensions.  '
