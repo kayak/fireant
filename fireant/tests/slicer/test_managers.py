@@ -1,4 +1,5 @@
 # coding: utf-8
+import copy
 from unittest import TestCase
 
 from mock import patch, MagicMock
@@ -129,6 +130,18 @@ class ManagerInitializationTests(TestCase):
             'dimensions': ['cat'],
         }
 
+        with self.assertRaises(TransformationException):
+            self._test_transform(self.slicer.highcharts.line_chart, mock_transform, request)
+
+    @patch.object(HighchartsLineTransformer, 'transform')
+    def test_transform_highcharts_require_cont_dim_on_slicer_with_no_dims(self, mock_transform):
+        request = {
+            'metrics': ['foo', 'bar'],
+            'dimensions': [],
+        }
+
+        slicer = copy.deepcopy(self.slicer)
+        slicer.dimensions = []
         with self.assertRaises(TransformationException):
             self._test_transform(self.slicer.highcharts.line_chart, mock_transform, request)
 

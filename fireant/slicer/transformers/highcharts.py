@@ -35,6 +35,11 @@ def _format_data_point(value):
     return value
 
 
+MISSING_CONT_DIM_MESSAGE = ('Highcharts line charts require a continuous dimension as the first '
+                            'dimension.  Please add a continuous dimension from your Slicer to '
+                            'your request.')
+
+
 class HighchartsLineTransformer(Transformer):
     """
     Transforms data frames into Highcharts format for several chart types, particularly line or bar charts.
@@ -49,13 +54,13 @@ class HighchartsLineTransformer(Transformer):
                                                                    metric_filters, dimension_filters,
                                                                    references, operations)
 
-        from fireant.slicer import ContinuousDimension
+        if not dimensions or not slicer.dimensions:
+            raise TransformationException(MISSING_CONT_DIM_MESSAGE)
 
+        from fireant.slicer import ContinuousDimension
         dimension0 = slicer.dimensions[dimensions[0]]
-        if not dimensions or not isinstance(dimension0, ContinuousDimension):
-            raise TransformationException('Highcharts line charts require a continuous dimension as the first '
-                                          'dimension.  Please add a continuous dimension from your Slicer to '
-                                          'your request.')
+        if not isinstance(dimension0, ContinuousDimension):
+            raise TransformationException(MISSING_CONT_DIM_MESSAGE)
 
     def transform(self, dataframe, display_schema):
         has_references = isinstance(dataframe.columns, pd.MultiIndex)
