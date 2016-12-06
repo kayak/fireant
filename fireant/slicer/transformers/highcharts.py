@@ -1,8 +1,8 @@
 # coding: utf-8
 import numpy as np
 import pandas as pd
-from fireant import settings, utils
 
+from fireant import settings, utils
 from .base import Transformer, TransformationException
 
 COLORS = {
@@ -221,9 +221,9 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
     def prevalidate_request(self, slicer, metrics, dimensions,
                             metric_filters, dimension_filters,
                             references, operations):
-        super(HighchartsLineTransformer, self).prevalidate_request(slicer, metrics, dimensions,
-                                                                   metric_filters, dimension_filters,
-                                                                   references, operations)
+        super(HighchartsColumnTransformer, self).prevalidate_request(slicer, metrics, dimensions,
+                                                                     metric_filters, dimension_filters,
+                                                                     references, operations)
 
         if dimensions and 2 < len(dimensions):
             # Too many dimensions

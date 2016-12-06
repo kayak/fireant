@@ -226,20 +226,20 @@ class SlicerManager(QueryManager, OperationManager):
 
     def _filters_schema(self, elements, filters, default_value_func, element_label='dimension'):
         filters_schema = []
-        for filter in filters:
-            if isinstance(filter.element_key, (tuple, list)):
-                element_key, modifier = filter.element_key
+        for filter_item in filters:
+            if isinstance(filter_item.element_key, (tuple, list)):
+                element_key, modifier = filter_item.element_key
             else:
-                element_key, modifier = filter.element_key, None
+                element_key, modifier = filter_item.element_key, None
 
             element = elements.get(element_key)
             if not element:
                 raise SlicerException(
                     'Unable to apply filter [{filter}].  '
                     'No such {element} with key [{key}].'.format(
-                        filter=filter,
+                        filter=filter_item,
                         element=element_label,
-                        key=filter.element_key
+                        key=filter_item.element_key
                     ))
 
             if hasattr(element, 'display_field') and 'display' == modifier:
@@ -248,7 +248,7 @@ class SlicerManager(QueryManager, OperationManager):
             else:
                 definition = element.definition or default_value_func(element.key)
 
-            filters_schema.append(filter.schemas(definition))
+            filters_schema.append(filter_item.schemas(definition))
 
         return filters_schema
 
