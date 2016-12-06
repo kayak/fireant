@@ -1,8 +1,8 @@
 # coding: utf-8
 import numpy as np
 import pandas as pd
-
 from fireant import settings, utils
+
 from .base import Transformer, TransformationException
 
 COLORS = {
@@ -96,9 +96,9 @@ class HighchartsLineTransformer(Transformer):
         }
 
     def yaxis_options(self, dataframe, dim_ordinal, display_schema):
-        return [{
-            'title': None
-        }] * len(display_schema['metrics'])
+        axes = {metric_schema.get('axis')
+                for metric_schema in display_schema['metrics'].values()}
+        return [{'title': None}] * len(axes)
 
     def _make_series(self, dataframe, dim_ordinal, display_schema, reference=None):
         metrics = list(dataframe.columns.levels[0]
@@ -117,7 +117,7 @@ class HighchartsLineTransformer(Transformer):
             'name': self._format_label(idx, dim_ordinal, display_schema, reference),
             'data': self._format_data(item),
             'tooltip': self._format_tooltip(display_schema['metrics'][metric_key]),
-            'yAxis': metrics.index(utils.slice_first(idx)),
+            'yAxis': display_schema['metrics'][metric_key].get('axis', 0),
             'color': color,
             'dashStyle': 'Dot' if reference else 'Solid'
         }

@@ -173,14 +173,14 @@ class SlicerManager(QueryManager, OperationManager):
             raise SlicerException('Invalid metrics included in request: '
                                   '[%s]' % ', '.join(invalid_metrics))
 
-        metrics = OrderedDict()
+        schema_metrics = OrderedDict()
         for key in keys:
             schema_metric = self.slicer.metrics.get(key)
 
-            for key, definition in schema_metric.schemas():
-                metrics[key] = definition or self._default_metric_definition(key)
+            for metric_key, definition in schema_metric.schemas():
+                schema_metrics[metric_key] = definition or self._default_metric_definition(metric_key)
 
-        return metrics
+        return schema_metrics
 
     def _dimensions_schema(self, keys):
         invalid_dimensions = {utils.slice_first(key) for key in keys} - set(self.slicer.dimensions)
@@ -216,14 +216,13 @@ class SlicerManager(QueryManager, OperationManager):
         joins = set()
 
         for key in keys:
-            schema_metric = elements.get(utils.slice_first(key))
-            if schema_metric and schema_metric.joins:
-                joins |= set(schema_metric.joins)
+            element = elements.get(utils.slice_first(key))
+            if element and element.joins:
+                joins |= set(element.joins)
 
         return {(self.slicer.joins[key].table,
                  self.slicer.joins[key].criterion,
-                 self.slicer.joins[key].join_type)
-                for key in joins}
+                 self.slicer.joins[key].join_type) for key in joins}
 
     def _filters_schema(self, elements, filters, default_value_func, element_label='dimension'):
         filters_schema = []
@@ -307,23 +306,31 @@ class SlicerManager(QueryManager, OperationManager):
 
     def _display_metrics(self, metrics, operations):
         display = OrderedDict()
-        for metric_key in metrics:
-            schema = self.slicer.metrics[metric_key]
-            display[metric_key] = {attr: getattr(schema, attr)
-                                   for attr in ['label', 'precision', 'prefix', 'suffix']
-                                   if getattr(schema, attr) is not None}
+
+        axis = 0
+        for metrics_level in metrics:
+            for metric_key in utils.wrap_list(metrics_level):
+                schema = self.slicer.metrics[metric_key]
+                display[metric_key] = {attr: getattr(schema, attr)
+                                       for attr in ['label', 'precision', 'prefix', 'suffix']
+                                       if getattr(schema, attr) is not None}
+                display[metric_key]["axis"] = axis
+                axis += 1
 
         for operation in operations:
-            metric_key = getattr(operation, 'metric_key', None)
-            if metric_key is None:
+            if not hasattr(operation, 'metric_key'):
                 continue
 
-            key = '{}_{}'.format(metric_key, operation.key)
+            metric_key = operation.metric_key
             metric_schema = self.slicer.metrics[metric_key]
+
+            key = '{}_{}'.format(metric_key, operation.key)
             display[key] = {attr: getattr(metric_schema, attr)
                             for attr in ['precision', 'prefix', 'suffix']
                             if getattr(metric_schema, attr) is not None}
             display[key]['label'] = '{} {}'.format(metric_schema.label, operation.label)
+            display[key]["axis"] = axis
+            axis += 1
 
         return display
 
@@ -398,7 +405,7 @@ class TransformerManager(object):
                                references=references, operations=operations)
 
         # Loads data and transforms it with a given transformer.
-        dataframe = self.manager.data(metrics=metrics, dimensions=dimensions,
+        dataframe = self.manager.data(metrics=utils.flatten(metrics), dimensions=dimensions,
                                       metric_filters=metric_filters, dimension_filters=dimension_filters,
                                       references=references, operations=operations)
         display_schema = self.manager.display_schema(metrics, dimensions, references, operations)

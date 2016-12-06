@@ -108,8 +108,8 @@ class ManagerInitializationTests(TestCase):
         request = {
             'metrics': ['foo', 'bar'],
             'dimensions': ['cont'],
-            'metric_filters': tuple(), 'dimension_filters': tuple(),
-            'references': tuple(), 'operations': tuple(),
+            'metric_filters': (), 'dimension_filters': (),
+            'references': (), 'operations': (),
         }
         self._test_transform(self.slicer.highcharts.line_chart, mock_transform, request)
 
@@ -118,8 +118,8 @@ class ManagerInitializationTests(TestCase):
         request = {
             'metrics': ['foo', 'bar'],
             'dimensions': ['date'],
-            'metric_filters': tuple(), 'dimension_filters': tuple(),
-            'references': tuple(), 'operations': tuple(),
+            'metric_filters': (), 'dimension_filters': (),
+            'references': (), 'operations': (),
         }
         self._test_transform(self.slicer.highcharts.line_chart, mock_transform, request)
 
@@ -150,8 +150,8 @@ class ManagerInitializationTests(TestCase):
         request = {
             'metrics': ['foo'],
             'dimensions': [],
-            'metric_filters': tuple(), 'dimension_filters': tuple(),
-            'references': tuple(), 'operations': tuple(),
+            'metric_filters': (), 'dimension_filters': (),
+            'references': (), 'operations': (),
         }
         self._test_transform(self.slicer.highcharts.column_chart, mock_transform, request)
 
@@ -179,8 +179,8 @@ class ManagerInitializationTests(TestCase):
     def test_transform_highcharts_bar_chart(self, mock_transform):
         request = {
             'metrics': ['foo'], 'dimensions': [],
-            'metric_filters': tuple(), 'dimension_filters': tuple(),
-            'references': tuple(), 'operations': tuple(),
+            'metric_filters': (), 'dimension_filters': (),
+            'references': (), 'operations': (),
         }
         self._test_transform(self.slicer.highcharts.bar_chart, mock_transform, request)
 
@@ -209,8 +209,8 @@ class ManagerInitializationTests(TestCase):
         request = {
             'metrics': ['foo', 'bar'],
             'dimensions': ['cat', 'uni'],
-            'metric_filters': tuple(), 'dimension_filters': tuple(),
-            'references': tuple(), 'operations': tuple(),
+            'metric_filters': (), 'dimension_filters': (),
+            'references': (), 'operations': (),
         }
 
         self._test_transform(self.slicer.datatables.row_index_table, mock_transform, request)
@@ -220,8 +220,8 @@ class ManagerInitializationTests(TestCase):
         request = {
             'metrics': ['foo', 'bar'],
             'dimensions': ['cat', 'uni'],
-            'metric_filters': tuple(), 'dimension_filters': tuple(),
-            'references': tuple(), 'operations': tuple(),
+            'metric_filters': (), 'dimension_filters': (),
+            'references': (), 'operations': (),
         }
 
         self._test_transform(self.slicer.datatables.column_index_table, mock_transform, request)
@@ -231,8 +231,8 @@ class ManagerInitializationTests(TestCase):
         request = {
             'metrics': ['foo', 'bar'],
             'dimensions': ['cat', 'uni'],
-            'metric_filters': tuple(), 'dimension_filters': tuple(),
-            'references': tuple(), 'operations': tuple(),
+            'metric_filters': (), 'dimension_filters': (),
+            'references': (), 'operations': (),
         }
 
         self._test_transform(self.slicer.datatables.row_index_csv, mock_transform, request)
@@ -242,8 +242,8 @@ class ManagerInitializationTests(TestCase):
         request = {
             'metrics': ['foo', 'bar'],
             'dimensions': ['cat', 'uni'],
-            'metric_filters': tuple(), 'dimension_filters': tuple(),
-            'references': tuple(), 'operations': tuple(),
+            'metric_filters': (), 'dimension_filters': (),
+            'references': (), 'operations': (),
         }
 
         self._test_transform(self.slicer.datatables.column_index_csv, mock_transform, request)
