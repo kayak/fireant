@@ -51,6 +51,7 @@ class TotalsTests(TestCase):
             dimensions=['dim'],
             operations=[Totals('dim')]
         )
-        self.assertDictEqual(display_schema['metrics'], {'foo': {'label': 'Foo'}, 'bar': {'label': 'Bar'}})
+        self.assertDictEqual(display_schema['metrics'], {'foo': {'label': 'Foo', 'axis': 0},
+                                                         'bar': {'label': 'Bar', 'axis': 1}})
         self.assertDictEqual(display_schema['dimensions'], {'dim': {'label': 'Dim', 'display_options': {}}})
         self.assertDictEqual(display_schema['references'], {})

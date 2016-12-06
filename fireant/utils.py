@@ -1,7 +1,4 @@
 # coding: utf-8
-import itertools
-
-import pandas as pd
 
 
 def dimension_levels(dimension_key, dimension):
@@ -12,6 +9,10 @@ def dimension_levels(dimension_key, dimension):
 
 def wrap_list(value):
     return value if isinstance(value, (tuple, list)) else [value]
+
+
+def flatten(items):
+    return [item for level in items for item in wrap_list(level)]
 
 
 def slice_first(item):
