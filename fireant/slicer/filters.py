@@ -37,6 +37,15 @@ class ContainsFilter(Filter):
         return element.isin(self.values)
 
 
+class ExcludesFilter(Filter):
+    def __init__(self, element_key, values):
+        super(ExcludesFilter, self).__init__(element_key)
+        self.values = values
+
+    def schemas(self, element):
+        return element.notin(self.values)
+
+
 class RangeFilter(Filter):
     def __init__(self, element_key, start, stop):
         super(RangeFilter, self).__init__(element_key)
