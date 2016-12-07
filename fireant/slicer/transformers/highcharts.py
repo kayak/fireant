@@ -229,6 +229,9 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
                                           'Request included %d metrics and %d dimensions.' % (len(metrics),
                                                                                               len(dimensions)))
 
+    def yaxis_options(self, dataframe, dim_ordinal, display_schema):
+        return [{'title': None }] * len(display_schema['metrics'])
+
     def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference, color='#000'):
         metric_key = utils.slice_first(idx)
         return {
