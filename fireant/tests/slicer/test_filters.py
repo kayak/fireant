@@ -2,7 +2,7 @@
 from datetime import date
 from unittest import TestCase
 
-from fireant.slicer import EqualityFilter, EqualityOperator, ContainsFilter, RangeFilter, WildcardFilter
+from fireant.slicer import EqualityFilter, EqualityOperator, ContainsFilter, ExcludesFilter, RangeFilter, WildcardFilter
 from pypika import Table
 
 
@@ -64,6 +64,34 @@ class FilterTests(TestCase):
         schemas = eq_filter.schemas(self.test_table.foo)
 
         self.assertEqual('"foo" IN (\'abc\',\'efg\',\'hij\')', str(schemas))
+
+    def test_excludes_filter_numbers(self):
+        eq_filter = ExcludesFilter('test', [1, 2, 3])
+
+        schemas = eq_filter.schemas(self.test_table.foo)
+
+        self.assertEqual('"foo" NOT IN (1,2,3)', str(schemas))
+
+    def test_excludes_filter_characters(self):
+        eq_filter = ExcludesFilter('test', ['a', 'b', 'c'])
+
+        schemas = eq_filter.schemas(self.test_table.foo)
+
+        self.assertEqual('"foo" NOT IN (\'a\',\'b\',\'c\')', str(schemas))
+
+    def test_excludes_filter_dates(self):
+        eq_filter = ExcludesFilter('test', [date(2000, 1, 1), date(2000, 1, 2), date(2000, 1, 3)])
+
+        schemas = eq_filter.schemas(self.test_table.foo)
+
+        self.assertEqual('"foo" NOT IN (\'2000-01-01\',\'2000-01-02\',\'2000-01-03\')', str(schemas))
+
+    def test_excludes_filter_strings(self):
+        eq_filter = ExcludesFilter('test', ['abc', 'efg', 'hij'])
+
+        schemas = eq_filter.schemas(self.test_table.foo)
+
+        self.assertEqual('"foo" NOT IN (\'abc\',\'efg\',\'hij\')', str(schemas))
 
     def test_range_filter_numbers(self):
         eq_filter = RangeFilter('test', 0, 1)
