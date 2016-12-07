@@ -315,7 +315,7 @@ class SlicerManager(QueryManager, OperationManager):
                                        for attr in ['label', 'precision', 'prefix', 'suffix']
                                        if getattr(schema, attr) is not None}
                 display[metric_key]["axis"] = axis
-                axis += 1
+            axis += 1
 
         for operation in operations:
             if not hasattr(operation, 'metric_key'):
