@@ -2,7 +2,9 @@
 import numpy as np
 import pandas as pd
 
+from fireant.slicer.operations import Totals
 from fireant import settings, utils
+
 from .base import Transformer, TransformationException
 
 COLORS = {
@@ -167,9 +169,9 @@ class HighchartsLineTransformer(Transformer):
 
         dimension_labels = [self._format_dimension_display(dim_ordinal, key, dimension, idx)
                             for key, dimension in list(display_schema['dimensions'].items())[1:]]
-        dimension_labels = [dimension_label  # filter out the NaNs
+        dimension_labels = [dimension_label  # filter out the Totals
                             for dimension_label in dimension_labels
-                            if dimension_label is not np.nan]
+                            if dimension_label is not Totals.label]
 
         return (
             '{metric} ({dimensions})'.format(
@@ -289,10 +291,7 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
             return [value.strftime("%y-%m-%d") for value in dataframe.index]
 
         display_options = category_dimension.get('category_dimension', {})
-        return [display_options.get(value, value)
-                if value and not (isinstance(value, (float, int)) and np.isnan(value))
-                else 'Totals'
-                for value in dataframe.index]
+        return [display_options.get(value, value) for value in dataframe.index]
 
 
 class HighchartsBarTransformer(HighchartsColumnTransformer):

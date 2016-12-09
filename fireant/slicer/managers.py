@@ -1,10 +1,12 @@
 # coding: utf-8
 
 import functools
-from collections import OrderedDict
 
+from collections import OrderedDict
+from fireant.slicer.operations import Totals
 from fireant import utils
 from pypika import functions as fn
+
 from .postprocessors import OperationManager
 from .queries import QueryManager
 
@@ -144,7 +146,7 @@ class SlicerManager(QueryManager, OperationManager):
         """
         return {
             'metrics': self._display_metrics(metrics, operations),
-            'dimensions': self._display_dimensions(dimensions),
+            'dimensions': self._display_dimensions(dimensions, operations),
             'references': OrderedDict([(reference.key, reference.label)
                                        for reference in references]),
         }
@@ -252,7 +254,7 @@ class SlicerManager(QueryManager, OperationManager):
 
         return filters_schema
 
-    def _display_dimensions(self, dimensions):
+    def _display_dimensions(self, dimensions, operations):
         req_dimension_keys = [utils.slice_first(dimension)
                               for dimension in dimensions]
 
@@ -264,6 +266,11 @@ class SlicerManager(QueryManager, OperationManager):
             if hasattr(dimension, 'display_options'):
                 display_dim['display_options'] = {opt.key: opt.label
                                                   for opt in dimension.display_options}
+
+            total_operations = [operation for operation in operations if isinstance(operation, Totals)]
+            for total_operation in total_operations:
+                if key in total_operation.dimension_keys:
+                    display_dim['display_options'][total_operation.key] = total_operation.label
 
             if hasattr(dimension, 'display_field') and dimension.display_field:
                 display_dim['display_field'] = '%s_display' % dimension.key
@@ -338,7 +345,7 @@ class SlicerManager(QueryManager, OperationManager):
         dimension_set = set(utils.slice_first(dimension) for dimension in dimensions)
         totals, missing_dimensions = [], set()
         for operation in operations:
-            if 'totals' != operation.key:
+            if operation.key != Totals.key:
                 continue
 
             missing_dimensions |= set(operation.dimension_keys) - dimension_set

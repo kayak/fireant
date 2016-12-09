@@ -2,8 +2,10 @@
 import copy
 import logging
 
+import numpy as np
 import pandas as pd
 
+from fireant.slicer.operations import Totals
 from pypika import Query, JoinType
 
 logger = logging.Logger('fireant')
@@ -102,12 +104,16 @@ class QueryManager(object):
             A pd.DataFrame indexed by the provided dimensions paramaters containing columns for each metrics parameter.
         """
         query = self._build_data_query(table, joins or dict(), metrics or dict(), dimensions or dict(),
-                                       dfilters or dict(), mfilters or dict(), references or dict(), rollup or dict())
+                                       dfilters or dict(), mfilters or dict(), references or dict(), rollup or list())
 
         querystring = str(query)
         logger.info("Executing query:\n----START----\n{query}\n-----END-----".format(query=querystring))
 
         dataframe = database.fetch_dataframe(querystring)
+
+        for dimension_key in rollup:
+            dataframe[dimension_key].replace([np.nan], [Totals.key], inplace=True)
+
         dataframe.columns = [col.decode('utf-8') if isinstance(col, bytes) else col
                              for col in dataframe.columns]
 

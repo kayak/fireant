@@ -1,10 +1,10 @@
 # coding: utf-8
 from unittest import TestCase
+from pypika import Table
 
 from fireant.slicer import Slicer, Metric, CategoricalDimension, SlicerException
 from fireant.slicer.operations import Totals
 from fireant.tests.database.mock_database import TestDatabase
-from pypika import Table
 
 
 class TotalsTests(TestCase):
@@ -27,7 +27,7 @@ class TotalsTests(TestCase):
 
     def test_totals_init(self):
         totals = Totals('date')
-        self.assertEqual('totals', totals.key)
+        self.assertEqual('_total', totals.key)
 
     def test_data_query_schema__totals_dim_set_in_rollup(self):
         query_schema = self.test_slicer.manager.data_query_schema(
@@ -53,5 +53,7 @@ class TotalsTests(TestCase):
         )
         self.assertDictEqual(display_schema['metrics'], {'foo': {'label': 'Foo', 'axis': 0},
                                                          'bar': {'label': 'Bar', 'axis': 1}})
-        self.assertDictEqual(display_schema['dimensions'], {'dim': {'label': 'Dim', 'display_options': {}}})
+        self.assertDictEqual(display_schema['dimensions'], {
+            'dim': {'label': 'Dim', 'display_options': {Totals.key: Totals.label}}
+        })
         self.assertDictEqual(display_schema['references'], {})
