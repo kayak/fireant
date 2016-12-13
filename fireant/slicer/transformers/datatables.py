@@ -119,7 +119,7 @@ class DataTablesRowIndexTransformer(Transformer):
         if not isinstance(metric_column, tuple):
             return {'title': metrics[metric_column]['label'],
                     'data': metric_column,
-                    'render': {'type': 'value', '_': 'display'}}
+                    'render': {'type': 'value', '_': 'display', 'sort': 'value'}}
 
         references = display_schema.get('references')
         metric_key_idx = 1 if references else 0
@@ -141,7 +141,7 @@ class DataTablesRowIndexTransformer(Transformer):
         return {
             'title': metric_label,
             'data': path,
-            'render': {'type': 'value', '_': 'display'}
+            'render': {'type': 'value', '_': 'display', 'sort': 'value'}
         }
 
     def _render_data(self, dataframe, display_schema):
@@ -270,7 +270,7 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
         return {
             'title': metric_label,
             'data': data,
-            'render': {'type': 'value', '_': 'display'}
+            'render': {'type': 'value', '_': 'display', 'sort': 'value'}
         }
 
     def _recurse_dimensions(self, dataframe, dimensions, metrics, reference=None):
