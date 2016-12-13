@@ -20,14 +20,14 @@ class DataTablesRowIndexTransformerTests(TestCase):
         # Tests transformation of a single metric with a single continuous dimension
         result = self.dt_tx.transform(mock_df.no_dims_multi_metric_df, mock_df.no_dims_multi_metric_schema)
         self.assertDictEqual({
-            'columns': [{'title': 'One', 'render': {'type': 'value', '_': 'display'}, 'data': 'one'},
-                        {'title': 'Two', 'render': {'type': 'value', '_': 'display'}, 'data': 'two'},
-                        {'title': 'Three', 'render': {'type': 'value', '_': 'display'}, 'data': 'three'},
-                        {'title': 'Four', 'render': {'type': 'value', '_': 'display'}, 'data': 'four'},
-                        {'title': 'Five', 'render': {'type': 'value', '_': 'display'}, 'data': 'five'},
-                        {'title': 'Six', 'render': {'type': 'value', '_': 'display'}, 'data': 'six'},
-                        {'title': 'Seven', 'render': {'type': 'value', '_': 'display'}, 'data': 'seven'},
-                        {'title': 'Eight', 'render': {'type': 'value', '_': 'display'}, 'data': 'eight'}],
+            'columns': [{'title': 'One', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'data': 'one'},
+                        {'title': 'Two', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'data': 'two'},
+                        {'title': 'Three', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'data': 'three'},
+                        {'title': 'Four', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'data': 'four'},
+                        {'title': 'Five', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'data': 'five'},
+                        {'title': 'Six', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'data': 'six'},
+                        {'title': 'Seven', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'data': 'seven'},
+                        {'title': 'Eight', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'data': 'eight'}],
             'data': [{'six': {'value': 5, 'display': '5'}, 'seven': {'value': 6, 'display': '6'},
                       'three': {'value': 2, 'display': '2'}, 'one': {'value': 0, 'display': '0'},
                       'two': {'value': 1, 'display': '1'}, 'four': {'value': 3, 'display': '3'},
@@ -38,7 +38,7 @@ class DataTablesRowIndexTransformerTests(TestCase):
         result = self.dt_tx.transform(mock_df.cont_dim_single_metric_df, mock_df.cont_dim_single_metric_schema)
         self.assertDictEqual({
             'columns': [{'data': 'cont', 'render': {'_': 'value'}, 'title': 'Cont'},
-                        {'data': 'one', 'render': {'type': 'value', '_': 'display'}, 'title': 'One'}],
+                        {'data': 'one', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'title': 'One'}],
             'data': [{'cont': {'value': i}, 'one': {'value': i, 'display': str(i)}}
                      for i in range(8)]}, result)
 
@@ -47,8 +47,8 @@ class DataTablesRowIndexTransformerTests(TestCase):
         result = self.dt_tx.transform(mock_df.cont_dim_multi_metric_df, mock_df.cont_dim_multi_metric_schema)
         self.assertDictEqual({
             'columns': [{'title': 'Cont', 'data': 'cont', 'render': {'_': 'value'}},
-                        {'title': 'One', 'data': 'one', 'render': {'type': 'value', '_': 'display'}},
-                        {'title': 'Two', 'data': 'two', 'render': {'type': 'value', '_': 'display'}}],
+                        {'title': 'One', 'data': 'one', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}},
+                        {'title': 'Two', 'data': 'two', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}}],
             'data': [{
                          'cont': {'value': i},
                          'one': {'value': i, 'display': str(i)},
@@ -60,7 +60,7 @@ class DataTablesRowIndexTransformerTests(TestCase):
         result = self.dt_tx.transform(mock_df.time_dim_single_metric_df, mock_df.time_dim_single_metric_schema)
         self.assertDictEqual({
             'columns': [{'render': {'_': 'value'}, 'data': 'date', 'title': 'Date'},
-                        {'render': {'type': 'value', '_': 'display'}, 'data': 'one', 'title': 'One'}],
+                        {'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'data': 'one', 'title': 'One'}],
             'data': [{'date': {'value': '2000-01-0%d' % (1 + i)}, 'one': {'value': i, 'display': str(i)}}
                      for i in range(8)]}, result)
 
@@ -69,8 +69,8 @@ class DataTablesRowIndexTransformerTests(TestCase):
         result = self.dt_tx.transform(mock_df.time_dim_single_metric_ref_df, mock_df.time_dim_single_metric_ref_schema)
         self.assertDictEqual({
             'columns': [{'render': {'_': 'value'}, 'data': 'date', 'title': 'Date'},
-                        {'render': {'type': 'value', '_': 'display'}, 'data': 'one', 'title': 'One'},
-                        {'render': {'type': 'value', '_': 'display'}, 'data': 'wow.one', 'title': 'One WoW'}],
+                        {'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'data': 'one', 'title': 'One'},
+                        {'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'data': 'wow.one', 'title': 'One WoW'}],
             'data': [{
                          'date': {'value': '2000-01-0%d' % (1 + i)},
                          'one': {'value': i, 'display': str(i)},
@@ -80,9 +80,10 @@ class DataTablesRowIndexTransformerTests(TestCase):
     def test_uni_dim_single_metric(self):
         # Tests transformation of a metric with a unique dimension with one key and display
         result = self.dt_tx.transform(mock_df.uni_dim_single_metric_df, mock_df.uni_dim_single_metric_schema)
+        print('mike', result)
         self.assertDictEqual({
             'columns': [{'data': 'uni', 'render': {'type': 'value', '_': 'display'}, 'title': 'Uni'},
-                        {'data': 'one', 'render': {'type': 'value', '_': 'display'}, 'title': 'One'}],
+                        {'data': 'one', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'title': 'One'}],
             'data': [{'one': {'value': 0, 'display': '0'}, 'uni': {'display': 'Aa', 'value': 1}},
                      {'one': {'value': 1, 'display': '1'}, 'uni': {'display': 'Bb', 'value': 2}},
                      {'one': {'value': 2, 'display': '2'}, 'uni': {'display': 'Cc', 'value': 3}}]}, result)
@@ -92,8 +93,8 @@ class DataTablesRowIndexTransformerTests(TestCase):
         result = self.dt_tx.transform(mock_df.uni_dim_multi_metric_df, mock_df.uni_dim_multi_metric_schema)
         self.assertDictEqual({
             'columns': [{'render': {'_': 'display', 'type': 'value'}, 'title': 'Uni', 'data': 'uni'},
-                        {'render': {'_': 'display', 'type': 'value'}, 'title': 'One', 'data': 'one'},
-                        {'render': {'_': 'display', 'type': 'value'}, 'title': 'Two', 'data': 'two'}],
+                        {'render': {'_': 'display', 'type': 'value', 'sort': 'value'}, 'title': 'One', 'data': 'one'},
+                        {'render': {'_': 'display', 'type': 'value', 'sort': 'value'}, 'title': 'Two', 'data': 'two'}],
             'data': [{'one': {'value': 0, 'display': '0'}, 'two': {'value': 0, 'display': '0'},
                       'uni': {'value': 1, 'display': 'Aa'}},
                      {'one': {'value': 1, 'display': '1'}, 'two': {'value': 2, 'display': '2'},
@@ -107,7 +108,7 @@ class DataTablesRowIndexTransformerTests(TestCase):
         self.assertDictEqual({
             'columns': [{'render': {'_': 'display', 'type': 'value'}, 'title': 'Cat1', 'data': 'cat1'},
                         {'render': {'_': 'display', 'type': 'value'}, 'title': 'Cat2', 'data': 'cat2'},
-                        {'render': {'_': 'display', 'type': 'value'}, 'title': 'One', 'data': 'one'}],
+                        {'render': {'_': 'display', 'type': 'value', 'sort': 'value'}, 'title': 'One', 'data': 'one'}],
             'data': [{'cat1': {'display': 'A', 'value': 'a'}, 'cat2': {'display': 'Y', 'value': 'y'},
                       'one': {'display': '0', 'value': 0}},
                      {'cat1': {'display': 'A', 'value': 'a'}, 'cat2': {'display': 'Z', 'value': 'z'},
@@ -131,8 +132,8 @@ class DataTablesRowIndexTransformerTests(TestCase):
                       'cat2': {'display': 'Z', 'value': 'z'}, 'cat1': {'display': 'B', 'value': 'b'}}],
             'columns': [{'title': 'Cat1', 'render': {'_': 'display', 'type': 'value'}, 'data': 'cat1'},
                         {'title': 'Cat2', 'render': {'_': 'display', 'type': 'value'}, 'data': 'cat2'},
-                        {'title': 'One', 'render': {'_': 'display', 'type': 'value'}, 'data': 'one'},
-                        {'title': 'Two', 'render': {'_': 'display', 'type': 'value'}, 'data': 'two'}]}, result)
+                        {'title': 'One', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}, 'data': 'one'},
+                        {'title': 'Two', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}, 'data': 'two'}]}, result)
 
     def test_rollup_cont_cat_cat_dim_multi_metric(self):
         # Tests transformation of two metrics with two categorical dimensions
@@ -142,8 +143,8 @@ class DataTablesRowIndexTransformerTests(TestCase):
             'columns': [{'title': 'Cont', 'render': {'_': 'value'}, 'data': 'cont'},
                         {'title': 'Cat1', 'render': {'type': 'value', '_': 'display'}, 'data': 'cat1'},
                         {'title': 'Cat2', 'render': {'type': 'value', '_': 'display'}, 'data': 'cat2'},
-                        {'title': 'One', 'render': {'type': 'value', '_': 'display'}, 'data': 'one'},
-                        {'title': 'Two', 'render': {'type': 'value', '_': 'display'}, 'data': 'two'}],
+                        {'title': 'One', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'data': 'one'},
+                        {'title': 'Two', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'data': 'two'}],
             'data': [
                 {'one': {'value': 12, 'display': '12'}, 'two': {'value': 24, 'display': '24'}, 'cont': {'value': 0},
                  'cat1': {'value': None, 'display': 'Total'}, 'cat2': {'value': None, 'display': 'Total'}},
@@ -272,21 +273,21 @@ class DataTablesColumnIndexTransformerTests(TestCase):
                       'seven': {'value': 6, 'display': '6'}, 'four': {'value': 3, 'display': '3'},
                       'three': {'value': 2, 'display': '2'}, 'five': {'value': 4, 'display': '4'},
                       'six': {'value': 5, 'display': '5'}, 'two': {'value': 1, 'display': '1'}}],
-            'columns': [{'render': {'type': 'value', '_': 'display'}, 'title': 'One', 'data': 'one'},
-                        {'render': {'type': 'value', '_': 'display'}, 'title': 'Two', 'data': 'two'},
-                        {'render': {'type': 'value', '_': 'display'}, 'title': 'Three', 'data': 'three'},
-                        {'render': {'type': 'value', '_': 'display'}, 'title': 'Four', 'data': 'four'},
-                        {'render': {'type': 'value', '_': 'display'}, 'title': 'Five', 'data': 'five'},
-                        {'render': {'type': 'value', '_': 'display'}, 'title': 'Six', 'data': 'six'},
-                        {'render': {'type': 'value', '_': 'display'}, 'title': 'Seven', 'data': 'seven'},
-                        {'render': {'type': 'value', '_': 'display'}, 'title': 'Eight', 'data': 'eight'}]}, result)
+            'columns': [{'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'title': 'One', 'data': 'one'},
+                        {'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'title': 'Two', 'data': 'two'},
+                        {'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'title': 'Three', 'data': 'three'},
+                        {'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'title': 'Four', 'data': 'four'},
+                        {'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'title': 'Five', 'data': 'five'},
+                        {'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'title': 'Six', 'data': 'six'},
+                        {'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'title': 'Seven', 'data': 'seven'},
+                        {'render': {'type': 'value', '_': 'display', 'sort': 'value'}, 'title': 'Eight', 'data': 'eight'}]}, result)
 
     def test_cont_dim_single_metric(self):
         # Tests transformation of a single metric with a single continuous dimension
         result = self.dt_tx.transform(mock_df.cont_dim_single_metric_df, mock_df.cont_dim_single_metric_schema)
         self.assertDictEqual({
             'columns': [{'title': 'Cont', 'data': 'cont', 'render': {'_': 'value'}},
-                        {'title': 'One', 'data': 'one', 'render': {'type': 'value', '_': 'display'}}],
+                        {'title': 'One', 'data': 'one', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}}],
             'data': [{
                          'cont': {'value': i},
                          'one': {'value': i, 'display': str(i)},
@@ -297,8 +298,8 @@ class DataTablesColumnIndexTransformerTests(TestCase):
         result = self.dt_tx.transform(mock_df.cont_dim_multi_metric_df, mock_df.cont_dim_multi_metric_schema)
         self.assertDictEqual({
             'columns': [{'data': 'cont', 'render': {'_': 'value'}, 'title': 'Cont'},
-                        {'data': 'one', 'render': {'_': 'display', 'type': 'value'}, 'title': 'One'},
-                        {'data': 'two', 'render': {'_': 'display', 'type': 'value'}, 'title': 'Two'}],
+                        {'data': 'one', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}, 'title': 'One'},
+                        {'data': 'two', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}, 'title': 'Two'}],
             'data': [{
                          'cont': {'value': i},
                          'one': {'value': i, 'display': str(i)},
@@ -310,7 +311,7 @@ class DataTablesColumnIndexTransformerTests(TestCase):
         result = self.dt_tx.transform(mock_df.time_dim_single_metric_df, mock_df.time_dim_single_metric_schema)
         self.assertDictEqual({
             'columns': [{'data': 'date', 'render': {'_': 'value'}, 'title': 'Date'},
-                        {'data': 'one', 'render': {'_': 'display', 'type': 'value'}, 'title': 'One'}],
+                        {'data': 'one', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}, 'title': 'One'}],
             'data': [{
                          'date': {'value': '2000-01-0%d' % (i + 1)},
                          'one': {'value': i, 'display': str(i)}
@@ -321,8 +322,8 @@ class DataTablesColumnIndexTransformerTests(TestCase):
         result = self.dt_tx.transform(mock_df.time_dim_single_metric_ref_df, mock_df.time_dim_single_metric_ref_schema)
         self.assertDictEqual({
             'columns': [{'data': 'date', 'render': {'_': 'value'}, 'title': 'Date'},
-                        {'data': 'one', 'render': {'_': 'display', 'type': 'value'}, 'title': 'One'},
-                        {'data': 'wow.one', 'render': {'_': 'display', 'type': 'value'}, 'title': 'One WoW'}],
+                        {'data': 'one', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}, 'title': 'One'},
+                        {'data': 'wow.one', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}, 'title': 'One WoW'}],
             'data': [{
                          'date': {'value': '2000-01-0%d' % (i + 1)},
                          'one': {'value': i, 'display': str(i)},
@@ -335,8 +336,8 @@ class DataTablesColumnIndexTransformerTests(TestCase):
                                       mock_df.cont_cat_dims_single_metric_schema)
         self.assertDictEqual({
             'columns': [{'data': 'cont', 'title': 'Cont', 'render': {'_': 'value'}},
-                        {'data': 'a.one', 'title': 'One (A)', 'render': {'type': 'value', '_': 'display'}},
-                        {'data': 'b.one', 'title': 'One (B)', 'render': {'type': 'value', '_': 'display'}}],
+                        {'data': 'a.one', 'title': 'One (A)', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}},
+                        {'data': 'b.one', 'title': 'One (B)', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}}],
             'data': [{'b': {'one': {'value': 1, 'display': '1'}}, 'a': {'one': {'value': 0, 'display': '0'}},
                       'cont': {'value': 0}},
                      {'b': {'one': {'value': 3, 'display': '3'}}, 'a': {'one': {'value': 2, 'display': '2'}},
@@ -384,10 +385,10 @@ class DataTablesColumnIndexTransformerTests(TestCase):
                       'a': {'one': {'display': '14', 'value': 14}, 'two': {'display': '28', 'value': 28}},
                       'cont': {'value': 7}}],
             'columns': [{'title': 'Cont', 'render': {'_': 'value'}, 'data': 'cont'},
-                        {'title': 'One (A)', 'render': {'_': 'display', 'type': 'value'}, 'data': 'a.one'},
-                        {'title': 'One (B)', 'render': {'_': 'display', 'type': 'value'}, 'data': 'b.one'},
-                        {'title': 'Two (A)', 'render': {'_': 'display', 'type': 'value'}, 'data': 'a.two'},
-                        {'title': 'Two (B)', 'render': {'_': 'display', 'type': 'value'}, 'data': 'b.two'}]}, result)
+                        {'title': 'One (A)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}, 'data': 'a.one'},
+                        {'title': 'One (B)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}, 'data': 'b.one'},
+                        {'title': 'Two (A)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}, 'data': 'a.two'},
+                        {'title': 'Two (B)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}, 'data': 'b.two'}]}, result)
 
     def test_cont_cat_cat_dim_multi_metric(self):
         # Tests transformation of two metrics with a continuous and two categorical dimensions
@@ -435,14 +436,14 @@ class DataTablesColumnIndexTransformerTests(TestCase):
                                'y': {'one': {'value': 28, 'display': '28'}, 'two': {'value': 56, 'display': '56'}}},
                          'cont': {'value': 7}}],
             'columns': [{'data': 'cont', 'title': 'Cont', 'render': {'_': 'value'}},
-                        {'data': 'a.y.one', 'title': 'One (A, Y)', 'render': {'type': 'value', '_': 'display'}},
-                        {'data': 'a.z.one', 'title': 'One (A, Z)', 'render': {'type': 'value', '_': 'display'}},
-                        {'data': 'b.y.one', 'title': 'One (B, Y)', 'render': {'type': 'value', '_': 'display'}},
-                        {'data': 'b.z.one', 'title': 'One (B, Z)', 'render': {'type': 'value', '_': 'display'}},
-                        {'data': 'a.y.two', 'title': 'Two (A, Y)', 'render': {'type': 'value', '_': 'display'}},
-                        {'data': 'a.z.two', 'title': 'Two (A, Z)', 'render': {'type': 'value', '_': 'display'}},
-                        {'data': 'b.y.two', 'title': 'Two (B, Y)', 'render': {'type': 'value', '_': 'display'}},
-                        {'data': 'b.z.two', 'title': 'Two (B, Z)', 'render': {'type': 'value', '_': 'display'}}]},
+                        {'data': 'a.y.one', 'title': 'One (A, Y)', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}},
+                        {'data': 'a.z.one', 'title': 'One (A, Z)', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}},
+                        {'data': 'b.y.one', 'title': 'One (B, Y)', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}},
+                        {'data': 'b.z.one', 'title': 'One (B, Z)', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}},
+                        {'data': 'a.y.two', 'title': 'Two (A, Y)', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}},
+                        {'data': 'a.z.two', 'title': 'Two (A, Z)', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}},
+                        {'data': 'b.y.two', 'title': 'Two (B, Y)', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}},
+                        {'data': 'b.z.two', 'title': 'Two (B, Z)', 'render': {'type': 'value', '_': 'display', 'sort': 'value'}}]},
             result)
 
     def test_cont_cat_uni_dim_multi_metric(self):
@@ -507,18 +508,18 @@ class DataTablesColumnIndexTransformerTests(TestCase):
                             2: {'one': {'display': '43', 'value': 43}, 'two': {'display': '143', 'value': 143}},
                             3: {'one': {'display': '44', 'value': 44}, 'two': {'display': '144', 'value': 144}}}}],
             'columns': [{'data': 'cont', 'title': 'Cont', 'render': {'_': 'value'}},
-                        {'data': 'a.1.one', 'title': 'One (A, Aa)', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'a.2.one', 'title': 'One (A, Bb)', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'a.3.one', 'title': 'One (A, Cc)', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'b.1.one', 'title': 'One (B, Aa)', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'b.2.one', 'title': 'One (B, Bb)', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'b.3.one', 'title': 'One (B, Cc)', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'a.1.two', 'title': 'Two (A, Aa)', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'a.2.two', 'title': 'Two (A, Bb)', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'a.3.two', 'title': 'Two (A, Cc)', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'b.1.two', 'title': 'Two (B, Aa)', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'b.2.two', 'title': 'Two (B, Bb)', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'b.3.two', 'title': 'Two (B, Cc)', 'render': {'_': 'display', 'type': 'value'}}]},
+                        {'data': 'a.1.one', 'title': 'One (A, Aa)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'a.2.one', 'title': 'One (A, Bb)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'a.3.one', 'title': 'One (A, Cc)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'b.1.one', 'title': 'One (B, Aa)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'b.2.one', 'title': 'One (B, Bb)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'b.3.one', 'title': 'One (B, Cc)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'a.1.two', 'title': 'Two (A, Aa)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'a.2.two', 'title': 'Two (A, Bb)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'a.3.two', 'title': 'Two (A, Cc)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'b.1.two', 'title': 'Two (B, Aa)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'b.2.two', 'title': 'Two (B, Bb)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'b.3.two', 'title': 'Two (B, Cc)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}}]},
             result)
 
     def test_rollup_cont_cat_cat_dims_multi_metric_df(self):
@@ -527,20 +528,20 @@ class DataTablesColumnIndexTransformerTests(TestCase):
                                       mock_df.rollup_cont_cat_cat_dims_multi_metric_schema)
         self.assertDictEqual({
             'columns': [{'data': 'cont', 'title': 'Cont', 'render': {'_': 'value'}},
-                        {'data': 'one', 'title': 'One', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'a.one', 'title': 'One (A)', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'a.y.one', 'title': 'One (A, Y)', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'a.z.one', 'title': 'One (A, Z)', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'b.one', 'title': 'One (B)', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'b.y.one', 'title': 'One (B, Y)', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'b.z.one', 'title': 'One (B, Z)', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'two', 'title': 'Two', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'a.two', 'title': 'Two (A)', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'a.y.two', 'title': 'Two (A, Y)', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'a.z.two', 'title': 'Two (A, Z)', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'b.two', 'title': 'Two (B)', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'b.y.two', 'title': 'Two (B, Y)', 'render': {'_': 'display', 'type': 'value'}},
-                        {'data': 'b.z.two', 'title': 'Two (B, Z)', 'render': {'_': 'display', 'type': 'value'}}],
+                        {'data': 'one', 'title': 'One', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'a.one', 'title': 'One (A)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'a.y.one', 'title': 'One (A, Y)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'a.z.one', 'title': 'One (A, Z)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'b.one', 'title': 'One (B)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'b.y.one', 'title': 'One (B, Y)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'b.z.one', 'title': 'One (B, Z)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'two', 'title': 'Two', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'a.two', 'title': 'Two (A)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'a.y.two', 'title': 'Two (A, Y)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'a.z.two', 'title': 'Two (A, Z)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'b.two', 'title': 'Two (B)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'b.y.two', 'title': 'Two (B, Y)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}},
+                        {'data': 'b.z.two', 'title': 'Two (B, Z)', 'render': {'_': 'display', 'type': 'value', 'sort': 'value'}}],
             'data': [{'b': {'y': {'one': {'display': '2', 'value': 2}, 'two': {'display': '4', 'value': 4}},
                             'z': {'one': {'display': '3', 'value': 3}, 'two': {'display': '6', 'value': 6}}},
                       'cont': {'value': 0},
