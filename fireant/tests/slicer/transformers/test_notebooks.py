@@ -1,10 +1,9 @@
 # coding: utf-8
 from datetime import datetime
 from unittest import TestCase
-
-import numpy as np
 from mock import patch, ANY, call, MagicMock
 
+from fireant.slicer.operations import Totals
 from fireant.slicer.transformers import PandasRowIndexTransformer, TransformationException
 from fireant.tests import mock_dataframes as mock_df
 
@@ -113,8 +112,8 @@ class PandasRowIndexTransformerTests(TestCase):
 
         self.assertListEqual(['Cont', 'Cat1', 'Cat2'], list(result.index.names))
         self.assertListEqual([0, 1, 2, 3, 4, 5, 6, 7], list(result.index.levels[0]))
-        self.assertListEqual([np.nan, 'A', 'B'], list(result.index.levels[1]))
-        self.assertListEqual([np.nan, 'Y', 'Z'], list(result.index.levels[2]))
+        self.assertListEqual([Totals.label, 'A', 'B'], list(result.index.levels[1]))
+        self.assertListEqual([Totals.label, 'Y', 'Z'], list(result.index.levels[2]))
 
         self.assertListEqual(['One', 'Two'], list(result.columns))
         self.assertListEqual([12, 1, 0, 1, 5, 2, 3,
@@ -253,8 +252,8 @@ class PandasColumnIndexTransformerTests(TestCase):
 
         self.assertListEqual(['Cont', 'Cat1', 'Cat2'], list(result.index.names))
         self.assertListEqual([0, 1, 2, 3, 4, 5, 6, 7], list(result.index.levels[0]))
-        self.assertListEqual([np.nan, 'A', 'B'], list(result.index.levels[1]))
-        self.assertListEqual([np.nan, 'Y', 'Z'], list(result.index.levels[2]))
+        self.assertListEqual([Totals.label, 'A', 'B'], list(result.index.levels[1]))
+        self.assertListEqual([Totals.label, 'Y', 'Z'], list(result.index.levels[2]))
 
         self.assertListEqual(['One', 'Two'], list(result.columns))
         self.assertListEqual([12, 1, 0, 1, 5, 2, 3,

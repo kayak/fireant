@@ -1,9 +1,9 @@
 # coding: utf-8
-from datetime import time
-
 import numpy as np
 import pandas as pd
 
+from datetime import time
+from fireant.slicer.operations import Totals
 from fireant import settings
 from fireant.slicer.transformers import Transformer
 
@@ -58,7 +58,7 @@ def _format_column_display(csv_df, metrics, dimensions):
 
             dimension_display = _safe(dimension_display)
 
-            if dimension_display is not None:
+            if dimension_display != Totals.label:
                 dimension_displays.append(dimension_display)
 
         if dimension_displays:
@@ -216,9 +216,6 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
         # Replaces invalid values and unstacks the data frame for column_index tables.
         dataframe = super(DataTablesColumnIndexTransformer, self)._prepare_dataframe(dataframe, dimensions)
 
-        if 2 > len(dimensions):
-            return dataframe
-
         unstack_levels = []
         for key, dimension in list(dimensions.items())[1:]:
             unstack_levels.append(key)
@@ -236,9 +233,7 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
         for dimension in list(display_schema['dimensions'].values())[1:]:
             if 'display_options' in dimension:
                 level_key = metric_column[i]
-                level_display = (dimension['display_options'].get(level_key, None)
-                                 if not (isinstance(level_key, float) and np.isnan(level_key))
-                                 else 'Total')
+                level_display = dimension['display_options'].get(level_key, None)
 
             else:
                 level_key = metric_column[i]
@@ -250,7 +245,8 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
 
             # the metric key must remain last
             if not (isinstance(level_key, float) and np.isnan(level_key)):
-                levels.append(level_display)
+                if level_key != Totals.key:
+                    levels.append(level_display)
                 data_keys.append(level_key)
 
             i += 1
@@ -277,16 +273,34 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
         }
 
     def _recurse_dimensions(self, dataframe, dimensions, metrics, reference=None):
+        if dataframe.empty:
+            return []
+
         if reference or not dimensions:
             return super(DataTablesColumnIndexTransformer, self)._recurse_dimensions(dataframe, dimensions, metrics,
                                                                                      reference)
 
-        if 'display_field' in dimensions[0][1]:
-            return [(key, dict(self._recurse_dimensions(dataframe[:, key, display], dimensions[1:], metrics)))
-                    for key, display in zip(*dataframe.index.levels[1:3])]
+        data = []
 
-        return [(str(level), dict(self._recurse_dimensions(dataframe[:, level], dimensions[1:], metrics)))
-                for level in dataframe.index.levels[1]]
+        if 'display_field' in dimensions[0][1]:
+            levels = zip(*dataframe.index.levels[1:3])
+            format_key = lambda level: level[0]
+            slice_metric_data = lambda level: dataframe[:, level[0], level[1]]
+        else:
+            levels = dataframe.index.levels[1]
+            format_key = str
+            slice_metric_data = lambda level: dataframe[:, level]
+
+        for level in levels:
+            metric_data =  dict(self._recurse_dimensions(slice_metric_data(level), dimensions[1:], metrics))
+
+            if not metric_data:
+                continue
+
+            data.append((format_key(level), metric_data))
+
+        return data
+
 
 
 class CSVRowIndexTransformer(DataTablesRowIndexTransformer):

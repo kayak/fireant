@@ -1,9 +1,10 @@
 # coding: utf-8
-from collections import OrderedDict
-from datetime import date
-
 import numpy as np
 import pandas as pd
+
+from collections import OrderedDict
+from datetime import date
+from fireant.slicer.operations import Totals
 
 
 def rollup(dataframe, levels):
@@ -13,7 +14,7 @@ def rollup(dataframe, levels):
                      if i not in levels]
 
     for rolled_level in rolled_levels:
-        roll[rolled_level] = None
+        roll[rolled_level] = Totals.key
 
     return dataframe.append(roll.set_index(rolled_levels, append=True)).sort_index()
 
@@ -23,6 +24,8 @@ datetime_dim = {'label': 'Date'}
 uni_dim = {'label': 'Uni', 'display_field': 'uni_label'}
 cat1_dim = {'label': 'Cat1', 'display_options': {'a': 'A', 'b': 'B'}}
 cat2_dim = {'label': 'Cat2', 'display_options': {'y': 'Y', 'z': 'Z'}}
+cat1_rollup_dim = {'label': 'Cat1', 'display_options': {'a': 'A', 'b': 'B', Totals.key: Totals.label}}
+cat2_rollup_dim = {'label': 'Cat2', 'display_options': {'y': 'Y', 'z': 'Z', Totals.key: Totals.label}}
 
 shortcuts = {
     'a': 'A',
@@ -31,7 +34,7 @@ shortcuts = {
     'd': 'D',
     'y': 'Y',
     'z': 'Z',
-    np.nan: 'Total',
+    Totals.key: Totals.label
 }
 
 cont_idx = pd.Index([0, 1, 2, 3, 4, 5, 6, 7], name='cont')
@@ -294,7 +297,7 @@ rollup_cont_cat_cat_dims_multi_metric_df = rollup(rollup_cont_cat_cat_dims_multi
 rollup_cont_cat_cat_dims_multi_metric_df = rollup(rollup_cont_cat_cat_dims_multi_metric_df, [0])
 rollup_cont_cat_cat_dims_multi_metric_schema = {
     'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
-    'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_dim), ('cat2', cat2_dim)])
+    'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_rollup_dim), ('cat2', cat2_rollup_dim)])
 }
 
 # Mock DF with single continuous dimension and two metric columns

@@ -20,7 +20,8 @@ class Totals(Operation):
     `Operation` for rolling up totals across dimensions in queries.  This will append the totals across a dimension to
     a dimension.
     """
-    key = 'totals'
+    key = '_total'
+    label = 'Total'
 
     def __init__(self, *dimension_keys):
         self.dimension_keys = dimension_keys
