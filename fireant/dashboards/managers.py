@@ -16,7 +16,7 @@ class WidgetGroupManager(object):
         dataframe = self.widget_group.slicer.manager.data(
             metrics=[metric
                      for widget in self.widget_group.widgets
-                     for metric in widget.metrics],
+                     for metric in utils.flatten(widget.metrics)],
             dimensions=combined_dimensions,
             metric_filters=metric_filters or [],
             dimension_filters=self.widget_group.dimension_filters + (dimension_filters or []),
@@ -39,10 +39,10 @@ class WidgetGroupManager(object):
                 # This escapes a pandas bug where a data frame subset of columns still returns the columns of the
                 # original data frame
                 reference_keys = [''] + [ref.key for ref in references]
-                subset_columns = pd.MultiIndex.from_product([reference_keys, widget.metrics])
+                subset_columns = pd.MultiIndex.from_product([reference_keys, utils.flatten(widget.metrics)])
                 subset = pd.DataFrame(dataframe[subset_columns], columns=subset_columns)
 
             else:
-                subset = dataframe[widget.metrics]
+                subset = dataframe[utils.flatten(widget.metrics)]
 
             yield widget.transformer.transform(subset, display_schema)
