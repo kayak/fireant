@@ -180,7 +180,7 @@ class DataTablesRowIndexTransformer(Transformer):
                 yield key, {'display': _safe(idx[i]), 'value': dimension_value}
 
             elif 'display_options' in dimension:
-                display = dimension['display_options'].get(dimension_value, dimension_value) or 'Total'
+                display = dimension['display_options'].get(dimension_value, dimension_value)
                 yield key, {'display': display, 'value': dimension_value}
 
             else:
