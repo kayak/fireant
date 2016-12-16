@@ -180,7 +180,7 @@ class DataTablesRowIndexTransformer(Transformer):
                 yield key, {'display': _safe(idx[i]), 'value': dimension_value}
 
             elif 'display_options' in dimension:
-                display = dimension['display_options'].get(dimension_value, dimension_value) or 'Total'
+                display = dimension['display_options'].get(dimension_value, dimension_value)
                 yield key, {'display': display, 'value': dimension_value}
 
             else:
@@ -233,7 +233,7 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
         for dimension in list(display_schema['dimensions'].values())[1:]:
             if 'display_options' in dimension:
                 level_key = metric_column[i]
-                level_display = dimension['display_options'].get(level_key, None)
+                level_display = dimension['display_options'].get(level_key, level_key)
 
             else:
                 level_key = metric_column[i]
