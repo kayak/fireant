@@ -4,12 +4,12 @@ from unittest import TestCase
 
 import pandas as pd
 from mock import Mock, patch, call
+from pypika import Table, functions as fn
 
 from fireant.dashboards import *
 from fireant.slicer import *
 from fireant.slicer.references import WoW
 from fireant.tests.database.mock_database import TestDatabase
-from pypika import Table, functions as fn
 
 
 class DashboardTests(TestCase):
@@ -63,7 +63,8 @@ class DashboardTests(TestCase):
             operations=operations or [],
         )
 
-    def assert_result_transformed(self, widgets, dimensions, mock_transformer, tx_generator, references=[]):
+    def assert_result_transformed(self, widgets, dimensions, mock_transformer, tx_generator, references=[],
+                                  operations=[]):
         # Assert that there is a result for each widget
         self.assertEqual(len(widgets), len(list(tx_generator)))
 
@@ -72,6 +73,7 @@ class DashboardTests(TestCase):
                 dimensions=dimensions or [],
                 metrics=widget.metrics,
                 references=references,
+                operations=operations,
             ) for widget in widgets]
         )
 

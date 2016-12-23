@@ -51,7 +51,7 @@ class L1Loss(Operation):
 
 class L2Loss(L1Loss):
     """
-    Performs L1 Loss (mean sqr. error) operation on a metric using another metric as the target.
+    Performs L2 Loss (mean sqr. error) operation on a metric using another metric as the target.
     """
     key = 'l2loss'
     label = 'L2 loss'
