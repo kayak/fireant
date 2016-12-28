@@ -1,0 +1,6 @@
+six
+pandas==0.18.1
+pypika==0.1.12
+vertica-python>=0.6
+matplotlib
+mock
