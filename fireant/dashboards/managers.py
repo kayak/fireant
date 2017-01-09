@@ -9,12 +9,12 @@ class WidgetGroupManager(object):
     def __init__(self, widget_group):
         self.widget_group = widget_group
 
-    def render(self, dimensions=None, metric_filters=None, dimension_filters=None, references=None, operations=None):
+    def _schema(self, dimensions=None, metric_filters=None, dimension_filters=None, references=None, operations=None):
         combined_dimensions = utils.filter_duplicates(self.widget_group.dimensions + (dimensions or []))
         combined_references = utils.filter_duplicates(self.widget_group.references + (references or []))
         combined_operations = utils.filter_duplicates(self.widget_group.operations + (operations or []))
 
-        dataframe = self.widget_group.slicer.manager.data(
+        return dict(
             metrics=[metric
                      for widget in self.widget_group.widgets
                      for metric in utils.flatten(widget.metrics)],
@@ -25,8 +25,19 @@ class WidgetGroupManager(object):
             operations=combined_operations,
         )
 
-        return list(self._transform_widgets(self.widget_group.widgets, dataframe,
-                                            combined_dimensions, combined_references, combined_operations))
+    def render(self, dimensions=None, metric_filters=None, dimension_filters=None, references=None, operations=None):
+        schema = self._schema(dimensions, metric_filters, dimension_filters, references, operations)
+        dataframe = self.widget_group.slicer.manager.data(**schema)
+        return list(
+            self._transform_widgets(self.widget_group.widgets, dataframe,
+                                    schema['dimensions'], schema['references'], schema['operations'])
+        )
+
+    def query_string(self, dimensions=None, metric_filters=None, dimension_filters=None, references=None,
+                     operations=None):
+        schema = self._schema(dimensions, metric_filters, dimension_filters, references, operations)
+        return self.widget_group.slicer.manager.query_string(**schema)
+
 
     def _transform_widgets(self, widgets, dataframe, dimensions, references, operations):
         for widget in widgets:

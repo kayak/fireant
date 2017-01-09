@@ -63,6 +63,47 @@ class SlicerManager(QueryManager, OperationManager):
         dataframe = self.query_data(**query_schema)
         return self.post_process(dataframe, operation_schema)
 
+    def query_string(self, metrics=(), dimensions=(),
+                     metric_filters=(), dimension_filters=(),
+                     references=(), operations=()):
+        """
+        :param metrics:
+            Type: list or tuple
+            A set of metrics to include in the query.
+
+        :param dimensions:
+            Type: list or tuple
+            A set of dimensions to split the metrics into groups.
+
+        :param metric_filters:
+            Type: list or tuple
+            A set of filters to constrain the data with by metric thresholds.
+
+        :param dimension_filters:
+            Type: list or tuple
+            A set of filters to constrain the data with by dimension.
+
+        :param references:
+            Type: list or tuple
+            A set of comparisons to include in the query.
+
+        :param operations:
+            Type: list or tuple
+            A set of operations to perform on the response.
+
+        :return:
+            The query that would generate the data.
+        """
+        metrics = utils.filter_duplicates(metrics)
+        dimensions = utils.filter_duplicates(dimensions)
+
+        query_schema = self.data_query_schema(metrics=metrics, dimensions=dimensions,
+                                              metric_filters=metric_filters, dimension_filters=dimension_filters,
+                                              references=references, operations=operations)
+
+        del query_schema['database']
+        return str(self._build_data_query(**query_schema))
+
     def dimension_options(self, dimension, filters, limit=None):
         dimopt_schema = self.dimension_option_schema(dimension, filters, limit)
         return self.query_dimension_options(**dimopt_schema)
@@ -82,7 +123,6 @@ class SlicerManager(QueryManager, OperationManager):
 
         :return:
         """
-
         metric_joins_schema = self._joins_schema(set(metrics) | {mf.element_key for mf in metric_filters},
                                                  self.slicer.metrics)
         dimension_joins_schema = self._joins_schema(set(dimensions) | {df.element_key for df in dimension_filters},

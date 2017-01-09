@@ -103,13 +103,12 @@ class QueryManager(object):
         :return:
             A pd.DataFrame indexed by the provided dimensions paramaters containing columns for each metrics parameter.
         """
-        query = self._build_data_query(table, joins or dict(), metrics or dict(), dimensions or dict(),
-                                       dfilters or dict(), mfilters or dict(), references or dict(), rollup or list())
+        query = self._build_data_query(table, joins, metrics, dimensions, dfilters, mfilters, references, rollup)
 
-        querystring = str(query)
-        logger.info("Executing query:\n----START----\n{query}\n-----END-----".format(query=querystring))
+        query_string = str(query)
+        logger.info("Executing query:\n----START----\n{query}\n-----END-----".format(query=query_string))
 
-        dataframe = database.fetch_dataframe(querystring)
+        dataframe = database.fetch_dataframe(query_string)
 
         for dimension_key in rollup:
             dataframe[dimension_key].replace([np.nan], [Totals.key], inplace=True)
@@ -157,7 +156,9 @@ class QueryManager(object):
                 for result in results]
 
     def _build_data_query(self, table, joins, metrics, dimensions, dfilters, mfilters, references, rollup):
-        args = (table, joins, metrics, dimensions, dfilters, mfilters, rollup)
+        args = (table, joins or dict(), metrics or dict(), dimensions or dict(),
+                dfilters or dict(), mfilters or dict(), rollup or list())
+
         query = self._build_query_inner(*args)
 
         if references:

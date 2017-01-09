@@ -93,6 +93,20 @@ class DashboardTests(TestCase):
 
 
 class DashboardSchemaTests(DashboardTests):
+    def test_if_the_dashboard_query_string_is_equal_to_its_slicer_query_string_given_same_metrics(self):
+        metrics = ['clicks']
+
+        test_render = WidgetGroup(
+            slicer=self.test_slicer,
+            widgets = [
+                LineChartWidget(metrics=metrics),
+            ]
+        )
+
+        result = test_render.manager.query_string()
+
+        self.assertEquals(self.test_slicer.manager.query_string(metrics=metrics), result)
+
     @patch('fireant.dashboards.LineChartWidget.transformer')
     def test_metric_widgets(self, mock_transformer):
         metrics = ['clicks', 'conversions']
