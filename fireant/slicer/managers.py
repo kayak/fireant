@@ -1,12 +1,11 @@
 # coding: utf-8
 
 import functools
-
 from collections import OrderedDict
-from fireant.slicer.operations import Totals
-from fireant import utils
-from pypika import functions as fn
 
+from fireant import utils
+from fireant.slicer.operations import Totals
+from pypika import functions as fn
 from .postprocessors import OperationManager
 from .queries import QueryManager
 
@@ -103,7 +102,7 @@ class SlicerManager(QueryManager, OperationManager):
                                              self._default_dimension_definition),
 
             'joins': list(metric_joins_schema | dimension_joins_schema),
-            'references': self._references_schema(references, dimensions),
+            'references': self._references_schema(references),
             'rollup': self._totals_schema(dimensions, operations),
         }
 
@@ -279,16 +278,14 @@ class SlicerManager(QueryManager, OperationManager):
 
         return display_dims
 
-    def _references_schema(self, references, dimensions):
-        dimension_keys = {utils.slice_first(dimension) for dimension in dimensions}
-
+    def _references_schema(self, references):
         schema_references = OrderedDict()
         for reference in references:
-            if reference.element_key not in dimension_keys:
+            if reference.element_key not in self.slicer.dimensions.keys():
                 raise SlicerException(
                     'Unable to query with [{reference}]. '
-                    'Dimension [{dimension}] is missing.'.format(reference=str(reference),
-                                                                 dimension=reference.element_key))
+                    'No such dimension [{dimension}].'.format(reference=str(reference),
+                                                              dimension=reference.element_key))
 
             from .schemas import DatetimeDimension
             if not isinstance(self.slicer.dimensions[reference.element_key], DatetimeDimension):
@@ -299,6 +296,7 @@ class SlicerManager(QueryManager, OperationManager):
 
             schema_references[reference.key] = {
                 'dimension': reference.element_key,
+                'definition': self.slicer.dimensions[reference.element_key].definition,
                 'interval': reference.interval,
                 'modifier': reference.modifier,
             }

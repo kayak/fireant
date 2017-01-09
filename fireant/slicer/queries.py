@@ -170,40 +170,33 @@ class QueryManager(object):
                                                     for key in list(dimensions.keys()) + list(metrics.keys())])
 
         for reference_key, schema in references.items():
-            dimension_key = schema['dimension']
+            dimension_key, interval = schema['dimension'], schema['interval']
 
-            dimensions, dfilters = self._replace_dim_for_ref(dfilters, dimension_key, dimensions, schema['interval'])
+            dfilters = self._replace_filters_for_ref(dfilters, schema['definition'], interval)
+
             ref_query = self._build_query_inner(table, joins, metrics, dimensions, dfilters, mfilters, rollup)
-
-            ref_criteria = query.field(dimension_key) == ref_query.field(dimension_key)
-            for dkey in set(dimensions.keys()) - {dimension_key}:
-                ref_criteria &= query.field(dkey) == ref_query.field(dkey)
+            join_criteria = self._build_reference_join_criteria(dimension_key, dimensions, interval, query, ref_query)
 
             # Optional modifier function to modify the metric in the reference query. This is for delta and delta
             # percentage references. It is None for normal references and this default should be used
             modifier = schema.get('modifier')
 
-            reference_metrics = [
-                modifier(query.field(key), ref_query.field(key)).as_(self._suffix(key, reference_key))
-                for key in metrics.keys()
-                ] if modifier else [
-                ref_query.field(key).as_(self._suffix(key, reference_key))
-                for key in metrics.keys()]
-
             # Join the reference query and select the reference dimension and all metrics
             # This ignores additional dimensions since they are identical to the primary results
-            wrapper_query = (
-                wrapper_query.join(ref_query, JoinType.left).on(ref_criteria)
-                    # Don't select this for now
-                    # .select(ref_dimension.as_(self._suffix(dimension_key, reference_key)))
-                    .select(*[
-                    # Select the metrics after applying the modifier (such as Delta/Delta Percentage) if there is one
-                    modifier(query.field(key), ref_query.field(key)).as_(self._suffix(key, reference_key))
-                    for key in metrics.keys()
-                    ] if modifier else [
-                    # If no modifier, just select the metric from the subquery
-                    ref_query.field(key).as_(self._suffix(key, reference_key))
-                    for key in metrics.keys()])
+            if join_criteria:
+                wrapper_query = wrapper_query.join(ref_query, JoinType.left).on(join_criteria)
+            else:
+                wrapper_query = wrapper_query.from_(ref_query)
+
+            if modifier:
+                get_reference_field = lambda key: modifier(query.field(key), ref_query.field(key))
+
+            else:
+                get_reference_field = lambda key: ref_query.field(key)
+
+            wrapper_query = wrapper_query.select(
+                *[get_reference_field(key).as_(self._suffix(key, reference_key))
+                  for key in metrics.keys()]
             )
 
         return self._add_sorting(wrapper_query, [query.field(dkey) for dkey in dimensions.keys()])
@@ -278,24 +271,20 @@ class QueryManager(object):
         return '%s_%s' % (key, suffix) if suffix else key
 
     @staticmethod
-    def _replace_dim_for_ref(dfilters, dimension_key, dimensions, interval):
+    def _replace_filters_for_ref(dfilters, target_dimension, interval):
         """
         Replaces the dimension used by a reference in the dimension schema and dimension filter schema.
 
         We do this in order to build the same query with a shifted date instead of the actual date.
         """
-        target_dimension = dimensions[dimension_key]
-
-        new_dimensions = copy.deepcopy(dimensions)
-        new_dimensions[dimension_key] = target_dimension + interval
-
         new_dfilters = []
         for dfilter in dfilters:
-            # This is a very hack way of doing this.  This expects the dfilter to use the exact same reference to
-            # the dimension's definition, which the slicer manager guarentees and the unit tests simulate.
-            # TODO provide a utility in pypika for checking if these are the same
             try:
-                if dfilter.term.fields()[0] is target_dimension.fields()[0]:
+                # FIXME this is a bit hacky. Casts the fields to string to see if the filter uses this dimensinon
+                # TODO provide a utility in pypika for checking if these are the same
+                filter_fields = ''.join(str(f) for f in dfilter.term.fields())
+                target_fields = ''.join(str(f) for f in target_dimension.fields())
+                if filter_fields == target_fields:
                     dfilter = copy.deepcopy(dfilter)
                     dfilter.term = dfilter.term + interval
 
@@ -304,4 +293,24 @@ class QueryManager(object):
 
             new_dfilters.append(dfilter)
 
-        return new_dimensions, new_dfilters
+        return new_dfilters
+
+    @staticmethod
+    def _build_reference_join_criteria(dimension_key, dimensions, interval, query, ref_query):
+        ref_join_criteria = []
+        if dimension_key in dimensions:
+            ref_join_criteria.append(
+                query.field(dimension_key) == ref_query.field(dimension_key) + interval
+            )
+        ref_join_criteria += [query.field(dkey) == ref_query.field(dkey)
+                              for dkey in set(dimensions.keys()) - {dimension_key}]
+
+        # If there are no selected dimensions, this will be an empty list.
+        if not ref_join_criteria:
+            return None
+
+        ref_criteria = ref_join_criteria.pop(0)
+        for criteria in ref_join_criteria:
+            ref_criteria &= criteria
+
+        return ref_criteria
