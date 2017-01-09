@@ -102,7 +102,7 @@ class ExampleTests(QueryTests):
             references=OrderedDict([
                 # Example of adding a Week-over-Week comparison to the query
                 (references.WoW.key, {
-                    'dimension': 'date',
+                    'dimension': 'date', 'definition': dt,
                     'interval': references.WoW.interval,
                 })
             ]),
@@ -137,7 +137,7 @@ class ExampleTests(QueryTests):
                          'LEFT JOIN ('
                          # Reference Query
                          'SELECT '
-                         'ROUND("test_table"."dt",\'DD\')+INTERVAL \'1 WEEK\' "date","test_join2"."fiz" "fiz",'
+                         'ROUND("test_table"."dt",\'DD\') "date","test_join2"."fiz" "fiz",'
                          'SUM("test_table"."foo") "foo",'
                          'AVG("test_join1"."bar") "bar",'
                          'SUM("test_table"."numerator")/SUM("test_table"."denominator") "ratio" '
@@ -146,9 +146,9 @@ class ExampleTests(QueryTests):
                          'LEFT JOIN "test_join2" ON "test_table"."join2_id"="test_join2"."id" '
                          'WHERE "test_table"."dt"+INTERVAL \'1 WEEK\' BETWEEN \'2016-01-01\' AND \'2016-12-31\' '
                          'AND "test_join2"."fiz" IN (\'a\',\'b\',\'c\') '
-                         'GROUP BY ROUND("test_table"."dt",\'DD\')+INTERVAL \'1 WEEK\',"test_join2"."fiz" '
+                         'GROUP BY ROUND("test_table"."dt",\'DD\'),"test_join2"."fiz" '
                          'HAVING SUM("test_join2"."buz")>100'
-                         ') "sq1" ON "sq0"."date"="sq1"."date" '
+                         ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL \'1 WEEK\' '
                          'AND "sq0"."fiz"="sq1"."fiz" '
                          'ORDER BY "sq0"."date","sq0"."fiz"', str(query))
 
@@ -541,7 +541,7 @@ class FilterTests(QueryTests):
                          'ORDER BY "locale"', str(query))
 
 
-class ComparisonTests(QueryTests):
+class ReferenceTests(QueryTests):
     intervals = {
         'yoy': '1 YEAR',
         'qoq': '1 QUARTER',
@@ -570,7 +570,8 @@ class ComparisonTests(QueryTests):
                 dt[date(2000, 1, 1):date(2000, 3, 1)]
             ],
             references=OrderedDict([
-                (ref.key, {'dimension': ref.element_key, 'interval': ref.interval, 'modifier': ref.modifier})
+                (ref.key, {'dimension': ref.element_key, 'definition': dt,
+                           'interval': ref.interval, 'modifier': ref.modifier})
             ]),
             rollup=[],
         )
@@ -594,12 +595,12 @@ class ComparisonTests(QueryTests):
             ') "sq0" '
             'LEFT JOIN ('
             'SELECT '
-            'ROUND("dt",\'DD\')+INTERVAL \'{expr}\' "date","device_type" "device_type",'
+            'ROUND("dt",\'DD\') "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY ROUND("dt",\'DD\')+INTERVAL \'{expr}\',"device_type"'
-            ') "sq1" ON "sq0"."date"="sq1"."date" '
+            'GROUP BY ROUND("dt",\'DD\'),"device_type"'
+            ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL \'{expr}\' '
             'AND "sq0"."device_type"="sq1"."device_type" '
             'ORDER BY "sq0"."date","sq0"."device_type"'.format(
                 key=key,
@@ -625,12 +626,12 @@ class ComparisonTests(QueryTests):
             ') "sq0" '
             'LEFT JOIN ('
             'SELECT '
-            'ROUND("dt",\'DD\')+INTERVAL \'{expr}\' "date","device_type" "device_type",'
+            'ROUND("dt",\'DD\') "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY ROUND("dt",\'DD\')+INTERVAL \'{expr}\',"device_type"'
-            ') "sq1" ON "sq0"."date"="sq1"."date" '
+            'GROUP BY ROUND("dt",\'DD\'),"device_type"'
+            ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL \'{expr}\' '
             'AND "sq0"."device_type"="sq1"."device_type" '
             'ORDER BY "sq0"."date","sq0"."device_type"'.format(
                 key=key,
@@ -656,12 +657,12 @@ class ComparisonTests(QueryTests):
             ') "sq0" '
             'LEFT JOIN ('
             'SELECT '
-            'ROUND("dt",\'DD\')+INTERVAL \'{expr}\' "date","device_type" "device_type",'
+            'ROUND("dt",\'DD\') "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY ROUND("dt",\'DD\')+INTERVAL \'{expr}\',"device_type"'
-            ') "sq1" ON "sq0"."date"="sq1"."date" '
+            'GROUP BY ROUND("dt",\'DD\'),"device_type"'
+            ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL \'{expr}\' '
             'AND "sq0"."device_type"="sq1"."device_type" '
             'ORDER BY "sq0"."date","sq0"."device_type"'.format(
                 key=key,
@@ -739,11 +740,109 @@ class ComparisonTests(QueryTests):
         query = self._get_compare_query(references.DeltaPercentage(reference))
         self.assert_reference_p(query, reference.key)
 
-
-    def test_metrics_dimensions_filters_references__DoD_p(self):
+    def test_metrics_dimensions_filters_references__dod_p(self):
         reference = references.DoD('date')
         query = self._get_compare_query(references.DeltaPercentage(reference))
         self.assert_reference_p(query, reference.key)
+
+    def test_metrics_dimensions_filters_references__no_date_dimension(self):
+        ref = references.DoD('date')
+        dt = self.mock_table.dt
+        device_type = self.mock_table.device_type
+
+        query = self.manager._build_data_query(
+            table=self.mock_table,
+            joins=[],
+            metrics=OrderedDict([
+                ('clicks', fn.Sum(self.mock_table.clicks)),
+                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
+            ]),
+            dimensions=OrderedDict([
+                # NO Date Dimension
+                ('device_type', device_type),
+            ]),
+            mfilters=[],
+            dfilters=[
+                dt[date(2000, 1, 1):date(2000, 3, 1)]
+            ],
+            references=OrderedDict([
+                (ref.key, {'dimension': ref.element_key, 'definition': self.mock_table.dt,
+                           'interval': ref.interval, 'modifier': ref.modifier})
+            ]),
+            rollup=[],
+        )
+
+        self.assertEqual(
+            'SELECT '
+            '"sq0"."device_type" "device_type",'
+            '"sq0"."clicks" "clicks","sq0"."roi" "roi",'
+            '"sq1"."clicks" "clicks_{key}",'
+            '"sq1"."roi" "roi_{key}" '
+            'FROM ('
+            'SELECT '
+            '"device_type" "device_type",'
+            'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'FROM "test_table" '
+            'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+            'GROUP BY "device_type"'
+            ') "sq0" '
+            'LEFT JOIN ('
+            'SELECT '
+            '"device_type" "device_type",'
+            'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'FROM "test_table" '
+            'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+            'GROUP BY "device_type"'
+            ') "sq1" ON "sq0"."device_type"="sq1"."device_type" '
+            'ORDER BY "sq0"."device_type"'.format(
+                key=ref.key,
+                expr=self.intervals[ref.key]
+            ), str(query)
+        )
+
+    def test_metrics_dimensions_filters_references__no_dimensions(self):
+        ref = references.DoD('date')
+        dt = self.mock_table.dt
+
+        query = self.manager._build_data_query(
+            table=self.mock_table,
+            joins=[],
+            metrics=OrderedDict([
+                ('clicks', fn.Sum(self.mock_table.clicks)),
+                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
+            ]),
+            dimensions={},
+            mfilters=[],
+            dfilters=[
+                dt[date(2000, 1, 1):date(2000, 3, 1)]
+            ],
+            references=OrderedDict([
+                (ref.key, {'dimension': ref.element_key, 'definition': self.mock_table.dt,
+                           'interval': ref.interval, 'modifier': ref.modifier})
+            ]),
+            rollup=[],
+        )
+
+        self.assertEqual(
+            'SELECT '
+            '"sq0"."clicks" "clicks","sq0"."roi" "roi",'
+            '"sq1"."clicks" "clicks_{key}",'
+            '"sq1"."roi" "roi_{key}" '
+            'FROM ('
+            'SELECT '
+            'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'FROM "test_table" '
+            'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\''
+            ') "sq0",('
+            'SELECT '
+            'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'FROM "test_table" '
+            'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\''
+            ') "sq1"'.format(
+                key=ref.key,
+                expr=self.intervals[ref.key]
+            ), str(query)
+        )
 
 
 class TotalsQueryTests(QueryTests):

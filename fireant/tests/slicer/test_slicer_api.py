@@ -756,9 +756,16 @@ class SlicerSchemaReferenceTests(SlicerSchemaTests):
         self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
         self.assertSetEqual({'date'}, set(query_schema['dimensions'].keys()))
         self.assertEqual('ROUND("test"."dt",\'DD\')', str(query_schema['dimensions']['date']))
+
+        # Cast definition to string for comparison
+        query_schema['references'][reference.key]['definition'] = str(
+            query_schema['references'][reference.key]['definition']
+        )
+
         self.assertDictEqual({
             reference.key: {
                 'dimension': reference.element_key,
+                'definition': '"test"."dt"',
                 'interval': reference.interval,
                 'modifier': reference.modifier,
             }
@@ -801,12 +808,12 @@ class SlicerSchemaReferenceTests(SlicerSchemaTests):
         self._reference_test_with_date(DeltaPercentage(YoY('date')))
 
     def test_reference_missing_dimension(self):
-        # Reference dimension is required in order to use a reference with it
+        # Throws exception when reference key is not a dimension key
         with self.assertRaises(SlicerException):
             self.test_slicer.manager.data_query_schema(
                 metrics=['foo'],
                 dimensions=[],
-                references=[WoW('date')],
+                references=[WoW('blahblah')],
             )
 
     def test_reference_wrong_dimension_type(self):

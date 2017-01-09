@@ -3,11 +3,25 @@ from pypika import Interval, functions as fn
 
 
 class Reference(object):
+    key = None
+    label = None
     interval = None
     modifier = None
 
     def __init__(self, element_key):
         self.element_key = element_key
+
+    def __eq__(self, other):
+        if not isinstance(other, Reference):
+            return False
+
+        return all([
+            self.key == other.key,
+            self.element_key == other.element_key,
+        ])
+
+    def __hash__(self):
+        return hash('%s:%s' % (self.key, self.element_key))
 
 
 class Delta(Reference):
