@@ -45,7 +45,7 @@ class DeltaPercentage(Reference):
 
     @staticmethod
     def modifier(field, join_field):
-        return (field - join_field) / fn.NullIf(join_field, 0)
+        return ((field - join_field) * 100) / fn.NullIf(join_field, 0)
 
 
 class DoD(Reference):
