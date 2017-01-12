@@ -6,6 +6,7 @@ from mock import patch, MagicMock
 
 from fireant.slicer import *
 from fireant.slicer.managers import SlicerManager
+from fireant.slicer.queries import QueryManager
 from fireant.slicer.transformers import *
 from fireant.tests.database.mock_database import TestDatabase
 from pypika import Table
@@ -70,6 +71,21 @@ class ManagerInitializationTests(TestCase):
         mock_query_data.assert_called_once_with(a=1, b=2)
         mock_post_process.assert_called_once_with('dataframe', 'op_schema')
         mock_operation_schema.assert_called_once_with(mock_args['operations'])
+
+    @patch('fireant.slicer.managers.SlicerManager._build_data_query')
+    @patch('fireant.slicer.managers.SlicerManager.data_query_schema')
+    def test_query_string(self, mock_query_schema, mock_build_query_string):
+        mock_args = {'metrics': [0], 'dimensions': [1],
+                     'metric_filters': [2], 'dimension_filters': [3],
+                     'references': [4], 'operations': [5]}
+        mock_query_schema.return_value = {'database': 'db1', 'a': 1, 'b': 2}
+        mock_build_query_string.return_value = 1
+
+        result = self.slicer.manager.query_string(**mock_args)
+
+        self.assertEqual(str(mock_build_query_string.return_value), result)
+        mock_query_schema.assert_called_once_with(**mock_args)
+        mock_build_query_string.assert_called_once_with(a=1, b=2)
 
     def missing_database_config(self):
         with self.assertRaises(SlicerException):
