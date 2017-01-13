@@ -10,22 +10,22 @@ class WidgetGroupManager(object):
         self.widget_group = widget_group
 
     def _schema(self, dimensions=None, metric_filters=None, dimension_filters=None, references=None, operations=None):
-        combined_dimensions = utils.filter_duplicates(self.widget_group.dimensions + (dimensions or []))
-        combined_references = utils.filter_duplicates(self.widget_group.references + (references or []))
-        combined_operations = utils.filter_duplicates(self.widget_group.operations + (operations or []))
-
         return dict(
             metrics=[metric
                      for widget in self.widget_group.widgets
                      for metric in utils.flatten(widget.metrics)],
-            dimensions=combined_dimensions,
+            dimensions=dimensions,
             metric_filters=metric_filters or [],
             dimension_filters=self.widget_group.dimension_filters + (dimension_filters or []),
-            references=combined_references,
-            operations=combined_operations,
+            references=references,
+            operations=operations,
         )
 
     def render(self, dimensions=None, metric_filters=None, dimension_filters=None, references=None, operations=None):
+        dimensions = utils.filter_duplicates(self.widget_group.dimensions + (dimensions or []))
+        references = utils.filter_duplicates(self.widget_group.references + (references or []))
+        operations = utils.filter_duplicates(self.widget_group.operations + (operations or []))
+
         for widget in self.widget_group.widgets:
             widget.transformer.prevalidate_request(self.widget_group.slicer, widget.metrics, dimensions,
                                                    metric_filters, dimension_filters, references, operations)
@@ -39,6 +39,10 @@ class WidgetGroupManager(object):
 
     def query_string(self, dimensions=None, metric_filters=None, dimension_filters=None, references=None,
                      operations=None):
+        dimensions = utils.filter_duplicates(self.widget_group.dimensions + (dimensions or []))
+        references = utils.filter_duplicates(self.widget_group.references + (references or []))
+        operations = utils.filter_duplicates(self.widget_group.operations + (operations or []))
+
         schema = self._schema(dimensions, metric_filters, dimension_filters, references, operations)
         return self.widget_group.slicer.manager.query_string(**schema)
 

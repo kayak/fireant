@@ -55,7 +55,8 @@ class HighchartsLineTransformer(Transformer):
             raise TransformationException(MISSING_CONT_DIM_MESSAGE)
 
         from fireant.slicer import ContinuousDimension
-        dimension0 = slicer.dimensions[dimensions[0]]
+        first_dimension = utils.slice_first(dimensions[0])
+        dimension0 = slicer.dimensions[first_dimension]
         if not isinstance(dimension0, ContinuousDimension):
             raise TransformationException(MISSING_CONT_DIM_MESSAGE)
 
