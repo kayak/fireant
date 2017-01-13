@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import functools
+import itertools
 from collections import OrderedDict
 
 from fireant import utils
@@ -61,7 +62,15 @@ class SlicerManager(QueryManager, OperationManager):
         operation_schema = self.operation_schema(operations)
 
         dataframe = self.query_data(**query_schema)
-        return self.post_process(dataframe, operation_schema)
+        dataframe = self.post_process(dataframe, operation_schema)
+
+        # Filter additional metrics from the dataframe that were needed for operations
+        final_columns = metrics + ['%s_%s' % (os['metric'], os['key']) for os in operation_schema]
+        if not references:
+            return dataframe[final_columns]
+
+        reference_columns = [''] + [r.key for r in references]
+        return dataframe[list(itertools.product(reference_columns, final_columns))]
 
     def query_string(self, metrics=(), dimensions=(),
                      metric_filters=(), dimension_filters=(),

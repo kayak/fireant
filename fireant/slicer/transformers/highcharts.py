@@ -2,9 +2,8 @@
 import numpy as np
 import pandas as pd
 
-from fireant.slicer.operations import Totals
 from fireant import settings, utils
-
+from fireant.slicer.operations import Totals
 from .base import Transformer, TransformationException
 
 COLORS = {
@@ -153,16 +152,13 @@ class HighchartsLineTransformer(Transformer):
 
     def _format_label(self, idx, dim_ordinal, display_schema, reference):
         is_multidimensional = isinstance(idx, tuple)
-        if is_multidimensional:
-            metric = display_schema['metrics'].get(idx[0], idx[0])
-        else:
-            metric = display_schema['metrics'].get(idx, idx)
 
-        metric_label = metric['label']
+        metric_idx = idx[0] if is_multidimensional else idx
+        metric = display_schema['metrics'].get(metric_idx, {})
+        metric_label = metric.get('label', metric_idx)
+
         if reference:
-            metric_label += ' {reference}'.format(
-                reference=display_schema['references'][reference]
-            )
+            metric_label += ' {}'.format(display_schema['references'][reference])
 
         if not is_multidimensional:
             return metric_label
@@ -232,7 +228,7 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
                                                                                               len(dimensions)))
 
     def yaxis_options(self, dataframe, dim_ordinal, display_schema):
-        return [{'title': None }] * len(display_schema['metrics'])
+        return [{'title': None}] * len(display_schema['metrics'])
 
     def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference, color='#000'):
         metric_key = utils.slice_first(idx)
