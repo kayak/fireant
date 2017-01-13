@@ -3,7 +3,7 @@ from unittest import TestCase
 from pypika import Table
 
 from fireant.slicer import Slicer, Metric, CategoricalDimension, SlicerException
-from fireant.slicer.operations import Totals
+from fireant.slicer.operations import Totals, CumSum, L1Loss
 from fireant.tests.database.mock_database import TestDatabase
 
 
@@ -57,3 +57,57 @@ class TotalsTests(TestCase):
             'dim': {'label': 'Dim', 'display_options': {Totals.key: Totals.label}}
         })
         self.assertDictEqual(display_schema['references'], {})
+
+
+class MetricOperationTests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.test_table = Table('test_table')
+        cls.test_slicer = Slicer(
+            table=Table('test_table'),
+            database=TestDatabase(),
+            joins=[],
+            metrics=[
+                Metric('foo'),
+                Metric('bar'),
+            ],
+
+            dimensions=[
+                CategoricalDimension('dim'),
+            ]
+        )
+
+    def test_metric_included_in_query_schema_for_operation(self):
+        query_schema = self.test_slicer.manager.data_query_schema(
+            metrics=['foo'],
+            dimensions=['dim'],
+            operations=[CumSum('foo')],
+        )
+
+        # Metric included
+        self.assertTrue('foo' in query_schema['metrics'])
+
+        # No rollup added
+        self.assertEqual(len(query_schema['rollup']), 0)
+
+    def test_metric_included_in_query_schema_for_operation_without_metrics(self):
+        query_schema = self.test_slicer.manager.data_query_schema(
+            metrics=[],
+            dimensions=['dim'],
+            operations=[CumSum('foo')],
+        )
+
+        # Metric included
+        self.assertTrue('foo' in query_schema['metrics'])
+
+    def test_all_metrics_included_in_query_schema_for_operation_without_metrics(self):
+        query_schema = self.test_slicer.manager.data_query_schema(
+            metrics=[],
+            dimensions=['dim'],
+            operations=[L1Loss('foo','bar')],
+        )
+
+        # Metric included
+        self.assertTrue('foo' in query_schema['metrics'])
+        self.assertTrue('bar' in query_schema['metrics'])
+

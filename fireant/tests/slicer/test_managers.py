@@ -1,12 +1,14 @@
 # coding: utf-8
 import copy
+import itertools
 from unittest import TestCase
 
+import pandas as pd
 from mock import patch, MagicMock
 
 from fireant.slicer import *
 from fireant.slicer.managers import SlicerManager
-from fireant.slicer.queries import QueryManager
+from fireant.slicer.references import WoW
 from fireant.slicer.transformers import *
 from fireant.tests.database.mock_database import TestDatabase
 from pypika import Table
@@ -56,20 +58,20 @@ class ManagerInitializationTests(TestCase):
     @patch('fireant.slicer.managers.SlicerManager.operation_schema')
     @patch('fireant.slicer.managers.SlicerManager.data_query_schema')
     def test_data(self, mock_query_schema, mock_operation_schema, mock_query_data, mock_post_process):
-        mock_args = {'metrics': [0], 'dimensions': [1],
+        mock_args = {'metrics': ['a'], 'dimensions': ['e'],
                      'metric_filters': [2], 'dimension_filters': [3],
-                     'references': [4], 'operations': [5]}
+                     'references': [WoW('d')], 'operations': [5]}
         mock_query_schema.return_value = {'a': 1, 'b': 2}
-        mock_query_data.return_value = 'dataframe'
-        mock_operation_schema.return_value = 'op_schema'
-        mock_post_process.return_value = 'OK'
+        mock_query_data.return_value = mock_post_process.return_value = pd.DataFrame(
+            columns=itertools.product(['', 'wow'], ['a', 'c', 'm_test']))
+        mock_operation_schema.return_value = [{'metric': 'm', 'key': 'test'}]
 
         result = self.slicer.manager.data(**mock_args)
 
-        self.assertEqual('OK', result)
+        self.assertIsInstance(result, pd.DataFrame)
+        self.assertListEqual([('', 'a'), ('', 'm_test'), ('wow', 'a'), ('wow', 'm_test')], list(result.columns))
         mock_query_schema.assert_called_once_with(**mock_args)
         mock_query_data.assert_called_once_with(a=1, b=2)
-        mock_post_process.assert_called_once_with('dataframe', 'op_schema')
         mock_operation_schema.assert_called_once_with(mock_args['operations'])
 
     @patch('fireant.slicer.managers.SlicerManager._build_data_query')
