@@ -4,12 +4,13 @@ from unittest import TestCase
 
 import pandas as pd
 from mock import Mock, patch, call
-from pypika import Table, functions as fn
 
 from fireant.dashboards import *
 from fireant.slicer import *
 from fireant.slicer.references import WoW
+from fireant.slicer.transformers import TransformationException
 from fireant.tests.database.mock_database import TestDatabase
+from pypika import Table, functions as fn
 
 
 class DashboardTests(TestCase):
@@ -63,8 +64,8 @@ class DashboardTests(TestCase):
             operations=operations or [],
         )
 
-    def assert_result_transformed(self, widgets, dimensions, mock_transformer, tx_generator, references=[],
-                                  operations=[]):
+    def assert_result_transformed(self, widgets, dimensions, mock_transformer, tx_generator, references=(),
+                                  operations=()):
         # Assert that there is a result for each widget
         self.assertEqual(len(widgets), len(list(tx_generator)))
 
@@ -72,8 +73,8 @@ class DashboardTests(TestCase):
             [call(
                 dimensions=dimensions or [],
                 metrics=widget.metrics,
-                references=references,
-                operations=operations,
+                references=list(references),
+                operations=list(operations),
             ) for widget in widgets]
         )
 
@@ -98,7 +99,7 @@ class DashboardSchemaTests(DashboardTests):
 
         test_render = WidgetGroup(
             slicer=self.test_slicer,
-            widgets = [
+            widgets=[
                 LineChartWidget(metrics=metrics),
             ]
         )
@@ -597,3 +598,34 @@ class DashboardAPITests(DashboardTests):
             dimensions=dimensions,
         )
         self.assert_result_transformed(test_render.widgets, dimensions, mock_transformer, result)
+
+
+class PrevalidationTests(DashboardTests):
+    @classmethod
+    def setUpClass(cls):
+        super(PrevalidationTests, cls).setUpClass()
+
+        cls.test_wg = WidgetGroup(
+            slicer=cls.test_slicer,
+
+            widgets=[
+                LineChartWidget(metrics=['clicks']),
+                LineChartWidget(metrics=['conversions']),
+            ]
+        )
+
+    def test_raises_exception_for_linechart_with_no_dimensions(self):
+        with self.assertRaises(TransformationException):
+            self.test_wg.manager.render(dimensions=[])
+
+    @patch('fireant.dashboards.LineChartWidget.transformer.transform')
+    def test_raises_exception_for_linechart_without_continuous_first_dimension(self, mock_transform):
+        self.test_slicer.manager.data.return_value = pd.DataFrame(columns=['clicks', 'conversions'])
+
+        self.test_wg.manager.render(dimensions=['date'])
+        self.test_wg.manager.render(dimensions=['clicks'])
+
+        with self.assertRaises(TransformationException):
+            self.test_wg.manager.render(dimensions=['locale'])
+        with self.assertRaises(TransformationException):
+            self.test_wg.manager.render(dimensions=['account'])

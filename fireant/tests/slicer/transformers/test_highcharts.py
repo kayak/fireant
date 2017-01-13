@@ -5,10 +5,13 @@ from unittest import TestCase
 import numpy as np
 import pandas as pd
 
+from fireant.slicer import Slicer, Metric, ContinuousDimension, DatetimeDimension, CategoricalDimension, UniqueDimension
 from fireant.slicer.transformers import (HighchartsLineTransformer, HighchartsColumnTransformer,
                                          HighchartsBarTransformer)
-from fireant.slicer.transformers import highcharts
+from fireant.slicer.transformers import highcharts, TransformationException
 from fireant.tests import mock_dataframes as mock_df
+from fireant.tests.database.mock_database import TestDatabase
+from pypika import Table
 
 
 class HighchartsLineTransformerTests(TestCase):
@@ -18,7 +21,25 @@ class HighchartsLineTransformerTests(TestCase):
     1-cont-dim, *-metric
     1-cont-dim, *-dim, *-metric
     """
-    hc_tx = HighchartsLineTransformer()
+
+    @classmethod
+    def setUpClass(cls):
+        cls.hc_tx = HighchartsLineTransformer()
+
+        test_table = Table('test_table')
+        test_db = TestDatabase()
+        cls.test_slicer = Slicer(
+            table=test_table,
+            database=test_db,
+
+            dimensions=[
+                ContinuousDimension('cont', definition=test_table.clicks),
+                DatetimeDimension('date', definition=test_table.date),
+                CategoricalDimension('cat', definition=test_table.cat),
+                UniqueDimension('uni', definition=test_table.uni_id, display_field=test_table.uni_name),
+            ],
+            metrics=[Metric('foo')],
+        )
 
     def evaluate_chart_options(self, result, num_series=1, xaxis_type='linear', dash_style='Solid'):
         self.assertSetEqual({'title', 'series', 'chart', 'tooltip', 'xAxis', 'yAxis'}, set(result.keys()))
@@ -57,6 +78,20 @@ class HighchartsLineTransformerTests(TestCase):
 
         else:
             self.assertSetEqual({'type'}, set(series['xAxis'].keys()))
+
+    def test_require_dimensions(self):
+        with self.assertRaises(TransformationException):
+            self.hc_tx.prevalidate_request(self.test_slicer, [], [], [], [], [], [])
+
+    def test_require_continuous_first_dimension(self):
+        # A ContinuousDimension type is required for the first dimension
+        self.hc_tx.prevalidate_request(self.test_slicer, [], ['cont'], [], [], [], [])
+        self.hc_tx.prevalidate_request(self.test_slicer, [], ['date'], [], [], [], [])
+
+        with self.assertRaises(TransformationException):
+            self.hc_tx.prevalidate_request(self.test_slicer, [], ['cat'], [], [], [], [])
+        with self.assertRaises(TransformationException):
+            self.hc_tx.prevalidate_request(self.test_slicer, [], ['uni'], [], [], [], [])
 
     def test_series_single_metric(self):
         # Tests transformation of a single-metric, single-dimension result
@@ -240,6 +275,10 @@ class HighchartsColumnTransformerTests(TestCase):
     """
     type = HighchartsColumnTransformer.chart_type
 
+    @classmethod
+    def setUpClass(cls):
+        cls.hc_tx = HighchartsColumnTransformer()
+
     def evaluate_chart_options(self, result, num_results=1, categories=None):
         self.assertSetEqual({'title', 'series', 'chart', 'tooltip', 'xAxis', 'yAxis'}, set(result.keys()))
         self.assertEqual(num_results, len(result['series']))
@@ -272,10 +311,6 @@ class HighchartsColumnTransformerTests(TestCase):
 
         else:
             self.assertSetEqual({'type'}, set(series['xAxis'].keys()))
-
-    @classmethod
-    def setUpClass(cls):
-        cls.hc_tx = HighchartsColumnTransformer()
 
     def evaluate_result(self, df, result):
         result_data = [series['data'] for series in result['series']]

@@ -444,8 +444,9 @@ class TransformerManager(object):
         :return:
             The transformed result of the request.
         """
-        tx.prevalidate_request(self.manager.slicer, metrics=metrics, dimensions=[utils.slice_first(dimension)
-                                                                                 for dimension in dimensions],
+        tx.prevalidate_request(self.manager.slicer, metrics=metrics,
+                               dimensions=[utils.slice_first(dimension)
+                                           for dimension in dimensions],
                                metric_filters=metric_filters, dimension_filters=dimension_filters,
                                references=references, operations=operations)
 
