@@ -96,5 +96,5 @@ In a custom database connector, the ``connect`` function must be overridden to p
 
 
 .. include:: ../README.rst
-   :start-after: _appendix_start:
-   :end-before:  _appendix_end:
+    :start-after: _appendix_start:
+    :end-before:  _appendix_end:

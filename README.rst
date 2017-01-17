@@ -106,6 +106,7 @@ The notebooks transformer bundle includes different functions for use in Jupyter
 .. _manager_api_start:
 
 * ``my_slicer.manager.data`` - A Pandas_ data frame indexed by the selected dimensions.
+* ``my_slicer.manager.query_string`` - A string containing the raw SQL query that FireAnt is running.
 
 * ``my_slicer.notebooks.row_index_table`` - A Datatables_ row-indexed table.
 * ``my_slicer.notebooks.column_index_table`` - A Datatables_ column-indexed table.
