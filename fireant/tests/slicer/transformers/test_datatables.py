@@ -716,6 +716,10 @@ class DatatablesUtilityTests(TestCase):
         result = datatables._pretty(0.123456789, {'precision': 2})
         self.assertEqual('0.12', result)
 
+    def test_zero_precision(self):
+        result = datatables._pretty(1784.0, {'precision': 0})
+        self.assertEqual('1784', result)
+
     def test_prefix(self):
         result = datatables._pretty(0.12, {'prefix': '$'})
         self.assertEqual('$0.12', result)
