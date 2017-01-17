@@ -28,8 +28,13 @@ def _safe(value):
 
 
 def _pretty(value, schema):
-    if value and isinstance(value, float) and 'precision' in schema:
-        value = round(value, schema['precision'])
+    precision = schema.get('precision')
+
+    if value and isinstance(value, float) and precision:
+        value = round(value, precision)
+
+    if value and isinstance(value, float) and precision == 0:
+        value = int(value)
 
     return '{prefix}{value}{suffix}'.format(
         prefix=schema.get('prefix', ''),
