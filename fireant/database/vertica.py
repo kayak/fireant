@@ -3,11 +3,11 @@ from pypika import terms
 from . import Database
 
 
-class Round(terms.Function):
-    # Wrapper for Vertica ROUND function for rounding dates.
+class Trunc(terms.Function):
+    # Wrapper for Vertica TRUNC function for truncating dates.
 
     def __init__(self, field, date_format, alias=None):
-        super(Round, self).__init__('ROUND', field, date_format, alias=alias)
+        super(Trunc, self).__init__('TRUNC', field, date_format, alias=alias)
 
 
 class Vertica(Database):
@@ -32,5 +32,5 @@ class Vertica(Database):
             read_timeout=self.read_timeout,
         )
 
-    def round_date(self, field, interval):
-        return Round(field, interval)
+    def trunc_date(self, field, interval):
+        return Trunc(field, interval)

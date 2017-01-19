@@ -40,4 +40,4 @@ class DatabaseTests(TestCase):
             db.connect()
 
         with self.assertRaises(NotImplementedError):
-            db.round_date(Field('abc'), 'DAY')
+            db.trunc_date(Field('abc'), 'DAY')

@@ -80,8 +80,8 @@ Instead of using one of the built in database connectors, you can provide your o
                 read_timeout=self.read_timeout,
             )
 
-        def round_date(self, field, interval):
-            return Round(field, interval)
+        def trunc_date(self, field, interval):
+            return Trunc(field, interval)
 
     hostage.settings = MyVertica(
         host='example.com',
@@ -91,7 +91,7 @@ Instead of using one of the built in database connectors, you can provide your o
         password='password123',
     )
 
-In a custom database connector, the ``connect`` function must be overridden to provide a ``connection`` to the database. The ``round_date`` function must also be overridden since there is no common way to round dates in SQL databases.
+In a custom database connector, the ``connect`` function must be overridden to provide a ``connection`` to the database. The ``trunc_date`` function must also be overridden since there is no common way to trunc dates in SQL databases.
 
 
 

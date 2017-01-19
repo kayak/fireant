@@ -117,7 +117,7 @@ class DatetimeDimension(ContinuousDimension):
 
     def schemas(self, *args, **kwargs):
         interval = args[0] if args else self.default_interval
-        return [(self.key, kwargs['database'].round_date(self.definition, interval.size))]
+        return [(self.key, kwargs['database'].trunc_date(self.definition, interval.size))]
 
 
 class CategoricalDimension(Dimension):

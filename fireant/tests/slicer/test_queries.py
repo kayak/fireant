@@ -83,8 +83,8 @@ class ExampleTests(QueryTests):
                 ('ratio', fn.Sum(self.mock_table.numerator) / fn.Sum(self.mock_table.denominator)),
             ]),
             dimensions=OrderedDict([
-                # Example of using a continuous datetime dimension, where the values are rounded up to the nearest day
-                ('date', settings.database.round_date(dt, 'DD')),
+                # Example of using a continuous datetime dimension, where the values are truncated to the nearest day
+                ('date', settings.database.trunc_date(dt, 'DD')),
 
                 # Example of using a categorical dimension from a joined table
                 ('fiz', self.mock_join2.fiz),
@@ -122,7 +122,7 @@ class ExampleTests(QueryTests):
                          'FROM ('
                          # Main Query
                          'SELECT '
-                         'ROUND("test_table"."dt",\'DD\') "date","test_join2"."fiz" "fiz",'
+                         'TRUNC("test_table"."dt",\'DD\') "date","test_join2"."fiz" "fiz",'
                          'SUM("test_table"."foo") "foo",'
                          'AVG("test_join1"."bar") "bar",'
                          'SUM("test_table"."numerator")/SUM("test_table"."denominator") "ratio" '
@@ -131,13 +131,13 @@ class ExampleTests(QueryTests):
                          'LEFT JOIN "test_join2" ON "test_table"."join2_id"="test_join2"."id" '
                          'WHERE "test_table"."dt" BETWEEN \'2016-01-01\' AND \'2016-12-31\' '
                          'AND "test_join2"."fiz" IN (\'a\',\'b\',\'c\') '
-                         'GROUP BY ROUND("test_table"."dt",\'DD\'),"test_join2"."fiz" '
+                         'GROUP BY TRUNC("test_table"."dt",\'DD\'),"test_join2"."fiz" '
                          'HAVING SUM("test_join2"."buz")>100'
                          ') "sq0" '
                          'LEFT JOIN ('
                          # Reference Query
                          'SELECT '
-                         'ROUND("test_table"."dt",\'DD\') "date","test_join2"."fiz" "fiz",'
+                         'TRUNC("test_table"."dt",\'DD\') "date","test_join2"."fiz" "fiz",'
                          'SUM("test_table"."foo") "foo",'
                          'AVG("test_join1"."bar") "bar",'
                          'SUM("test_table"."numerator")/SUM("test_table"."denominator") "ratio" '
@@ -146,7 +146,7 @@ class ExampleTests(QueryTests):
                          'LEFT JOIN "test_join2" ON "test_table"."join2_id"="test_join2"."id" '
                          'WHERE "test_table"."dt"+INTERVAL \'1 WEEK\' BETWEEN \'2016-01-01\' AND \'2016-12-31\' '
                          'AND "test_join2"."fiz" IN (\'a\',\'b\',\'c\') '
-                         'GROUP BY ROUND("test_table"."dt",\'DD\'),"test_join2"."fiz" '
+                         'GROUP BY TRUNC("test_table"."dt",\'DD\'),"test_join2"."fiz" '
                          'HAVING SUM("test_join2"."buz")>100'
                          ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL \'1 WEEK\' '
                          'AND "sq0"."fiz"="sq1"."fiz" '
@@ -254,8 +254,8 @@ class MetricsTests(QueryTests):
 
 
 class DimensionTests(QueryTests):
-    def _test_rounded_timeseries(self, increment):
-        rounded_dt = settings.database.round_date(self.mock_table.dt, increment)
+    def _test_truncated_timeseries(self, increment):
+        truncated_dt = settings.database.trunc_date(self.mock_table.dt, increment)
 
         return self.manager._build_data_query(
             table=self.mock_table,
@@ -265,7 +265,7 @@ class DimensionTests(QueryTests):
                 ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions=OrderedDict([
-                ('date', rounded_dt)
+                ('date', truncated_dt)
             ]),
             mfilters=[],
             dfilters=[],
@@ -274,58 +274,58 @@ class DimensionTests(QueryTests):
         )
 
     def test_timeseries_hour(self):
-        query = self._test_rounded_timeseries('HH')
+        query = self._test_truncated_timeseries('HH')
 
         self.assertEqual(
-            'SELECT ROUND("dt",\'HH\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'SELECT TRUNC("dt",\'HH\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'GROUP BY ROUND("dt",\'HH\') '
-            'ORDER BY ROUND("dt",\'HH\')', str(query))
+            'GROUP BY TRUNC("dt",\'HH\') '
+            'ORDER BY TRUNC("dt",\'HH\')', str(query))
 
     def test_timeseries_DD(self):
-        query = self._test_rounded_timeseries('DD')
+        query = self._test_truncated_timeseries('DD')
 
         self.assertEqual(
-            'SELECT ROUND("dt",\'DD\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'SELECT TRUNC("dt",\'DD\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'GROUP BY ROUND("dt",\'DD\') '
-            'ORDER BY ROUND("dt",\'DD\')', str(query))
+            'GROUP BY TRUNC("dt",\'DD\') '
+            'ORDER BY TRUNC("dt",\'DD\')', str(query))
 
     def test_timeseries_week(self):
-        query = self._test_rounded_timeseries('WW')
+        query = self._test_truncated_timeseries('WW')
 
         self.assertEqual(
-            'SELECT ROUND("dt",\'WW\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'SELECT TRUNC("dt",\'WW\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'GROUP BY ROUND("dt",\'WW\') '
-            'ORDER BY ROUND("dt",\'WW\')', str(query))
+            'GROUP BY TRUNC("dt",\'WW\') '
+            'ORDER BY TRUNC("dt",\'WW\')', str(query))
 
     def test_timeseries_month(self):
-        query = self._test_rounded_timeseries('MONTH')
+        query = self._test_truncated_timeseries('MONTH')
 
         self.assertEqual(
-            'SELECT ROUND("dt",\'MONTH\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'SELECT TRUNC("dt",\'MONTH\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'GROUP BY ROUND("dt",\'MONTH\') '
-            'ORDER BY ROUND("dt",\'MONTH\')', str(query))
+            'GROUP BY TRUNC("dt",\'MONTH\') '
+            'ORDER BY TRUNC("dt",\'MONTH\')', str(query))
 
     def test_timeseries_quarter(self):
-        query = self._test_rounded_timeseries('Q')
+        query = self._test_truncated_timeseries('Q')
 
         self.assertEqual(
-            'SELECT ROUND("dt",\'Q\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'SELECT TRUNC("dt",\'Q\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'GROUP BY ROUND("dt",\'Q\') '
-            'ORDER BY ROUND("dt",\'Q\')', str(query))
+            'GROUP BY TRUNC("dt",\'Q\') '
+            'ORDER BY TRUNC("dt",\'Q\')', str(query))
 
     def test_timeseries_year(self):
-        query = self._test_rounded_timeseries('YEAR')
+        query = self._test_truncated_timeseries('YEAR')
 
         self.assertEqual(
-            'SELECT ROUND("dt",\'YEAR\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'SELECT TRUNC("dt",\'YEAR\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'GROUP BY ROUND("dt",\'YEAR\') '
-            'ORDER BY ROUND("dt",\'YEAR\')', str(query))
+            'GROUP BY TRUNC("dt",\'YEAR\') '
+            'ORDER BY TRUNC("dt",\'YEAR\')', str(query))
 
     def test_multidimension_categorical(self):
         query = self.manager._build_data_query(
@@ -353,7 +353,7 @@ class DimensionTests(QueryTests):
             'ORDER BY "device_type","locale"', str(query))
 
     def test_multidimension_timeseries_categorical(self):
-        rounded_dt = settings.database.round_date(self.mock_table.dt, 'DD')
+        truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'DD')
         device_type = self.mock_table.device_type
 
         query = self.manager._build_data_query(
@@ -364,7 +364,7 @@ class DimensionTests(QueryTests):
                 ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions=OrderedDict([
-                ('date', rounded_dt),
+                ('date', truncated_dt),
                 ('device_type', device_type),
             ]),
             mfilters=[],
@@ -374,14 +374,14 @@ class DimensionTests(QueryTests):
         )
 
         self.assertEqual(
-            'SELECT ROUND("dt",\'DD\') "date","device_type" "device_type",'
+            'SELECT TRUNC("dt",\'DD\') "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'GROUP BY ROUND("dt",\'DD\'),"device_type" '
-            'ORDER BY ROUND("dt",\'DD\'),"device_type"', str(query))
+            'GROUP BY TRUNC("dt",\'DD\'),"device_type" '
+            'ORDER BY TRUNC("dt",\'DD\'),"device_type"', str(query))
 
     def test_metrics_with_joins(self):
-        rounded_dt = settings.database.round_date(self.mock_table.dt, 'DD')
+        truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'DD')
         locale = self.mock_table.locale
 
         query = self.manager._build_data_query(
@@ -398,7 +398,7 @@ class DimensionTests(QueryTests):
                 ('city_name', self.mock_join1.city_name),
             ]),
             dimensions=OrderedDict([
-                ('date', rounded_dt),
+                ('date', truncated_dt),
                 ('locale', locale),
             ]),
             mfilters=[],
@@ -408,15 +408,15 @@ class DimensionTests(QueryTests):
         )
 
         self.assertEqual('SELECT '
-                         'ROUND("test_table"."dt",\'DD\') "date","test_table"."locale" "locale",'
+                         'TRUNC("test_table"."dt",\'DD\') "date","test_table"."locale" "locale",'
                          'SUM("test_table"."clicks") "clicks",'
                          'SUM("test_table"."revenue")/SUM("test_table"."cost") "roi",'
                          '"test_join1"."hotel_name" "hotel_name","test_join1"."address" "hotel_address",'
                          '"test_join1"."ctid" "city_id","test_join1"."city_name" "city_name" '
                          'FROM "test_table" '
                          'LEFT JOIN "test_join1" ON "test_table"."hotel_id"="test_join1"."hotel_id" '
-                         'GROUP BY ROUND("test_table"."dt",\'DD\'),"test_table"."locale" '
-                         'ORDER BY ROUND("test_table"."dt",\'DD\'),"test_table"."locale"', str(query))
+                         'GROUP BY TRUNC("test_table"."dt",\'DD\'),"test_table"."locale" '
+                         'ORDER BY TRUNC("test_table"."dt",\'DD\'),"test_table"."locale"', str(query))
 
 
 class FilterTests(QueryTests):
@@ -561,12 +561,11 @@ class ReferenceTests(QueryTests):
                 ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions=OrderedDict([
-                ('date', settings.database.round_date(dt, 'DD')),
+                ('date', settings.database.trunc_date(dt, 'DD')),
                 ('device_type', device_type),
             ]),
             mfilters=[],
             dfilters=[
-                # rounded_dt[date(2000, 1, 1):date(2000, 3, 1)]
                 dt[date(2000, 1, 1):date(2000, 3, 1)]
             ],
             references=OrderedDict([
@@ -587,19 +586,19 @@ class ReferenceTests(QueryTests):
             '"sq1"."roi" "roi_{key}" '
             'FROM ('
             'SELECT '
-            'ROUND("dt",\'DD\') "date","device_type" "device_type",'
+            'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY ROUND("dt",\'DD\'),"device_type"'
+            'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
             ') "sq0" '
             'LEFT JOIN ('
             'SELECT '
-            'ROUND("dt",\'DD\') "date","device_type" "device_type",'
+            'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY ROUND("dt",\'DD\'),"device_type"'
+            'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
             ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL \'{expr}\' '
             'AND "sq0"."device_type"="sq1"."device_type" '
             'ORDER BY "sq0"."date","sq0"."device_type"'.format(
@@ -618,19 +617,19 @@ class ReferenceTests(QueryTests):
             '"sq0"."roi"-"sq1"."roi" "roi_{key}_d" '
             'FROM ('
             'SELECT '
-            'ROUND("dt",\'DD\') "date","device_type" "device_type",'
+            'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY ROUND("dt",\'DD\'),"device_type"'
+            'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
             ') "sq0" '
             'LEFT JOIN ('
             'SELECT '
-            'ROUND("dt",\'DD\') "date","device_type" "device_type",'
+            'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY ROUND("dt",\'DD\'),"device_type"'
+            'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
             ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL \'{expr}\' '
             'AND "sq0"."device_type"="sq1"."device_type" '
             'ORDER BY "sq0"."date","sq0"."device_type"'.format(
@@ -649,19 +648,19 @@ class ReferenceTests(QueryTests):
             '("sq0"."roi"-"sq1"."roi")*100/NULLIF("sq1"."roi",0) "roi_{key}_p" '
             'FROM ('
             'SELECT '
-            'ROUND("dt",\'DD\') "date","device_type" "device_type",'
+            'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY ROUND("dt",\'DD\'),"device_type"'
+            'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
             ') "sq0" '
             'LEFT JOIN ('
             'SELECT '
-            'ROUND("dt",\'DD\') "date","device_type" "device_type",'
+            'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY ROUND("dt",\'DD\'),"device_type"'
+            'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
             ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL \'{expr}\' '
             'AND "sq0"."device_type"="sq1"."device_type" '
             'ORDER BY "sq0"."date","sq0"."device_type"'.format(
@@ -847,7 +846,7 @@ class ReferenceTests(QueryTests):
 
 class TotalsQueryTests(QueryTests):
     def test_add_rollup_one_dimension(self):
-        rounded_dt = settings.database.round_date(self.mock_table.dt, 'DD')
+        truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'DD')
         locale = self.mock_table.locale
 
         query = self.manager._build_data_query(
@@ -858,7 +857,7 @@ class TotalsQueryTests(QueryTests):
                 ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions=OrderedDict([
-                ('date', rounded_dt),
+                ('date', truncated_dt),
                 ('locale', locale),
             ]),
             mfilters=[],
@@ -868,14 +867,14 @@ class TotalsQueryTests(QueryTests):
         )
 
         self.assertEqual('SELECT '
-                         'ROUND("dt",\'DD\') "date","locale" "locale",'
+                         'TRUNC("dt",\'DD\') "date","locale" "locale",'
                          'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
                          'FROM "test_table" '
-                         'GROUP BY ROUND("dt",\'DD\'),ROLLUP("locale") '
-                         'ORDER BY ROUND("dt",\'DD\'),"locale"', str(query))
+                         'GROUP BY TRUNC("dt",\'DD\'),ROLLUP("locale") '
+                         'ORDER BY TRUNC("dt",\'DD\'),"locale"', str(query))
 
     def test_add_rollup_two_dimensions(self):
-        rounded_dt = settings.database.round_date(self.mock_table.dt, 'DD')
+        truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'DD')
         locale = self.mock_table.locale
         device_type = self.mock_table.device_type
 
@@ -887,7 +886,7 @@ class TotalsQueryTests(QueryTests):
                 ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions=OrderedDict([
-                ('date', rounded_dt),
+                ('date', truncated_dt),
                 ('locale', locale),
                 ('device_type', device_type),
             ]),
@@ -898,16 +897,16 @@ class TotalsQueryTests(QueryTests):
         )
 
         self.assertEqual('SELECT '
-                         'ROUND("dt",\'DD\') "date",'
+                         'TRUNC("dt",\'DD\') "date",'
                          '"locale" "locale",'
                          '"device_type" "device_type",'
                          'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
                          'FROM "test_table" '
-                         'GROUP BY ROUND("dt",\'DD\'),ROLLUP("locale","device_type") '
-                         'ORDER BY ROUND("dt",\'DD\'),"locale","device_type"', str(query))
+                         'GROUP BY TRUNC("dt",\'DD\'),ROLLUP("locale","device_type") '
+                         'ORDER BY TRUNC("dt",\'DD\'),"locale","device_type"', str(query))
 
     def test_add_rollup_two_dimensions_partial(self):
-        rounded_dt = settings.database.round_date(self.mock_table.dt, 'DD')
+        truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'DD')
         locale = self.mock_table.locale
         device_type = self.mock_table.device_type
 
@@ -919,7 +918,7 @@ class TotalsQueryTests(QueryTests):
                 ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions=OrderedDict([
-                ('date', rounded_dt),
+                ('date', truncated_dt),
                 ('locale', locale),
                 ('device_type', device_type),
             ]),
@@ -929,13 +928,13 @@ class TotalsQueryTests(QueryTests):
             rollup=['locale'],
         )
         self.assertEqual('SELECT '
-                         'ROUND("dt",\'DD\') "date",'
+                         'TRUNC("dt",\'DD\') "date",'
                          '"device_type" "device_type",'
                          '"locale" "locale",'  # Order is changed, rollup dims move to end
                          'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
                          'FROM "test_table" '
-                         'GROUP BY ROUND("dt",\'DD\'),"device_type",ROLLUP("locale") '
-                         'ORDER BY ROUND("dt",\'DD\'),"locale","device_type"', str(query))
+                         'GROUP BY TRUNC("dt",\'DD\'),"device_type",ROLLUP("locale") '
+                         'ORDER BY TRUNC("dt",\'DD\'),"locale","device_type"', str(query))
 
 
 class DimensionOptionTests(QueryTests):
