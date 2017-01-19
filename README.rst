@@ -71,7 +71,7 @@ To configure a slicer, instantiate a |ClassSlicer| with a list of |ClassMetric| 
         ],
 
         dimensions=[
-            # Datetime Dimensions are continuous and must be rounded to an interval
+            # Datetime Dimensions are continuous and must be truncated to an interval
             # like hour, day, week. Day is the default.
             DatetimeDimension('date', definition=analytics.dt),
 

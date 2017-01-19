@@ -33,7 +33,7 @@ class TestVertica(TestCase):
             user='test_user', password='password', read_timeout=None,
         )
 
-    def test_round_date(self):
-        result = Vertica().round_date(Field('date'), 'XX')
+    def test_trunc_date(self):
+        result = Vertica().trunc_date(Field('date'), 'XX')
 
-        self.assertEqual('ROUND("date",\'XX\')', str(result))
+        self.assertEqual('TRUNC("date",\'XX\')', str(result))

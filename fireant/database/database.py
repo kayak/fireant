@@ -10,7 +10,7 @@ class Database(object):
     def connect(self):
         raise NotImplementedError
 
-    def round_date(self, field, interval):
+    def trunc_date(self, field, interval):
         raise NotImplementedError
 
     def fetch(self, query):

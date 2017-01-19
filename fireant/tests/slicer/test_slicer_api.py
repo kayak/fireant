@@ -170,7 +170,7 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
         self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'date'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('ROUND("test"."dt",\'DD\')', str(query_schema['dimensions']['date']))
+        self.assertEqual('TRUNC("test"."dt",\'DD\')', str(query_schema['dimensions']['date']))
 
     def test_date_dimension_custom_interval(self):
         query_schema = self.test_slicer.manager.data_query_schema(
@@ -186,7 +186,7 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
         self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'date'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('ROUND("test"."dt",\'WW\')', str(query_schema['dimensions']['date']))
+        self.assertEqual('TRUNC("test"."dt",\'WW\')', str(query_schema['dimensions']['date']))
 
     def test_numeric_dimension_default_interval(self):
         query_schema = self.test_slicer.manager.data_query_schema(
@@ -755,7 +755,7 @@ class SlicerSchemaReferenceTests(SlicerSchemaTests):
         self.assertSetEqual({'foo'}, set(query_schema['metrics'].keys()))
         self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
         self.assertSetEqual({'date'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('ROUND("test"."dt",\'DD\')', str(query_schema['dimensions']['date']))
+        self.assertEqual('TRUNC("test"."dt",\'DD\')', str(query_schema['dimensions']['date']))
 
         # Cast definition to string for comparison
         query_schema['references'][reference.key]['definition'] = str(
@@ -841,7 +841,7 @@ class SlicerOperationSchemaTests(SlicerSchemaTests):
         self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'date', 'locale', 'account', 'account_display'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('ROUND("test"."dt",\'DD\')', str(query_schema['dimensions']['date']))
+        self.assertEqual('TRUNC("test"."dt",\'DD\')', str(query_schema['dimensions']['date']))
 
         self.assertListEqual(['locale', 'account', 'account_display'], query_schema['rollup'])
 

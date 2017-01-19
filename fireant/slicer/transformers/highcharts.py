@@ -232,15 +232,16 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
         metric_key = utils.slice_first(idx)
         return {
             'name': self._format_label(idx, dim_ordinal, display_schema, reference),
-            'data': [_format_data_point(x)
-                     for x in item
-                     if not (isinstance(x, (float, int)) and np.isnan(x))],
+            'data': self._format_data(item),
             'tooltip': self._format_tooltip(display_schema['metrics'][metric_key]),
             'yAxis': display_schema['metrics'][metric_key].get('axis', 0),
             'color': color
         }
 
     def xaxis_options(self, dataframe, dim_ordinal, display_schema):
+        if isinstance(dataframe.index, pd.DatetimeIndex):
+            return {'type': 'datetime'}
+
         result = {'type': 'categorical'}
 
         categories = self._make_categories(dataframe, dim_ordinal, display_schema)
@@ -278,11 +279,6 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
         if 'display_field' in category_dimension:
             display_field = category_dimension['display_field']
             return dataframe.index.get_level_values(display_field).tolist()
-
-        if isinstance(dataframe.index, pd.DatetimeIndex):
-            if any(value.time() for value in dataframe.index):
-                return [value.isoformat() for value in dataframe.index]
-            return [value.strftime("%y-%m-%d") for value in dataframe.index]
 
         display_options = category_dimension.get('category_dimension', {})
         return [display_options.get(value, value) for value in dataframe.index]

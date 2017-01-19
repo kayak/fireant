@@ -316,7 +316,7 @@ class HighchartsColumnTransformerTests(TestCase):
         result_data = [series['data'] for series in result['series']]
 
         for data, (_, item) in zip(result_data, df.iteritems()):
-            self.assertListEqual(list(item), data)
+            self.assertListEqual(list(item.iteritems()), data)
 
     def test_no_dims_multi_metric(self):
         df = mock_df.no_dims_multi_metric_df
