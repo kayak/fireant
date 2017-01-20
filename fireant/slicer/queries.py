@@ -109,7 +109,7 @@ class QueryManager(object):
         start_time = time.time()
         dataframe = database.fetch_dataframe(query_string)
 
-        query_logger.debug('[duration: {duration} seconds]: {query}'.format(
+        query_logger.info('[duration: {duration} seconds]: {query}'.format(
             duration=round(time.time() - start_time, 4),
             query=query_string)
         )
