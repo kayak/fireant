@@ -104,13 +104,12 @@ class QueryManager(object):
             A pd.DataFrame indexed by the provided dimensions paramaters containing columns for each metrics parameter.
         """
         query = self._build_data_query(table, joins, metrics, dimensions, dfilters, mfilters, references, rollup)
-
         query_string = str(query)
-        logger.debug('Executing query:\n----START----\n{query}\n-----END-----'.format(query=query_string))
-        start_time = time.time()
 
+        start_time = time.time()
         dataframe = database.fetch_dataframe(query_string)
-        logger.debug('Query completed [duration: {duration} seconds]:\n----START----\n{query}\n-----END-----'.format(
+
+        logger.debug('[duration: {duration} seconds]: {query}'.format(
             duration=round(time.time() - start_time, 4),
             query=query_string)
         )
