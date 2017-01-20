@@ -8,7 +8,7 @@ import pandas as pd
 from fireant.slicer.operations import Totals
 from pypika import Query, JoinType
 
-logger = logging.getLogger(__name__)
+query_logger = logging.getLogger('fireant.query_log$')
 
 
 class QueryManager(object):
@@ -109,7 +109,7 @@ class QueryManager(object):
         start_time = time.time()
         dataframe = database.fetch_dataframe(query_string)
 
-        logger.debug('[duration: {duration} seconds]: {query}'.format(
+        query_logger.debug('[duration: {duration} seconds]: {query}'.format(
             duration=round(time.time() - start_time, 4),
             query=query_string)
         )
