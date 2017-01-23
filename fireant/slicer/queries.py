@@ -1,14 +1,14 @@
 # coding: utf-8
 import copy
 import logging
+import time
 
 import numpy as np
 import pandas as pd
-
 from fireant.slicer.operations import Totals
 from pypika import Query, JoinType
 
-logger = logging.Logger('fireant')
+query_logger = logging.getLogger('fireant.query_log$')
 
 
 class QueryManager(object):
@@ -104,11 +104,15 @@ class QueryManager(object):
             A pd.DataFrame indexed by the provided dimensions paramaters containing columns for each metrics parameter.
         """
         query = self._build_data_query(table, joins, metrics, dimensions, dfilters, mfilters, references, rollup)
-
         query_string = str(query)
-        logger.info("Executing query:\n----START----\n{query}\n-----END-----".format(query=query_string))
 
+        start_time = time.time()
         dataframe = database.fetch_dataframe(query_string)
+
+        query_logger.info('[duration: {duration} seconds]: {query}'.format(
+            duration=round(time.time() - start_time, 4),
+            query=query_string)
+        )
 
         for dimension_key in rollup:
             dataframe[dimension_key].replace([np.nan], [Totals.key], inplace=True)
