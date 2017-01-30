@@ -1,6 +1,7 @@
 # coding: utf-8
 import numpy as np
 import pandas as pd
+import locale as lc
 
 from datetime import time
 from fireant.slicer.operations import Totals
@@ -24,17 +25,30 @@ def _safe(value):
         # Cannot transform np.int64 to json
         return int(value)
 
+    if isinstance(value, np.float64):
+        return float(value)
+
     return value
 
 
 def _pretty(value, schema):
     precision = schema.get('precision')
 
-    if value and isinstance(value, float) and precision:
-        value = round(value, precision)
+    if isinstance(value, float):
+        if precision is not None:
+            float_format = '%d' if precision == 0 else '%.{}f'.format(precision)
+            value = lc.format(float_format, value, grouping=True)
+        elif value.is_integer():
+            float_format = '%d'
+            value = lc.format(float_format, value, grouping=True)
+        else:
+            float_format = '%f'
+            # Stripping trailing zeros is necessary because %f can add them if no precision is set
+            value = lc.format(float_format, value, grouping=True).rstrip('.0')
 
-    if value and isinstance(value, float) and precision == 0:
-        value = int(value)
+    if isinstance(value, int):
+        float_format = '%d'
+        value = lc.format(float_format, value, grouping=True)
 
     return '{prefix}{value}{suffix}'.format(
         prefix=schema.get('prefix', ''),
