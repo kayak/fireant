@@ -1,6 +1,7 @@
 # coding: utf-8
 import numpy as np
 import pandas as pd
+import locale as lc
 
 from collections import OrderedDict
 from datetime import date, datetime
@@ -11,6 +12,8 @@ from fireant.slicer.operations import Totals
 from fireant.slicer.transformers import DataTablesRowIndexTransformer, DataTablesColumnIndexTransformer
 from fireant.slicer.transformers import datatables
 from fireant.tests import mock_dataframes as mock_df
+
+lc.setlocale(lc.LC_ALL, 'C')
 
 
 class DataTablesRowIndexTransformerTests(TestCase):
@@ -711,6 +714,14 @@ class DatatablesUtilityTests(TestCase):
         # Needs to be converted to milliseconds
         result = datatables._safe(pd.Timestamp(datetime(2000, 1, 1, 1)))
         self.assertEqual('2000-01-01T01:00:00', result)
+
+    def test_no_precision_with_zero(self):
+        result = datatables._pretty(0.0, {})
+        self.assertEqual('0', result)
+
+    def test_no_precision_with_non_zero(self):
+        result = datatables._pretty(0.01, {})
+        self.assertEqual('0.01', result)
 
     def test_precision(self):
         result = datatables._pretty(0.123456789, {'precision': 2})
