@@ -300,6 +300,15 @@ rollup_cont_cat_cat_dims_multi_metric_schema = {
     'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_rollup_dim), ('cat2', cat2_rollup_dim)])
 }
 
+# Mock DF with single unique dimension and one metric column using rollup for totals
+rollup_cont_cat_uni_dims_multi_metric_df = rollup(_cont_cat_uni.set_index('uni_label', append=True), [0, 1])
+rollup_cont_cat_uni_dims_multi_metric_df = rollup(rollup_cont_cat_uni_dims_multi_metric_df, [0])
+rollup_cont_cat_uni_dims_multi_metric_schema = {
+    'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
+    'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_dim), ('uni', uni_dim)])
+}
+
+
 # Mock DF with single continuous dimension and two metric columns
 cont_dim_pretty_df = pd.DataFrame(
     np.array([0.12345, 0.23456, 0.34567, 0.45678, 0.56789, 0.67891, 0.78912, 0.89123]).T,

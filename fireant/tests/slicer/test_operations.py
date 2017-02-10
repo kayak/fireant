@@ -1,4 +1,7 @@
 # coding: utf-8
+import numpy as np
+import pandas as pd
+
 from unittest import TestCase
 from pypika import Table
 
@@ -35,7 +38,7 @@ class TotalsTests(TestCase):
             dimensions=['dim'],
             operations=[Totals('dim')],
         )
-        self.assertListEqual(query_schema['rollup'], ['dim'])
+        self.assertListEqual(query_schema['rollup'], [['dim']])
 
     def test_data_query_schema__exception_when_missing_totals_dim(self):
         with self.assertRaises(SlicerException):
@@ -54,7 +57,7 @@ class TotalsTests(TestCase):
         self.assertDictEqual(display_schema['metrics'], {'foo': {'label': 'Foo', 'axis': 0},
                                                          'bar': {'label': 'Bar', 'axis': 1}})
         self.assertDictEqual(display_schema['dimensions'], {
-            'dim': {'label': 'Dim', 'display_options': {Totals.key: Totals.label}}
+            'dim': {'label': 'Dim', 'display_options': {np.nan: '', pd.NaT: ''}}
         })
         self.assertDictEqual(display_schema['references'], {})
 

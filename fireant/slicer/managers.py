@@ -2,6 +2,9 @@
 
 import functools
 import itertools
+import numpy as np
+import pandas as pd
+
 from collections import OrderedDict
 
 from fireant import utils
@@ -314,11 +317,7 @@ class SlicerManager(QueryManager, OperationManager):
             if hasattr(dimension, 'display_options'):
                 display_dim['display_options'] = {opt.key: opt.label
                                                   for opt in dimension.display_options}
-
-            total_operations = [operation for operation in operations if isinstance(operation, Totals)]
-            for total_operation in total_operations:
-                if key in total_operation.dimension_keys:
-                    display_dim['display_options'][total_operation.key] = total_operation.label
+                display_dim['display_options'].update({pd.NaT: '', np.nan: ''})
 
             if hasattr(dimension, 'display_field') and dimension.display_field:
                 display_dim['display_field'] = '%s_display' % dimension.key
@@ -391,14 +390,15 @@ class SlicerManager(QueryManager, OperationManager):
     def _totals_schema(self, dimensions, operations):
         dimension_set = set(utils.slice_first(dimension) for dimension in dimensions)
         totals, missing_dimensions = [], set()
+
         for operation in operations:
             if operation.key != Totals.key:
                 continue
 
             missing_dimensions |= set(operation.dimension_keys) - dimension_set
-            totals += [level
+            totals += [[level for level in self.slicer.dimensions[dimension].levels()]
                        for dimension in operation.dimension_keys
-                       for level in self.slicer.dimensions[dimension].levels()]
+            ]
 
         if missing_dimensions:
             raise SlicerException("Missing dimensions with keys: {}".format(", ".join(missing_dimensions)))

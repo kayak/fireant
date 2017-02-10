@@ -2,11 +2,11 @@
 import copy
 import logging
 import time
-
-import numpy as np
 import pandas as pd
-from fireant.slicer.operations import Totals
+
+from itertools import chain
 from pypika import Query, JoinType
+from pypika.terms import ListField
 
 query_logger = logging.getLogger('fireant.query_log$')
 
@@ -114,11 +114,15 @@ class QueryManager(object):
             query=query_string)
         )
 
-        for dimension_key in rollup:
-            dataframe[dimension_key].replace([np.nan], [Totals.key], inplace=True)
-
         dataframe.columns = [col.decode('utf-8') if isinstance(col, bytes) else col
                              for col in dataframe.columns]
+
+        for column in dataframe.columns:
+            # Only replace NaNs for columns of type object. Column types other than that tend to be checked
+            # against in the transformers. Which would be a problem when replacing NaNs with a string
+            # because that alters the type of the column.
+            if dataframe[column].dtype == object:
+                dataframe[column] = dataframe[column].fillna('')
 
         if dimensions:
             dataframe = dataframe.set_index(
@@ -236,15 +240,29 @@ class QueryManager(object):
     def _select_dimensions(query, dimensions, rollup):
         dims = [dimension.as_(key)
                 for key, dimension in dimensions.items()
-                if key not in rollup]
+                if key not in chain(*rollup)]
         if dims:
             query = query.select(*dims).groupby(*dims)
 
-        rollup_dims = [dimension.as_(key)
-                       for key, dimension in dimensions.items()
-                       if key in rollup]
+        rollup_dims = [
+            dimension.as_(dimension_key)
+            for dimension_key, dimension in dimensions.items()
+            for keys in rollup
+            if dimension_key in keys
+        ]
+
+        # Rollups must take UniqueDimension's two columns (i.e. id, display) as one
+        rollup_args = [
+            ListField([
+                dimension.as_(dimension_key)
+                for dimension_key, dimension in dimensions.items()
+                if dimension_key in keys
+            ])
+            for keys in rollup
+        ]
+
         if rollup_dims:
-            query = query.select(*rollup_dims).rollup(*rollup_dims)
+            query = query.select(*rollup_dims).rollup(*rollup_args)
 
         return query
 
