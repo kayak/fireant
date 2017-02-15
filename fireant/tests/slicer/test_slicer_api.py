@@ -172,7 +172,7 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
         self.assertSetEqual({'date'}, set(query_schema['dimensions'].keys()))
         self.assertEqual('TRUNC("test"."dt",\'DD\')', str(query_schema['dimensions']['date']))
 
-    def test_date_dimension_custom_interval(self):
+    def test_date_dimension_custom_week_interval(self):
         query_schema = self.test_slicer.manager.data_query_schema(
             metrics=['foo'],
             # TODO This could be improved by using an object
@@ -186,7 +186,47 @@ class SlicerSchemaDimensionTests(SlicerSchemaTests):
         self.assertEqual('SUM("test"."foo")', str(query_schema['metrics']['foo']))
 
         self.assertSetEqual({'date'}, set(query_schema['dimensions'].keys()))
-        self.assertEqual('TRUNC("test"."dt",\'WW\')', str(query_schema['dimensions']['date']))
+        self.assertEqual('TRUNC("test"."dt",\'IW\')', str(query_schema['dimensions']['date']))
+
+    def test_date_dimension_year_interval_uses_correct_trunc_statement(self):
+        query_schema = self.test_slicer.manager.data_query_schema(
+            metrics=['foo'],
+            dimensions=[('date', DatetimeDimension.year)],
+        )
+        self.assertSetEqual({'date'}, set(query_schema['dimensions'].keys()))
+        self.assertEqual('TRUNC("test"."dt",\'Y\')', str(query_schema['dimensions']['date']))
+
+    def test_date_dimension_quarter_interval_uses_correct_trunc_statement(self):
+        query_schema = self.test_slicer.manager.data_query_schema(
+            metrics=['foo'],
+            dimensions=[('date', DatetimeDimension.quarter)],
+        )
+        self.assertSetEqual({'date'}, set(query_schema['dimensions'].keys()))
+        self.assertEqual('TRUNC("test"."dt",\'Q\')', str(query_schema['dimensions']['date']))
+
+    def test_date_dimension_month_interval_uses_correct_trunc_statement(self):
+        query_schema = self.test_slicer.manager.data_query_schema(
+            metrics=['foo'],
+            dimensions=[('date', DatetimeDimension.month)],
+        )
+        self.assertSetEqual({'date'}, set(query_schema['dimensions'].keys()))
+        self.assertEqual('TRUNC("test"."dt",\'MM\')', str(query_schema['dimensions']['date']))
+
+    def test_date_dimension_day_interval_uses_correct_trunc_statement(self):
+        query_schema = self.test_slicer.manager.data_query_schema(
+            metrics=['foo'],
+            dimensions=[('date', DatetimeDimension.day)],
+        )
+        self.assertSetEqual({'date'}, set(query_schema['dimensions'].keys()))
+        self.assertEqual('TRUNC("test"."dt",\'DD\')', str(query_schema['dimensions']['date']))
+
+    def test_date_dimension_hour_interval_uses_correct_trunc_statement(self):
+        query_schema = self.test_slicer.manager.data_query_schema(
+            metrics=['foo'],
+            dimensions=[('date', DatetimeDimension.hour)],
+        )
+        self.assertSetEqual({'date'}, set(query_schema['dimensions'].keys()))
+        self.assertEqual('TRUNC("test"."dt",\'HH\')', str(query_schema['dimensions']['date']))
 
     def test_numeric_dimension_default_interval(self):
         query_schema = self.test_slicer.manager.data_query_schema(
