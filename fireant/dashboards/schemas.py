@@ -45,6 +45,13 @@ class ColumnChartWidget(Widget):
     transformer = HighchartsColumnTransformer()
 
 
+class PieChartWidget(Widget):
+    """
+    The `PieChartWidget` class represents a Highcharts Pie chart.
+    """
+    transformer = HighchartsPieTransformer()
+
+
 class RowIndexTableWidget(Widget):
     """
     The `RowIndexTableWidget` class represents datatables.js data table with row-indexed dimensions.

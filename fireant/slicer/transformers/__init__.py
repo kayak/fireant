@@ -11,7 +11,8 @@ from .datatables import (DataTablesRowIndexTransformer,
 from .highcharts import (HighchartsLineTransformer,
                          HighchartsAreaTransformer,
                          HighchartsColumnTransformer,
-                         HighchartsBarTransformer)
+                         HighchartsBarTransformer,
+                         HighchartsPieTransformer)
 from .notebooks import (PandasRowIndexTransformer,
                         PandasColumnIndexTransformer,
                         MatplotlibLineChartTransformer,
@@ -29,6 +30,7 @@ BUNDLES = {
         'area_chart': HighchartsAreaTransformer(),
         'column_chart': HighchartsColumnTransformer(),
         'bar_chart': HighchartsBarTransformer(),
+        'pie_chart': HighchartsPieTransformer(),
     },
     'datatables': {
         'row_index_table': DataTablesRowIndexTransformer(),

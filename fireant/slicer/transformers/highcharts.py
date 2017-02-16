@@ -1,9 +1,9 @@
 # coding: utf-8
 import numpy as np
 import pandas as pd
-
 from fireant import settings, utils
 from fireant.slicer.operations import Totals
+
 from .base import Transformer, TransformationException
 
 COLORS = {
@@ -181,6 +181,9 @@ class HighchartsLineTransformer(Transformer):
 
     @staticmethod
     def _format_dimension_display(dim_ordinal, key, dimension, idx):
+        if not isinstance(idx, (list, tuple)):
+            idx = [idx]
+
         if 'display_field' in dimension:
             display_field = dimension['display_field']
             return idx[dim_ordinal[display_field]]
@@ -302,3 +305,124 @@ class HighchartsBarTransformer(HighchartsColumnTransformer):
     http://www.highcharts.com/demo/bar-basic
     """
     chart_type = 'bar'
+
+
+class HighchartsPieTransformer(HighchartsLineTransformer):
+    """
+    Transformer to create the correct JSON payload for Highcharts Pie Charts
+    http://www.highcharts.com/demo/pie-basic
+    """
+    chart_type = 'pie'
+
+    def prevalidate_request(self, slicer, metrics, dimensions,
+                            metric_filters, dimension_filters,
+                            references, operations):
+        """
+        Ensure no references or operations are passed and that there is no more than one enabled metric
+        """
+
+        if len(references) > 0 or len(operations) > 0:
+            raise TransformationException('References and Operations cannot be used with '
+                                          '{} charts'.format(self.chart_type))
+
+        if len(utils.flatten(metrics)) > 1:
+            raise TransformationException('Only one metric can be specified when using '
+                                          '{} charts'.format(self.chart_type))
+
+    def transform(self, dataframe, display_schema):
+        """
+        Transform the dataframe into the format Highcharts expects for Pie charts
+
+        :param dataframe: Dataframe containing queried data
+        :param display_schema: Dictionary defining how the metrics and dimensions should be displayed
+        :return: Dictionary in the required Highcharts Pie chart format ready to be dumped into JSON
+        """
+        dim_ordinal = {name: ordinal
+                       for ordinal, name in enumerate(dataframe.index.names)}
+        dataframe = self._prepare_dataframe(dataframe, dim_ordinal, display_schema['dimensions'])
+        series = self._make_series(dataframe, dim_ordinal, display_schema)
+        metric_key = self._get_metric_key(dataframe)
+
+        result = {
+            'chart': {'type': self.chart_type},
+            'title': {'text': None},
+            'tooltip': self._format_tooltip(display_schema['metrics'][metric_key]),
+            'series': [series],
+            'plotOptions': {
+                'pie': {
+                    'allowPointSelect': True,  # Allows users to select a piece of pie and it separates out
+                    'cursor': 'pointer',
+                    'dataLabels': {
+                        'enabled': True,
+                        'format': '<b>{point.name}</b>: {point.percentage:.1f} %',
+                        'style': {
+                            'color': COLORS.get('grid')
+                        }
+                    }
+                }
+            },
+        }
+
+        return result
+
+    def _prepare_dataframe(self, dataframe, dim_ordinal, dimensions):
+        """
+        Force all fields to be float (Safer for highcharts)
+
+        :param dataframe: Dataframe containing queried data
+        :param dim_ordinal: Dictionary containing dimensions with their associated order
+        :param dimensions: OrderedDict of dimensions along with their display options/display field
+        :return: Dataframe with float values and without np.inf values
+        """
+        return dataframe.astype(np.float).replace([np.inf, -np.inf], np.nan)
+
+    def _get_metric_key(self, dataframe):
+        """
+        Get the metric label (There will only ever be one metric)
+
+        :param dataframe: Dataframe containing queried data
+        """
+        metrics = list(dataframe.columns.levels[0]
+                       if isinstance(dataframe.columns, pd.MultiIndex)
+                       else dataframe.columns)
+        return metrics[0]
+
+    def _make_series(self, dataframe, dim_ordinal, display_schema, reference=None):
+        """
+        Create the series. Pie charts only ever have a single series.
+
+        :param dataframe: Dataframe containing queried data
+        :param dim_ordinal: Dictionary containing dimensions with their associated order
+        :param display_schema: Dictionary defining how the metrics and dimensions should be displayed
+        :param reference: Not used - set here to match parent classes' function signature
+        :return: Dictonary containing the series name and data list
+        """
+        metric_key = self._get_metric_key(dataframe)
+        return {
+            'name': display_schema['metrics'][metric_key].get('label', metric_key),
+            'data': [(self._format_label(idx, dim_ordinal, display_schema, reference), _format_data_point(item))
+                     for idx, item in dataframe[metric_key].iteritems()]
+        }
+
+    def _format_label(self, idx, dim_ordinal, display_schema, reference):
+        """
+        Create the labels for the pie pieces. If there is more than one dimension,
+        these will be shown in the format (dim1, dim2). Otherwise, it will show just the
+        individual dimension without parentheses.
+
+        :param idx: Dataframe index
+        :param dim_ordinal: Dictionary containing dimensions with their associated order
+        :param display_schema: Dictionary defining how the metrics and dimensions should be displayed
+        :param reference: Not used - set here to match parent classes' function signature
+        :return: Dimension label string
+        """
+        dimension_labels = [self._format_dimension_display(dim_ordinal, key, dimension, idx)
+                            for key, dimension in list(display_schema['dimensions'].items())]
+
+        label = (
+            '{dimensions}'.format(
+                dimensions=', '.join(map(str, dimension_labels))
+            )
+            if dimension_labels else ''
+        )
+        return '({})'.format(label) if len(dimension_labels) > 1 else label

@@ -54,6 +54,18 @@ cont_cat_cat_idx = pd.MultiIndex.from_product([cont_idx, cat1_idx, cat2_idx], na
 cont_cat_uni_idx = pd.MultiIndex.from_product([cont_idx, cat1_idx, uni_idx.levels[0]],
                                               names=['cont', 'cat1', 'uni'])
 
+# Mock DF with single metric column and no dimension
+no_dims_single_metric_df = pd.DataFrame(
+    np.array([
+        np.arange(1),
+    ]),
+    columns=['one'],
+)
+no_dims_single_metric_schema = {
+    'metrics': OrderedDict([('one', {'label': 'One'})]),
+    'dimensions': OrderedDict()
+}
+
 # Mock DF with single continuous dimension and one metric column
 no_dims_multi_metric_df = pd.DataFrame(
     np.array([
@@ -120,6 +132,17 @@ uni_dim_multi_metric_df = pd.DataFrame(
 )
 uni_dim_multi_metric_schema = {
     'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
+    'dimensions': OrderedDict([('uni', uni_dim)])
+}
+
+# Mock DF with single unique dimension and a single metric columns with pretty prefix/suffix/precision settings
+uni_dim_pretty_df = pd.DataFrame(
+    np.array([np.arange(3)]).T,
+    columns=['pretty'],
+    index=uni_idx
+)
+uni_dim_pretty_schema = {
+    'metrics': OrderedDict([('pretty', {'label': 'One', 'prefix': '!', 'suffix': '~', 'precision': 1})]),
     'dimensions': OrderedDict([('uni', uni_dim)])
 }
 
