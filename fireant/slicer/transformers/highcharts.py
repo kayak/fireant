@@ -376,7 +376,8 @@ class HighchartsPieTransformer(HighchartsLineTransformer):
         """
         return dataframe.astype(np.float).replace([np.inf, -np.inf], np.nan)
 
-    def _get_metric_key(self, dataframe):
+    @staticmethod
+    def _get_metric_key(dataframe):
         """
         Get the metric label (There will only ever be one metric)
 
