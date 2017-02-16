@@ -1,7 +1,7 @@
 # coding: utf-8
 from pypika import terms
-
 from fireant.database import Database
+from fireant.database.vertica import Interval
 
 
 class Trunc(terms.Function):
@@ -19,3 +19,6 @@ class TestDatabase(Database):
 
     def trunc_date(self, field, interval):
         return Trunc(field, interval)
+
+    def interval(self, **kwargs):
+        return Interval(**kwargs)

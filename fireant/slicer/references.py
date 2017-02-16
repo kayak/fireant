@@ -27,7 +27,7 @@ class Reference(object):
 class Delta(Reference):
     def __init__(self, reference):
         super(Delta, self).__init__(reference.element_key)
-        self.key = '%s_d' % reference.key
+        self.key = self.generate_key(reference.key)
         self.label = '%s Δ' % reference.label
         self.interval = reference.interval
 
@@ -35,17 +35,25 @@ class Delta(Reference):
     def modifier(field, join_field):
         return field - join_field
 
+    @staticmethod
+    def generate_key(reference_key):
+        return '%s_d' % reference_key
+
 
 class DeltaPercentage(Reference):
     def __init__(self, reference):
         super(DeltaPercentage, self).__init__(reference.element_key)
-        self.key = '%s_p' % reference.key
+        self.key = self.generate_key(reference.key)
         self.label = '%s Δ%%' % reference.label
         self.interval = reference.interval
 
     @staticmethod
     def modifier(field, join_field):
         return ((field - join_field) * 100) / fn.NullIf(join_field, 0)
+
+    @staticmethod
+    def generate_key(reference_key):
+        return '%s_p' % reference_key
 
 
 class DoD(Reference):

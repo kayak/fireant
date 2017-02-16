@@ -87,7 +87,7 @@ class ManagerInitializationTests(TestCase):
 
         self.assertEqual(str(mock_build_query_string.return_value), result)
         mock_query_schema.assert_called_once_with(**mock_args)
-        mock_build_query_string.assert_called_once_with(a=1, b=2)
+        mock_build_query_string.assert_called_once_with(database='db1', a=1, b=2)
 
     def missing_database_config(self):
         with self.assertRaises(SlicerException):
