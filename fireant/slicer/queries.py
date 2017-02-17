@@ -5,7 +5,9 @@ import time
 
 import numpy as np
 import pandas as pd
+
 from fireant.slicer.operations import Totals
+from fireant.slicer.references import YoY, Delta, DeltaPercentage
 from pypika import Query, JoinType
 
 query_logger = logging.getLogger('fireant.query_log$')
@@ -103,7 +105,9 @@ class QueryManager(object):
         :return:
             A pd.DataFrame indexed by the provided dimensions paramaters containing columns for each metrics parameter.
         """
-        query = self._build_data_query(table, joins, metrics, dimensions, dfilters, mfilters, references, rollup)
+        query = self._build_data_query(
+            database, table, joins, metrics, dimensions, dfilters, mfilters, references, rollup
+        )
         query_string = str(query)
 
         start_time = time.time()
@@ -159,26 +163,33 @@ class QueryManager(object):
         return [{k: v for k, v in zip(dimensions.keys(), result)}
                 for result in results]
 
-    def _build_data_query(self, table, joins, metrics, dimensions, dfilters, mfilters, references, rollup):
+    def _build_data_query(self, database, table, joins, metrics, dimensions, dfilters, mfilters, references, rollup):
         args = (table, joins or dict(), metrics or dict(), dimensions or dict(),
                 dfilters or dict(), mfilters or dict(), rollup or list())
 
         query = self._build_query_inner(*args)
 
         if references:
-            return self._build_reference_query(query, references, *args)
+            return self._build_reference_query(query, database, references, *args)
 
         return self._add_sorting(query, list(dimensions.values()))
 
-    def _build_reference_query(self, query, references, table, joins, metrics, dimensions, dfilters, mfilters, rollup):
+    def _build_reference_query(self, query, database, references, table, joins, metrics, dimensions, dfilters,
+                               mfilters, rollup):
         wrapper_query = Query.from_(query).select(*[query.field(key).as_(key)
                                                     for key in list(dimensions.keys()) + list(metrics.keys())])
 
         for reference_key, schema in references.items():
             dimension_key, interval = schema['dimension'], schema['interval']
 
-            dfilters = self._replace_filters_for_ref(dfilters, schema['definition'], interval)
+            # The interval term from pypika does not take into account leap years, therefore the interval
+            # needs to be replaced with a database specific one when appropriate.
+            if reference_key in [YoY.key, Delta.generate_key(YoY.key), DeltaPercentage.generate_key(YoY.key)]:
+                interval = database.interval(years=1)
 
+            schema['interval'] = interval
+
+            dfilters = self._replace_filters_for_ref(dfilters, schema['definition'], interval)
             ref_query = self._build_query_inner(table, joins, metrics, dimensions, dfilters, mfilters, rollup)
             join_criteria = self._build_reference_join_criteria(dimension_key, dimensions, interval, query, ref_query)
 
