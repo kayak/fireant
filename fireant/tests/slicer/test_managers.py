@@ -47,6 +47,7 @@ class ManagerInitializationTests(TestCase):
         self.assertTrue(hasattr(self.slicer.highcharts, 'area_chart'))
         self.assertTrue(hasattr(self.slicer.highcharts, 'column_chart'))
         self.assertTrue(hasattr(self.slicer.highcharts, 'bar_chart'))
+        self.assertTrue(hasattr(self.slicer.highcharts, 'pie_chart'))
 
         self.assertTrue(hasattr(self.slicer, 'datatables'))
         self.assertTrue(hasattr(self.slicer.datatables, 'row_index_table'))
@@ -205,6 +206,47 @@ class ManagerInitializationTests(TestCase):
         slicer.dimensions = []
         with self.assertRaises(TransformationException):
             self._test_transform(self.slicer.highcharts.area_chart, mock_transform, request)
+
+    @patch.object(HighchartsPieTransformer, 'transform')
+    def test_transform_highcharts_pie_chart(self, mock_transform):
+        request = {
+            'metrics': ['foo'],
+            'dimensions': ['cont'],
+            'metric_filters': (), 'dimension_filters': (),
+            'references': (), 'operations': (),
+        }
+        self._test_transform(self.slicer.highcharts.pie_chart, mock_transform, request)
+
+    @patch.object(HighchartsPieTransformer, 'transform')
+    def test_transform_highcharts_pie_chart_date(self, mock_transform):
+        request = {
+            'metrics': ['foo'],
+            'dimensions': ['date'],
+            'metric_filters': (), 'dimension_filters': (),
+            'references': (), 'operations': (),
+        }
+        self._test_transform(self.slicer.highcharts.pie_chart, mock_transform, request)
+
+    @patch.object(HighchartsPieTransformer, 'transform')
+    def test_transform_highcharts_pie_chart_does_not_allow_two_metrics(self, mock_transform):
+        request = {
+            'metrics': ['foo', 'bar'],
+            'dimensions': ['cat'],
+        }
+
+        with self.assertRaises(TransformationException):
+            self._test_transform(self.slicer.highcharts.pie_chart, mock_transform, request)
+
+    @patch.object(HighchartsPieTransformer, 'transform')
+    def test_transform_highcharts_pie_chart_multiple_dimensions_one_metric(self, mock_transform):
+        request = {
+            'metrics': ['foo'],
+            'dimensions': ['date', 'cat'],
+            'metric_filters': (), 'dimension_filters': (),
+            'references': (), 'operations': (),
+        }
+
+        self._test_transform(self.slicer.highcharts.pie_chart, mock_transform, request)
 
     @patch.object(HighchartsColumnTransformer, 'transform')
     def test_transform_highcharts_column_chart(self, mock_transform):

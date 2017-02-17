@@ -7,14 +7,38 @@ import pandas as pd
 
 from fireant.slicer import Slicer, Metric, ContinuousDimension, DatetimeDimension, CategoricalDimension, UniqueDimension
 from fireant.slicer.transformers import (HighchartsLineTransformer, HighchartsAreaTransformer,
-                                         HighchartsColumnTransformer, HighchartsBarTransformer)
+                                         HighchartsColumnTransformer, HighchartsBarTransformer,
+                                         HighchartsPieTransformer)
 from fireant.slicer.transformers import highcharts, TransformationException
 from fireant.tests import mock_dataframes as mock_df
 from fireant.tests.database.mock_database import TestDatabase
 from pypika import Table
 
 
-class HighchartsLineTransformerTests(TestCase):
+class BaseHighchartsTransformerTests(TestCase):
+    """
+    Test methods that are common to all Highcharts Transformers
+    """
+
+    def evaluate_tooltip_options(self, series, prefix=None, suffix=None, precision=None):
+        self.assertIn('tooltip', series)
+
+        tooltip = series['tooltip']
+        if prefix is not None:
+            self.assertIn('valuePrefix', tooltip)
+            self.assertEqual(prefix, tooltip['valuePrefix'])
+        if suffix is not None:
+            self.assertIn('valueSuffix', tooltip)
+            self.assertEqual(suffix, tooltip['valueSuffix'])
+        if precision is not None:
+            self.assertIn('valueDecimals', tooltip)
+            self.assertEqual(precision, tooltip['valueDecimals'])
+
+        else:
+            self.assertSetEqual({'type'}, set(series['xAxis'].keys()))
+
+
+class HighchartsLineTransformerTests(BaseHighchartsTransformerTests):
     """
     Line charts work with the following requests:
 
@@ -62,23 +86,6 @@ class HighchartsLineTransformerTests(TestCase):
 
         for data, (_, row) in zip(result_data, df.iteritems()):
             self.assertListEqual(list(row.iteritems()), data)
-
-    def evaluate_tooltip_options(self, series, prefix=None, suffix=None, precision=None):
-        self.assertIn('tooltip', series)
-
-        tooltip = series['tooltip']
-        if prefix is not None:
-            self.assertIn('valuePrefix', tooltip)
-            self.assertEqual(prefix, tooltip['valuePrefix'])
-        if suffix is not None:
-            self.assertIn('valueSuffix', tooltip)
-            self.assertEqual(suffix, tooltip['valueSuffix'])
-        if precision is not None:
-            self.assertIn('valueDecimals', tooltip)
-            self.assertEqual(precision, tooltip['valueDecimals'])
-
-        else:
-            self.assertSetEqual({'type'}, set(series['xAxis'].keys()))
 
     def test_require_dimensions(self):
         with self.assertRaises(TransformationException):
@@ -461,3 +468,94 @@ class HighchartsUtilityTests(TestCase):
         # Needs to be cast to python int
         result = highcharts._format_data_point(np.nan)
         self.assertIsNone(result)
+
+
+class HighChartsPieChartTests(BaseHighchartsTransformerTests):
+    """
+    Pie charts work with the following requests:
+
+    1-metric, *-dim
+    """
+    type = HighchartsPieTransformer.chart_type
+
+    @classmethod
+    def setUpClass(cls):
+        cls.hc_tx = HighchartsPieTransformer()
+
+    def evaluate_chart_options(self, result, num_results=1):
+        self.assertSetEqual({'title', 'series', 'chart', 'tooltip', 'plotOptions'}, set(result.keys()))
+        self.assertEqual(num_results, len(result['series']))
+
+        self.assertSetEqual({'text'}, set(result['title'].keys()))
+        self.assertIsNone(result['title']['text'])
+
+        self.assertEqual(self.type, result['chart']['type'])
+
+        for series in result['series']:
+            self.assertSetEqual({'name', 'data'}, set(series.keys()))
+
+    def test_no_dims_single_metric(self):
+        # Tests transformation of a single-metric, no-dimension result
+        df = mock_df.no_dims_single_metric_df
+
+        result = self.hc_tx.transform(df, mock_df.no_dims_single_metric_schema)
+        self.evaluate_chart_options(result, num_results=1)
+        self.assertEqual(result['series'][0], {'name': 'One', 'data': [('', 0.0)]})
+
+    def test_cat_dim_single_metric(self):
+        # Tests transformation of a single-metric, single-dimension result
+        df = mock_df.cat_dim_single_metric_df
+        result = self.hc_tx.transform(df, mock_df.cat_dim_single_metric_schema)
+        result_series = result['series'][0]
+        self.assertEqual(result_series, {'data': [('A', 0.0), ('B', 1.0)], 'name': 'One'})
+
+    def test_uni_dim_single_metric(self):
+        # Tests transformation of a single metric and a unique dimension
+        df = mock_df.uni_dim_single_metric_df
+        result = self.hc_tx.transform(df, mock_df.uni_dim_single_metric_schema)
+        result_series = result['series'][0]
+        self.assertEqual(result_series, {'data': [('Aa', 0.0), ('Bb', 1.0), ('Cc', 2.0)], 'name': 'One'})
+
+    def test_date_dim_single_metric(self):
+        # Tests transformation of a single metric and a datetime dimension
+        df = mock_df.time_dim_single_metric_df
+        result = self.hc_tx.transform(df, mock_df.time_dim_single_metric_schema)
+        result_series = result['series'][0]
+        self.assertEqual(result_series, {'data': [
+            ('2000-01-01 00:00:00', 0),
+            ('2000-01-02 00:00:00', 1),
+            ('2000-01-03 00:00:00', 2),
+            ('2000-01-04 00:00:00', 3),
+            ('2000-01-05 00:00:00', 4),
+            ('2000-01-06 00:00:00', 5),
+            ('2000-01-07 00:00:00', 6),
+            ('2000-01-08 00:00:00', 7),
+        ], 'name': 'One'})
+
+    def test_cat_cat_and_a_single_metric(self):
+        # Tests transformation of two categorical dimensions with a single metric
+        df = mock_df.cat_cat_dims_single_metric_df
+        result = self.hc_tx.transform(df, mock_df.cat_cat_dims_single_metric_schema)
+        result_series = result['series'][0]
+        self.assertEqual(result_series,
+                         {'data': [('(A, Y)', 0.0), ('(A, Z)', 1.0), ('(B, Y)', 2.0), ('(B, Z)', 3.0)], 'name': 'One'})
+
+    def test_cont_cat_uni_and_a_single_metric(self):
+        # Tests transformation of a categorical and unique dimensions with a single metric
+        df = mock_df.cont_cat_dims_single_metric_df
+        result = self.hc_tx.transform(df, mock_df.cont_cat_dims_single_metric_schema)
+        result_series = result['series'][0]
+        self.assertEqual(result_series,
+                         {'data': [('(0, A)', 0), ('(0, B)', 1), ('(1, A)', 2), ('(1, B)', 3), ('(2, A)', 4),
+                                   ('(2, B)', 5), ('(3, A)', 6), ('(3, B)', 7), ('(4, A)', 8), ('(4, B)', 9),
+                                   ('(5, A)', 10), ('(5, B)', 11), ('(6, A)', 12), ('(6, B)', 13), ('(7, A)', 14),
+                                   ('(7, B)', 15)],
+                          'name': 'One'})
+
+    def test_unique_dim_single_metric_pretty_tooltip(self):
+        # Tests transformation of a single metrics and a unique dimension with correct tooltip
+        df = mock_df.uni_dim_pretty_df
+        result = self.hc_tx.transform(df, mock_df.uni_dim_pretty_schema)
+        result_series = result['series'][0]
+        self.assertEqual(result_series, {'data': [('Aa', 0.0), ('Bb', 1.0), ('Cc', 2.0)], 'name': 'One'})
+        self.evaluate_tooltip_options(result, prefix='!', suffix='~', precision=1)
