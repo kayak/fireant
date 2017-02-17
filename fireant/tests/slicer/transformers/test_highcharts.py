@@ -6,8 +6,8 @@ import numpy as np
 import pandas as pd
 
 from fireant.slicer import Slicer, Metric, ContinuousDimension, DatetimeDimension, CategoricalDimension, UniqueDimension
-from fireant.slicer.transformers import (HighchartsLineTransformer, HighchartsColumnTransformer,
-                                         HighchartsBarTransformer)
+from fireant.slicer.transformers import (HighchartsLineTransformer, HighchartsAreaTransformer,
+                                         HighchartsColumnTransformer, HighchartsBarTransformer)
 from fireant.slicer.transformers import highcharts, TransformationException
 from fireant.tests import mock_dataframes as mock_df
 from fireant.tests.database.mock_database import TestDatabase
@@ -21,6 +21,7 @@ class HighchartsLineTransformerTests(TestCase):
     1-cont-dim, *-metric
     1-cont-dim, *-dim, *-metric
     """
+    chart_type = HighchartsLineTransformer.chart_type
 
     @classmethod
     def setUpClass(cls):
@@ -48,7 +49,7 @@ class HighchartsLineTransformerTests(TestCase):
         self.assertSetEqual({'text'}, set(result['title'].keys()))
         self.assertIsNone(result['title']['text'])
 
-        self.assertEqual(HighchartsLineTransformer.chart_type, result['chart']['type'])
+        self.assertEqual(self.chart_type, result['chart']['type'])
 
         self.assertSetEqual({'type'}, set(result['xAxis'].keys()))
         self.assertEqual(xaxis_type, result['xAxis']['type'])
@@ -266,6 +267,15 @@ class HighchartsLineTransformerTests(TestCase):
         self.evaluate_result(df, result)
 
 
+class HighchartsAreaTransformerTests(HighchartsLineTransformerTests):
+    chart_type = HighchartsAreaTransformer.chart_type
+
+    @classmethod
+    def setUpClass(cls):
+        super(HighchartsAreaTransformerTests, cls).setUpClass()
+        cls.hc_tx = HighchartsAreaTransformer()
+
+
 class HighchartsColumnTransformerTests(TestCase):
     """
     Bar and Column charts work with the following requests:
@@ -273,7 +283,7 @@ class HighchartsColumnTransformerTests(TestCase):
     1-dim, *-metric
     2-dim, 1-metric
     """
-    type = HighchartsColumnTransformer.chart_type
+    chart_type = HighchartsColumnTransformer.chart_type
 
     @classmethod
     def setUpClass(cls):
@@ -286,7 +296,7 @@ class HighchartsColumnTransformerTests(TestCase):
         self.assertSetEqual({'text'}, set(result['title'].keys()))
         self.assertIsNone(result['title']['text'])
 
-        self.assertEqual(self.type, result['chart']['type'])
+        self.assertEqual(self.chart_type, result['chart']['type'])
         self.assertEqual('categorical', result['xAxis']['type'])
 
         if categories:
@@ -425,7 +435,7 @@ class HighchartsColumnTransformerTests(TestCase):
 
 
 class HighchartsBarTransformerTests(HighchartsColumnTransformerTests):
-    type = HighchartsBarTransformer.chart_type
+    chart_type = HighchartsBarTransformer.chart_type
 
     @classmethod
     def setUpClass(cls):

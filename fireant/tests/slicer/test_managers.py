@@ -44,6 +44,7 @@ class ManagerInitializationTests(TestCase):
 
         self.assertTrue(hasattr(self.slicer, 'highcharts'))
         self.assertTrue(hasattr(self.slicer.highcharts, 'line_chart'))
+        self.assertTrue(hasattr(self.slicer.highcharts, 'area_chart'))
         self.assertTrue(hasattr(self.slicer.highcharts, 'column_chart'))
         self.assertTrue(hasattr(self.slicer.highcharts, 'bar_chart'))
 
@@ -162,6 +163,48 @@ class ManagerInitializationTests(TestCase):
         slicer.dimensions = []
         with self.assertRaises(TransformationException):
             self._test_transform(self.slicer.highcharts.line_chart, mock_transform, request)
+
+    @patch.object(HighchartsAreaTransformer, 'transform')
+    def test_transform_highcharts_area_chart(self, mock_transform):
+        request = {
+            'metrics': ['foo', 'bar'],
+            'dimensions': ['cont'],
+            'metric_filters': (), 'dimension_filters': (),
+            'references': (), 'operations': (),
+        }
+        self._test_transform(self.slicer.highcharts.area_chart, mock_transform, request)
+
+    @patch.object(HighchartsAreaTransformer, 'transform')
+    def test_transform_highcharts_area_chart_date(self, mock_transform):
+        request = {
+            'metrics': ['foo', 'bar'],
+            'dimensions': ['date'],
+            'metric_filters': (), 'dimension_filters': (),
+            'references': (), 'operations': (),
+        }
+        self._test_transform(self.slicer.highcharts.area_chart, mock_transform, request)
+
+    @patch.object(HighchartsAreaTransformer, 'transform')
+    def test_transform_highcharts_area_chart_require_cont_dim(self, mock_transform):
+        request = {
+            'metrics': ['foo', 'bar'],
+            'dimensions': ['cat'],
+        }
+
+        with self.assertRaises(TransformationException):
+            self._test_transform(self.slicer.highcharts.area_chart, mock_transform, request)
+
+    @patch.object(HighchartsAreaTransformer, 'transform')
+    def test_transform_highcharts_area_chart_require_cont_dim_on_slicer_with_no_dims(self, mock_transform):
+        request = {
+            'metrics': ['foo', 'bar'],
+            'dimensions': [],
+        }
+
+        slicer = copy.deepcopy(self.slicer)
+        slicer.dimensions = []
+        with self.assertRaises(TransformationException):
+            self._test_transform(self.slicer.highcharts.area_chart, mock_transform, request)
 
     @patch.object(HighchartsColumnTransformer, 'transform')
     def test_transform_highcharts_column_chart(self, mock_transform):
