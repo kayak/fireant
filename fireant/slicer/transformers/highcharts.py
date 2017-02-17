@@ -210,7 +210,19 @@ class HighchartsLineTransformer(Transformer):
                 yield dim_ordinal[dimension['display_field']]
 
 
+class HighchartsAreaTransformer(HighchartsLineTransformer):
+    """
+    Transformer for a Highcharts Area chart
+    http://www.highcharts.com/demo/area-basic
+    """
+    chart_type = 'area'
+
+
 class HighchartsColumnTransformer(HighchartsLineTransformer):
+    """
+    Transformer for a Highcharts Column chart
+    http://www.highcharts.com/demo/column-basic
+    """
     chart_type = 'column'
 
     def prevalidate_request(self, slicer, metrics, dimensions,
@@ -285,4 +297,8 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
 
 
 class HighchartsBarTransformer(HighchartsColumnTransformer):
+    """
+    Transformer for a Highcharts Bar chart
+    http://www.highcharts.com/demo/bar-basic
+    """
     chart_type = 'bar'

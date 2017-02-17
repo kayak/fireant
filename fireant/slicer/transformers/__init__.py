@@ -9,6 +9,7 @@ from .datatables import (DataTablesRowIndexTransformer,
                          CSVRowIndexTransformer,
                          CSVColumnIndexTransformer)
 from .highcharts import (HighchartsLineTransformer,
+                         HighchartsAreaTransformer,
                          HighchartsColumnTransformer,
                          HighchartsBarTransformer)
 from .notebooks import (PandasRowIndexTransformer,
@@ -25,6 +26,7 @@ BUNDLES = {
     },
     'highcharts': {
         'line_chart': HighchartsLineTransformer(),
+        'area_chart': HighchartsAreaTransformer(),
         'column_chart': HighchartsColumnTransformer(),
         'bar_chart': HighchartsBarTransformer(),
     },

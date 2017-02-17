@@ -1,4 +1,4 @@
 # coding: utf-8
 
-from .schemas import (WidgetGroup, LineChartWidget, BarChartWidget, ColumnChartWidget, RowIndexTableWidget,
-                      ColumnIndexTableWidget)
+from .schemas import (WidgetGroup, LineChartWidget, AreaChartWidget, BarChartWidget, ColumnChartWidget,
+                      RowIndexTableWidget, ColumnIndexTableWidget)

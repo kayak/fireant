@@ -1,5 +1,6 @@
 # coding: utf-8
 import unittest
+
 from collections import OrderedDict
 from datetime import date
 
@@ -64,6 +65,7 @@ class ExampleTests(QueryTests):
         """
         dt = self.mock_table.dt
         query = self.manager._build_data_query(
+            database=settings.database,
             table=self.mock_table,
             joins=[
                 (self.mock_join1, self.mock_table.join1_id == self.mock_join1.id, JoinType.inner),
@@ -156,6 +158,7 @@ class ExampleTests(QueryTests):
 class MetricsTests(QueryTests):
     def test_metrics(self):
         query = self.manager._build_data_query(
+            database=settings.database,
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -174,6 +177,7 @@ class MetricsTests(QueryTests):
 
     def test_metrics_dimensions(self):
         query = self.manager._build_data_query(
+            database=settings.database,
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -197,6 +201,7 @@ class MetricsTests(QueryTests):
 
     def test_metrics_filters(self):
         query = self.manager._build_data_query(
+            database=settings.database,
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -223,6 +228,7 @@ class MetricsTests(QueryTests):
 
     def test_metrics_dimensions_filters(self):
         query = self.manager._build_data_query(
+            database=settings.database,
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -258,6 +264,7 @@ class DimensionTests(QueryTests):
         truncated_dt = settings.database.trunc_date(self.mock_table.dt, increment)
 
         return self.manager._build_data_query(
+            database=settings.database,
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -329,6 +336,7 @@ class DimensionTests(QueryTests):
 
     def test_multidimension_categorical(self):
         query = self.manager._build_data_query(
+            database=settings.database,
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -357,6 +365,7 @@ class DimensionTests(QueryTests):
         device_type = self.mock_table.device_type
 
         query = self.manager._build_data_query(
+            database=settings.database,
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -385,6 +394,7 @@ class DimensionTests(QueryTests):
         locale = self.mock_table.locale
 
         query = self.manager._build_data_query(
+            database=settings.database,
             table=self.mock_table,
             joins=[
                 (self.mock_join1, self.mock_table.hotel_id == self.mock_join1.hotel_id, JoinType.left),
@@ -422,6 +432,7 @@ class DimensionTests(QueryTests):
 class FilterTests(QueryTests):
     def test_single_dimension_filter(self):
         query = self.manager._build_data_query(
+            database=settings.database,
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -450,6 +461,7 @@ class FilterTests(QueryTests):
 
     def test_multi_dimension_filter(self):
         query = self.manager._build_data_query(
+            database=settings.database,
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -482,6 +494,7 @@ class FilterTests(QueryTests):
 
     def test_single_metric_filter(self):
         query = self.manager._build_data_query(
+            database=settings.database,
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -510,6 +523,7 @@ class FilterTests(QueryTests):
 
     def test_multi_metric_filter(self):
         query = self.manager._build_data_query(
+            database=settings.database,
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -543,7 +557,7 @@ class FilterTests(QueryTests):
 
 class ReferenceTests(QueryTests):
     intervals = {
-        'yoy': '1 YEAR',
+        'yoy': '1',
         'qoq': '1 QUARTER',
         'mom': '1 MONTH',
         'wow': '1 WEEK',
@@ -554,6 +568,7 @@ class ReferenceTests(QueryTests):
         dt = self.mock_table.dt
         device_type = self.mock_table.device_type
         query = self.manager._build_data_query(
+            database=settings.database,
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -576,7 +591,9 @@ class ReferenceTests(QueryTests):
         )
         return query
 
-    def assert_reference(self, query, key):
+    def assert_reference(self, query, key, interval=None):
+        interval = interval if interval else '\'{expr}\''.format(expr=self.intervals[key])
+
         self.assertEqual(
             'SELECT '
             '"sq0"."date" "date","sq0"."device_type" "device_type",'
@@ -597,17 +614,19 @@ class ReferenceTests(QueryTests):
             'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+            'WHERE "dt"+INTERVAL {interval} BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
             'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
-            ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL \'{expr}\' '
+            ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL {interval} '
             'AND "sq0"."device_type"="sq1"."device_type" '
             'ORDER BY "sq0"."date","sq0"."device_type"'.format(
                 key=key,
-                expr=self.intervals[key]
+                interval=interval
             ), str(query)
         )
 
-    def assert_reference_d(self, query, key):
+    def assert_reference_d(self, query, key, interval=None):
+        interval = interval if interval else '\'{expr}\''.format(expr=self.intervals[key])
+
         self.assertEqual(
             'SELECT '
             '"sq0"."date" "date","sq0"."device_type" "device_type",'
@@ -628,17 +647,19 @@ class ReferenceTests(QueryTests):
             'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+            'WHERE "dt"+INTERVAL {interval} BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
             'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
-            ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL \'{expr}\' '
+            ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL {interval} '
             'AND "sq0"."device_type"="sq1"."device_type" '
             'ORDER BY "sq0"."date","sq0"."device_type"'.format(
                 key=key,
-                expr=self.intervals[key]
+                interval=interval
             ), str(query)
         )
 
-    def assert_reference_p(self, query, key):
+    def assert_reference_p(self, query, key, interval=None):
+        interval = interval if interval else '\'{expr}\''.format(expr=self.intervals[key])
+
         self.assertEqual(
             'SELECT '
             '"sq0"."date" "date","sq0"."device_type" "device_type",'
@@ -659,20 +680,20 @@ class ReferenceTests(QueryTests):
             'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+            'WHERE "dt"+INTERVAL {interval} BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
             'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
-            ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL \'{expr}\' '
+            ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL {interval} '
             'AND "sq0"."device_type"="sq1"."device_type" '
             'ORDER BY "sq0"."date","sq0"."device_type"'.format(
                 key=key,
-                expr=self.intervals[key]
+                interval=interval
             ), str(query)
         )
 
     def test_metrics_dimensions_filters_references__yoy(self):
         reference = references.YoY('date')
         query = self._get_compare_query(reference)
-        self.assert_reference(query, reference.key)
+        self.assert_reference(query, reference.key, '\'{expr}\' YEAR'.format(expr=self.intervals[reference.key]))
 
     def test_metrics_dimensions_filters_references__qoq(self):
         reference = references.QoQ('date')
@@ -697,7 +718,7 @@ class ReferenceTests(QueryTests):
     def test_metrics_dimensions_filters_references__yoy_d(self):
         reference = references.YoY('date')
         query = self._get_compare_query(references.Delta(reference))
-        self.assert_reference_d(query, reference.key)
+        self.assert_reference_d(query, reference.key, '\'{expr}\' YEAR'.format(expr=self.intervals[reference.key]))
 
     def test_metrics_dimensions_filters_references__qoq_d(self):
         reference = references.QoQ('date')
@@ -722,7 +743,7 @@ class ReferenceTests(QueryTests):
     def test_metrics_dimensions_filters_references__yoy_p(self):
         reference = references.YoY('date')
         query = self._get_compare_query(references.DeltaPercentage(reference))
-        self.assert_reference_p(query, reference.key)
+        self.assert_reference_p(query, reference.key, '\'{expr}\' YEAR'.format(expr=self.intervals[reference.key]))
 
     def test_metrics_dimensions_filters_references__qoq_p(self):
         reference = references.QoQ('date')
@@ -750,6 +771,7 @@ class ReferenceTests(QueryTests):
         device_type = self.mock_table.device_type
 
         query = self.manager._build_data_query(
+            database=settings.database,
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -804,6 +826,7 @@ class ReferenceTests(QueryTests):
         dt = self.mock_table.dt
 
         query = self.manager._build_data_query(
+            database=settings.database,
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -850,6 +873,7 @@ class TotalsQueryTests(QueryTests):
         locale = self.mock_table.locale
 
         query = self.manager._build_data_query(
+            database=settings.database,
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -879,6 +903,7 @@ class TotalsQueryTests(QueryTests):
         device_type = self.mock_table.device_type
 
         query = self.manager._build_data_query(
+            database=settings.database,
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([
@@ -911,6 +936,7 @@ class TotalsQueryTests(QueryTests):
         device_type = self.mock_table.device_type
 
         query = self.manager._build_data_query(
+            database=settings.database,
             table=self.mock_table,
             joins=[],
             metrics=OrderedDict([

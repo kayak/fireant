@@ -11,7 +11,6 @@ class Widget(object):
     Attributes:
         * label: human readable text.
         * metrics: list of metric names/identifiers
-        * width
     """
 
     def __init__(self, metrics=tuple()):
@@ -23,6 +22,13 @@ class LineChartWidget(Widget):
     The `LineChartWidget` class represents a Highcharts line chart.
     """
     transformer = HighchartsLineTransformer()
+
+
+class AreaChartWidget(Widget):
+    """
+    The `AreaChartWidget` class represents a Highcharts area chart.
+    """
+    transformer = HighchartsAreaTransformer()
 
 
 class BarChartWidget(Widget):

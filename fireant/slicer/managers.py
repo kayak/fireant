@@ -113,7 +113,6 @@ class SlicerManager(QueryManager, OperationManager):
                                               metric_filters=metric_filters, dimension_filters=dimension_filters,
                                               references=references, operations=operations)
 
-        del query_schema['database']
         return str(self._build_data_query(**query_schema))
 
     def dimension_options(self, dimension, filters, limit=None):
