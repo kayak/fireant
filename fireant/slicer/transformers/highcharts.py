@@ -168,7 +168,7 @@ class HighchartsLineTransformer(Transformer):
                             for key, dimension in list(display_schema['dimensions'].items())[1:]]
         dimension_labels = [dimension_label  # filter out the Totals
                             for dimension_label in dimension_labels
-                            if dimension_label is not Totals.label]
+                            if dimension_label and dimension_label is not Totals.label]
 
         return (
             '{metric} ({dimensions})'.format(
@@ -196,7 +196,7 @@ class HighchartsLineTransformer(Transformer):
 
         return [self._format_point(key, value)
                 for key, value in column.iteritems()
-                if not (isinstance(value, (float, int)) and np.isnan(value))]
+                if not (isinstance(value, (float, int)) and np.isnan(value)) and not pd.isnull(key)]
 
     @staticmethod
     def _format_point(x, y):

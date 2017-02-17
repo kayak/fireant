@@ -887,14 +887,14 @@ class TotalsQueryTests(QueryTests):
             mfilters=[],
             dfilters=[],
             references={},
-            rollup=['locale'],
+            rollup=[['locale']],
         )
 
         self.assertEqual('SELECT '
                          'TRUNC("dt",\'DD\') "date","locale" "locale",'
                          'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
                          'FROM "test_table" '
-                         'GROUP BY TRUNC("dt",\'DD\'),ROLLUP("locale") '
+                         'GROUP BY TRUNC("dt",\'DD\'),ROLLUP(("locale")) '
                          'ORDER BY TRUNC("dt",\'DD\'),"locale"', str(query))
 
     def test_add_rollup_two_dimensions(self):
@@ -918,7 +918,7 @@ class TotalsQueryTests(QueryTests):
             mfilters=[],
             dfilters=[],
             references={},
-            rollup=['locale', 'device_type'],
+            rollup=[['locale'], ['device_type']],
         )
 
         self.assertEqual('SELECT '
@@ -927,7 +927,7 @@ class TotalsQueryTests(QueryTests):
                          '"device_type" "device_type",'
                          'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
                          'FROM "test_table" '
-                         'GROUP BY TRUNC("dt",\'DD\'),ROLLUP("locale","device_type") '
+                         'GROUP BY TRUNC("dt",\'DD\'),ROLLUP(("locale"),("device_type")) '
                          'ORDER BY TRUNC("dt",\'DD\'),"locale","device_type"', str(query))
 
     def test_add_rollup_two_dimensions_partial(self):
@@ -951,7 +951,7 @@ class TotalsQueryTests(QueryTests):
             mfilters=[],
             dfilters=[],
             references={},
-            rollup=['locale'],
+            rollup=[['locale']],
         )
         self.assertEqual('SELECT '
                          'TRUNC("dt",\'DD\') "date",'
@@ -959,7 +959,7 @@ class TotalsQueryTests(QueryTests):
                          '"locale" "locale",'  # Order is changed, rollup dims move to end
                          'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
                          'FROM "test_table" '
-                         'GROUP BY TRUNC("dt",\'DD\'),"device_type",ROLLUP("locale") '
+                         'GROUP BY TRUNC("dt",\'DD\'),"device_type",ROLLUP(("locale")) '
                          'ORDER BY TRUNC("dt",\'DD\'),"locale","device_type"', str(query))
 
 

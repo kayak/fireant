@@ -18,7 +18,7 @@ def _safe(value):
         else:
             return value.strftime('%Y-%m-%dT%H:%M:%S')
 
-    if value is None or (isinstance(value, float) and np.isnan(value)):
+    if value is None or (isinstance(value, float) and np.isnan(value)) or pd.isnull(value):
         return None
 
     if isinstance(value, np.int64):
@@ -241,7 +241,12 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
             if 'display_field' in dimension:
                 unstack_levels.append(dimension['display_field'])
 
-        return dataframe.unstack(level=unstack_levels)
+
+        dataframe.replace('', 'N/A', inplace=True)
+
+        # TODO: Remove the extra NaN row that is created for each column when totals are being applied to a
+        #       unique dimension.
+        return dataframe.unstack(level=unstack_levels, fill_value='N/A')
 
     def _render_column_level(self, metric_column, display_schema):
         column = super(DataTablesColumnIndexTransformer, self)._render_column_level(metric_column, display_schema)
@@ -250,13 +255,11 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
         i = 2 if display_schema.get('references') else 1
         data_keys, levels = [], []
         for dimension in list(display_schema['dimensions'].values())[1:]:
+            level_key = metric_column[i]
+
             if 'display_options' in dimension:
-                level_key = metric_column[i]
                 level_display = dimension['display_options'].get(level_key, level_key)
-
             else:
-                level_key = metric_column[i]
-
                 if 'display_field' in dimension:
                     i += 1
 
@@ -302,7 +305,8 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
         data = []
 
         if 'display_field' in dimensions[0][1]:
-            levels = zip(*dataframe.index.levels[1:3])
+            # Returning indexes per level does not guarantee they are ordered, therefore iteritems() must be used
+            levels = [row[0][1:] for row in dataframe.iteritems()]
             format_key = lambda level: level[0]
             slice_metric_data = lambda level: dataframe[:, level[0], level[1]]
         else:
@@ -319,7 +323,6 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
             data.append((format_key(level), metric_data))
 
         return data
-
 
 
 class CSVRowIndexTransformer(DataTablesRowIndexTransformer):

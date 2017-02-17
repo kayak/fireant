@@ -1,4 +1,7 @@
 # coding: utf-8
+import numpy as np
+import pandas as pd
+
 from datetime import date
 from unittest import TestCase
 
@@ -883,7 +886,7 @@ class SlicerOperationSchemaTests(SlicerSchemaTests):
         self.assertSetEqual({'date', 'locale', 'account', 'account_display'}, set(query_schema['dimensions'].keys()))
         self.assertEqual('TRUNC("test"."dt",\'DD\')', str(query_schema['dimensions']['date']))
 
-        self.assertListEqual(['locale', 'account', 'account_display'], query_schema['rollup'])
+        self.assertListEqual([['locale'], ['account', 'account_display']], query_schema['rollup'])
 
     def test_totals_operation_schema(self):
         operation_schema = self.test_slicer.manager.operation_schema(
@@ -1041,7 +1044,9 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
             {
                 'metrics': {'foo': {'label': 'Foo', 'axis': 0}},
                 'dimensions': {
-                    'locale': {'label': 'Locale', 'display_options': {'us': 'United States', 'de': 'Germany'}},
+                    'locale': {'label': 'Locale', 'display_options': {
+                        'us': 'United States', 'de': 'Germany', np.nan: '', pd.NaT: ''
+                    }},
                 },
                 'references': {},
             },
@@ -1079,7 +1084,9 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
                 'dimensions': {
                     'date': {'label': 'Date'},
                     'clicks': {'label': 'My Clicks'},
-                    'locale': {'label': 'Locale', 'display_options': {'us': 'United States', 'de': 'Germany'}},
+                    'locale': {'label': 'Locale', 'display_options': {
+                        'us': 'United States', 'de': 'Germany', np.nan: '', pd.NaT: ''
+                    }},
                     'account': {'label': 'Account', 'display_field': 'account_display'},
                 },
                 'references': {},
