@@ -272,7 +272,7 @@ class HighchartsAreaTransformerTests(HighchartsLineTransformerTests):
 
     @classmethod
     def setUpClass(cls):
-        super().setUpClass()
+        super(HighchartsAreaTransformerTests, cls).setUpClass()
         cls.hc_tx = HighchartsAreaTransformer()
 
 
