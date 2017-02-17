@@ -106,10 +106,10 @@ class DatetimeInterval(object):
 class DatetimeDimension(ContinuousDimension):
     hour = DatetimeInterval('HH')
     day = DatetimeInterval('DD')
-    week = DatetimeInterval('WW')
+    week = DatetimeInterval('IW')
     month = DatetimeInterval('MM')
     quarter = DatetimeInterval('Q')
-    year = DatetimeInterval('IY')
+    year = DatetimeInterval('Y')
 
     def __init__(self, key, label=None, definition=None, default_interval=day, joins=None):
         super(DatetimeDimension, self).__init__(key=key, label=label, definition=definition, joins=joins,
