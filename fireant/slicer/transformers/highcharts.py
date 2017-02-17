@@ -356,7 +356,7 @@ class HighchartsPieTransformer(HighchartsLineTransformer):
                         'enabled': True,
                         'format': '<b>{point.name}</b>: {point.percentage:.1f} %',
                         'style': {
-                            'color': COLORS.get('grid')
+                            'color': COLORS.get(settings.highcharts_colors, 'grid')
                         }
                     }
                 }
