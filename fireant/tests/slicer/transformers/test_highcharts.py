@@ -283,6 +283,22 @@ class HighchartsAreaTransformerTests(HighchartsLineTransformerTests):
         super(HighchartsAreaTransformerTests, cls).setUpClass()
         cls.hc_tx = HighchartsAreaTransformer()
 
+    def evaluate_chart_options(self, result, num_series=1, xaxis_type='linear', dash_style='Solid'):
+        self.assertSetEqual({'title', 'series', 'chart', 'plotOptions', 'tooltip', 'xAxis', 'yAxis'},
+                            set(result.keys()))
+        self.assertEqual(num_series, len(result['series']))
+
+        self.assertSetEqual({'text'}, set(result['title'].keys()))
+        self.assertIsNone(result['title']['text'])
+
+        self.assertEqual(self.chart_type, result['chart']['type'])
+
+        self.assertSetEqual({'type'}, set(result['xAxis'].keys()))
+        self.assertEqual(xaxis_type, result['xAxis']['type'])
+
+        for series in result['series']:
+            self.assertSetEqual({'name', 'data', 'tooltip', 'color', 'dashStyle'}, set(series.keys()))
+
 
 class HighchartsAreaPercentageTransformerTests(HighchartsLineTransformerTests):
     chart_type = HighchartsAreaPercentageTransformer.chart_type
