@@ -230,7 +230,7 @@ class HighchartsAreaPercentageTransformer(HighchartsLineTransformer):
     chart_type = 'area'
 
     def transform(self, dataframe, display_schema):
-        config = super().transform(dataframe, display_schema)
+        config = super(HighchartsAreaPercentageTransformer, self).transform(dataframe, display_schema)
         config['plotOptions'] = {
             'area': {
                 'stacking': 'percent',
@@ -239,7 +239,7 @@ class HighchartsAreaPercentageTransformer(HighchartsLineTransformer):
         return config
 
     def _format_tooltip(self, metric_schema):
-        tooltip = super()._format_tooltip(metric_schema)
+        tooltip = super(HighchartsAreaPercentageTransformer, self)._format_tooltip(metric_schema)
         # Add the percentage to the default tooltip point format
         tooltip['pointFormat'] = '<span style="color:{point.color}">\u25CF</span> {series.name}: ' \
                                  '<b>{point.y} - {point.percentage:.1f}%</b><br/>'
