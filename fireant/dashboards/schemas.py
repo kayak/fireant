@@ -45,11 +45,25 @@ class BarChartWidget(Widget):
     transformer = HighchartsBarTransformer()
 
 
+class StackedBarChartWidget(Widget):
+    """
+    The `StackedBarChartWidget` class represents a Highcharts stacked bar chart.
+    """
+    transformer = HighchartsStackedBarTransformer()
+
+
 class ColumnChartWidget(Widget):
     """
     The `ColumnChartWidget` class represents a Highcharts column chart.
     """
     transformer = HighchartsColumnTransformer()
+
+
+class StackedColumnChartWidget(Widget):
+    """
+    The `StackedColumnChartWidget` class represents a Highcharts stacked column chart.
+    """
+    transformer = HighchartsStackedColumnTransformer()
 
 
 class PieChartWidget(Widget):
