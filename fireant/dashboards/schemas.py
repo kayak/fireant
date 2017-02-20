@@ -31,6 +31,13 @@ class AreaChartWidget(Widget):
     transformer = HighchartsAreaTransformer()
 
 
+class AreaPercentageChartWidget(Widget):
+    """
+    The `AreaPercentageChartWidget` class represents a Highcharts area percentage chart.
+    """
+    transformer = HighchartsAreaPercentageTransformer()
+
+
 class BarChartWidget(Widget):
     """
     The `BarChartWidget` class represents a Highcharts bar chart.

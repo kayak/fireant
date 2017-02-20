@@ -80,6 +80,7 @@ class HighchartsLineTransformer(Transformer):
         result = {
             'chart': {'type': self.chart_type, 'zoomType': 'x'},
             'title': {'text': None},
+            'plotOptions': {},
             'xAxis': self.xaxis_options(dataframe, dim_ordinal, display_schema),
             'yAxis': self.yaxis_options(dataframe, dim_ordinal, display_schema),
             'tooltip': {'shared': True},
@@ -219,6 +220,30 @@ class HighchartsAreaTransformer(HighchartsLineTransformer):
     http://www.highcharts.com/demo/area-basic
     """
     chart_type = 'area'
+
+
+class HighchartsAreaPercentageTransformer(HighchartsLineTransformer):
+    """
+    Transformer for a Highcharts Area Percentage chart
+    http://www.highcharts.com/demo/area-stacked-percent
+    """
+    chart_type = 'area'
+
+    def transform(self, dataframe, display_schema):
+        config = super().transform(dataframe, display_schema)
+        config['plotOptions'] = {
+            'area': {
+                'stacking': 'percent',
+            }
+        }
+        return config
+
+    def _format_tooltip(self, metric_schema):
+        tooltip = super()._format_tooltip(metric_schema)
+        # Add the percentage to the default tooltip point format
+        tooltip['pointFormat'] = '<span style="color:{point.color}">\u25CF</span> {series.name}: ' \
+                                 '<b>{point.y} - {point.percentage:.1f}%</b><br/>'
+        return tooltip
 
 
 class HighchartsColumnTransformer(HighchartsLineTransformer):
