@@ -366,6 +366,15 @@ class HighchartsPieTransformer(HighchartsLineTransformer):
                        for ordinal, name in enumerate(dataframe.index.names)}
         dataframe = self._prepare_dataframe(dataframe, dim_ordinal, display_schema['dimensions'])
         series = self._make_series(dataframe, dim_ordinal, display_schema)
+
+        # Issues have been seen when showing over 900 data points on a Highcharts pie chart.
+        max_data_points = 900
+        num_data_points = len(series['data'])
+        if num_data_points > max_data_points:
+            raise TransformationException('You have reached the maximum number of data points that can be shown '
+                                          'on a pie chart. Maximum number of data points: {}. '
+                                          'Current number of data points: {}.'.format(max_data_points, num_data_points))
+
         metric_key = self._get_metric_key(dataframe)
 
         result = {
