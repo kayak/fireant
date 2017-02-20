@@ -5,9 +5,10 @@ from unittest import TestCase
 import numpy as np
 import pandas as pd
 from fireant.slicer import Slicer, Metric, ContinuousDimension, DatetimeDimension, CategoricalDimension, UniqueDimension
-from fireant.slicer.transformers import (HighchartsLineTransformer, HighchartsAreaTransformer,
-                                         HighchartsAreaPercentageTransformer,
-                                         HighchartsColumnTransformer, HighchartsBarTransformer,
+from fireant.slicer.transformers import (HighchartsLineTransformer,
+                                         HighchartsAreaTransformer, HighchartsAreaPercentageTransformer,
+                                         HighchartsColumnTransformer, HighchartsStackedColumnTransformer,
+                                         HighchartsBarTransformer, HighchartsStackedBarTransformer,
                                          HighchartsPieTransformer)
 from fireant.slicer.transformers import highcharts, TransformationException
 from fireant.tests import mock_dataframes as mock_df
@@ -452,12 +453,45 @@ class HighchartsColumnTransformerTests(TestCase):
         self.evaluate_result(df, result)
 
 
+class HighchartsStackedColumnTransformerTests(HighchartsColumnTransformerTests):
+    chart_type = HighchartsStackedColumnTransformer.chart_type
+
+    @classmethod
+    def setUpClass(cls):
+        cls.hc_tx = HighchartsStackedColumnTransformer()
+
+    def evaluate_chart_options(self, result, num_results=1, categories=None):
+        self.assertSetEqual({'title', 'series', 'chart', 'tooltip', 'xAxis', 'yAxis', 'plotOptions'},
+                            set(result.keys()))
+        self.assertEqual(num_results, len(result['series']))
+
+        self.assertSetEqual({'text'}, set(result['title'].keys()))
+        self.assertIsNone(result['title']['text'])
+
+        self.assertEqual(self.chart_type, result['chart']['type'])
+        self.assertEqual('categorical', result['xAxis']['type'])
+
+        if categories:
+            self.assertSetEqual({'type', 'categories'}, set(result['xAxis'].keys()))
+
+        for series in result['series']:
+            self.assertSetEqual({'name', 'data', 'color', 'tooltip'}, set(series.keys()))
+
+
 class HighchartsBarTransformerTests(HighchartsColumnTransformerTests):
     chart_type = HighchartsBarTransformer.chart_type
 
     @classmethod
     def setUpClass(cls):
         cls.hc_tx = HighchartsBarTransformer()
+
+
+class HighchartsStackedBarTransformerTests(HighchartsStackedColumnTransformerTests):
+    chart_type = HighchartsStackedBarTransformer.chart_type
+
+    @classmethod
+    def setUpClass(cls):
+        cls.hc_tx = HighchartsStackedBarTransformer()
 
 
 class HighchartsUtilityTests(TestCase):

@@ -324,12 +324,70 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
         return [display_options.get(value, value) for value in dataframe.index]
 
 
+class HighchartsStackedColumnTransformer(HighchartsColumnTransformer):
+    """
+    Transformer for a Highcharts Stacked Column chart
+    http://www.highcharts.com/demo/column-stacked
+    """
+    def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference, color='#000'):
+        metric_key = utils.slice_first(idx)
+        return {
+            'name': self._format_label(idx, dim_ordinal, display_schema, reference),
+            'data': self._format_data(item),
+            'tooltip': self._format_tooltip(display_schema['metrics'][metric_key]),
+            'color': color
+        }
+
+    def transform(self, dataframe, display_schema):
+        result = super(HighchartsStackedColumnTransformer, self).transform(dataframe, display_schema)
+        result['plotOptions'] = result.get('plotOptions', {})
+        result['plotOptions'].update({
+            'column': {
+                'stacking': 'normal'
+            }
+        })
+
+        return result
+
+    def yaxis_options(self, dataframe, dim_ordinal, display_schema):
+        return [{'title': None}]
+
+
 class HighchartsBarTransformer(HighchartsColumnTransformer):
     """
     Transformer for a Highcharts Bar chart
     http://www.highcharts.com/demo/bar-basic
     """
     chart_type = 'bar'
+
+
+class HighchartsStackedBarTransformer(HighchartsBarTransformer):
+    """
+    Transformer for a Highcharts Stacked Bar chart
+    http://www.highcharts.com/demo/bar-stacked
+    """
+    def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference, color='#000'):
+        metric_key = utils.slice_first(idx)
+        return {
+            'name': self._format_label(idx, dim_ordinal, display_schema, reference),
+            'data': self._format_data(item),
+            'tooltip': self._format_tooltip(display_schema['metrics'][metric_key]),
+            'color': color
+        }
+
+    def transform(self, dataframe, display_schema):
+        result = super(HighchartsStackedBarTransformer, self).transform(dataframe, display_schema)
+        result['plotOptions'] = result.get('plotOptions', {})
+        result['plotOptions'].update({
+            'series': {
+                'stacking': 'normal'
+            }
+        })
+
+        return result
+
+    def yaxis_options(self, dataframe, dim_ordinal, display_schema):
+        return [{'title': None}]
 
 
 class HighchartsPieTransformer(HighchartsLineTransformer):
