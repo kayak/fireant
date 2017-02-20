@@ -221,6 +221,23 @@ class HighchartsAreaTransformer(HighchartsLineTransformer):
     """
     chart_type = 'area'
 
+    def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference, color='#000'):
+        """
+        Overriding the parent class' _make_series_item to remove the yAxis key as area charts
+        only really make sense on a single y axis
+        """
+        metric_key = utils.slice_first(idx)
+        return {
+            'name': self._format_label(idx, dim_ordinal, display_schema, reference),
+            'data': self._format_data(item),
+            'tooltip': self._format_tooltip(display_schema['metrics'][metric_key]),
+            'color': color,
+            'dashStyle': 'Dot' if reference else 'Solid'
+        }
+
+    def yaxis_options(self, dataframe, dim_ordinal, display_schema):
+        return [{'title': None}]
+
 
 class HighchartsAreaPercentageTransformer(HighchartsLineTransformer):
     """
