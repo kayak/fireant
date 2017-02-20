@@ -301,7 +301,7 @@ class HighchartsAreaTransformerTests(HighchartsLineTransformerTests):
             self.assertSetEqual({'name', 'data', 'tooltip', 'color', 'dashStyle'}, set(series.keys()))
 
 
-class HighchartsAreaPercentageTransformerTests(HighchartsLineTransformerTests):
+class HighchartsAreaPercentageTransformerTests(HighchartsAreaTransformerTests):
     chart_type = HighchartsAreaPercentageTransformer.chart_type
 
     @classmethod

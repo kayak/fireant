@@ -239,7 +239,7 @@ class HighchartsAreaTransformer(HighchartsLineTransformer):
         return [{'title': None}]
 
 
-class HighchartsAreaPercentageTransformer(HighchartsLineTransformer):
+class HighchartsAreaPercentageTransformer(HighchartsAreaTransformer):
     """
     Transformer for a Highcharts Area Percentage chart
     http://www.highcharts.com/demo/area-stacked-percent
