@@ -4,9 +4,9 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
-
 from fireant.slicer import Slicer, Metric, ContinuousDimension, DatetimeDimension, CategoricalDimension, UniqueDimension
 from fireant.slicer.transformers import (HighchartsLineTransformer, HighchartsAreaTransformer,
+                                         HighchartsAreaPercentageTransformer,
                                          HighchartsColumnTransformer, HighchartsBarTransformer,
                                          HighchartsPieTransformer)
 from fireant.slicer.transformers import highcharts, TransformationException
@@ -67,7 +67,8 @@ class HighchartsLineTransformerTests(BaseHighchartsTransformerTests):
         )
 
     def evaluate_chart_options(self, result, num_series=1, xaxis_type='linear', dash_style='Solid'):
-        self.assertSetEqual({'title', 'series', 'chart', 'tooltip', 'xAxis', 'yAxis'}, set(result.keys()))
+        self.assertSetEqual({'title', 'series', 'chart', 'plotOptions', 'tooltip', 'xAxis', 'yAxis'},
+                            set(result.keys()))
         self.assertEqual(num_series, len(result['series']))
 
         self.assertSetEqual({'text'}, set(result['title'].keys()))
@@ -283,6 +284,15 @@ class HighchartsAreaTransformerTests(HighchartsLineTransformerTests):
         cls.hc_tx = HighchartsAreaTransformer()
 
 
+class HighchartsAreaPercentageTransformerTests(HighchartsLineTransformerTests):
+    chart_type = HighchartsAreaPercentageTransformer.chart_type
+
+    @classmethod
+    def setUpClass(cls):
+        super(HighchartsAreaPercentageTransformerTests, cls).setUpClass()
+        cls.hc_tx = HighchartsAreaPercentageTransformer()
+
+
 class HighchartsColumnTransformerTests(TestCase):
     """
     Bar and Column charts work with the following requests:
@@ -297,7 +307,8 @@ class HighchartsColumnTransformerTests(TestCase):
         cls.hc_tx = HighchartsColumnTransformer()
 
     def evaluate_chart_options(self, result, num_results=1, categories=None):
-        self.assertSetEqual({'title', 'series', 'chart', 'tooltip', 'xAxis', 'yAxis'}, set(result.keys()))
+        self.assertSetEqual({'title', 'series', 'chart', 'tooltip', 'xAxis', 'yAxis', 'plotOptions'},
+                            set(result.keys()))
         self.assertEqual(num_results, len(result['series']))
 
         self.assertSetEqual({'text'}, set(result['title'].keys()))

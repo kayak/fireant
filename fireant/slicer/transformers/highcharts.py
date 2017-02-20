@@ -80,6 +80,7 @@ class HighchartsLineTransformer(Transformer):
         result = {
             'chart': {'type': self.chart_type, 'zoomType': 'x'},
             'title': {'text': None},
+            'plotOptions': {},
             'xAxis': self.xaxis_options(dataframe, dim_ordinal, display_schema),
             'yAxis': self.yaxis_options(dataframe, dim_ordinal, display_schema),
             'tooltip': {'shared': True},
@@ -221,6 +222,30 @@ class HighchartsAreaTransformer(HighchartsLineTransformer):
     chart_type = 'area'
 
 
+class HighchartsAreaPercentageTransformer(HighchartsLineTransformer):
+    """
+    Transformer for a Highcharts Area Percentage chart
+    http://www.highcharts.com/demo/area-stacked-percent
+    """
+    chart_type = 'area'
+
+    def transform(self, dataframe, display_schema):
+        config = super(HighchartsAreaPercentageTransformer, self).transform(dataframe, display_schema)
+        config['plotOptions'] = {
+            'area': {
+                'stacking': 'percent',
+            }
+        }
+        return config
+
+    def _format_tooltip(self, metric_schema):
+        tooltip = super(HighchartsAreaPercentageTransformer, self)._format_tooltip(metric_schema)
+        # Add the percentage to the default tooltip point format
+        tooltip['pointFormat'] = '<span style="color:{point.color}">\u25CF</span> {series.name}: ' \
+                                 '<b>{point.y} - {point.percentage:.1f}%</b><br/>'
+        return tooltip
+
+
 class HighchartsColumnTransformer(HighchartsLineTransformer):
     """
     Transformer for a Highcharts Column chart
@@ -341,6 +366,15 @@ class HighchartsPieTransformer(HighchartsLineTransformer):
                        for ordinal, name in enumerate(dataframe.index.names)}
         dataframe = self._prepare_dataframe(dataframe, dim_ordinal, display_schema['dimensions'])
         series = self._make_series(dataframe, dim_ordinal, display_schema)
+
+        # Issues have been seen when showing over 900 data points on a Highcharts pie chart.
+        max_data_points = 900
+        num_data_points = len(series['data'])
+        if num_data_points > max_data_points:
+            raise TransformationException('You have reached the maximum number of data points that can be shown '
+                                          'on a pie chart. Maximum number of data points: {}. '
+                                          'Current number of data points: {}.'.format(max_data_points, num_data_points))
+
         metric_key = self._get_metric_key(dataframe)
 
         result = {

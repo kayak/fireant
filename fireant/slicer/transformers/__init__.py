@@ -10,6 +10,7 @@ from .datatables import (DataTablesRowIndexTransformer,
                          CSVColumnIndexTransformer)
 from .highcharts import (HighchartsLineTransformer,
                          HighchartsAreaTransformer,
+                         HighchartsAreaPercentageTransformer,
                          HighchartsColumnTransformer,
                          HighchartsBarTransformer,
                          HighchartsPieTransformer)
@@ -28,6 +29,7 @@ BUNDLES = {
     'highcharts': {
         'line_chart': HighchartsLineTransformer(),
         'area_chart': HighchartsAreaTransformer(),
+        'area_percentage_chart': HighchartsAreaPercentageTransformer(),
         'column_chart': HighchartsColumnTransformer(),
         'bar_chart': HighchartsBarTransformer(),
         'pie_chart': HighchartsPieTransformer(),
