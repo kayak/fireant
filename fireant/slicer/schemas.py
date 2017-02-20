@@ -131,17 +131,20 @@ class UniqueDimension(Dimension):
         super(UniqueDimension, self).__init__(key=key, label=label, definition=definition, joins=joins)
         self.display_field = display_field
 
+    def display_key(self):
+        return '{key}_display'.format(key=self.key)
+
     def schemas(self, *args, **kwargs):
         schemas = [('{key}'.format(key=self.key), self.definition)]
 
         if self.display_field:
-            schemas.append(('{key}_display'.format(key=self.key), self.display_field))
+            schemas.append((self.display_key(), self.display_field))
 
         return schemas
 
     def levels(self):
         if self.display_field is not None:
-            return [self.key, self.display_field]
+            return [self.key, self.display_key()]
         return super(UniqueDimension, self).levels()
 
 
