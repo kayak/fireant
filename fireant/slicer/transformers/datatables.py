@@ -241,7 +241,6 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
             if 'display_field' in dimension:
                 unstack_levels.append(dimension['display_field'])
 
-
         dataframe.replace('', 'N/A', inplace=True)
 
         # TODO: Remove the extra NaN row that is created for each column when totals are being applied to a
