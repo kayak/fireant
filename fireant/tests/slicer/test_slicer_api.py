@@ -1,10 +1,9 @@
 # coding: utf-8
-import numpy as np
-import pandas as pd
-
 from datetime import date
 from unittest import TestCase
 
+import numpy as np
+import pandas as pd
 from fireant.slicer import *
 from fireant.slicer.operations import *
 from fireant.slicer.references import *
@@ -1062,7 +1061,8 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
             {
                 'metrics': {'foo': {'label': 'Foo', 'axis': 0}},
                 'dimensions': {
-                    'account': {'label': 'Account', 'display_field': 'account_display'},
+                    'account': {'label': 'Account', 'display_field': 'account_display',
+                                'display_options': {pd.NaT: '', np.nan: ''}},
                 },
                 'references': {},
             },
@@ -1087,7 +1087,8 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
                     'locale': {'label': 'Locale', 'display_options': {
                         'us': 'United States', 'de': 'Germany', np.nan: '', pd.NaT: ''
                     }},
-                    'account': {'label': 'Account', 'display_field': 'account_display'},
+                    'account': {'label': 'Account', 'display_field': 'account_display',
+                                'display_options': {np.nan: '', pd.NaT: ''}},
                 },
                 'references': {},
             },
