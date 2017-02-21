@@ -167,6 +167,7 @@ class HighchartsLineTransformer(Transformer):
 
         dimension_labels = [self._format_dimension_display(dim_ordinal, key, dimension, idx)
                             for key, dimension in list(display_schema['dimensions'].items())[1:]]
+
         dimension_labels = [dimension_label  # filter out the Totals
                             for dimension_label in dimension_labels
                             if dimension_label and dimension_label is not Totals.label]
@@ -185,13 +186,25 @@ class HighchartsLineTransformer(Transformer):
         if not isinstance(idx, (list, tuple)):
             idx = [idx]
 
-        if 'display_field' in dimension:
-            display_field = dimension['display_field']
-            return idx[dim_ordinal[display_field]]
-
         dimension_value = idx[dim_ordinal[key]]
+        dimension_has_display_field = 'display_field' in dimension
+
         if 'display_options' in dimension:
-            dimension_value = dimension['display_options'].get(dimension_value, dimension_value)
+            # Only return a pre-defined display value if one has been defined in the dimension definition
+            if dimension_has_display_field:
+                display_field = dimension['display_field']
+                lookup_value = idx[dim_ordinal[display_field]]
+            else:
+                lookup_value = dimension_value
+
+            new_display_value = dimension['display_options'].get(lookup_value)
+            if new_display_value:
+                return new_display_value
+
+            if dimension_has_display_field:
+                return lookup_value
+
+        # Return raw dimension value if no display option or display field has been set
         return dimension_value
 
     def _format_data(self, column):
@@ -346,6 +359,7 @@ class HighchartsStackedColumnTransformer(HighchartsColumnTransformer):
     Transformer for a Highcharts Stacked Column chart
     http://www.highcharts.com/demo/column-stacked
     """
+
     def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference, color='#000'):
         metric_key = utils.slice_first(idx)
         return {
@@ -383,6 +397,7 @@ class HighchartsStackedBarTransformer(HighchartsBarTransformer):
     Transformer for a Highcharts Stacked Bar chart
     http://www.highcharts.com/demo/bar-stacked
     """
+
     def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference, color='#000'):
         metric_key = utils.slice_first(idx)
         return {

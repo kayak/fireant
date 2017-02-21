@@ -176,7 +176,7 @@ class HighchartsLineTransformerTests(BaseHighchartsTransformerTests):
         self.evaluate_chart_options(result, num_series=3)
 
         self.assertSetEqual(
-            {'One (Aa)', 'One (Bb)', 'One (Cc)'},
+            {'One (Aa)', 'One (Bb)', 'One (testoption)'},
             {series['name'] for series in result['series']}
         )
 
@@ -191,7 +191,7 @@ class HighchartsLineTransformerTests(BaseHighchartsTransformerTests):
         self.evaluate_chart_options(result, num_series=6)
 
         self.assertSetEqual(
-            {'One (Aa)', 'One (Bb)', 'One (Cc)', 'Two (Aa)', 'Two (Bb)', 'Two (Cc)'},
+            {'One (Aa)', 'One (Bb)', 'One (testoption)', 'Two (Aa)', 'Two (Bb)', 'Two (testoption)'},
             {series['name'] for series in result['series']}
         )
 
@@ -575,7 +575,7 @@ class HighChartsPieChartTests(BaseHighchartsTransformerTests):
         df = mock_df.uni_dim_single_metric_df
         result = self.hc_tx.transform(df, mock_df.uni_dim_single_metric_schema)
         result_series = result['series'][0]
-        self.assertEqual(result_series, {'data': [('Aa', 0.0), ('Bb', 1.0), ('Cc', 2.0)], 'name': 'One'})
+        self.assertEqual(result_series, {'data': [('Aa', 0.0), ('Bb', 1.0), ('testoption', 2.0)], 'name': 'One'})
 
     def test_date_dim_single_metric(self):
         # Tests transformation of a single metric and a datetime dimension
@@ -603,14 +603,28 @@ class HighChartsPieChartTests(BaseHighchartsTransformerTests):
 
     def test_cont_cat_uni_and_a_single_metric(self):
         # Tests transformation of a categorical and unique dimensions with a single metric
-        df = mock_df.cont_cat_dims_single_metric_df
-        result = self.hc_tx.transform(df, mock_df.cont_cat_dims_single_metric_schema)
+        df = mock_df.cont_cat_uni_dims_multi_metric_df
+        result = self.hc_tx.transform(df, mock_df.cont_cat_uni_dims_multi_metric_schema)
         result_series = result['series'][0]
         self.assertEqual(result_series,
-                         {'data': [('(0, A)', 0), ('(0, B)', 1), ('(1, A)', 2), ('(1, B)', 3), ('(2, A)', 4),
-                                   ('(2, B)', 5), ('(3, A)', 6), ('(3, B)', 7), ('(4, A)', 8), ('(4, B)', 9),
-                                   ('(5, A)', 10), ('(5, B)', 11), ('(6, A)', 12), ('(6, B)', 13), ('(7, A)', 14),
-                                   ('(7, B)', 15)],
+                         {'data': [('(0, A, Aa)', 0.0), ('(0, A, Bb)', 1.0), ('(0, A, testoption)', 2.0),
+                                   ('(0, B, Aa)', 3.0),
+                                   ('(0, B, Bb)', 4.0), ('(0, B, testoption)', 5.0), ('(1, A, Aa)', 6.0),
+                                   ('(1, A, Bb)', 7.0),
+                                   ('(1, A, testoption)', 8.0), ('(1, B, Aa)', 9.0), ('(1, B, Bb)', 10.0),
+                                   ('(1, B, testoption)', 11.0),
+                                   ('(2, A, Aa)', 12.0), ('(2, A, Bb)', 13.0), ('(2, A, testoption)', 14.0),
+                                   ('(2, B, Aa)', 15.0), ('(2, B, Bb)', 16.0), ('(2, B, testoption)', 17.0),
+                                   ('(3, A, Aa)', 18.0), ('(3, A, Bb)', 19.0), ('(3, A, testoption)', 20.0),
+                                   ('(3, B, Aa)', 21.0), ('(3, B, Bb)', 22.0), ('(3, B, testoption)', 23.0),
+                                   ('(4, A, Aa)', 24.0), ('(4, A, Bb)', 25.0), ('(4, A, testoption)', 26.0),
+                                   ('(4, B, Aa)', 27.0), ('(4, B, Bb)', 28.0), ('(4, B, testoption)', 29.0),
+                                   ('(5, A, Aa)', 30.0), ('(5, A, Bb)', 31.0), ('(5, A, testoption)', 32.0),
+                                   ('(5, B, Aa)', 33.0), ('(5, B, Bb)', 34.0), ('(5, B, testoption)', 35.0),
+                                   ('(6, A, Aa)', 36.0), ('(6, A, Bb)', 37.0), ('(6, A, testoption)', 38.0),
+                                   ('(6, B, Aa)', 39.0), ('(6, B, Bb)', 40.0), ('(6, B, testoption)', 41.0),
+                                   ('(7, A, Aa)', 42.0), ('(7, A, Bb)', 43.0), ('(7, A, testoption)', 44.0),
+                                   ('(7, B, Aa)', 45.0), ('(7, B, Bb)', 46.0), ('(7, B, testoption)', 47.0)],
                           'name': 'One'})
 
     def test_unique_dim_single_metric_pretty_tooltip(self):
@@ -618,5 +632,5 @@ class HighChartsPieChartTests(BaseHighchartsTransformerTests):
         df = mock_df.uni_dim_pretty_df
         result = self.hc_tx.transform(df, mock_df.uni_dim_pretty_schema)
         result_series = result['series'][0]
-        self.assertEqual(result_series, {'data': [('Aa', 0.0), ('Bb', 1.0), ('Cc', 2.0)], 'name': 'One'})
+        self.assertEqual(result_series, {'data': [('Aa', 0.0), ('Bb', 1.0), ('testoption', 2.0)], 'name': 'One'})
         self.evaluate_tooltip_options(result, prefix='!', suffix='~', precision=1)

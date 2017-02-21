@@ -1,11 +1,11 @@
 # coding: utf-8
+import locale as lc
+from datetime import time
+
 import numpy as np
 import pandas as pd
-import locale as lc
-
-from datetime import time
-from fireant.slicer.operations import Totals
 from fireant import settings
+from fireant.slicer.operations import Totals
 from fireant.slicer.transformers import Transformer
 
 NO_TIME = time(0)
@@ -193,14 +193,27 @@ class DataTablesRowIndexTransformer(Transformer):
         i = 0
         for key, dimension in dimensions:
             dimension_value = _safe(idx[i])
+            display_value = None
 
-            if 'display_field' in dimension:
-                i += 1
-                yield key, {'display': _safe(idx[i]), 'value': dimension_value}
+            # Categorical and Unique dimensions both contain a display_options key
+            if 'display_options' in dimension:
+                if 'display_field' in dimension:
+                    i += 1
+                    display_value = _safe(idx[i])
 
-            elif 'display_options' in dimension:
-                display = dimension['display_options'].get(dimension_value, dimension_value)
-                yield key, {'display': display, 'value': dimension_value}
+                display = dimension['display_options'].get(display_value or dimension_value)
+                if display:
+                    yield key, {'display': display, 'value': dimension_value}
+
+                else:
+                    # If a display label has not been defined for the dimension and it is a display field, then
+                    # use the display field value. Otherwise, just use the raw dimension name.
+                    if 'display_field' in dimension:
+                        yield key, {'display': display_value, 'value': dimension_value}
+
+                    else:
+                        # Return the raw value if no display option is defined and a display field is not present
+                        yield key, {'display': dimension_value, 'value': dimension_value}
 
             else:
                 yield key, {'value': dimension_value}
@@ -241,7 +254,6 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
             if 'display_field' in dimension:
                 unstack_levels.append(dimension['display_field'])
 
-
         dataframe.replace('', 'N/A', inplace=True)
 
         # TODO: Remove the extra NaN row that is created for each column when totals are being applied to a
@@ -256,14 +268,14 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
         data_keys, levels = [], []
         for dimension in list(display_schema['dimensions'].values())[1:]:
             level_key = metric_column[i]
+            lookup_value = metric_column[i]
 
             if 'display_options' in dimension:
-                level_display = dimension['display_options'].get(level_key, level_key)
-            else:
                 if 'display_field' in dimension:
                     i += 1
+                    lookup_value = metric_column[i]
 
-                level_display = metric_column[i]
+                level_display = dimension['display_options'].get(lookup_value, lookup_value)
 
             # the metric key must remain last
             if not (isinstance(level_key, float) and np.isnan(level_key)):
@@ -315,7 +327,7 @@ class DataTablesColumnIndexTransformer(DataTablesRowIndexTransformer):
             slice_metric_data = lambda level: dataframe[:, level]
 
         for level in levels:
-            metric_data =  dict(self._recurse_dimensions(slice_metric_data(level), dimensions[1:], metrics))
+            metric_data = dict(self._recurse_dimensions(slice_metric_data(level), dimensions[1:], metrics))
 
             if not metric_data:
                 continue
