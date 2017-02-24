@@ -1,3 +1,3 @@
 # coding: utf-8
 
-__version__ = '{major}.{minor}.{patch}'.format(major=0, minor=11, patch=3)
+__version__ = '{major}.{minor}.{patch}'.format(major=0, minor=12, patch=0)
