@@ -95,9 +95,24 @@ class HighchartsLineTransformer(Transformer):
         }
 
     def yaxis_options(self, dataframe, dim_ordinal, display_schema):
-        axes = {metric_schema.get('axis')
-                for metric_schema in display_schema['metrics'].values()}
-        return [{'title': None}] * len(axes)
+        axis_count = len(display_schema['metrics'].keys())
+
+        # Axis for metrics are blue to facilitate differing those from the reference ones.
+        axis = [
+            {'id': id, 'title': {'text': None}, 'labels': {'style':{'color': '#337ab7'}}}
+            for id in range(axis_count)
+        ]
+
+        reference_keys = display_schema.get('references', {}).keys()
+
+        # Create only one axes per available modifier (i.e. delta percent, percent and none).
+        reference_axes_ids = set(self._reference_axes_id(reference_key) for reference_key in reference_keys)
+
+        for axes_id in reference_axes_ids:
+            axis.append({'id': axes_id, 'title': {'text': None}})
+
+        return axis
+
 
     def _make_series(self, dataframe, dim_ordinal, display_schema, reference=None):
         metrics = list(dataframe.columns.levels[0]
@@ -112,14 +127,24 @@ class HighchartsLineTransformer(Transformer):
 
     def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference, color='#000'):
         metric_key = utils.slice_first(idx)
+
         return {
             'name': self._format_label(idx, dim_ordinal, display_schema, reference),
             'data': self._format_data(item),
             'tooltip': self._format_tooltip(display_schema['metrics'][metric_key]),
-            'yAxis': display_schema['metrics'][metric_key].get('axis', 0),
+            'yAxis': display_schema['metrics'][metric_key].get('axis', 0)
+                     if not reference else self._reference_axes_id(reference),
             'color': color,
             'dashStyle': 'Dot' if reference else 'Solid'
         }
+
+    @staticmethod
+    def _reference_axes_id(reference_key):
+        if '_' in reference_key:
+            # Replace dod, wow, mom and yoy with reference, since each modifier type should have only one axes.
+            modifier = '_'.join(reference_key.split('_')[1:])
+            return 'reference_{}'.format(modifier)
+        return 'reference'
 
     @staticmethod
     def _make_categories(dataframe, dim_ordinal, display_schema):

@@ -37,7 +37,7 @@ class Delta(Reference):
 
     @staticmethod
     def generate_key(reference_key):
-        return '%s_d' % reference_key
+        return '%s_delta' % reference_key
 
 
 class DeltaPercentage(Reference):
@@ -53,7 +53,7 @@ class DeltaPercentage(Reference):
 
     @staticmethod
     def generate_key(reference_key):
-        return '%s_p' % reference_key
+        return '%s_delta_percent' % reference_key
 
 
 class DoD(Reference):
