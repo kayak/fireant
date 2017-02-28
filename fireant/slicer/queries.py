@@ -193,8 +193,9 @@ class QueryManager(object):
 
             schema['interval'] = interval
 
-            dfilters = self._replace_filters_for_ref(dfilters, schema['definition'], interval)
-            ref_query = self._build_query_inner(table, joins, metrics, dimensions, dfilters, mfilters, rollup)
+            # Don't reuse the dfilters arg otherwise intervals will be aggregated on each iteration
+            replaced_dfilters = self._replace_filters_for_ref(dfilters, schema['definition'], interval)
+            ref_query = self._build_query_inner(table, joins, metrics, dimensions, replaced_dfilters, mfilters, rollup)
             join_criteria = self._build_reference_join_criteria(dimension_key, dimensions, interval, query, ref_query)
 
             # Optional modifier function to modify the metric in the reference query. This is for delta and delta
