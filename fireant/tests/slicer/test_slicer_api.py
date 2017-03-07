@@ -80,8 +80,7 @@ class SlicerSchemaTests(TestCase):
 
                 # Unique Dimension with single ID field
                 UniqueDimension('account', 'Account', definition=cls.test_table.account_id,
-                                display_field=cls.test_table.account_name,
-                                display_options=[DimensionValue('fakename', 'Fake Name')]),
+                                display_field=cls.test_table.account_name),
 
                 # Unique Dimension with composite ID field
                 UniqueDimension('keyword', 'Keyword', definition=cls.test_table.keyword_id,
@@ -1062,8 +1061,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
             {
                 'metrics': {'foo': {'label': 'Foo', 'axis': 0}},
                 'dimensions': {
-                    'account': {'label': 'Account', 'display_field': 'account_display',
-                                'display_options': {pd.NaT: '', np.nan: '', 'fakename': 'Fake Name'}},
+                    'account': {'label': 'Account', 'display_field': 'account_display'},
                 },
                 'references': {},
             },
@@ -1088,8 +1086,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
                     'locale': {'label': 'Locale', 'display_options': {
                         'us': 'United States', 'de': 'Germany', np.nan: '', pd.NaT: ''
                     }},
-                    'account': {'label': 'Account', 'display_field': 'account_display',
-                                'display_options': {np.nan: '', pd.NaT: '', 'fakename': 'Fake Name'}},
+                    'account': {'label': 'Account', 'display_field': 'account_display'},
                 },
                 'references': {},
             },

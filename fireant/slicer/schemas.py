@@ -126,10 +126,9 @@ class CategoricalDimension(Dimension):
         self.display_options = display_options
 
 
-class UniqueDimension(CategoricalDimension):
-    def __init__(self, key, label=None, definition=None, display_options=tuple(), display_field=None, joins=None):
-        super(UniqueDimension, self).__init__(key=key, label=label, display_options=display_options,
-                                              definition=definition, joins=joins)
+class UniqueDimension(Dimension):
+    def __init__(self, key, label=None, definition=None, display_field=None, joins=None):
+        super(UniqueDimension, self).__init__(key=key, label=label, definition=definition, joins=joins)
         self.display_field = display_field
 
     def display_key(self):

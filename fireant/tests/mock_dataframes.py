@@ -21,7 +21,7 @@ def rollup(dataframe, levels):
 
 cont_dim = {'label': 'Cont'}
 datetime_dim = {'label': 'Date'}
-uni_dim = {'label': 'Uni', 'display_field': 'uni_label', 'display_options': {'Cc': 'testoption'}}
+uni_dim = {'label': 'Uni', 'display_field': 'uni_label'}
 cat1_dim = {'label': 'Cat1', 'display_options': {'a': 'A', 'b': 'B'}}
 cat2_dim = {'label': 'Cat2', 'display_options': {'y': 'Y', 'z': 'Z'}}
 cat1_rollup_dim = {'label': 'Cat1', 'display_options': {'a': 'A', 'b': 'B', Totals.key: Totals.label}}
