@@ -211,25 +211,15 @@ class HighchartsLineTransformer(Transformer):
         if not isinstance(idx, (list, tuple)):
             idx = [idx]
 
+        if 'display_field' in dimension:
+            display_field = dimension['display_field']
+            return idx[dim_ordinal[display_field]]
+
         dimension_value = idx[dim_ordinal[key]]
-        dimension_has_display_field = 'display_field' in dimension
 
         if 'display_options' in dimension:
-            # Only return a pre-defined display value if one has been defined in the dimension definition
-            if dimension_has_display_field:
-                display_field = dimension['display_field']
-                lookup_value = idx[dim_ordinal[display_field]]
-            else:
-                lookup_value = dimension_value
+            dimension_value = dimension['display_options'].get(dimension_value, dimension_value)
 
-            new_display_value = dimension['display_options'].get(lookup_value)
-            if new_display_value:
-                return new_display_value
-
-            if dimension_has_display_field:
-                return lookup_value
-
-        # Return raw dimension value if no display option or display field has been set
         return dimension_value
 
     def _format_data(self, column):
