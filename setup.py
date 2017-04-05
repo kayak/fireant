@@ -4,6 +4,11 @@ from setuptools import setup
 
 from fireant import __version__
 
+# Getting the list of requirements from the requirements.txt file
+# http://stackoverflow.com/a/16624700
+install_requirements = parse_requirements('requirements.txt', session=PipSession())
+requirements = [str(ir.req) for ir in install_requirements]
+
 setup(
     name='fireant',
     version=__version__,
@@ -53,8 +58,8 @@ setup(
 
     install_requires=[
         'six',
-        'pandas==0.18.1',
-        'pypika==0.2.0'
+        'pandas>=0.18.1',
+        'pypika>=0.2.2'
     ],
     tests_require=[
         'mock'
