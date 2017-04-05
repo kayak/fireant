@@ -4,11 +4,6 @@ from setuptools import setup
 
 from fireant import __version__
 
-# Getting the list of requirements from the requirements.txt file
-# http://stackoverflow.com/a/16624700
-install_requirements = parse_requirements('requirements.txt', session=PipSession())
-requirements = [str(ir.req) for ir in install_requirements]
-
 setup(
     name='fireant',
     version=__version__,
