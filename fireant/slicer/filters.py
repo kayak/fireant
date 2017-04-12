@@ -27,6 +27,12 @@ class EqualityFilter(Filter):
 
         return criterion
 
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) \
+               and self.element_key == other.element_key \
+               and self.operator == other.operator \
+               and self.value == other.value
+
 
 class ContainsFilter(Filter):
     def __init__(self, element_key, values):
@@ -36,6 +42,11 @@ class ContainsFilter(Filter):
     def schemas(self, element):
         return element.isin(self.values)
 
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) \
+               and self.element_key == other.element_key \
+               and self.values == other.values
+
 
 class ExcludesFilter(Filter):
     def __init__(self, element_key, values):
@@ -44,6 +55,11 @@ class ExcludesFilter(Filter):
 
     def schemas(self, element):
         return element.notin(self.values)
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) \
+               and self.element_key == other.element_key \
+               and self.values == other.values
 
 
 class RangeFilter(Filter):
@@ -67,6 +83,12 @@ class RangeFilter(Filter):
 
         return criterion
 
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) \
+               and self.element_key == other.element_key \
+               and self.start == other.start \
+               and self.stop == other.stop
+
 
 class WildcardFilter(Filter):
     def __init__(self, element_key, value):
@@ -75,3 +97,8 @@ class WildcardFilter(Filter):
 
     def schemas(self, element):
         return element.like(self.value)
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) \
+               and self.element_key == other.element_key \
+               and self.value == other.value
