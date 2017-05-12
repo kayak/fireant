@@ -24,7 +24,7 @@ class SlicerElement(object):
             A list of Join keys required by this element.
         """
         self.key = key
-        self.label = label or ' '.join(key.capitalize().split('_'))
+        self.label = label or key
         self.definition = definition
         self.joins = joins
 

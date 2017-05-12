@@ -1,6 +1,8 @@
 # coding: utf-8
 from datetime import date
 from unittest import TestCase
+from collections import OrderedDict
+from pprint import pprint as pp
 
 import numpy as np
 import pandas as pd
@@ -978,11 +980,9 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
 
         self.assertDictEqual(
-            {
-                'metrics': {'foo': {'label': 'Foo', 'axis': 0}},
-                'dimensions': {},
-                'references': {},
-            },
+            {'dimensions': OrderedDict(),
+             'metrics': OrderedDict([('foo', {'axis': 0, 'label': 'foo'})]),
+             'references': OrderedDict()},
             display_schema
         )
 
@@ -1007,13 +1007,9 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
 
         self.assertDictEqual(
-            {
-                'metrics': {'foo': {'label': 'Foo', 'axis': 0}},
-                'dimensions': {
-                    'date': {'label': 'Date'}
-                },
-                'references': {},
-            },
+            {'dimensions': OrderedDict([('date', {'label': 'date'})]),
+             'metrics': OrderedDict([('foo', {'axis': 0, 'label': 'foo'})]),
+             'references': OrderedDict()},
             display_schema
         )
 
@@ -1024,13 +1020,9 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
 
         self.assertDictEqual(
-            {
-                'metrics': {'foo': {'label': 'Foo', 'axis': 0}},
-                'dimensions': {
-                    'clicks': {'label': 'My Clicks'}
-                },
-                'references': {},
-            },
+            {'dimensions': OrderedDict([('clicks', {'label': 'My Clicks'})]),
+             'metrics': OrderedDict([('foo', {'axis': 0, 'label': 'foo'})]),
+             'references': OrderedDict()},
             display_schema
         )
 
@@ -1039,16 +1031,16 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
             metrics=['foo'],
             dimensions=['locale'],
         )
+
         self.assertDictEqual(
-            {
-                'metrics': {'foo': {'label': 'Foo', 'axis': 0}},
-                'dimensions': {
-                    'locale': {'label': 'Locale', 'display_options': {
-                        'us': 'United States', 'de': 'Germany', np.nan: '', pd.NaT: ''
-                    }},
-                },
-                'references': {},
-            },
+            {'dimensions': OrderedDict([('locale',
+                                         {'display_options': {pd.NaT: '',
+                                                              np.nan: '',
+                                                              'de': 'Germany',
+                                                              'us': 'United States'},
+                                          'label': 'Locale'})]),
+             'metrics': OrderedDict([('foo', {'axis': 0, 'label': 'foo'})]),
+             'references': OrderedDict()},
             display_schema
         )
 
@@ -1058,13 +1050,11 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
             dimensions=['account'],
         )
         self.assertDictEqual(
-            {
-                'metrics': {'foo': {'label': 'Foo', 'axis': 0}},
-                'dimensions': {
-                    'account': {'label': 'Account', 'display_field': 'account_display'},
-                },
-                'references': {},
-            },
+            {'dimensions': OrderedDict([('account',
+                                         {'display_field': 'account_display',
+                                          'label': 'Account'})]),
+             'metrics': OrderedDict([('foo', {'label': 'foo', 'axis': 0})]),
+             'references': OrderedDict()},
             display_schema
         )
 
@@ -1075,21 +1065,20 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
 
         self.assertDictEqual(
-            {
-                'metrics': {
-                    'foo': {'label': 'Foo', 'axis': 0},
-                    'bar': {'label': 'FizBuz', 'axis': 1},
-                },
-                'dimensions': {
-                    'date': {'label': 'Date'},
-                    'clicks': {'label': 'My Clicks'},
-                    'locale': {'label': 'Locale', 'display_options': {
-                        'us': 'United States', 'de': 'Germany', np.nan: '', pd.NaT: ''
-                    }},
-                    'account': {'label': 'Account', 'display_field': 'account_display'},
-                },
-                'references': {},
-            },
+            {'dimensions': OrderedDict([('date', {'label': 'date'}),
+                                        ('clicks', {'label': 'My Clicks'}),
+                                        ('locale',
+                                         {'display_options': {pd.NaT: '',
+                                                              np.nan: '',
+                                                              'de': 'Germany',
+                                                              'us': 'United States'},
+                                          'label': 'Locale'}),
+                                        ('account',
+                                         {'display_field': 'account_display',
+                                          'label': 'Account'})]),
+             'metrics': OrderedDict([('foo', {'axis': 0, 'label': 'foo'}),
+                                     ('bar', {'axis': 1, 'label': 'FizBuz'})]),
+             'references': OrderedDict()},
             display_schema
         )
 
@@ -1099,15 +1088,10 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
             dimensions=['date'],
             references=[WoW('date')],
         )
-
         self.assertDictEqual(
-            {
-                'metrics': {'foo': {'label': 'Foo', 'axis': 0}},
-                'dimensions': {
-                    'date': {'label': 'Date'},
-                },
-                'references': {'wow': 'WoW'},
-            },
+            {'dimensions': OrderedDict([('date', {'label': 'date'})]),
+             'metrics': OrderedDict([('foo', {'label': 'foo', 'axis': 0})]),
+             'references': OrderedDict([('wow', 'WoW')])},
             display_schema
         )
 
@@ -1117,11 +1101,9 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
 
         self.assertDictEqual(
-            {
-                'metrics': {'foo_cumsum': {'label': 'Foo cum. sum', 'axis': 0}},
-                'dimensions': {},
-                'references': {},
-            },
+            {'dimensions': OrderedDict(),
+             'metrics': OrderedDict([('foo_cumsum', {'axis': 0, 'label': 'foo cum. sum'})]),
+             'references': OrderedDict()},
             display_schema
         )
 
@@ -1131,11 +1113,10 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
 
         self.assertDictEqual(
-            {
-                'metrics': {'foo_cummean': {'label': 'Foo cum. mean', 'axis': 0}},
-                'dimensions': {},
-                'references': {},
-            },
+            {'dimensions': OrderedDict(),
+             'metrics': OrderedDict([('foo_cummean',
+                                      {'axis': 0, 'label': 'foo cum. mean'})]),
+             'references': OrderedDict()},
             display_schema
         )
 
@@ -1145,11 +1126,9 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
 
         self.assertDictEqual(
-            {
-                'metrics': {'foo_l1loss': {'label': 'Foo L1 loss', 'axis': 0}},
-                'dimensions': {},
-                'references': {},
-            },
+            {'dimensions': OrderedDict(),
+             'metrics': OrderedDict([('foo_l1loss', {'axis': 0, 'label': 'foo L1 loss'})]),
+             'references': OrderedDict()},
             display_schema
         )
 
@@ -1159,11 +1138,9 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
 
         self.assertDictEqual(
-            {
-                'metrics': {'foo_l2loss': {'label': 'Foo L2 loss', 'axis': 0}},
-                'dimensions': {},
-                'references': {},
-            },
+            {'dimensions': OrderedDict(),
+             'metrics': OrderedDict([('foo_l2loss', {'axis': 0, 'label': 'foo L2 loss'})]),
+             'references': OrderedDict()},
             display_schema
         )
 
@@ -1174,14 +1151,10 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
 
         self.assertDictEqual(
-            {
-                'metrics': {
-                    'bar': {'label': 'FizBuz', 'axis': 0},
-                    'foo_cumsum': {'label': 'Foo cum. sum', 'axis': 1}
-                },
-                'dimensions': {},
-                'references': {},
-            },
+            {'dimensions': OrderedDict(),
+             'metrics': OrderedDict([('bar', {'axis': 0, 'label': 'FizBuz'}),
+                                     ('foo_cumsum', {'axis': 1, 'label': 'foo cum. sum'})]),
+             'references': OrderedDict()},
             display_schema
         )
 
@@ -1192,14 +1165,10 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
 
         self.assertDictEqual(
-            {
-                'metrics': {
-                    'foo': {'label': 'Foo', 'axis': 0},
-                    'foo_cumsum': {'label': 'Foo cum. sum', 'axis': 1}
-                },
-                'dimensions': {},
-                'references': {},
-            },
+            {'dimensions': OrderedDict(),
+             'metrics': OrderedDict([('foo', {'axis': 0, 'label': 'foo'}),
+                                     ('foo_cumsum', {'axis': 1, 'label': 'foo cum. sum'})]),
+             'references': OrderedDict()},
             display_schema
         )
 
@@ -1210,15 +1179,10 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
 
         self.assertDictEqual(
-            {
-                'metrics': {
-                    'decimal': {'label': 'Decimal', 'axis': 0, 'precision': 2},
-                },
-                'dimensions': {
-                    'date': {'label': 'Date'}
-                },
-                'references': {},
-            },
+            {'dimensions': OrderedDict([('date', {'label': 'date'})]),
+             'metrics': OrderedDict([('decimal',
+                                      {'axis': 0, 'label': 'decimal', 'precision': 2})]),
+             'references': OrderedDict()},
             display_schema
         )
 
@@ -1229,15 +1193,10 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
 
         self.assertDictEqual(
-            {
-                'metrics': {
-                    'dollar': {'label': 'Dollar', 'axis': 0, 'prefix': '$'},
-                },
-                'dimensions': {
-                    'date': {'label': 'Date'}
-                },
-                'references': {},
-            },
+            {'dimensions': OrderedDict([('date', {'label': 'date'})]),
+             'metrics': OrderedDict([('dollar',
+                                      {'axis': 0, 'label': 'dollar', 'prefix': '$'})]),
+             'references': OrderedDict()},
             display_schema
         )
 
@@ -1248,14 +1207,9 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
 
         self.assertDictEqual(
-            {
-                'metrics': {
-                    'euro': {'label': 'Euro', 'axis': 0, 'suffix': '€'},
-                },
-                'dimensions': {
-                    'date': {'label': 'Date'}
-                },
-                'references': {},
-            },
+            {'dimensions': OrderedDict([('date', {'label': 'date'})]),
+             'metrics': OrderedDict([('euro',
+                                      {'axis': 0, 'label': 'euro', 'suffix': '€'})]),
+             'references': OrderedDict()},
             display_schema
         )
