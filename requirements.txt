@@ -1,5 +1,8 @@
 six
-pandas>=0.18.1
+# setting to 0.19 as pandas 0.20 throws an exception when calling `df.sort_index()` on a mixed-type index in the tests.
+# however, calling `pd.DataFrame(index=[1,2,'three']).sort_index()` fails on both 0.19 AND 0.20, so it's unclear
+# where this is coming from.
+pandas==0.19
 pypika>=0.2.4
 vertica-python>=0.6
 matplotlib
