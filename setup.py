@@ -1,8 +1,7 @@
 # coding: utf8
 
-from setuptools import setup
-
 from fireant import __version__
+from setuptools import setup
 
 setup(
     name='fireant',
@@ -53,8 +52,9 @@ setup(
 
     install_requires=[
         'six',
-        'pandas>=0.18.1',
-        'pypika>=0.2.4'
+        'pandas==0.19.2',
+        'pypika==0.3.0',
+        'vertica-python>=0.6'
     ],
     tests_require=[
         'mock'
