@@ -1,9 +1,10 @@
 # coding: utf-8
-from datetime import date
 from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+from datetime import date
+
 from fireant.slicer import *
 from fireant.slicer.operations import *
 from fireant.slicer.references import *
@@ -979,7 +980,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
 
         self.assertDictEqual(
             {
-                'metrics': {'foo': {'label': 'Foo', 'axis': 0}},
+                'metrics': {'foo': {'label': 'foo', 'axis': 0}},
                 'dimensions': {},
                 'references': {},
             },
@@ -1008,9 +1009,9 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
 
         self.assertDictEqual(
             {
-                'metrics': {'foo': {'label': 'Foo', 'axis': 0}},
+                'metrics': {'foo': {'label': 'foo', 'axis': 0}},
                 'dimensions': {
-                    'date': {'label': 'Date'}
+                    'date': {'label': 'date'}
                 },
                 'references': {},
             },
@@ -1025,7 +1026,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
 
         self.assertDictEqual(
             {
-                'metrics': {'foo': {'label': 'Foo', 'axis': 0}},
+                'metrics': {'foo': {'label': 'foo', 'axis': 0}},
                 'dimensions': {
                     'clicks': {'label': 'My Clicks'}
                 },
@@ -1041,7 +1042,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
         self.assertDictEqual(
             {
-                'metrics': {'foo': {'label': 'Foo', 'axis': 0}},
+                'metrics': {'foo': {'label': 'foo', 'axis': 0}},
                 'dimensions': {
                     'locale': {'label': 'Locale', 'display_options': {
                         'us': 'United States', 'de': 'Germany', np.nan: '', pd.NaT: ''
@@ -1059,7 +1060,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         )
         self.assertDictEqual(
             {
-                'metrics': {'foo': {'label': 'Foo', 'axis': 0}},
+                'metrics': {'foo': {'label': 'foo', 'axis': 0}},
                 'dimensions': {
                     'account': {'label': 'Account', 'display_field': 'account_display'},
                 },
@@ -1077,11 +1078,11 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         self.assertDictEqual(
             {
                 'metrics': {
-                    'foo': {'label': 'Foo', 'axis': 0},
+                    'foo': {'label': 'foo', 'axis': 0},
                     'bar': {'label': 'FizBuz', 'axis': 1},
                 },
                 'dimensions': {
-                    'date': {'label': 'Date'},
+                    'date': {'label': 'date'},
                     'clicks': {'label': 'My Clicks'},
                     'locale': {'label': 'Locale', 'display_options': {
                         'us': 'United States', 'de': 'Germany', np.nan: '', pd.NaT: ''
@@ -1102,9 +1103,9 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
 
         self.assertDictEqual(
             {
-                'metrics': {'foo': {'label': 'Foo', 'axis': 0}},
+                'metrics': {'foo': {'label': 'foo', 'axis': 0}},
                 'dimensions': {
-                    'date': {'label': 'Date'},
+                    'date': {'label': 'date'},
                 },
                 'references': {'wow': 'WoW'},
             },
@@ -1118,7 +1119,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
 
         self.assertDictEqual(
             {
-                'metrics': {'foo_cumsum': {'label': 'Foo cum. sum', 'axis': 0}},
+                'metrics': {'foo_cumsum': {'label': 'foo cum. sum', 'axis': 0}},
                 'dimensions': {},
                 'references': {},
             },
@@ -1132,7 +1133,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
 
         self.assertDictEqual(
             {
-                'metrics': {'foo_cummean': {'label': 'Foo cum. mean', 'axis': 0}},
+                'metrics': {'foo_cummean': {'label': 'foo cum. mean', 'axis': 0}},
                 'dimensions': {},
                 'references': {},
             },
@@ -1146,7 +1147,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
 
         self.assertDictEqual(
             {
-                'metrics': {'foo_l1loss': {'label': 'Foo L1 loss', 'axis': 0}},
+                'metrics': {'foo_l1loss': {'label': 'foo L1 loss', 'axis': 0}},
                 'dimensions': {},
                 'references': {},
             },
@@ -1160,7 +1161,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
 
         self.assertDictEqual(
             {
-                'metrics': {'foo_l2loss': {'label': 'Foo L2 loss', 'axis': 0}},
+                'metrics': {'foo_l2loss': {'label': 'foo L2 loss', 'axis': 0}},
                 'dimensions': {},
                 'references': {},
             },
@@ -1177,7 +1178,7 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
             {
                 'metrics': {
                     'bar': {'label': 'FizBuz', 'axis': 0},
-                    'foo_cumsum': {'label': 'Foo cum. sum', 'axis': 1}
+                    'foo_cumsum': {'label': 'foo cum. sum', 'axis': 1}
                 },
                 'dimensions': {},
                 'references': {},
@@ -1194,8 +1195,8 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         self.assertDictEqual(
             {
                 'metrics': {
-                    'foo': {'label': 'Foo', 'axis': 0},
-                    'foo_cumsum': {'label': 'Foo cum. sum', 'axis': 1}
+                    'foo': {'label': 'foo', 'axis': 0},
+                    'foo_cumsum': {'label': 'foo cum. sum', 'axis': 1}
                 },
                 'dimensions': {},
                 'references': {},
@@ -1212,10 +1213,10 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         self.assertDictEqual(
             {
                 'metrics': {
-                    'decimal': {'label': 'Decimal', 'axis': 0, 'precision': 2},
+                    'decimal': {'label': 'decimal', 'axis': 0, 'precision': 2},
                 },
                 'dimensions': {
-                    'date': {'label': 'Date'}
+                    'date': {'label': 'date'}
                 },
                 'references': {},
             },
@@ -1231,10 +1232,10 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         self.assertDictEqual(
             {
                 'metrics': {
-                    'dollar': {'label': 'Dollar', 'axis': 0, 'prefix': '$'},
+                    'dollar': {'label': 'dollar', 'axis': 0, 'prefix': '$'},
                 },
                 'dimensions': {
-                    'date': {'label': 'Date'}
+                    'date': {'label': 'date'}
                 },
                 'references': {},
             },
@@ -1250,10 +1251,10 @@ class SlicerDisplaySchemaTests(SlicerSchemaTests):
         self.assertDictEqual(
             {
                 'metrics': {
-                    'euro': {'label': 'Euro', 'axis': 0, 'suffix': '€'},
+                    'euro': {'label': 'euro', 'axis': 0, 'suffix': '€'},
                 },
                 'dimensions': {
-                    'date': {'label': 'Date'}
+                    'date': {'label': 'date'}
                 },
                 'references': {},
             },

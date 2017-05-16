@@ -1,13 +1,13 @@
 # coding: utf-8
+from unittest import TestCase
+
 import numpy as np
 import pandas as pd
-
-from unittest import TestCase
-from pypika import Table
 
 from fireant.slicer import Slicer, Metric, CategoricalDimension, SlicerException
 from fireant.slicer.operations import Totals, CumSum, L1Loss
 from fireant.tests.database.mock_database import TestDatabase
+from pypika import Table
 
 
 class TotalsTests(TestCase):
@@ -54,10 +54,10 @@ class TotalsTests(TestCase):
             dimensions=['dim'],
             operations=[Totals('dim')]
         )
-        self.assertDictEqual(display_schema['metrics'], {'foo': {'label': 'Foo', 'axis': 0},
-                                                         'bar': {'label': 'Bar', 'axis': 1}})
+        self.assertDictEqual(display_schema['metrics'], {'foo': {'label': 'foo', 'axis': 0},
+                                                         'bar': {'label': 'bar', 'axis': 1}})
         self.assertDictEqual(display_schema['dimensions'], {
-            'dim': {'label': 'Dim', 'display_options': {np.nan: '', pd.NaT: ''}}
+            'dim': {'label': 'dim', 'display_options': {np.nan: '', pd.NaT: ''}}
         })
         self.assertDictEqual(display_schema['references'], {})
 
