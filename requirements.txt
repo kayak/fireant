@@ -1,5 +1,5 @@
 six
-pandas>=0.18.1
+pandas==0.19.2
 pypika>=0.2.4
 vertica-python>=0.6
 matplotlib
