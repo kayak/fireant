@@ -1,6 +1,5 @@
 # coding: utf-8
 import unittest
-
 from collections import OrderedDict
 from datetime import date
 
@@ -77,9 +76,6 @@ class ExampleTests(QueryTests):
 
                 # Examples using a field of a table
                 ('bar', fn.Avg(self.mock_join1.bar)),
-
-                # Example using functions and Arithmetic
-                ('ratio', fn.Sum(self.mock_table.numerator) / fn.Sum(self.mock_table.denominator)),
 
                 # Example using functions and Arithmetic
                 ('ratio', fn.Sum(self.mock_table.numerator) / fn.Sum(self.mock_table.denominator)),
@@ -958,6 +954,39 @@ class TotalsQueryTests(QueryTests):
                          'FROM "test_table" '
                          'GROUP BY TRUNC("dt",\'DD\'),"device_type",ROLLUP(("locale")) '
                          'ORDER BY TRUNC("dt",\'DD\'),"locale","device_type"', str(query))
+
+    def test_add_rollup_uni_dimension(self):
+        truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'DD')
+        locale = self.mock_table.locale
+        locale_display = self.mock_table.locale_display
+        device_type = self.mock_table.device_type
+
+        query = self.manager._build_data_query(
+            database=settings.database,
+            table=self.mock_table,
+            joins=[],
+            metrics=OrderedDict([
+                ('clicks', fn.Sum(self.mock_table.clicks)),
+                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
+            ]),
+            dimensions=OrderedDict([
+                ('date', truncated_dt),
+                ('locale', locale),
+                ('locale_display', locale_display),
+            ]),
+            mfilters=[],
+            dfilters=[],
+            references={},
+            rollup=[['locale', 'locale_display']],
+        )
+        self.assertEqual('SELECT '
+                         'TRUNC("dt",\'DD\') "date",'
+                         '"locale" "locale",'
+                         '"locale_display" "locale_display",'
+                         'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+                         'FROM "test_table" '
+                         'GROUP BY TRUNC("dt",\'DD\'),ROLLUP(("locale","locale_display")) '
+                         'ORDER BY TRUNC("dt",\'DD\'),"locale","locale_display"', str(query))
 
 
 class DimensionOptionTests(QueryTests):

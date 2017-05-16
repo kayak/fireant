@@ -2,10 +2,10 @@
 
 import functools
 import itertools
+from collections import OrderedDict
+
 import numpy as np
 import pandas as pd
-
-from collections import OrderedDict
 
 from fireant import utils
 from fireant.slicer.operations import Totals
@@ -56,8 +56,7 @@ class SlicerManager(QueryManager, OperationManager):
         :return:
             A transformed response that is queried based on the slicer and the format.
         """
-        metrics = utils.filter_duplicates(metrics)
-        dimensions = utils.filter_duplicates(dimensions)
+        metrics, dimensions = map(utils.filter_duplicates, (metrics, dimensions))
 
         query_schema = self.data_query_schema(metrics=metrics, dimensions=dimensions,
                                               metric_filters=metric_filters, dimension_filters=dimension_filters,

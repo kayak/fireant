@@ -2,13 +2,13 @@
 import copy
 import logging
 import time
+from itertools import chain
+
 import pandas as pd
 
-from itertools import chain
-from fireant.slicer.operations import Totals
+from fireant import utils
 from fireant.slicer.references import YoY, Delta, DeltaPercentage
 from pypika import Query, JoinType
-from pypika.terms import ListField
 
 query_logger = logging.getLogger('fireant.query_log$')
 
@@ -256,25 +256,18 @@ class QueryManager(object):
         if dims:
             query = query.select(*dims).groupby(*dims)
 
-        rollup_dims = [
-            dimension.as_(dimension_key)
-            for dimension_key, dimension in dimensions.items()
-            for keys in rollup
-            if dimension_key in keys
-        ]
+        # Rollup is passed in as a list of lists so that multiple columns can be rolled up together (such as for
+        # Unique dimensions)
+        rollup_dims = [[dimension.as_(dimension_key)
+                        for dimension_key, dimension in dimensions.items()
+                        if dimension_key in keys]
+                       for keys in rollup]
 
-        # Rollups must take UniqueDimension's two columns (i.e. id, display) as one
-        rollup_args = [
-            ListField([
-                dimension.as_(dimension_key)
-                for dimension_key, dimension in dimensions.items()
-                if dimension_key in keys
-            ])
-            for keys in rollup
-        ]
+        # Remove entry levels
+        flattened_rollup_dims = utils.flatten(rollup_dims)
 
-        if rollup_dims:
-            query = query.select(*rollup_dims).rollup(*rollup_args)
+        if flattened_rollup_dims:
+            query = query.select(*flattened_rollup_dims).rollup(*rollup_dims)
 
         return query
 
