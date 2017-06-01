@@ -19,13 +19,13 @@ def rollup(dataframe, levels):
     return dataframe.append(roll.set_index(rolled_levels, append=True)).sort_index()
 
 
-cont_dim = {'label': 'Cont'}
-datetime_dim = {'label': 'Date'}
-uni_dim = {'label': 'Uni', 'display_field': 'uni_label'}
-cat1_dim = {'label': 'Cat1', 'display_options': {'a': 'A', 'b': 'B'}}
-cat2_dim = {'label': 'Cat2', 'display_options': {'y': 'Y', 'z': 'Z'}}
-cat1_rollup_dim = {'label': 'Cat1', 'display_options': {'a': 'A', 'b': 'B', Totals.key: Totals.label}}
-cat2_rollup_dim = {'label': 'Cat2', 'display_options': {'y': 'Y', 'z': 'Z', Totals.key: Totals.label}}
+cont_dim = {'axis': 0, 'label': 'Cont'}
+datetime_dim = {'axis': 0, 'label': 'Date'}
+uni_dim = {'axis': 0, 'label': 'Uni', 'display_field': 'uni_label'}
+cat1_dim = {'axis': 0, 'label': 'Cat1', 'display_options': {'a': 'A', 'b': 'B'}}
+cat2_dim = {'axis': 0, 'label': 'Cat2', 'display_options': {'y': 'Y', 'z': 'Z'}}
+cat1_rollup_dim = {'axis': 0, 'label': 'Cat1', 'display_options': {'a': 'A', 'b': 'B', Totals.key: Totals.label}}
+cat2_rollup_dim = {'axis': 0, 'label': 'Cat2', 'display_options': {'y': 'Y', 'z': 'Z', Totals.key: Totals.label}}
 
 shortcuts = {
     'a': 'A',
@@ -62,7 +62,7 @@ no_dims_single_metric_df = pd.DataFrame(
     columns=['one'],
 )
 no_dims_single_metric_schema = {
-    'metrics': OrderedDict([('one', {'label': 'One'})]),
+    'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'})]),
     'dimensions': OrderedDict()
 }
 
@@ -74,10 +74,10 @@ no_dims_multi_metric_df = pd.DataFrame(
     columns=['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'],
 )
 no_dims_multi_metric_schema = {
-    'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'}),
-                            ('three', {'label': 'Three'}), ('four', {'label': 'Four'}),
-                            ('five', {'label': 'Five'}), ('six', {'label': 'Six'}),
-                            ('seven', {'label': 'Seven'}), ('eight', {'label': 'Eight'})]),
+    'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'}), ('two', {'axis': 0, 'label': 'Two'}),
+                            ('three', {'axis': 0, 'label': 'Three'}), ('four', {'axis': 0, 'label': 'Four'}),
+                            ('five', {'axis': 0, 'label': 'Five'}), ('six', {'axis': 0, 'label': 'Six'}),
+                            ('seven', {'axis': 0, 'label': 'Seven'}), ('eight', {'axis': 0, 'label': 'Eight'})]),
     'dimensions': OrderedDict()
 }
 
@@ -90,7 +90,7 @@ cont_dim_single_metric_df = pd.DataFrame(
     index=cont_idx
 )
 cont_dim_single_metric_schema = {
-    'metrics': OrderedDict([('one', {'label': 'One'})]),
+    'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'})]),
     'dimensions': OrderedDict([('cont', cont_dim)])
 }
 
@@ -104,7 +104,7 @@ cont_dim_multi_metric_df = pd.DataFrame(
     index=cont_idx
 )
 cont_dim_multi_metric_schema = {
-    'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
+    'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'}), ('two', {'axis': 0, 'label': 'Two'})]),
     'dimensions': OrderedDict([('cont', cont_dim)])
 }
 
@@ -117,7 +117,7 @@ uni_dim_single_metric_df = pd.DataFrame(
     index=uni_idx
 )
 uni_dim_single_metric_schema = {
-    'metrics': OrderedDict([('one', {'label': 'One'})]),
+    'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'})]),
     'dimensions': OrderedDict([('uni', uni_dim)])
 }
 
@@ -131,7 +131,7 @@ uni_dim_multi_metric_df = pd.DataFrame(
     index=uni_idx
 )
 uni_dim_multi_metric_schema = {
-    'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
+    'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'}), ('two', {'axis': 0, 'label': 'Two'})]),
     'dimensions': OrderedDict([('uni', uni_dim)])
 }
 
@@ -142,7 +142,7 @@ uni_dim_pretty_df = pd.DataFrame(
     index=uni_idx
 )
 uni_dim_pretty_schema = {
-    'metrics': OrderedDict([('pretty', {'label': 'One', 'prefix': '!', 'suffix': '~', 'precision': 1})]),
+    'metrics': OrderedDict([('pretty', {'axis': 0, 'label': 'One', 'prefix': '!', 'suffix': '~', 'precision': 1})]),
     'dimensions': OrderedDict([('uni', uni_dim)])
 }
 
@@ -155,7 +155,7 @@ cat_dim_single_metric_df = pd.DataFrame(
     index=cat1_idx
 )
 cat_dim_single_metric_schema = {
-    'metrics': OrderedDict([('one', {'label': 'One'})]),
+    'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'})]),
     'dimensions': OrderedDict([('cat1', cat1_dim)])
 }
 
@@ -169,7 +169,7 @@ cat_dim_multi_metric_df = pd.DataFrame(
     index=cat1_idx
 )
 cat_dim_multi_metric_schema = {
-    'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
+    'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'}), ('two', {'axis': 0, 'label': 'Two'})]),
     'dimensions': OrderedDict([('cat1', cat1_dim)])
 }
 
@@ -182,7 +182,7 @@ time_dim_single_metric_df = pd.DataFrame(
     index=datetime_idx
 )
 time_dim_single_metric_schema = {
-    'metrics': OrderedDict([('one', {'label': 'One'})]),
+    'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'})]),
     'dimensions': OrderedDict([('date', datetime_dim)])
 }
 time_dim_single_metric_ref_df = pd.DataFrame(
@@ -194,7 +194,7 @@ time_dim_single_metric_ref_df = pd.DataFrame(
     index=datetime_idx
 )
 time_dim_single_metric_ref_schema = {
-    'metrics': OrderedDict([('one', {'label': 'One'})]),
+    'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'})]),
     'dimensions': OrderedDict([('date', datetime_dim)]),
     'references': {'wow': 'WoW'}
 }
@@ -208,7 +208,7 @@ cont_cat_dims_single_metric_df = pd.DataFrame(
     index=cont_cat_idx
 )
 cont_cat_dims_single_metric_schema = {
-    'metrics': OrderedDict([('one', {'label': 'One'})]),
+    'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'})]),
     'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_dim)])
 }
 
@@ -222,7 +222,7 @@ cont_cat_dims_multi_metric_df = pd.DataFrame(
     index=cont_cat_idx
 )
 cont_cat_dims_multi_metric_schema = {
-    'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
+    'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'}), ('two', {'axis': 0, 'label': 'Two'})]),
     'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_dim)])
 }
 
@@ -239,14 +239,14 @@ for uni_id, label in uni_idx:
 cont_uni_dims_multi_metric_df = _cont_uni.set_index(['uni_label'], append=True)
 cont_uni_dims_multi_metric_df = pd.DataFrame(cont_uni_dims_multi_metric_df)
 cont_uni_dims_multi_metric_schema = {
-    'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
+    'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'}), ('two', {'axis': 0, 'label': 'Two'})]),
     'dimensions': OrderedDict([('cont', cont_dim), ('uni', uni_dim)])
 }
 
 # Mock DF with continuous and unique dimensions and one metric column
 cont_uni_dims_single_metric_df = pd.DataFrame(cont_uni_dims_multi_metric_df['one'])
 cont_uni_dims_single_metric_schema = {
-    'metrics': OrderedDict([('one', {'label': 'One'})]),
+    'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'})]),
     'dimensions': OrderedDict([('cont', cont_dim), ('uni', uni_dim)])
 }
 
@@ -259,7 +259,7 @@ cat_cat_dims_single_metric_df = pd.DataFrame(
     index=cat_cat_idx,
 )
 cat_cat_dims_single_metric_schema = {
-    'metrics': OrderedDict([('one', {'label': 'One'})]),
+    'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'})]),
     'dimensions': OrderedDict([('cat1', cat1_dim), ('cat2', cat2_dim)])
 }
 
@@ -273,7 +273,7 @@ cat_cat_dims_multi_metric_df = pd.DataFrame(
     index=cat_cat_idx,
 )
 cat_cat_dims_multi_metric_schema = {
-    'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
+    'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'}), ('two', {'axis': 0, 'label': 'Two'})]),
     'dimensions': OrderedDict([('cat1', cat1_dim), ('cat2', cat2_dim)])
 }
 
@@ -287,7 +287,7 @@ cont_cat_cat_dims_multi_metric_df = pd.DataFrame(
     index=cont_cat_cat_idx
 )
 cont_cat_cat_dims_multi_metric_schema = {
-    'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
+    'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'}), ('two', {'axis': 0, 'label': 'Two'})]),
     'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_dim), ('cat2', cat2_dim)])
 }
 
@@ -303,7 +303,7 @@ for uni_id, label in uni_idx:
 
 cont_cat_uni_dims_multi_metric_df = _cont_cat_uni.set_index('uni_label', append=True)
 cont_cat_uni_dims_multi_metric_schema = {
-    'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
+    'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'}), ('two', {'axis': 0, 'label': 'Two'})]),
     'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_dim), ('uni', uni_dim)])
 }
 
@@ -319,7 +319,7 @@ rollup_cont_cat_cat_dims_multi_metric_df = pd.DataFrame(
 rollup_cont_cat_cat_dims_multi_metric_df = rollup(rollup_cont_cat_cat_dims_multi_metric_df, [0, 1])
 rollup_cont_cat_cat_dims_multi_metric_df = rollup(rollup_cont_cat_cat_dims_multi_metric_df, [0])
 rollup_cont_cat_cat_dims_multi_metric_schema = {
-    'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
+    'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'}), ('two', {'axis': 0, 'label': 'Two'})]),
     'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_rollup_dim), ('cat2', cat2_rollup_dim)])
 }
 
@@ -327,7 +327,7 @@ rollup_cont_cat_cat_dims_multi_metric_schema = {
 rollup_cont_cat_uni_dims_multi_metric_df = rollup(_cont_cat_uni.set_index('uni_label', append=True), [0, 1])
 rollup_cont_cat_uni_dims_multi_metric_df = rollup(rollup_cont_cat_uni_dims_multi_metric_df, [0])
 rollup_cont_cat_uni_dims_multi_metric_schema = {
-    'metrics': OrderedDict([('one', {'label': 'One'}), ('two', {'label': 'Two'})]),
+    'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'}), ('two', {'axis': 0, 'label': 'Two'})]),
     'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_dim), ('uni', uni_dim)])
 }
 
@@ -339,6 +339,6 @@ cont_dim_pretty_df = pd.DataFrame(
     index=cont_idx
 )
 cont_dim_pretty_schema = {
-    'metrics': OrderedDict([('pretty', {'label': 'One', 'prefix': '!', 'suffix': '~', 'precision': 1})]),
+    'metrics': OrderedDict([('pretty', {'axis': 0, 'label': 'One', 'prefix': '!', 'suffix': '~', 'precision': 1})]),
     'dimensions': OrderedDict([('cont', cont_dim)])
 }
