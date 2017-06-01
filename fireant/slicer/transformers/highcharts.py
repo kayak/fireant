@@ -1,13 +1,15 @@
 # coding: utf-8
 import numpy as np
 import pandas as pd
+
+from collections import Counter
+
 from fireant import settings, utils
 from fireant.slicer.operations import Totals
-
 from .base import Transformer, TransformationException
 
 COLORS = {
-    'kayak': ['#FF690F', '#1A1A1A', '#3083F0', '#00B86B', '#D10244', '#FFDBE5', '#7B4F4B', '#B903AA', '#B05B6F'],
+    'kayak': ['#FF690F', '#3083F0', '#00B86B', '#D10244', '#FFDBE5', '#7B4F4B', '#B903AA', '#B05B6F'],
     'dark-blue': ["#DDDF0D", "#55BF3B", "#DF5353", "#7798BF", "#AAEEEE", "#FF0066", "#EEAAEE",
                   "#55BF3B", "#DF5353", "#7798BF", "#AAEEEE"],
     'dark-green': ["#DDDF0D", "#55BF3B", "#DF5353", "#7798BF", "#AAEEEE", "#FF0066", "#EEAAEE",
@@ -34,6 +36,13 @@ def _format_data_point(value):
         # Cannot serialize np.int64 to json
         return int(value)
     return value
+
+
+def _color(i):
+    colors = COLORS.get(settings.highcharts_colors, 'grid')
+    n_colors = len(colors)
+
+    return colors[i % n_colors]
 
 
 MISSING_CONT_DIM_MESSAGE = ('Highcharts line charts require a continuous dimension as the first '
@@ -95,12 +104,29 @@ class HighchartsLineTransformer(Transformer):
         }
 
     def yaxis_options(self, dataframe, dim_ordinal, display_schema):
-        axis_count = len(display_schema['metrics'].keys())
+        metrics_per_axis = Counter((metric['axis'] for metric in display_schema['metrics'].values()))
 
-        # Axis for metrics are blue to facilitate differing those from the reference ones.
+        metric_idx = 0
+        axis_options = {}
+
+        for axes_id, metrics_count in metrics_per_axis.items():
+            metric_idx += metrics_count
+            axis_options[axes_id] = {
+                'opposite': metrics_count > 1, 'color': 'black' if metrics_count > 1 else _color(metric_idx - 1)
+            }
+
+        # Axes with just one metric have the same color of their line. References and multiple metrics' axis
+        # will default to black.
         axis = [
-            {'id': id, 'title': {'text': None}, 'labels': {'style':{'color': '#337ab7'}}}
-            for id in range(axis_count)
+            {
+                'id': axes_id, 'opposite': options['opposite'], 'title': {'text': None},
+                'labels': {
+                    'style': {
+                        'color': options['color']
+                    }
+                }
+            }
+            for axes_id, options in axis_options.items()
         ]
 
         reference_keys = display_schema.get('references', {}).keys()
@@ -108,8 +134,8 @@ class HighchartsLineTransformer(Transformer):
         # Create only one axes per available modifier (i.e. delta percent, percent and none).
         reference_axes_ids = set(self._reference_axes_id(reference_key) for reference_key in reference_keys)
 
-        for axes_id in reference_axes_ids:
-            axis.append({'id': axes_id, 'title': {'text': None}})
+        for i, axes_id in enumerate(reference_axes_ids):
+            axis.append({'id': axes_id, 'title': {'text': 'References' if i == 0 else None}, 'opposite': True})
 
         return axis
 
@@ -119,10 +145,7 @@ class HighchartsLineTransformer(Transformer):
                        if isinstance(dataframe.columns, pd.MultiIndex)
                        else dataframe.columns)
 
-        color = COLORS.get(settings.highcharts_colors, 'grid')
-        n_colors = len(color)
-
-        return [self._make_series_item(idx, item, dim_ordinal, display_schema, metrics, reference, color[i % n_colors])
+        return [self._make_series_item(idx, item, dim_ordinal, display_schema, metrics, reference, _color(i))
                 for i, (idx, item) in enumerate(dataframe.iteritems())]
 
     def _make_series_item(self, idx, item, dim_ordinal, display_schema, metrics, reference, color='#000'):
@@ -319,7 +342,8 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
             'name': self._format_label(idx, dim_ordinal, display_schema, reference),
             'data': self._format_data(item),
             'tooltip': self._format_tooltip(display_schema['metrics'][metric_key]),
-            'yAxis': display_schema['metrics'][metric_key].get('axis', 0),
+            'yAxis': display_schema['metrics'][metric_key].get('axis', 0)
+                     if not reference else self._reference_axes_id(reference),
             'color': color
         }
 
