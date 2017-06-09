@@ -31,20 +31,25 @@ Slicers
 
 Slicers are the core component of |Brand|.  A Slicer is a configuration of two types of elements, metrics and dimensions, which represent what kinds of data exist and how the data can be organized.  A metric is a type of data, a measurement such as clicks and a dimension is a range over which metrics can be extended or grouped by.  Concretely, metrics represent the data *in* a chart or table and dimensions represent the rows and columns, axes, or categories.
 
-To configure a slicer, instantiate a |ClassSlicer| with a list of |ClassMetric| and |ClassDimension|.
+To configure a slicer, instantiate a |ClassSlicer| with either a |ClassVerticaDatabase| or a |ClassMySQLDatabase| and a |ClassTable| or |ClassTables|, with a list of |ClassMetric| and |ClassDimension|.
 
 .. _slicer_example_start:
 
 .. code-block:: python
 
     from fireant.slicer import *
+    from fireant.database import VerticaDatabase
     from pypika import Tables, functions as fn
 
+    vertica_database = VerticaDatabase(user='fakeuser', password='fakepassword')
     analytics, accounts = Tables('analytics', 'accounts')
 
     my_slicer = Slicer(
         # This is the primary database table that our slicer uses
         table=analytics,
+
+        # Define the database connection object
+        database=vertica_database,
 
         joins=[
             # Metrics and dimensions can use columns from joined tables by
@@ -258,7 +263,11 @@ Crafted with ♥ in Berlin.
 .. |ClassSection| replace:: ``fireant.dashboards.Section``
 
 .. |ClassDatabase| replace:: ``fireant.database.Database``
-.. |ClassVertica| replace:: ``fireant.database.Vertica``
+.. |ClassVerticaDatabase| replace:: ``fireant.database.VerticaDatabase``
+.. |ClassMySQLDatabase| replace:: ``fireant.database.MySQLDatabase``
+
+.. |ClassTable| replace:: `pypika.Table`
+.. |ClassTables| replace:: `pypika.Tables`
 
 .. _PyPika: https://github.com/kayak/pypika/
 .. _Pandas: http://pandas.pydata.org/

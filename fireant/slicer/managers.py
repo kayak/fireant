@@ -23,6 +23,7 @@ class SlicerManager(QueryManager, OperationManager):
         """
         :param slicer:
         """
+        super(SlicerManager, self).__init__(database=slicer.database)
         self.slicer = slicer
 
     def data(self, metrics=(), dimensions=(),

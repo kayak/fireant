@@ -3,13 +3,14 @@ from unittest import TestCase
 
 from mock import patch, Mock
 
-from fireant.database.vertica import Vertica
+from fireant.database import VerticaDatabase
 from pypika import Field
 
 
 class TestVertica(TestCase):
+
     def test_defaults(self):
-        vertica = Vertica()
+        vertica = VerticaDatabase()
 
         self.assertEqual('localhost', vertica.host)
         self.assertEqual(5433, vertica.port)
@@ -23,7 +24,7 @@ class TestVertica(TestCase):
         with patch.dict('sys.modules', vertica_python=mock_vertica):
             mock_vertica.connect.return_value = 'OK'
 
-            vertica = Vertica('test_host', 1234, 'test_database',
+            vertica = VerticaDatabase('test_host', 1234, 'test_database',
                               'test_user', 'password')
             result = vertica.connect()
 
@@ -33,7 +34,27 @@ class TestVertica(TestCase):
             user='test_user', password='password', read_timeout=None,
         )
 
-    def test_trunc_date(self):
-        result = Vertica().trunc_date(Field('date'), 'XX')
+    def test_trunc_hour(self):
+        result = VerticaDatabase().trunc_date(Field('date'), 'hour')
 
-        self.assertEqual('TRUNC("date",\'XX\')', str(result))
+        self.assertEqual('TRUNC("date",\'HH\')', str(result))
+
+    def test_trunc_day(self):
+        result = VerticaDatabase().trunc_date(Field('date'), 'day')
+
+        self.assertEqual('TRUNC("date",\'DD\')', str(result))
+
+    def test_trunc_week(self):
+        result = VerticaDatabase().trunc_date(Field('date'), 'week')
+
+        self.assertEqual('TRUNC("date",\'IW\')', str(result))
+
+    def test_trunc_quarter(self):
+        result = VerticaDatabase().trunc_date(Field('date'), 'quarter')
+
+        self.assertEqual('TRUNC("date",\'Q\')', str(result))
+
+    def test_trunc_year(self):
+        result = VerticaDatabase().trunc_date(Field('date'), 'year')
+
+        self.assertEqual('TRUNC("date",\'Y\')', str(result))
