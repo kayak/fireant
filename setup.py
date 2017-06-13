@@ -52,7 +52,7 @@ setup(
 
     install_requires=[
         'six',
-        'pandas',
+        'pandas<0.20',
         'pypika',
         'vertica-python>=0.6'
     ],
