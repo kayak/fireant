@@ -1,20 +1,25 @@
 # coding: utf-8
-from pypika import terms
+from pypika import terms, VerticaQuery
 
-from . import Database
+from fireant.database import Database
+from fireant.slicer import DatetimeInterval
 
 
 class Trunc(terms.Function):
-    # Wrapper for Vertica TRUNC function for truncating dates.
+    """
+    Wrapper for Vertica TRUNC function for truncating dates.
+    """
 
     def __init__(self, field, date_format, alias=None):
         super(Trunc, self).__init__('TRUNC', field, date_format, alias=alias)
 
 
 class Interval(terms.Interval):
-    # Wrapper for Vertica INTERVAL term.
+    """
+    Wrapper for Vertica INTERVAL term.
+    """
 
-    def get_sql(self):
+    def get_sql(self, **kwargs):
         if hasattr(self, 'quarters'):
             expr = getattr(self, 'quarters')
             unit = 'QUARTER'
@@ -24,7 +29,7 @@ class Interval(terms.Interval):
             unit = 'WEEK'
 
         else:
-            # Create the whole expression but trim out the unnecessery fields
+            # Create the whole expression but trim out the unnecessary fields
             expr = self.trim_pattern.sub(
                 '',
                 "{years}-{months}-{days} {hours}:{minutes}:{seconds}.{microseconds}".format(
@@ -51,9 +56,12 @@ class Interval(terms.Interval):
         return query.format(expr=expr,  unit=unit)
 
 
-
-class Vertica(Database):
-    # Vertica client that uses the vertica_python driver.
+class VerticaDatabase(Database):
+    """
+    Vertica client that uses the vertica_python driver.
+    """
+    # The pypika query class to use for constructing queries
+    query_cls = VerticaQuery
 
     def __init__(self, host='localhost', port=5433, database='vertica',
                  user='vertica', password=None,
@@ -75,7 +83,23 @@ class Vertica(Database):
         )
 
     def trunc_date(self, field, interval):
-        return Trunc(field, interval)
+        datetime_intervals = {
+            'hour': DatetimeInterval('HH'),
+            'day': DatetimeInterval('DD'),
+            'week': DatetimeInterval('IW'),
+            'month': DatetimeInterval('MM'),
+            'quarter': DatetimeInterval('Q'),
+            'year': DatetimeInterval('Y')
+        }
+
+        interval = datetime_intervals[interval]
+        return Trunc(field, interval.size)
 
     def interval(self, **kwargs):
         return Interval(**kwargs)
+
+
+def Vertica(*args, **kwargs):
+    from warnings import warn
+    warn('The Vertica class is now deprecated. Please use VerticaDatabase instead!')
+    return VerticaDatabase(*args, **kwargs)

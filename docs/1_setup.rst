@@ -18,6 +18,12 @@ Vertica
 
     pip install fireant[vertica]
 
+MySQL
+
+.. code-block:: bash
+
+    pip install fireant[mysql]
+
 Transformer add-ons
 -------------------
 
@@ -31,17 +37,18 @@ matplotlib
     pip install fireant[matplotlib]
 
 
-Once you have added |Brand| to your project, you must provide some additional settings.  A database connection is required in order to execute queries.  Currently, only Vertica is supported via ``vertica_python``, however future plans include support for various other databases such as MySQL and Oracle.
+Once you have added |Brand| to your project, you must provide some additional settings.  A database connection is required in order to execute queries.  Currently, only Vertica and MySQL are supported via ``vertica_python`` and ``pymysql`` respectively, however future plans include support for various other databases such as MSSQL, PostgreSQL and Oracle.
 
 To configure a database, instantiate a subclass of |ClassDatabase| and set it in ``fireant.settings``.  This must be only set once.
 
+Vertica
 
 .. code-block:: python
 
     import fireant.settings
-    from fireant.database import Vertica
+    from fireant.database import VerticaDatabase
 
-    fireant.settings = Vertica(
+    fireant.settings = VerticaDatabase(
         host='example.com',
         port=5433,
         database='example',
@@ -49,6 +56,23 @@ To configure a database, instantiate a subclass of |ClassDatabase| and set it in
         password='password123',
     )
 
+MySQL
+
+.. code-block:: python
+
+    import fireant.settings
+    from fireant.database import MySQLDatabase
+
+    fireant.settings = MySQLDatabase(
+        database='testdb',
+        host='mysql.example.com',
+        port=3308,
+        user='user',
+        password='password123',
+        charset='utf8mb4',
+    )
+
+To enable full MySQL support, please install the custom database and MySQL date truncate function found in fireant/scripts/mysql_functions.sql. Further information is provided in this script on how to grant permissions on this function to your MySQL users.
 
 Custom Database
 ---------------
@@ -91,7 +115,9 @@ Instead of using one of the built in database connectors, you can provide your o
         password='password123',
     )
 
-In a custom database connector, the ``connect`` function must be overridden to provide a ``connection`` to the database. The ``trunc_date`` function must also be overridden since there is no common way to trunc dates in SQL databases.
+In a custom database connector, the ``connect`` function must be overridden to provide a ``connection`` to the database.
+The ``trunc_date`` function must also be overridden since there is no common way to trunc dates in SQL databases.
+|ClassDatabase| also implements a default ``interval`` method which can be overridden if necessary.
 
 
 

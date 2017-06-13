@@ -13,7 +13,12 @@ setup(
     # License
     license='Apache License Version 2.0',
 
-    packages=['fireant', 'fireant.database', 'fireant.dashboards', 'fireant.slicer', 'fireant.slicer.transformers'],
+    packages=['fireant',
+              'fireant.database',
+              'fireant.dashboards',
+              'fireant.slicer',
+              'fireant.slicer.transformers',
+              'scripts'],
 
     # Include additional files into the package
     include_package_data=True,
@@ -54,13 +59,15 @@ setup(
         'six',
         'pandas<0.20',
         'pypika',
-        'vertica-python>=0.6'
+        'vertica-python>=0.6',
+        'pymysql==0.7.11'
     ],
     tests_require=[
         'mock'
     ],
     extras_require={
         'vertica': ['vertica-python>=0.6'],
+        'mysql': ['pymysql==0.7.11'],
         'matplotlib': ['matplotlib'],
     },
 

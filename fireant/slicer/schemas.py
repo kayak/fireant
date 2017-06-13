@@ -104,12 +104,12 @@ class DatetimeInterval(object):
 
 
 class DatetimeDimension(ContinuousDimension):
-    hour = DatetimeInterval('HH')
-    day = DatetimeInterval('DD')
-    week = DatetimeInterval('IW')
-    month = DatetimeInterval('MM')
-    quarter = DatetimeInterval('Q')
-    year = DatetimeInterval('Y')
+    hour = 'hour'
+    day = 'day'
+    week = 'week'
+    month = 'month'
+    quarter = 'quarter'
+    year = 'year'
 
     def __init__(self, key, label=None, definition=None, default_interval=day, joins=None):
         super(DatetimeDimension, self).__init__(key=key, label=label, definition=definition, joins=joins,
@@ -117,7 +117,7 @@ class DatetimeDimension(ContinuousDimension):
 
     def schemas(self, *args, **kwargs):
         interval = args[0] if args else self.default_interval
-        return [(self.key, kwargs['database'].trunc_date(self.definition, interval.size))]
+        return [(self.key, kwargs['database'].trunc_date(self.definition, interval))]
 
 
 class CategoricalDimension(Dimension):

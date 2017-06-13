@@ -3,15 +3,18 @@ import unittest
 from collections import OrderedDict
 from datetime import date
 
-from fireant import settings
-from fireant.slicer import references
-from fireant.slicer.queries import QueryManager
-from fireant.tests.database.mock_database import TestDatabase
+from mock import patch
 from pypika import Tables, functions as fn, JoinType
+
+from fireant import settings
+from fireant.database import MySQLDatabase
+from fireant.slicer import references
+from fireant.slicer.queries import QueryManager, QueryNotSupportedError
+from fireant.tests.database.mock_database import TestDatabase
 
 
 class QueryTests(unittest.TestCase):
-    manager = QueryManager()
+    manager = QueryManager(database=TestDatabase())
     maxDiff = None
 
     mock_table, mock_join1, mock_join2 = Tables('test_table', 'test_join1', 'test_join2')
@@ -82,7 +85,7 @@ class ExampleTests(QueryTests):
             ]),
             dimensions=OrderedDict([
                 # Example of using a continuous datetime dimension, where the values are truncated to the nearest day
-                ('date', settings.database.trunc_date(dt, 'DD')),
+                ('date', settings.database.trunc_date(dt, 'day')),
 
                 # Example of using a categorical dimension from a joined table
                 ('fiz', self.mock_join2.fiz),
@@ -277,7 +280,7 @@ class DimensionTests(QueryTests):
         )
 
     def test_timeseries_hour(self):
-        query = self._test_truncated_timeseries('HH')
+        query = self._test_truncated_timeseries('hour')
 
         self.assertEqual(
             'SELECT TRUNC("dt",\'HH\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
@@ -286,7 +289,7 @@ class DimensionTests(QueryTests):
             'ORDER BY TRUNC("dt",\'HH\')', str(query))
 
     def test_timeseries_DD(self):
-        query = self._test_truncated_timeseries('DD')
+        query = self._test_truncated_timeseries('day')
 
         self.assertEqual(
             'SELECT TRUNC("dt",\'DD\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
@@ -295,25 +298,25 @@ class DimensionTests(QueryTests):
             'ORDER BY TRUNC("dt",\'DD\')', str(query))
 
     def test_timeseries_week(self):
-        query = self._test_truncated_timeseries('WW')
+        query = self._test_truncated_timeseries('week')
 
         self.assertEqual(
-            'SELECT TRUNC("dt",\'WW\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'SELECT TRUNC("dt",\'IW\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'GROUP BY TRUNC("dt",\'WW\') '
-            'ORDER BY TRUNC("dt",\'WW\')', str(query))
+            'GROUP BY TRUNC("dt",\'IW\') '
+            'ORDER BY TRUNC("dt",\'IW\')', str(query))
 
     def test_timeseries_month(self):
-        query = self._test_truncated_timeseries('MONTH')
+        query = self._test_truncated_timeseries('month')
 
         self.assertEqual(
-            'SELECT TRUNC("dt",\'MONTH\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'SELECT TRUNC("dt",\'MM\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'GROUP BY TRUNC("dt",\'MONTH\') '
-            'ORDER BY TRUNC("dt",\'MONTH\')', str(query))
+            'GROUP BY TRUNC("dt",\'MM\') '
+            'ORDER BY TRUNC("dt",\'MM\')', str(query))
 
     def test_timeseries_quarter(self):
-        query = self._test_truncated_timeseries('Q')
+        query = self._test_truncated_timeseries('quarter')
 
         self.assertEqual(
             'SELECT TRUNC("dt",\'Q\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
@@ -322,13 +325,13 @@ class DimensionTests(QueryTests):
             'ORDER BY TRUNC("dt",\'Q\')', str(query))
 
     def test_timeseries_year(self):
-        query = self._test_truncated_timeseries('YEAR')
+        query = self._test_truncated_timeseries('year')
 
         self.assertEqual(
-            'SELECT TRUNC("dt",\'YEAR\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+            'SELECT TRUNC("dt",\'Y\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'GROUP BY TRUNC("dt",\'YEAR\') '
-            'ORDER BY TRUNC("dt",\'YEAR\')', str(query))
+            'GROUP BY TRUNC("dt",\'Y\') '
+            'ORDER BY TRUNC("dt",\'Y\')', str(query))
 
     def test_multidimension_categorical(self):
         query = self.manager._build_data_query(
@@ -357,7 +360,7 @@ class DimensionTests(QueryTests):
             'ORDER BY "device_type","locale"', str(query))
 
     def test_multidimension_timeseries_categorical(self):
-        truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'DD')
+        truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'day')
         device_type = self.mock_table.device_type
 
         query = self.manager._build_data_query(
@@ -386,7 +389,7 @@ class DimensionTests(QueryTests):
             'ORDER BY TRUNC("dt",\'DD\'),"device_type"', str(query))
 
     def test_metrics_with_joins(self):
-        truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'DD')
+        truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'day')
         locale = self.mock_table.locale
 
         query = self.manager._build_data_query(
@@ -572,7 +575,7 @@ class ReferenceTests(QueryTests):
                 ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
             ]),
             dimensions=OrderedDict([
-                ('date', settings.database.trunc_date(dt, 'DD')),
+                ('date', settings.database.trunc_date(dt, 'day')),
                 ('device_type', device_type),
             ]),
             mfilters=[],
@@ -862,7 +865,7 @@ class ReferenceTests(QueryTests):
 
 class TotalsQueryTests(QueryTests):
     def test_add_rollup_one_dimension(self):
-        truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'DD')
+        truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'day')
         locale = self.mock_table.locale
 
         query = self.manager._build_data_query(
@@ -891,7 +894,7 @@ class TotalsQueryTests(QueryTests):
                          'ORDER BY TRUNC("dt",\'DD\'),"locale"', str(query))
 
     def test_add_rollup_two_dimensions(self):
-        truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'DD')
+        truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'day')
         locale = self.mock_table.locale
         device_type = self.mock_table.device_type
 
@@ -924,7 +927,7 @@ class TotalsQueryTests(QueryTests):
                          'ORDER BY TRUNC("dt",\'DD\'),"locale","device_type"', str(query))
 
     def test_add_rollup_two_dimensions_partial(self):
-        truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'DD')
+        truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'day')
         locale = self.mock_table.locale
         device_type = self.mock_table.device_type
 
@@ -956,7 +959,7 @@ class TotalsQueryTests(QueryTests):
                          'ORDER BY TRUNC("dt",\'DD\'),"locale","device_type"', str(query))
 
     def test_add_rollup_uni_dimension(self):
-        truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'DD')
+        truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'day')
         locale = self.mock_table.locale
         locale_display = self.mock_table.locale_display
         device_type = self.mock_table.device_type
@@ -1002,7 +1005,7 @@ class DimensionOptionTests(QueryTests):
             filters=[],
         )
 
-        self.assertEqual('SELECT distinct '
+        self.assertEqual('SELECT DISTINCT '
                          '"locale" "locale" '
                          'FROM "test_table"', str(query))
 
@@ -1019,7 +1022,7 @@ class DimensionOptionTests(QueryTests):
             limit=10,
         )
 
-        self.assertEqual('SELECT distinct '
+        self.assertEqual('SELECT DISTINCT '
                          '"locale" "locale" '
                          'FROM "test_table" '
                          'LIMIT 10', str(query))
@@ -1038,7 +1041,7 @@ class DimensionOptionTests(QueryTests):
             ],
         )
 
-        self.assertEqual('SELECT distinct '
+        self.assertEqual('SELECT DISTINCT '
                          '"locale" "locale" '
                          'FROM "test_table" '
                          'WHERE "device_type"=\'desktop\'', str(query))
@@ -1058,7 +1061,7 @@ class DimensionOptionTests(QueryTests):
             limit=10
         )
 
-        self.assertEqual('SELECT distinct '
+        self.assertEqual('SELECT DISTINCT '
                          '"account_id" "account_id",'
                          '"account_name" "account_name" '
                          'FROM "test_table" '
@@ -1079,9 +1082,17 @@ class DimensionOptionTests(QueryTests):
             filters=[],
         )
 
-        self.assertEqual('SELECT distinct '
+        self.assertEqual('SELECT DISTINCT '
                          '"test_table"."account_id" "account_id",'
                          '"test_join1"."account_name" "account_name" '
                          'FROM "test_table" '
                          'LEFT JOIN "test_join1" '
                          'ON "test_table"."account_id"="test_join1"."account_id"', str(query))
+
+    @patch.object(MySQLDatabase, 'fetch_dataframe')
+    def test_exception_raised_if_rollup_requested_for_a_mysql_database(self, mock_db):
+        db = MySQLDatabase(database='testdb')
+        manager = QueryManager(database=db)
+
+        with self.assertRaises(QueryNotSupportedError):
+            manager.query_data(db, self.mock_table, rollup=[['locale']])

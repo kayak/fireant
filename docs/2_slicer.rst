@@ -80,12 +80,15 @@ A join requires three parameters, a *key*, a *table*, and a *criterion*.  The *k
 
 
     from fireant.slicer import *
+    from fireant.database.vertica import VerticaDatabase
     from pypika import Tables, functions as fn
 
+    vertica_database = VerticaDatabase(user='fakeuser', password='fakepassword')
     analytics, customers = Tables('analytics', 'customers')
 
     slicer = Slicer(
-        analytics,
+        table=analytics,
+        database=vertica_database,
 
         joins=[
             Join('customers', customers, analytics.customer_id == customers.id),
@@ -345,12 +348,12 @@ For each |FeatureReference|, there are the following variations:
 
 .. code-block:: python
 
-    from fireant.slicer.references import WoW, DeltaMoM, DeltaQoQ
+    from fireant.slicer.references import WoW, MoM, QoQ, Delta, DeltaPercentage
 
     slicer.notebooks.column_index_table(
         metrics=['clicks', 'conversions'],
         dimensions=['date'],
-        references=[WoW('date'), DeltaMoM('date'), DeltaQoQ('date')],
+        references=[WoW('date'), Delta(MoM('date')), DeltaPercentage(QoQ('date'))],
     )
 
 .. note::
@@ -367,6 +370,10 @@ Totals
 """"""
 
 Totals adds ``ROLLUP`` to the SQL query to load the data and aggregated across dimensions.  It requires one or more dimension keys as parameters for the dimensions that should be totaled.  The below example will add an extra line with the total clicks and conversions for each date in addition to the three lines for each device type, desktop, mobile and tablet.
+
+.. note::
+
+    Please note, the ROLLUP functionality is not currently supported for MySQL, as it implements ROLLUP differently to many Database platforms. An exception will be raised if you try and use this.
 
 .. code-block:: python
 

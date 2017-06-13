@@ -5,15 +5,25 @@ import time
 from itertools import chain
 
 import pandas as pd
+from pypika import JoinType, MySQLQuery
 
 from fireant import utils
-from fireant.slicer.references import YoY, Delta, DeltaPercentage
-from pypika import Query, JoinType
+from fireant.slicer.references import (YoY,
+                                       Delta,
+                                       DeltaPercentage)
 
 query_logger = logging.getLogger('fireant.query_log$')
 
 
+class QueryNotSupportedError(Exception):
+    pass
+
+
 class QueryManager(object):
+    def __init__(self, database):
+        # Get the correct pypika database query class
+        self.query_cls = database.query_cls
+
     def query_data(self, database, table, joins=None,
                    metrics=None, dimensions=None,
                    mfilters=None, dfilters=None,
@@ -47,7 +57,7 @@ class QueryManager(object):
             than one value is given, then a pd.DataFrame with a multi-index will be returned.  The key used will match
             the corresponding index level in the returned DataFrame.
 
-            If a dict is used instead of an OrderedDict, then the index levels cannot be guarenteed, so in most cases an
+            If a dict is used instead of an OrderedDict, then the index levels cannot be guaranteed, so in most cases an
             OrderedDict should be used.
 
         :param mfilters:
@@ -103,8 +113,13 @@ class QueryManager(object):
                 moved after the non-ROLLUP dimensions.
 
         :return:
-            A pd.DataFrame indexed by the provided dimensions paramaters containing columns for each metrics parameter.
+            A pd.DataFrame indexed by the provided dimensions parameters containing columns for each metrics parameter.
         """
+        if rollup and database.query_cls is MySQLQuery:
+            # MySQL doesn't currently support query rollups in the same way as Vertica, Oracle etc.
+            # We therefore don't support it for now.
+            raise QueryNotSupportedError("MySQL currently doesn't support ROLLUP operations!")
+
         query = self._build_data_query(
             database, table, joins, metrics, dimensions, dfilters, mfilters, references, rollup
         )
@@ -180,8 +195,8 @@ class QueryManager(object):
 
     def _build_reference_query(self, query, database, references, table, joins, metrics, dimensions, dfilters,
                                mfilters, rollup):
-        wrapper_query = Query.from_(query).select(*[query.field(key).as_(key)
-                                                    for key in list(dimensions.keys()) + list(metrics.keys())])
+        wrapper_query = self.query_cls.from_(query).select(*[query.field(key).as_(key)
+                                                             for key in list(dimensions.keys()) + list(metrics.keys())])
 
         for reference_key, schema in references.items():
             dimension_key, interval = schema['dimension'], schema['interval']
@@ -223,7 +238,7 @@ class QueryManager(object):
         return self._add_sorting(wrapper_query, [query.field(dkey) for dkey in dimensions.keys()])
 
     def _build_dimension_query(self, table, joins, dimensions, filters, limit=None):
-        query = Query.from_(table).distinct()
+        query = self.query_cls.from_(table).distinct()
         query = self._add_joins(joins, query)
         query = self._add_filters(query, filters, [])
 
@@ -236,7 +251,7 @@ class QueryManager(object):
         return query
 
     def _build_query_inner(self, table, joins, metrics, dimensions, dfilters, mfilters, rollup):
-        query = Query.from_(table)
+        query = self.query_cls.from_(table)
         query = self._add_joins(joins, query)
         query = self._select_dimensions(query, dimensions, rollup)
         query = self._select_metrics(query, metrics)
