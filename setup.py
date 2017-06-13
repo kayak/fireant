@@ -17,8 +17,7 @@ setup(
               'fireant.database',
               'fireant.dashboards',
               'fireant.slicer',
-              'fireant.slicer.transformers',
-              'scripts'],
+              'fireant.slicer.transformers'],
 
     # Include additional files into the package
     include_package_data=True,
