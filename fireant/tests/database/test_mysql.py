@@ -36,29 +36,29 @@ class TestMySQLDatabase(TestCase):
     def test_trunc_hour(self):
         result = MySQLDatabase(database='testdb').trunc_date(Field('date'), 'hour')
 
-        self.assertEqual('TRUNC("date",\'hour\')', str(result))
+        self.assertEqual('dashmore.TRUNC("date",\'hour\')', str(result))
 
     def test_trunc_day(self):
         result = MySQLDatabase(database='testdb').trunc_date(Field('date'), 'day')
 
-        self.assertEqual('TRUNC("date",\'day\')', str(result))
+        self.assertEqual('dashmore.TRUNC("date",\'day\')', str(result))
 
     def test_trunc_week(self):
         result = MySQLDatabase(database='testdb').trunc_date(Field('date'), 'week')
 
-        self.assertEqual('TRUNC("date",\'week\')', str(result))
+        self.assertEqual('dashmore.TRUNC("date",\'week\')', str(result))
 
     def test_trunc_month(self):
         result = MySQLDatabase(database='testdb').trunc_date(Field('date'), 'month')
 
-        self.assertEqual('TRUNC("date",\'month\')', str(result))
+        self.assertEqual('dashmore.TRUNC("date",\'month\')', str(result))
 
     def test_trunc_quarter(self):
         result = MySQLDatabase(database='testdb').trunc_date(Field('date'), 'quarter')
 
-        self.assertEqual('TRUNC("date",\'quarter\')', str(result))
+        self.assertEqual('dashmore.TRUNC("date",\'quarter\')', str(result))
 
     def test_trunc_year(self):
         result = MySQLDatabase(database='testdb').trunc_date(Field('date'), 'year')
 
-        self.assertEqual('TRUNC("date",\'year\')', str(result))
+        self.assertEqual('dashmore.TRUNC("date",\'year\')', str(result))

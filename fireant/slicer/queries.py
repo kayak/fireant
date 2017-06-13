@@ -57,7 +57,7 @@ class QueryManager(object):
             than one value is given, then a pd.DataFrame with a multi-index will be returned.  The key used will match
             the corresponding index level in the returned DataFrame.
 
-            If a dict is used instead of an OrderedDict, then the index levels cannot be guarenteed, so in most cases an
+            If a dict is used instead of an OrderedDict, then the index levels cannot be guaranteed, so in most cases an
             OrderedDict should be used.
 
         :param mfilters:

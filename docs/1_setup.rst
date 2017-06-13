@@ -72,6 +72,7 @@ MySQL
         charset='utf8mb4',
     )
 
+To enable full MySQL support, please install the custom database and MySQL date truncate function found in fireant/scripts/mysql_functions.sql. Further information is provided in this script on how to grant permissions on this function to your MySQL users.
 
 Custom Database
 ---------------

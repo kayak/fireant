@@ -1,11 +1,5 @@
-DELIMITER $$
-
-DROP FUNCTION IF EXISTS TRUNC$$
-
 /*
 Implements the Vertica TRUNC function in MySQL
-
-Called with TRUNC(<date>, <format required>) -> returns a string
 
 Valid formats:
   - hour - To the start of the hour
@@ -15,8 +9,25 @@ Valid formats:
   - quarter - To the start of the quarter
   - year - To the start of the year
 
+Called with TRUNC(<date>, <format required>) -> returns a string
+
+
+Note: A new database/schema will be created called 'dashmore' which will store the new function. All database users that
+Dashmore will use to query data with need to have permissions to execute this function.
+
+To give permissions, use the following query for each MySQL user you want to use to query data through Dashmore:
+
+  GRANT EXECUTE ON FUNCTION dashmore.TRUNC to '<user>'@'<host>';
+
 */
-CREATE FUNCTION TRUNC(DT  DATETIME,
+
+DELIMITER $$
+
+CREATE DATABASE IF NOT EXISTS dashmore DEFAULT CHARACTER SET = 'utf8' DEFAULT COLLATE 'utf8_general_ci'$$
+
+DROP FUNCTION IF EXISTS dashmore.TRUNC$$
+
+CREATE FUNCTION dashmore.TRUNC(DT  DATETIME,
                       FMT ENUM ('hour', 'day', 'week', 'month', 'quarter', 'year')) RETURNS NVARCHAR(19)
 
   BEGIN
