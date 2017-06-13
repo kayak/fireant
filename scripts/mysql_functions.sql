@@ -9,7 +9,7 @@ Valid formats:
   - quarter - To the start of the quarter
   - year - To the start of the year
 
-Called with TRUNC(<date>, <format required>) -> returns a string
+Called with TRUNC(<date>, <format required>) -> returns a timestamp
 
 
 Note: A new database/schema will be created called 'dashmore' which will store the new function. All database users that
@@ -28,30 +28,28 @@ CREATE DATABASE IF NOT EXISTS dashmore DEFAULT CHARACTER SET = 'utf8' DEFAULT CO
 DROP FUNCTION IF EXISTS dashmore.TRUNC$$
 
 CREATE FUNCTION dashmore.TRUNC(DT  DATETIME,
-                      FMT ENUM ('hour', 'day', 'week', 'month', 'quarter', 'year')) RETURNS NVARCHAR(19)
+                      FMT ENUM ('hour', 'day', 'week', 'month', 'quarter', 'year')) RETURNS TIMESTAMP
 
   BEGIN
     DECLARE NEW_DT NVARCHAR(19);
 
     CASE FMT
       WHEN 'hour'
-      THEN SET NEW_DT = DATE_FORMAT(DT, '%Y-%m-%d %H:00:00');
+      THEN SET NEW_DT = TIMESTAMP(DATE_FORMAT(DT, '%Y-%m-%d %H:00:00'));
       WHEN 'day'
-      THEN SET NEW_DT = DATE_FORMAT(DT, '%Y-%m-%d 00:00:00');
+      THEN SET NEW_DT = TIMESTAMP(DATE_FORMAT(DT, '%Y-%m-%d 00:00:00'));
       WHEN 'week'
-      THEN SET NEW_DT = DATE_FORMAT(DATE_SUB(DT, INTERVAL WEEKDAY(DT) DAY), '%Y-%m-%d 00:00:00');
+      THEN SET NEW_DT = TIMESTAMP(DATE_FORMAT(DATE_SUB(DT, INTERVAL WEEKDAY(DT) DAY), '%Y-%m-%d 00:00:00'));
       WHEN 'month'
-      THEN SET NEW_DT = DATE_FORMAT(DT, '%Y-%m-01');
+      THEN SET NEW_DT = TIMESTAMP(DATE_FORMAT(DT, '%Y-%m-01'));
       WHEN 'quarter'
-      THEN SET NEW_DT = MAKEDATE(YEAR(TIMESTAMP(DT)), 1) + INTERVAL QUARTER(TIMESTAMP(DT)) QUARTER - INTERVAL 1 QUARTER;
+      THEN SET NEW_DT = TIMESTAMP(MAKEDATE(YEAR(TIMESTAMP(DT)), 1) + INTERVAL QUARTER(TIMESTAMP(DT)) QUARTER - INTERVAL 1 QUARTER);
       WHEN 'year'
-      THEN SET NEW_DT = DATE_FORMAT(DT, '%Y-01-01');
-    ELSE SET NEW_DT = DT;
+      THEN SET NEW_DT = TIMESTAMP(DATE_FORMAT(DT, '%Y-01-01'));
+    ELSE SET NEW_DT = TIMESTAMP(DT);
     END CASE;
 
     RETURN NEW_DT;
   END$$
 
 DELIMITER ;
-
-

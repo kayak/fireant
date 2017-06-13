@@ -113,7 +113,7 @@ class QueryManager(object):
                 moved after the non-ROLLUP dimensions.
 
         :return:
-            A pd.DataFrame indexed by the provided dimensions paramaters containing columns for each metrics parameter.
+            A pd.DataFrame indexed by the provided dimensions parameters containing columns for each metrics parameter.
         """
         if rollup and database.query_cls is MySQLQuery:
             # MySQL doesn't currently support query rollups in the same way as Vertica, Oracle etc.
