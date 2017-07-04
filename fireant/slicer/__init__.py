@@ -1,5 +1,28 @@
 # coding: utf-8
-from .filters import EqualityFilter, ContainsFilter, ExcludesFilter, RangeFilter, WildcardFilter
 from .managers import SlicerException
-from .schemas import (Slicer, Metric, Dimension, CategoricalDimension, ContinuousDimension, NumericInterval,
-                      UniqueDimension, DatetimeDimension, DatetimeInterval, DimensionValue, EqualityOperator, Join)
+from .filters import (
+    BooleanFilter,
+    ContainsFilter,
+    EqualityFilter,
+    ExcludesFilter,
+    RangeFilter,
+    WildcardFilter,
+)
+from .schemas import (
+    DimensionValue,
+    EqualityOperator,
+    Join,
+    Metric,
+    Slicer,
+)
+from .schemas import (
+    DatetimeInterval,
+    NumericInterval,
+)
+from .schemas import (
+    BooleanDimension,
+    CategoricalDimension,
+    ContinuousDimension,
+    DatetimeDimension,
+    UniqueDimension,
+)

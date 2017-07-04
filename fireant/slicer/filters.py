@@ -34,6 +34,17 @@ class EqualityFilter(Filter):
                and self.value == other.value
 
 
+class BooleanFilter(Filter):
+    def __init__(self, element_key, value):
+        super(BooleanFilter, self).__init__(element_key)
+        self.value = value
+
+    def schemas(self, element):
+        if not self.value:
+            return element.negate()
+        return element
+
+
 class ContainsFilter(Filter):
     def __init__(self, element_key, values):
         super(ContainsFilter, self).__init__(element_key)

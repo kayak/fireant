@@ -2,7 +2,15 @@
 from datetime import date
 from unittest import TestCase
 
-from fireant.slicer import EqualityFilter, EqualityOperator, ContainsFilter, ExcludesFilter, RangeFilter, WildcardFilter
+from fireant.slicer import (
+    BooleanFilter,
+    ContainsFilter,
+    EqualityFilter,
+    EqualityOperator,
+    ExcludesFilter,
+    RangeFilter,
+    WildcardFilter,
+)
 from pypika import Table
 
 
@@ -36,6 +44,20 @@ class FilterTests(TestCase):
         schemas = eq_filter.schemas(self.test_table.foo)
 
         self.assertEqual('"foo"=\'test\'', str(schemas))
+
+    def test_boolean_filter_with_true(self):
+        bool_filter = BooleanFilter('test', True)
+
+        schemas = bool_filter.schemas(self.test_table.foo)
+
+        self.assertEqual('"foo"', str(schemas))
+
+    def test_boolean_filter_with_false(self):
+        bool_filter = BooleanFilter('test', False)
+
+        schemas = bool_filter.schemas(self.test_table.foo)
+
+        self.assertEqual('NOT "foo"', str(schemas))
 
     def test_contains_filter_numbers(self):
         eq_filter = ContainsFilter('test', [1, 2, 3])
