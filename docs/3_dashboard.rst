@@ -93,3 +93,15 @@ Additional dimensions, filters, references, and operations can be added to the r
             Delta.WoW('date')
         ],
     )
+
+Note: Pagination can also be used on widget groups. To enable pagination, just pass a ``fireant.slicer.pagination.Paginator``
+object into the render function using the pagination kwarg. For further information on this, please see the Slicer Pagination documentation.
+
+.. code-block:: python
+
+    from pypika import Order
+
+    from fireant.slicer import Paginator
+    result = my_widget_group.manager.render(
+        paginator=Paginator(limit=50, order=[('locale', Order.desc)])
+    )

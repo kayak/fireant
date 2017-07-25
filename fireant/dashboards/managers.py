@@ -9,7 +9,8 @@ class WidgetGroupManager(object):
     def __init__(self, widget_group):
         self.widget_group = widget_group
 
-    def _schema(self, dimensions=None, metric_filters=None, dimension_filters=None, references=None, operations=None):
+    def _schema(self, dimensions=None, metric_filters=None, dimension_filters=None,
+                references=None, operations=None, pagination=None):
         return dict(
             metrics=[metric
                      for widget in self.widget_group.widgets
@@ -19,9 +20,11 @@ class WidgetGroupManager(object):
             dimension_filters=self.widget_group.dimension_filters + (dimension_filters or []),
             references=references,
             operations=operations,
+            pagination=pagination
         )
 
-    def render(self, dimensions=None, metric_filters=None, dimension_filters=None, references=None, operations=None):
+    def render(self, dimensions=None, metric_filters=None, dimension_filters=None,
+               references=None, operations=None, pagination=None):
         dimensions = utils.filter_duplicates(self.widget_group.dimensions + (dimensions or []))
         references = utils.filter_duplicates(self.widget_group.references + (references or []))
         operations = utils.filter_duplicates(self.widget_group.operations + (operations or []))
@@ -30,20 +33,20 @@ class WidgetGroupManager(object):
             widget.transformer.prevalidate_request(self.widget_group.slicer, widget.metrics, dimensions,
                                                    metric_filters, dimension_filters, references, operations)
 
-        schema = self._schema(dimensions, metric_filters, dimension_filters, references, operations)
+        schema = self._schema(dimensions, metric_filters, dimension_filters, references, operations, pagination)
         dataframe = self.widget_group.slicer.manager.data(**schema)
 
         _args = [dataframe, schema['dimensions'], schema['references'], schema['operations']]
         return [self._transform_widget(widget, *_args)
                 for widget in self.widget_group.widgets]
 
-    def query_string(self, dimensions=None, metric_filters=None, dimension_filters=None, references=None,
-                     operations=None):
+    def query_string(self, dimensions=None, metric_filters=None, dimension_filters=None,
+                     references=None, operations=None, pagination=None):
         dimensions = utils.filter_duplicates(self.widget_group.dimensions + (dimensions or []))
         references = utils.filter_duplicates(self.widget_group.references + (references or []))
         operations = utils.filter_duplicates(self.widget_group.operations + (operations or []))
 
-        schema = self._schema(dimensions, metric_filters, dimension_filters, references, operations)
+        schema = self._schema(dimensions, metric_filters, dimension_filters, references, operations, pagination)
         return self.widget_group.slicer.manager.query_string(**schema)
 
     def _transform_widget(self, widget, dataframe, dimensions, references, operations):

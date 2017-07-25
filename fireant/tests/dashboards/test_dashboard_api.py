@@ -7,10 +7,15 @@ from mock import Mock, patch, call
 
 from fireant.dashboards import *
 from fireant.slicer import *
+from fireant.slicer.managers import SlicerManager
 from fireant.slicer.references import WoW
 from fireant.slicer.transformers import TransformationException
 from fireant.tests.database.mock_database import TestDatabase
-from pypika import Table, functions as fn
+from pypika import (
+    Table,
+    functions as fn,
+    Order,
+)
 
 
 class DashboardTests(TestCase):
@@ -54,7 +59,7 @@ class DashboardTests(TestCase):
         cls.test_slicer.manager.display_schema = Mock()
 
     def assert_slicer_queried(self, metrics, dimensions=None, mfilters=None, dfilters=None,
-                              references=None, operations=None):
+                              references=None, operations=None, pagination=None):
         self.test_slicer.manager.data.assert_called_with(
             metrics=metrics,
             dimensions=dimensions or [],
@@ -62,6 +67,7 @@ class DashboardTests(TestCase):
             dimension_filters=dfilters or [],
             references=references or [],
             operations=operations or [],
+            pagination=pagination,
         )
 
     def assert_result_transformed(self, widgets, dimensions, mock_transformer, tx_generator, references=(),
@@ -106,7 +112,25 @@ class DashboardSchemaTests(DashboardTests):
 
         result = test_render.manager.query_string()
 
-        self.assertEquals(self.test_slicer.manager.query_string(metrics=metrics), result)
+        self.assertEqual(self.test_slicer.manager.query_string(metrics=metrics), result)
+
+    @patch.object(SlicerManager, 'query_string')
+    def test_paginator_sent_to_query_string_is_added_to_query(self, mock_slicer_query_string):
+        metrics = ['clicks']
+        paginator = Paginator(limit=10, offset=10, order=[('clicks', Order.desc)])
+
+        test_render = WidgetGroup(
+            slicer=self.test_slicer,
+            widgets=[
+                LineChartWidget(metrics=metrics),
+            ],
+        )
+
+        test_render.manager.query_string(pagination=paginator)
+
+        mock_slicer_query_string.assert_called_once_with(metrics=metrics, dimensions=[],
+                                                         metric_filters=[], dimension_filters=[],
+                                                         operations=[], references=[], pagination=paginator)
 
     @patch('fireant.dashboards.LineChartWidget.transformer')
     def test_metric_widgets(self, mock_transformer):
@@ -250,6 +274,37 @@ class DashboardSchemaTests(DashboardTests):
         self.assert_slicer_queried(
             metrics,
             dfilters=[contains_filter],
+        )
+        self.assert_result_transformed(test_render.widgets, dimensions, mock_transformer, result)
+
+    @patch('fireant.dashboards.LineChartWidget.transformer')
+    def test_pagination_in_widgetgroup_render(self, mock_transformer):
+        metrics = ['clicks', 'conversions']
+        dimensions = ['locale']
+        paginator = Paginator(offset=10, limit=10, order=('locale', Order.desc))
+        self.test_slicer.manager.data.return_value = pd.DataFrame(columns=metrics)
+        self.test_slicer.manager.display_schema.side_effect = [
+            {'metrics': metrics[:1], 'dimensions': dimensions, 'references': []},
+            {'metrics': metrics[1:], 'dimensions': dimensions, 'references': []},
+        ]
+
+        test_render = WidgetGroup(
+            slicer=self.test_slicer,
+
+            widgets=[
+                LineChartWidget(metrics=metrics[:1]),
+                LineChartWidget(metrics=metrics[1:]),
+            ],
+
+            dimensions=dimensions,
+        )
+
+        result = test_render.manager.render(pagination=paginator)
+
+        self.assert_slicer_queried(
+            ['clicks', 'conversions'],
+            dimensions=dimensions,
+            pagination=paginator
         )
         self.assert_result_transformed(test_render.widgets, dimensions, mock_transformer, result)
 

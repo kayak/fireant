@@ -13,7 +13,7 @@ from pypika import JoinType
 from pypika import functions as fn, Tables, Case
 
 QUERY_BUILDER_PARAMS = {'table', 'database', 'joins', 'metrics', 'dimensions', 'mfilters', 'dfilters', 'references',
-                        'rollup'}
+                        'rollup', 'pagination'}
 
 
 class SlicerSchemaTests(TestCase):

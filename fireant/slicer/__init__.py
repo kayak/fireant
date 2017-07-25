@@ -8,6 +8,7 @@ from .filters import (
     RangeFilter,
     WildcardFilter,
 )
+from .pagination import Paginator
 from .schemas import (
     DimensionValue,
     EqualityOperator,

@@ -379,7 +379,7 @@ Totals adds ``ROLLUP`` to the SQL query to load the data and aggregated across d
 
     from fireant.slicer.operations import Totals
 
-    slicer.notebooks.line_chart(
+    slicer.highcharts.line_chart(
         metrics=['clicks', 'conversions'],
         dimensions=['date', 'device'],
         operations=[Totals('device')],
@@ -389,3 +389,23 @@ L1 and L2 Loss
 """"""""""""""
 
 Coming soon
+
+Pagination
+----------
+FireAnt also exposes an API to enable data pagination. The ``fireant.slicer.pagination.Paginator`` object
+can be used to define a query limit, offset and order bys.
+
+.. code-block:: python
+
+    from pypika import Order
+
+    slicer.datatables.row_index_table(
+        metrics=['clicks', 'conversions'],
+        dimensions=['date', 'device'],
+        pagination=Paginator(offset=10, limit=10, order=[('clicks', Order.desc), ('conversions', Order.asc))])
+    )
+
+.. note::
+
+    Please note, you cannot use operations with paginated tables. This is because operations are applied to the data once it has
+    been retrieved from the database, so the operation value would be reset on each page once new data has been retrieved.

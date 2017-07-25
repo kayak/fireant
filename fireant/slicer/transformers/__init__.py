@@ -21,27 +21,40 @@ from .notebooks import (PandasRowIndexTransformer,
                         MatplotlibLineChartTransformer,
                         MatplotlibBarChartTransformer)
 
+ROW_INDEX_TABLE = 'row_index_table'
+ROW_INDEX_CSV = 'row_index_csv'
+COLUMN_INDEX_TABLE = 'column_index_table'
+COLUMN_INDEX_CSV = 'column_index_csv'
+LINE_CHART = 'line_chart'
+BAR_CHART = 'bar_chart'
+AREA_CHART = 'area_chart'
+AREA_PERCENTAGE_CHART = 'area_percentage_chart'
+COLUMN_CHART = 'column_chart'
+STACKED_COLUMN_CHART = 'stacked_column_chart'
+STACKED_BAR_CHART = 'stacked_bar_chart'
+PIE_CHART = 'pie_chart'
+
 BUNDLES = {
     'notebooks': {
-        'row_index_table': PandasRowIndexTransformer(),
-        'column_index_table': PandasColumnIndexTransformer(),
-        'line_chart': MatplotlibLineChartTransformer(),
-        'bar_chart': MatplotlibBarChartTransformer(),
+        ROW_INDEX_TABLE: PandasRowIndexTransformer(),
+        COLUMN_INDEX_TABLE: PandasColumnIndexTransformer(),
+        LINE_CHART: MatplotlibLineChartTransformer(),
+        BAR_CHART: MatplotlibBarChartTransformer(),
     },
     'highcharts': {
-        'line_chart': HighchartsLineTransformer(),
-        'area_chart': HighchartsAreaTransformer(),
-        'area_percentage_chart': HighchartsAreaPercentageTransformer(),
-        'column_chart': HighchartsColumnTransformer(),
-        'stacked_column_chart': HighchartsStackedColumnTransformer(),
-        'bar_chart': HighchartsBarTransformer(),
-        'stacked_bar_chart': HighchartsStackedBarTransformer(),
-        'pie_chart': HighchartsPieTransformer(),
+        LINE_CHART: HighchartsLineTransformer(),
+        AREA_CHART: HighchartsAreaTransformer(),
+        AREA_PERCENTAGE_CHART: HighchartsAreaPercentageTransformer(),
+        COLUMN_CHART: HighchartsColumnTransformer(),
+        STACKED_COLUMN_CHART: HighchartsStackedColumnTransformer(),
+        BAR_CHART: HighchartsBarTransformer(),
+        STACKED_BAR_CHART: HighchartsStackedBarTransformer(),
+        PIE_CHART: HighchartsPieTransformer(),
     },
     'datatables': {
-        'row_index_table': DataTablesRowIndexTransformer(),
-        'column_index_table': DataTablesColumnIndexTransformer(),
-        'row_index_csv': CSVRowIndexTransformer(),
-        'column_index_csv': CSVColumnIndexTransformer(),
+        ROW_INDEX_TABLE: DataTablesRowIndexTransformer(),
+        COLUMN_INDEX_TABLE: DataTablesColumnIndexTransformer(),
+        ROW_INDEX_CSV: CSVRowIndexTransformer(),
+        COLUMN_INDEX_CSV: CSVColumnIndexTransformer(),
     },
 }
