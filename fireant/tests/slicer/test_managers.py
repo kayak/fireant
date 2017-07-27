@@ -16,6 +16,7 @@ from mock import (
 )
 from pypika import (
     Table,
+    Query,
 )
 
 
@@ -468,3 +469,42 @@ class ManagerInitializationTests(TestCase):
                 metric_filters=(), dimension_filters=(),
                 references=(), operations=(), pagination=None
         )
+
+    @patch.object(TestDatabase, 'fetch_dataframe')
+    @patch('fireant.slicer.queries.query_logger')
+    def test_get_dataframe_from_query_logs_query_before_and_query_after_with_duration(self, mock_logging, *args):
+        query = Query.from_('customers').select('id')
+        self.slicer.manager._get_dataframe_from_query(TestDatabase(), query)
+        self.assertEqual(mock_logging.debug.call_count, 1)
+        self.assertEqual(mock_logging.info.call_count, 1)
+
+    @patch.object(SlicerManager, '_get_dataframe_from_query')
+    @patch.object(SlicerManager, '_build_data_query')
+    def test_query_data_calls_build_data_query_with_correct_args(self, mock_build_query, *args):
+        db = TestDatabase()
+        metrics = {'bar': self.slicer.metrics.get('bar')}
+        dimensions = {'cat': self.slicer.dimensions.get('cat')}
+        dfilters = ContainsFilter('cat', ['a', 'b'])
+        references = {'date': WoW('date')}
+        args = {
+            'database': db,
+            'table': self.slicer.table,
+            'joins': self.slicer.joins,
+            'metrics': metrics,
+            'dimensions': dimensions,
+            'dfilters': dfilters,
+            'references': references
+        }
+        self.slicer.manager.query_data(**args)
+
+        mock_build_query.assert_called_once_with(db, self.slicer.table, self.slicer.joins,
+                                                 metrics, dimensions, dfilters, None, references, None, None)
+
+    @patch.object(SlicerManager, '_get_dataframe_from_query')
+    @patch.object(SlicerManager, '_build_data_query')
+    def test_query_data_calls_get_dataframe_from_query_with_correct_args(self, mock_query, mock_get_dataframe):
+        query = Query.from_('customers').select('id')
+        mock_query.return_value = query
+        db = TestDatabase()
+        self.slicer.manager.query_data(db, self.slicer.table)
+        mock_get_dataframe.assert_called_once_with(db, query)

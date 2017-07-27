@@ -3,6 +3,14 @@ import unittest
 from collections import OrderedDict
 from datetime import date
 
+from mock import patch
+from pypika import (
+    JoinType,
+    Order,
+    Tables,
+    functions as fn,
+)
+
 from fireant import settings
 from fireant.database import MySQLDatabase
 from fireant.slicer import references
@@ -12,15 +20,6 @@ from fireant.slicer.queries import (
     QueryNotSupportedError,
 )
 from fireant.tests.database.mock_database import TestDatabase
-from mock import patch
-from pypika import (
-    JoinType,
-    Order,
-    Query,
-    Table,
-    Tables,
-    functions as fn,
-)
 
 
 class QueryTests(unittest.TestCase):
@@ -1637,25 +1636,3 @@ class PaginationReferenceQueryTests(QueryTests):
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
                          'ORDER BY SUM("clicks") DESC,"locale_display" ASC '
                          'LIMIT 50 OFFSET 10', str(query))
-
-
-@patch.object(TestDatabase, 'fetch')
-class QueryRowCountTests(QueryTests):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.database = TestDatabase()
-
-        payments = Table('payments')
-
-        cls.query = Query.from_(payments).where(
-                payments.transacted[date(2015, 1, 1):date(2016, 1, 1)]
-        ).groupby(
-                payments.customer_id, payments.customer_type
-        ).having(
-                fn.Sum(payments.total) >= 1000
-        ).select(
-                payments.customer_id, fn.Sum(payments.total)
-        ).orderby(
-                payments.customer_id
-        )

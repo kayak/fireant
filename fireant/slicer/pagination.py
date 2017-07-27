@@ -15,4 +15,5 @@ class Paginator(object):
     def __str__(self):
         return 'offset: {offset} limit: {limit} order: {order}'.format(offset=self.offset,
                                                                        limit=self.limit,
-                                                                       order=self.order)
+                                                                       order=[(key, orderby.name)
+                                                                              for key, orderby in self.order])

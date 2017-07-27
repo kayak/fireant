@@ -1,12 +1,6 @@
 # coding: utf-8
 
 
-def dimension_levels(dimension_key, dimension):
-    if 'display_field' in dimension:
-        return [dimension_key, dimension['display_field']]
-    return [dimension_key]
-
-
 def wrap_list(value):
     return value if isinstance(value, (tuple, list)) else [value]
 
