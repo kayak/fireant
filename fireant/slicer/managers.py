@@ -6,10 +6,10 @@ from collections import OrderedDict
 
 import numpy as np
 import pandas as pd
-
 from fireant import utils
 from fireant.slicer.operations import Totals
 from pypika import functions as fn
+
 from .postprocessors import OperationManager
 from .queries import QueryManager
 
@@ -28,7 +28,7 @@ class SlicerManager(QueryManager, OperationManager):
 
     def data(self, metrics=(), dimensions=(),
              metric_filters=(), dimension_filters=(),
-             references=(), operations=()):
+             references=(), operations=(), pagination=None):
         """
         :param metrics:
             Type: list or tuple
@@ -54,14 +54,21 @@ class SlicerManager(QueryManager, OperationManager):
             Type: list or tuple
             A set of operations to perform on the response.
 
+        :param pagination:
+            Type: ``fireant.slicer.pagination.Paginator`` object
+            An object detailing the pagination to apply to the query
+
         :return:
             A transformed response that is queried based on the slicer and the format.
         """
-        metrics, dimensions = map(utils.filter_duplicates, (metrics, dimensions))
+        if operations and pagination:
+            raise SlicerException('Pagination cannot be used when operations are defined!')
+
+        metrics, dimensions = map(utils.filter_duplicates, (utils.flatten(metrics), dimensions))
 
         query_schema = self.data_query_schema(metrics=metrics, dimensions=dimensions,
                                               metric_filters=metric_filters, dimension_filters=dimension_filters,
-                                              references=references, operations=operations)
+                                              references=references, operations=operations, pagination=pagination)
         operation_schema = self.operation_schema(operations)
 
         dataframe = self.query_data(**query_schema)
@@ -75,9 +82,22 @@ class SlicerManager(QueryManager, OperationManager):
         reference_columns = [''] + [r.key for r in references]
         return dataframe[list(itertools.product(reference_columns, final_columns))]
 
+    def get_query(self, metrics=(), dimensions=(),
+                  metric_filters=(), dimension_filters=(),
+                  references=(), operations=(), pagination=None):
+        """ Returns the PyPika query object after building the query from the given params """
+        metrics = utils.filter_duplicates(utils.flatten(metrics))
+        dimensions = utils.filter_duplicates(dimensions)
+
+        query_schema = self.data_query_schema(metrics=metrics, dimensions=dimensions,
+                                              metric_filters=metric_filters, dimension_filters=dimension_filters,
+                                              references=references, operations=operations, pagination=pagination)
+
+        return self._build_data_query(**query_schema)
+
     def query_string(self, metrics=(), dimensions=(),
                      metric_filters=(), dimension_filters=(),
-                     references=(), operations=()):
+                     references=(), operations=(), pagination=None):
         """
         :param metrics:
             Type: list or tuple
@@ -103,17 +123,16 @@ class SlicerManager(QueryManager, OperationManager):
             Type: list or tuple
             A set of operations to perform on the response.
 
+        :param pagination:
+            Type: ``fireant.slicer.pagination.Paginator`` object
+            An object detailing the pagination to apply to the query
+
         :return:
             The query that would generate the data.
         """
-        metrics = utils.filter_duplicates(metrics)
-        dimensions = utils.filter_duplicates(dimensions)
-
-        query_schema = self.data_query_schema(metrics=metrics, dimensions=dimensions,
-                                              metric_filters=metric_filters, dimension_filters=dimension_filters,
-                                              references=references, operations=operations)
-
-        return str(self._build_data_query(**query_schema))
+        return str(self.get_query(metrics, dimensions,
+                                  metric_filters, dimension_filters,
+                                  references, operations, pagination))
 
     def dimension_options(self, dimension, filters, limit=None):
         dimopt_schema = self.dimension_option_schema(dimension, filters, limit)
@@ -121,7 +140,7 @@ class SlicerManager(QueryManager, OperationManager):
 
     def data_query_schema(self, metrics=(), dimensions=(),
                           metric_filters=(), dimension_filters=(),
-                          references=(), operations=()):
+                          references=(), operations=(), pagination=None):
         """
         Builds a `dict` model of the schema parts required for executing a data query given a request.
 
@@ -131,6 +150,7 @@ class SlicerManager(QueryManager, OperationManager):
         :param dimension_filters:
         :param references:
         :param operations:
+        :param pagination:
 
         :return:
         """
@@ -155,6 +175,7 @@ class SlicerManager(QueryManager, OperationManager):
             'joins': list(metric_joins_schema | dimension_joins_schema),
             'references': self._references_schema(references),
             'rollup': self._totals_schema(dimensions, operations),
+            'pagination': pagination
         }
 
     def dimension_option_schema(self, dimension, filters, limit=None):
@@ -183,14 +204,17 @@ class SlicerManager(QueryManager, OperationManager):
         :param metrics:
             Type: list[str]
             The requested list of metrics.  This must match a Metric contained in the slicer.
+
         :param dimensions:
             Type: list[str or tuple/list]
             The requested list of dimensions.  For simple dimensions, the string key is passed as a parameter, otherwise
-            a tuple of list with the first element equal to the key and the subsequent elements equal to the paramters.
+            a tuple of list with the first element equal to the key and the subsequent elements equal to the parameters.
+
         :param references:
             Type: list[tuple]
             A list of tuples describing reference options, where the first element in the tuple is the key of the
             reference operation and the second value is the dimension to perform the comparasion along.
+
         :return:
             A dictionary describing how to transform the resulting data frame for the same request.
         """
@@ -287,12 +311,12 @@ class SlicerManager(QueryManager, OperationManager):
             element = elements.get(element_key)
             if not element:
                 raise SlicerException(
-                    'Unable to apply filter [{filter}].  '
-                    'No such {element} with key [{key}].'.format(
-                        filter=filter_item,
-                        element=element_label,
-                        key=filter_item.element_key
-                    ))
+                        'Unable to apply filter [{filter}].  '
+                        'No such {element} with key [{key}].'.format(
+                                filter=filter_item,
+                                element=element_label,
+                                key=filter_item.element_key
+                        ))
 
             if hasattr(element, 'display_field') and 'display' == modifier:
                 definition = element.display_field
@@ -330,16 +354,16 @@ class SlicerManager(QueryManager, OperationManager):
         for reference in references:
             if reference.element_key not in self.slicer.dimensions.keys():
                 raise SlicerException(
-                    'Unable to query with [{reference}]. '
-                    'No such dimension [{dimension}].'.format(reference=str(reference),
-                                                              dimension=reference.element_key))
+                        'Unable to query with [{reference}]. '
+                        'No such dimension [{dimension}].'.format(reference=str(reference),
+                                                                  dimension=reference.element_key))
 
             from .schemas import DatetimeDimension
             if not isinstance(self.slicer.dimensions[reference.element_key], DatetimeDimension):
                 raise SlicerException(
-                    'Unable to query with [{reference}]. '
-                    'Dimension [{dimension}] must be a DatetimeDimension.'.format(reference=str(reference),
-                                                                                  dimension=reference.element_key))
+                        'Unable to query with [{reference}]. '
+                        'Dimension [{dimension}] must be a DatetimeDimension.'.format(reference=str(reference),
+                                                                                      dimension=reference.element_key))
 
             schema_references[reference.key] = {
                 'dimension': reference.element_key,
@@ -397,7 +421,7 @@ class SlicerManager(QueryManager, OperationManager):
             missing_dimensions |= set(operation.dimension_keys) - dimension_set
             totals += [[level for level in self.slicer.dimensions[dimension].levels()]
                        for dimension in operation.dimension_keys
-            ]
+                       ]
 
         if missing_dimensions:
             raise SlicerException("Missing dimensions with keys: {}".format(", ".join(missing_dimensions)))
@@ -415,7 +439,7 @@ class TransformerManager(object):
 
     def _get_and_transform_data(self, tx, metrics=(), dimensions=(),
                                 metric_filters=(), dimension_filters=(),
-                                references=(), operations=()):
+                                references=(), operations=(), pagination=None):
         """
         Handles a request and applies a transformation to the result.  This is the implementation of all of the
         transformer manager methods, which are constructed in the __init__ function of this class for each transformer.
@@ -425,6 +449,7 @@ class TransformerManager(object):
 
         :param tx:
             The transformer to use
+
         :param metrics:
             See ``fireant.slicer.SlicerManager``
             A list of metrics to include in the query.
@@ -449,6 +474,10 @@ class TransformerManager(object):
             See ``fireant.slicer.SlicerManager``
             A list of post-operations to apply to the result before transformation.
 
+        :param pagination:
+            See: ``fireant.slicer.pagination.Paginator`` object
+            An object detailing the pagination to apply to the query
+
         :return:
             The transformed result of the request.
         """
@@ -461,7 +490,7 @@ class TransformerManager(object):
         # Loads data and transforms it with a given transformer.
         dataframe = self.manager.data(metrics=utils.flatten(metrics), dimensions=dimensions,
                                       metric_filters=metric_filters, dimension_filters=dimension_filters,
-                                      references=references, operations=operations)
+                                      references=references, operations=operations, pagination=pagination)
         display_schema = self.manager.display_schema(metrics, dimensions, references, operations)
 
         return tx.transform(dataframe, display_schema)

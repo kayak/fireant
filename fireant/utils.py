@@ -1,12 +1,6 @@
 # coding: utf-8
 
 
-def dimension_levels(dimension_key, dimension):
-    if 'display_field' in dimension:
-        return [dimension_key, dimension['display_field']]
-    return [dimension_key]
-
-
 def wrap_list(value):
     return value if isinstance(value, (tuple, list)) else [value]
 
@@ -33,3 +27,16 @@ def filter_duplicates(iterable):
         filtered_list.append(item)
 
     return filtered_list
+
+
+def merge_dicts(*dict_args):
+    """
+    Given any number of dicts, shallow copy and merge into a new dict,
+    precedence goes to key value pairs in latter dicts.
+
+    https://stackoverflow.com/questions/38987/how-to-merge-two-python-dictionaries-in-a-single-expression
+    """
+    result = {}
+    for dictionary in dict_args:
+        result.update(dictionary)
+    return result

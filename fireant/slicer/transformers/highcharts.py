@@ -139,7 +139,6 @@ class HighchartsLineTransformer(Transformer):
 
         return axis
 
-
     def _make_series(self, dataframe, dim_ordinal, display_schema, reference=None):
         metrics = list(dataframe.columns.levels[0]
                        if isinstance(dataframe.columns, pd.MultiIndex)

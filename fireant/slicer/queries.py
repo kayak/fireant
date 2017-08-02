@@ -5,12 +5,16 @@ import time
 from itertools import chain
 
 import pandas as pd
-from pypika import JoinType, MySQLQuery
-
 from fireant import utils
-from fireant.slicer.references import (YoY,
-                                       Delta,
-                                       DeltaPercentage)
+from fireant.slicer.references import (
+    Delta,
+    DeltaPercentage,
+    YoY,
+)
+from pypika import (
+    JoinType,
+    MySQLQuery,
+)
 
 query_logger = logging.getLogger('fireant.query_log$')
 
@@ -27,7 +31,7 @@ class QueryManager(object):
     def query_data(self, database, table, joins=None,
                    metrics=None, dimensions=None,
                    mfilters=None, dfilters=None,
-                   references=None, rollup=None):
+                   references=None, rollup=None, pagination=None):
         """
         Loads a pandas data frame given a table and a description of the request.
 
@@ -112,6 +116,10 @@ class QueryManager(object):
                 When using rollup for less than all of the dimensions, the dimensions included in the ROLLUP will be
                 moved after the non-ROLLUP dimensions.
 
+        :param pagination:
+            Type: ``fireant.slicer.pagination.Paginator``
+            (Optional) A Paginator class defining the limit, offset and order by statements for the query
+
         :return:
             A pd.DataFrame indexed by the provided dimensions parameters containing columns for each metrics parameter.
         """
@@ -121,18 +129,10 @@ class QueryManager(object):
             raise QueryNotSupportedError("MySQL currently doesn't support ROLLUP operations!")
 
         query = self._build_data_query(
-            database, table, joins, metrics, dimensions, dfilters, mfilters, references, rollup
-        )
-        query_string = str(query)
-
-        start_time = time.time()
-        dataframe = database.fetch_dataframe(query_string)
-
-        query_logger.info('[duration: {duration} seconds]: {query}'.format(
-            duration=round(time.time() - start_time, 4),
-            query=query_string)
+                database, table, joins, metrics, dimensions, dfilters, mfilters, references, rollup, pagination
         )
 
+        dataframe = self._get_dataframe_from_query(database, query)
         dataframe.columns = [col.decode('utf-8') if isinstance(col, bytes) else col
                              for col in dataframe.columns]
 
@@ -145,14 +145,36 @@ class QueryManager(object):
 
         if dimensions:
             dataframe = dataframe.set_index(
-                # Removed the reference keys for now
-                list(dimensions.keys())  # + ['{1}_{0}'.format(*ref) for ref in references.items()]
-            ).sort_index()
+                    # Removed the reference keys for now
+                    list(dimensions.keys())  # + ['{1}_{0}'.format(*ref) for ref in references.items()]
+            )
 
         if references:
             dataframe.columns = pd.MultiIndex.from_product([[''] + list(references.keys()), list(metrics.keys())])
 
         return dataframe.fillna(0)
+
+    def _get_dataframe_from_query(self, database, query):
+        """
+        Returns a Pandas Dataframe built from the result of the query.
+        The query is also logged along with its duration.
+
+        :param database: Database object
+        :param query: PyPika query object
+        :return: Pandas Dataframe built from the result of the query
+        """
+        start_time = time.time()
+        query_string = str(query)
+        query_logger.debug(query_string)
+
+        dataframe = database.fetch_dataframe(query_string)
+
+        query_logger.info('[duration: {duration} seconds]: {query}'.format(
+                duration=round(time.time() - start_time, 4),
+                query=query_string)
+        )
+
+        return dataframe
 
     def query_dimension_options(self, database, table, joins=None, dimensions=None, filters=None, limit=None):
         """
@@ -160,6 +182,7 @@ class QueryManager(object):
 
         :param database:
             The database interface to use to execute the connection
+
         :param table:
             See above
 
@@ -182,19 +205,23 @@ class QueryManager(object):
         return [{k: v for k, v in zip(dimensions.keys(), result)}
                 for result in results]
 
-    def _build_data_query(self, database, table, joins, metrics, dimensions, dfilters, mfilters, references, rollup):
+    def _build_data_query(self, database, table, joins, metrics, dimensions,
+                          dfilters, mfilters, references, rollup, pagination):
         args = (table, joins or dict(), metrics or dict(), dimensions or dict(),
-                dfilters or dict(), mfilters or dict(), rollup or list())
+                dfilters or dict(), mfilters or dict(), rollup or list(), pagination or None)
 
-        query = self._build_query_inner(*args)
+        query = self._build_query_inner(table, joins, metrics, dimensions, dfilters, mfilters, rollup)
 
         if references:
             return self._build_reference_query(query, database, references, *args)
 
+        if pagination:
+            return self._add_pagination(query, pagination, metrics, dimensions, references=[])
+
         return self._add_sorting(query, list(dimensions.values()))
 
     def _build_reference_query(self, query, database, references, table, joins, metrics, dimensions, dfilters,
-                               mfilters, rollup):
+                               mfilters, rollup, pagination):
         wrapper_query = self.query_cls.from_(query).select(*[query.field(key).as_(key)
                                                              for key in list(dimensions.keys()) + list(metrics.keys())])
 
@@ -210,7 +237,8 @@ class QueryManager(object):
 
             # Don't reuse the dfilters arg otherwise intervals will be aggregated on each iteration
             replaced_dfilters = self._replace_filters_for_ref(dfilters, schema['definition'], interval)
-            ref_query = self._build_query_inner(table, joins, metrics, dimensions, replaced_dfilters, mfilters, rollup)
+            ref_query = self._build_query_inner(table, joins, metrics, dimensions,
+                                                replaced_dfilters, mfilters, rollup)
             join_criteria = self._build_reference_join_criteria(dimension_key, dimensions, interval, query, ref_query)
 
             # Optional modifier function to modify the metric in the reference query. This is for delta and delta
@@ -231,9 +259,12 @@ class QueryManager(object):
                 get_reference_field = lambda key: ref_query.field(key)
 
             wrapper_query = wrapper_query.select(
-                *[get_reference_field(key).as_(self._suffix(key, reference_key))
-                  for key in metrics.keys()]
+                    *[get_reference_field(key).as_(self._suffix(key, reference_key))
+                      for key in metrics.keys()]
             )
+
+        if pagination:
+            return self._add_pagination(wrapper_query, pagination, metrics or [], dimensions or [], references or [])
 
         return self._add_sorting(wrapper_query, [query.field(dkey) for dkey in dimensions.keys()])
 
@@ -310,6 +341,18 @@ class QueryManager(object):
         return query
 
     @staticmethod
+    def _add_pagination(query, pagination, metrics, dimensions, references):
+        """ Add offset, limit and order pagination to the query """
+        query = query[pagination.offset: pagination.limit]
+        query_objects = utils.merge_dicts(metrics, dimensions, references)
+
+        for key, order in pagination.order:
+            field = query_objects.get(key)
+            query = query.orderby(field, order=order)
+
+        return query
+
+    @staticmethod
     def _suffix(key, suffix):
         return '%s_%s' % (key, suffix) if suffix else key
 
@@ -343,10 +386,12 @@ class QueryManager(object):
         ref_join_criteria = []
         if dimension_key in dimensions:
             ref_join_criteria.append(
-                query.field(dimension_key) == ref_query.field(dimension_key) + interval
+                    query.field(dimension_key) == ref_query.field(dimension_key) + interval
             )
+
+        # The below set is sorted to ensure that the ON part of the join is always consistently ordered
         ref_join_criteria += [query.field(dkey) == ref_query.field(dkey)
-                              for dkey in set(dimensions.keys()) - {dimension_key}]
+                              for dkey in sorted(set(dimensions.keys()) - {dimension_key})]
 
         # If there are no selected dimensions, this will be an empty list.
         if not ref_join_criteria:
