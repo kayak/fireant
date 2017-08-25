@@ -1,9 +1,10 @@
 # coding: utf-8
+from collections import OrderedDict
+from datetime import date
+
 import numpy as np
 import pandas as pd
 
-from collections import OrderedDict
-from datetime import date
 from fireant.slicer.operations import Totals
 
 
@@ -19,6 +20,7 @@ def rollup(dataframe, levels):
     return dataframe.append(roll.set_index(rolled_levels, append=True)).sort_index()
 
 
+bool_dim = {'axis': 0, 'label': 'Bool'}
 cont_dim = {'axis': 0, 'label': 'Cont'}
 datetime_dim = {'axis': 0, 'label': 'Date'}
 uni_dim = {'axis': 0, 'label': 'Uni', 'display_field': 'uni_label'}
@@ -37,6 +39,7 @@ shortcuts = {
     Totals.key: Totals.label
 }
 
+bool_idx = pd.Index([None, False, True], name='bool')
 cont_idx = pd.Index([0, 1, 2, 3, 4, 5, 6, 7], name='cont')
 cat1_idx = pd.Index([u'a', u'b'], name='cat1')
 cat2_idx = pd.Index([u'y', u'z'], name='cat2')
@@ -46,6 +49,7 @@ uni_idx = pd.MultiIndex.from_tuples([(1, u'Aa'), (2, u'Bb'), (3, u'Cc')],
 
 datetime_idx = pd.DatetimeIndex(pd.date_range(start=date(2000, 1, 1), periods=8), name='date')
 cont_cat_idx = pd.MultiIndex.from_product([cont_idx, cat1_idx], names=['cont', 'cat1'])
+cont_bool_idx = pd.MultiIndex.from_product([cont_idx, bool_idx], names=['cont', 'bool'])
 cont_uni_idx = pd.MultiIndex.from_product([cont_idx, uni_idx.levels[0]],
                                           names=['cont', 'uni'])
 cat_cat_idx = pd.MultiIndex.from_product([cat1_idx, cat2_idx], names=['cat1', 'cat2'])
@@ -226,6 +230,33 @@ cont_cat_dims_multi_metric_schema = {
     'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_dim)])
 }
 
+# Mock DF with continuous and boolean dimensions and one metric column
+cont_bool_dims_single_metric_df = pd.DataFrame(
+    np.array([
+        np.arange(24),
+    ]).T,
+    columns=['one'],
+    index=cont_bool_idx
+)
+cont_bool_dims_single_metric_schema = {
+    'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'})]),
+    'dimensions': OrderedDict([('cont', cont_dim), ('bool', bool_dim)])
+}
+
+# Mock DF with continuous and boolean dimensions and two metric columns
+cont_bool_dims_multi_metric_df = pd.DataFrame(
+    np.array([
+        np.arange(24),
+        2 * np.arange(24),
+    ]).T,
+    columns=['one', 'two'],
+    index=cont_bool_idx
+)
+cont_bool_dims_multi_metric_schema = {
+    'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'}), ('two', {'axis': 0, 'label': 'Two'})]),
+    'dimensions': OrderedDict([('cont', cont_dim), ('bool', bool_dim)])
+}
+
 # Mock DF with continuous and unique dimensions and two metric columns
 _cont_uni = pd.DataFrame(
     np.array([np.arange(24), np.arange(100, 124)]).T,
@@ -330,7 +361,6 @@ rollup_cont_cat_uni_dims_multi_metric_schema = {
     'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'}), ('two', {'axis': 0, 'label': 'Two'})]),
     'dimensions': OrderedDict([('cont', cont_dim), ('cat1', cat1_dim), ('uni', uni_dim)])
 }
-
 
 # Mock DF with single continuous dimension and two metric columns
 cont_dim_pretty_df = pd.DataFrame(

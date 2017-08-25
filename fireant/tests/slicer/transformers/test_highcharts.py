@@ -4,16 +4,31 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
-from fireant.slicer import Slicer, Metric, ContinuousDimension, DatetimeDimension, CategoricalDimension, UniqueDimension
-from fireant.slicer.transformers import (HighchartsLineTransformer,
-                                         HighchartsAreaTransformer, HighchartsAreaPercentageTransformer,
-                                         HighchartsColumnTransformer, HighchartsStackedColumnTransformer,
-                                         HighchartsBarTransformer, HighchartsStackedBarTransformer,
-                                         HighchartsPieTransformer)
-from fireant.slicer.transformers import highcharts, TransformationException
+from pypika import Table
+
+from fireant.slicer import (
+    BooleanDimension,
+    CategoricalDimension,
+    ContinuousDimension,
+    DatetimeDimension,
+    Metric,
+    Slicer,
+    UniqueDimension,
+)
+from fireant.slicer.transformers import (
+    HighchartsAreaPercentageTransformer,
+    HighchartsAreaTransformer,
+    HighchartsBarTransformer,
+    HighchartsColumnTransformer,
+    HighchartsLineTransformer,
+    HighchartsPieTransformer,
+    HighchartsStackedBarTransformer,
+    HighchartsStackedColumnTransformer,
+    TransformationException,
+    highcharts,
+)
 from fireant.tests import mock_dataframes as mock_df
 from fireant.tests.database.mock_database import TestDatabase
-from pypika import Table
 
 
 class BaseHighchartsTransformerTests(TestCase):
@@ -59,9 +74,10 @@ class HighchartsLineTransformerTests(BaseHighchartsTransformerTests):
             database=test_db,
 
             dimensions=[
+                BooleanDimension('bool', definition=test_table.clicks < 10),
+                CategoricalDimension('cat', definition=test_table.cat),
                 ContinuousDimension('cont', definition=test_table.clicks),
                 DatetimeDimension('date', definition=test_table.date),
-                CategoricalDimension('cat', definition=test_table.cat),
                 UniqueDimension('uni', definition=test_table.uni_id, display_field=test_table.uni_name),
             ],
             metrics=[Metric('foo')],
@@ -196,6 +212,35 @@ class HighchartsLineTransformerTests(BaseHighchartsTransformerTests):
         )
 
         self.evaluate_result(df.unstack(level=[1, 2]), result)
+
+    def test_cont_bool_dim_single_metric(self):
+        # Tests transformation of a metric and a boolean dimension
+        df = mock_df.cont_bool_dims_single_metric_df
+
+        result = self.hc_tx.transform(df, mock_df.cont_bool_dims_single_metric_schema)
+
+        self.evaluate_chart_options(result, num_series=3)
+
+        self.assertSetEqual(
+            {'One (Null)', 'One (False)', 'One (True)'},
+            {series['name'] for series in result['series']}
+        )
+        self.evaluate_result(df.unstack(level=1), result)
+
+    def test_cont_bool_dim_multi_metric(self):
+        # Tests transformation of two metrics and a boolean dimension
+        df = mock_df.cont_bool_dims_multi_metric_df
+
+        result = self.hc_tx.transform(df, mock_df.cont_bool_dims_multi_metric_schema)
+
+        self.evaluate_chart_options(result, num_series=6)
+
+        self.assertSetEqual(
+            {'One (Null)', 'One (False)', 'One (True)', 'Two (Null)', 'Two (False)', 'Two (True)'},
+            {series['name'] for series in result['series']}
+        )
+
+        self.evaluate_result(df.unstack(level=[1]), result)
 
     def test_double_dimension_single_metric(self):
         # Tests transformation of a single-metric, double-dimension result
@@ -422,6 +467,36 @@ class HighchartsColumnTransformerTests(TestCase):
 
         self.evaluate_result(df.unstack(), result)
 
+    def test_cat_dim_multi_metric(self):
+        # Tests transformation of a single-metric, single-dimension result
+        df = mock_df.cat_dim_multi_metric_df
+
+        result = self.hc_tx.transform(df, mock_df.cat_dim_multi_metric_schema)
+
+        self.evaluate_chart_options(result, num_results=2, categories=['A', 'B'])
+
+        self.assertSetEqual(
+            {'One', 'Two'},
+            {series['name'] for series in result['series']}
+        )
+
+        self.evaluate_result(df, result)
+
+    def test_cat_cat_dim_single_metric(self):
+        # Tests transformation of a multi-metric, single-dimension result
+        df = mock_df.cat_cat_dims_single_metric_df
+
+        result = self.hc_tx.transform(df, mock_df.cat_cat_dims_single_metric_schema)
+
+        self.evaluate_chart_options(result, num_results=2, categories=['A', 'B'])
+
+        self.assertSetEqual(
+            {'One (Y)', 'One (Z)'},
+            {series['name'] for series in result['series']}
+        )
+
+        self.evaluate_result(df.unstack(), result)
+
     def test_uni_dim_single_metric(self):
         # Tests transformation of a metric and a unique dimension
         df = mock_df.uni_dim_single_metric_df
@@ -582,16 +657,18 @@ class HighChartsPieChartTests(BaseHighchartsTransformerTests):
         df = mock_df.time_dim_single_metric_df
         result = self.hc_tx.transform(df, mock_df.time_dim_single_metric_schema)
         result_series = result['series'][0]
-        self.assertEqual(result_series, {'data': [
-            ('2000-01-01 00:00:00', 0),
-            ('2000-01-02 00:00:00', 1),
-            ('2000-01-03 00:00:00', 2),
-            ('2000-01-04 00:00:00', 3),
-            ('2000-01-05 00:00:00', 4),
-            ('2000-01-06 00:00:00', 5),
-            ('2000-01-07 00:00:00', 6),
-            ('2000-01-08 00:00:00', 7),
-        ], 'name': 'One'})
+        self.assertEqual(result_series, {
+            'data': [
+                ('2000-01-01 00:00:00', 0),
+                ('2000-01-02 00:00:00', 1),
+                ('2000-01-03 00:00:00', 2),
+                ('2000-01-04 00:00:00', 3),
+                ('2000-01-05 00:00:00', 4),
+                ('2000-01-06 00:00:00', 5),
+                ('2000-01-07 00:00:00', 6),
+                ('2000-01-08 00:00:00', 7),
+            ], 'name': 'One'
+        })
 
     def test_cat_cat_and_a_single_metric(self):
         # Tests transformation of two categorical dimensions with a single metric
@@ -607,25 +684,27 @@ class HighChartsPieChartTests(BaseHighchartsTransformerTests):
         result = self.hc_tx.transform(df, mock_df.cont_cat_uni_dims_multi_metric_schema)
         result_series = result['series'][0]
         self.assertEqual(result_series,
-                         {'data': [('(0, A, Aa)', 0.0), ('(0, A, Bb)', 1.0), ('(0, A, Cc)', 2.0),
-                                   ('(0, B, Aa)', 3.0),
-                                   ('(0, B, Bb)', 4.0), ('(0, B, Cc)', 5.0), ('(1, A, Aa)', 6.0),
-                                   ('(1, A, Bb)', 7.0),
-                                   ('(1, A, Cc)', 8.0), ('(1, B, Aa)', 9.0), ('(1, B, Bb)', 10.0),
-                                   ('(1, B, Cc)', 11.0),
-                                   ('(2, A, Aa)', 12.0), ('(2, A, Bb)', 13.0), ('(2, A, Cc)', 14.0),
-                                   ('(2, B, Aa)', 15.0), ('(2, B, Bb)', 16.0), ('(2, B, Cc)', 17.0),
-                                   ('(3, A, Aa)', 18.0), ('(3, A, Bb)', 19.0), ('(3, A, Cc)', 20.0),
-                                   ('(3, B, Aa)', 21.0), ('(3, B, Bb)', 22.0), ('(3, B, Cc)', 23.0),
-                                   ('(4, A, Aa)', 24.0), ('(4, A, Bb)', 25.0), ('(4, A, Cc)', 26.0),
-                                   ('(4, B, Aa)', 27.0), ('(4, B, Bb)', 28.0), ('(4, B, Cc)', 29.0),
-                                   ('(5, A, Aa)', 30.0), ('(5, A, Bb)', 31.0), ('(5, A, Cc)', 32.0),
-                                   ('(5, B, Aa)', 33.0), ('(5, B, Bb)', 34.0), ('(5, B, Cc)', 35.0),
-                                   ('(6, A, Aa)', 36.0), ('(6, A, Bb)', 37.0), ('(6, A, Cc)', 38.0),
-                                   ('(6, B, Aa)', 39.0), ('(6, B, Bb)', 40.0), ('(6, B, Cc)', 41.0),
-                                   ('(7, A, Aa)', 42.0), ('(7, A, Bb)', 43.0), ('(7, A, Cc)', 44.0),
-                                   ('(7, B, Aa)', 45.0), ('(7, B, Bb)', 46.0), ('(7, B, Cc)', 47.0)],
-                          'name': 'One'})
+                         {
+                             'data': [('(0, A, Aa)', 0.0), ('(0, A, Bb)', 1.0), ('(0, A, Cc)', 2.0),
+                                      ('(0, B, Aa)', 3.0),
+                                      ('(0, B, Bb)', 4.0), ('(0, B, Cc)', 5.0), ('(1, A, Aa)', 6.0),
+                                      ('(1, A, Bb)', 7.0),
+                                      ('(1, A, Cc)', 8.0), ('(1, B, Aa)', 9.0), ('(1, B, Bb)', 10.0),
+                                      ('(1, B, Cc)', 11.0),
+                                      ('(2, A, Aa)', 12.0), ('(2, A, Bb)', 13.0), ('(2, A, Cc)', 14.0),
+                                      ('(2, B, Aa)', 15.0), ('(2, B, Bb)', 16.0), ('(2, B, Cc)', 17.0),
+                                      ('(3, A, Aa)', 18.0), ('(3, A, Bb)', 19.0), ('(3, A, Cc)', 20.0),
+                                      ('(3, B, Aa)', 21.0), ('(3, B, Bb)', 22.0), ('(3, B, Cc)', 23.0),
+                                      ('(4, A, Aa)', 24.0), ('(4, A, Bb)', 25.0), ('(4, A, Cc)', 26.0),
+                                      ('(4, B, Aa)', 27.0), ('(4, B, Bb)', 28.0), ('(4, B, Cc)', 29.0),
+                                      ('(5, A, Aa)', 30.0), ('(5, A, Bb)', 31.0), ('(5, A, Cc)', 32.0),
+                                      ('(5, B, Aa)', 33.0), ('(5, B, Bb)', 34.0), ('(5, B, Cc)', 35.0),
+                                      ('(6, A, Aa)', 36.0), ('(6, A, Bb)', 37.0), ('(6, A, Cc)', 38.0),
+                                      ('(6, B, Aa)', 39.0), ('(6, B, Bb)', 40.0), ('(6, B, Cc)', 41.0),
+                                      ('(7, A, Aa)', 42.0), ('(7, A, Bb)', 43.0), ('(7, A, Cc)', 44.0),
+                                      ('(7, B, Aa)', 45.0), ('(7, B, Bb)', 46.0), ('(7, B, Cc)', 47.0)],
+                             'name': 'One'
+                         })
 
     def test_unique_dim_single_metric_pretty_tooltip(self):
         # Tests transformation of a single metrics and a unique dimension with correct tooltip

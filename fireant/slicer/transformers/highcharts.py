@@ -1,12 +1,18 @@
 # coding: utf-8
+from collections import Counter
+
 import numpy as np
 import pandas as pd
 
-from collections import Counter
-
-from fireant import settings, utils
+from fireant import (
+    settings,
+    utils,
+)
 from fireant.slicer.operations import Totals
-from .base import Transformer, TransformationException
+from .base import (
+    TransformationException,
+    Transformer,
+)
 
 COLORS = {
     'kayak': ['#FF690F', '#3083F0', '#00B86B', '#D10244', '#FFDBE5', '#7B4F4B', '#B903AA', '#B05B6F'],
@@ -155,7 +161,7 @@ class HighchartsLineTransformer(Transformer):
             'data': self._format_data(item),
             'tooltip': self._format_tooltip(display_schema['metrics'][metric_key]),
             'yAxis': display_schema['metrics'][metric_key].get('axis', 0)
-                     if not reference else self._reference_axes_id(reference),
+            if not reference else self._reference_axes_id(reference),
             'color': color,
             'dashStyle': 'Dot' if reference else 'Solid'
         }
@@ -215,9 +221,10 @@ class HighchartsLineTransformer(Transformer):
         dimension_labels = [self._format_dimension_display(dim_ordinal, key, dimension, idx)
                             for key, dimension in list(display_schema['dimensions'].items())[1:]]
 
-        dimension_labels = [dimension_label  # filter out the Totals
-                            for dimension_label in dimension_labels
-                            if dimension_label and dimension_label is not Totals.label]
+        # filter out the Totals
+        dimension_labels = [dimension_label for dimension_label in dimension_labels
+                            if (dimension_label or dimension_label is False)
+                            and dimension_label is not Totals.label]
 
         return (
             '{metric} ({dimensions})'.format(
@@ -238,6 +245,9 @@ class HighchartsLineTransformer(Transformer):
             return idx[dim_ordinal[display_field]]
 
         dimension_value = idx[dim_ordinal[key]]
+
+        if pd.isnull(dimension_value) or dimension_value == '':
+            dimension_value = 'Null'
 
         if 'display_options' in dimension:
             dimension_value = dimension['display_options'].get(dimension_value, dimension_value)
@@ -342,7 +352,7 @@ class HighchartsColumnTransformer(HighchartsLineTransformer):
             'data': self._format_data(item),
             'tooltip': self._format_tooltip(display_schema['metrics'][metric_key]),
             'yAxis': display_schema['metrics'][metric_key].get('axis', 0)
-                     if not reference else self._reference_axes_id(reference),
+            if not reference else self._reference_axes_id(reference),
             'color': color
         }
 
