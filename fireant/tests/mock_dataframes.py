@@ -60,10 +60,10 @@ cont_cat_uni_idx = pd.MultiIndex.from_product([cont_idx, cat1_idx, uni_idx.level
 
 # Mock DF with single metric column and no dimension
 no_dims_single_metric_df = pd.DataFrame(
-        np.array([
-            np.arange(1),
-        ]),
-        columns=['one'],
+    np.array([
+        np.arange(1),
+    ]),
+    columns=['one'],
 )
 no_dims_single_metric_schema = {
     'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'})]),
@@ -72,10 +72,10 @@ no_dims_single_metric_schema = {
 
 # Mock DF with single continuous dimension and one metric column
 no_dims_multi_metric_df = pd.DataFrame(
-        np.array([
-            np.arange(8),
-        ]),
-        columns=['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'],
+    np.array([
+        np.arange(8),
+    ]),
+    columns=['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'],
 )
 no_dims_multi_metric_schema = {
     'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'}), ('two', {'axis': 0, 'label': 'Two'}),
@@ -87,11 +87,11 @@ no_dims_multi_metric_schema = {
 
 # Mock DF with single continuous dimension and one metric column
 cont_dim_single_metric_df = pd.DataFrame(
-        np.array([
-            np.arange(8),
-        ]).T,
-        columns=['one'],
-        index=cont_idx
+    np.array([
+        np.arange(8),
+    ]).T,
+    columns=['one'],
+    index=cont_idx
 )
 cont_dim_single_metric_schema = {
     'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'})]),
@@ -100,12 +100,12 @@ cont_dim_single_metric_schema = {
 
 # Mock DF with single continuous dimension and two metric columns
 cont_dim_multi_metric_df = pd.DataFrame(
-        np.array([
-            np.arange(8),
-            2 * np.arange(8),
-        ]).T,
-        columns=['one', 'two'],
-        index=cont_idx
+    np.array([
+        np.arange(8),
+        2 * np.arange(8),
+    ]).T,
+    columns=['one', 'two'],
+    index=cont_idx
 )
 cont_dim_multi_metric_schema = {
     'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'}), ('two', {'axis': 0, 'label': 'Two'})]),
@@ -114,11 +114,11 @@ cont_dim_multi_metric_schema = {
 
 # Mock DF with single unique dimension and one metric column
 uni_dim_single_metric_df = pd.DataFrame(
-        np.array([
-            np.arange(3),
-        ]).T,
-        columns=['one'],
-        index=uni_idx
+    np.array([
+        np.arange(3),
+    ]).T,
+    columns=['one'],
+    index=uni_idx
 )
 uni_dim_single_metric_schema = {
     'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'})]),
@@ -127,12 +127,12 @@ uni_dim_single_metric_schema = {
 
 # Mock DF with single unique dimension and two metric columns
 uni_dim_multi_metric_df = pd.DataFrame(
-        np.array([
-            np.arange(3),
-            2 * np.arange(3),
-        ]).T,
-        columns=['one', 'two'],
-        index=uni_idx
+    np.array([
+        np.arange(3),
+        2 * np.arange(3),
+    ]).T,
+    columns=['one', 'two'],
+    index=uni_idx
 )
 uni_dim_multi_metric_schema = {
     'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'}), ('two', {'axis': 0, 'label': 'Two'})]),
@@ -141,9 +141,9 @@ uni_dim_multi_metric_schema = {
 
 # Mock DF with single unique dimension and a single metric columns with pretty prefix/suffix/precision settings
 uni_dim_pretty_df = pd.DataFrame(
-        np.array([np.arange(3)]).T,
-        columns=['pretty'],
-        index=uni_idx
+    np.array([np.arange(3)]).T,
+    columns=['pretty'],
+    index=uni_idx
 )
 uni_dim_pretty_schema = {
     'metrics': OrderedDict([('pretty', {'axis': 0, 'label': 'One', 'prefix': '!', 'suffix': '~', 'precision': 1})]),
@@ -152,11 +152,11 @@ uni_dim_pretty_schema = {
 
 # Mock DF with single categorical dimension and one metric column
 cat_dim_single_metric_df = pd.DataFrame(
-        np.array([
-            np.arange(2),
-        ]).T,
-        columns=['one'],
-        index=cat1_idx
+    np.array([
+        np.arange(2),
+    ]).T,
+    columns=['one'],
+    index=cat1_idx
 )
 cat_dim_single_metric_schema = {
     'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'})]),
@@ -165,12 +165,12 @@ cat_dim_single_metric_schema = {
 
 # Mock DF with single categorical dimension and two metric columns
 cat_dim_multi_metric_df = pd.DataFrame(
-        np.array([
-            np.arange(2),
-            2 * np.arange(2),
-        ]).T,
-        columns=['one', 'two'],
-        index=cat1_idx
+    np.array([
+        np.arange(2),
+        2 * np.arange(2),
+    ]).T,
+    columns=['one', 'two'],
+    index=cat1_idx
 )
 cat_dim_multi_metric_schema = {
     'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'}), ('two', {'axis': 0, 'label': 'Two'})]),
@@ -179,23 +179,23 @@ cat_dim_multi_metric_schema = {
 
 # Mock DF with single continuous time dimension and one metric column
 time_dim_single_metric_df = pd.DataFrame(
-        np.array([
-            np.arange(8),
-        ]).T,
-        columns=['one'],
-        index=datetime_idx
+    np.array([
+        np.arange(8),
+    ]).T,
+    columns=['one'],
+    index=datetime_idx
 )
 time_dim_single_metric_schema = {
     'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'})]),
     'dimensions': OrderedDict([('date', datetime_dim)])
 }
 time_dim_single_metric_ref_df = pd.DataFrame(
-        np.array([
-            np.arange(8),
-            2 * np.arange(8),
-        ]).T,
-        columns=[['', 'wow'], ['one', 'one']],
-        index=datetime_idx
+    np.array([
+        np.arange(8),
+        2 * np.arange(8),
+    ]).T,
+    columns=[['', 'wow'], ['one', 'one']],
+    index=datetime_idx
 )
 time_dim_single_metric_ref_schema = {
     'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'})]),
@@ -205,11 +205,11 @@ time_dim_single_metric_ref_schema = {
 
 # Mock DF with continuous and categorical dimensions and one metric column
 cont_cat_dims_single_metric_df = pd.DataFrame(
-        np.array([
-            np.arange(16),
-        ]).T,
-        columns=['one'],
-        index=cont_cat_idx
+    np.array([
+        np.arange(16),
+    ]).T,
+    columns=['one'],
+    index=cont_cat_idx
 )
 cont_cat_dims_single_metric_schema = {
     'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'})]),
@@ -218,12 +218,12 @@ cont_cat_dims_single_metric_schema = {
 
 # Mock DF with continuous and categorical dimensions and two metric columns
 cont_cat_dims_multi_metric_df = pd.DataFrame(
-        np.array([
-            np.arange(16),
-            2 * np.arange(16),
-        ]).T,
-        columns=['one', 'two'],
-        index=cont_cat_idx
+    np.array([
+        np.arange(16),
+        2 * np.arange(16),
+    ]).T,
+    columns=['one', 'two'],
+    index=cont_cat_idx
 )
 cont_cat_dims_multi_metric_schema = {
     'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'}), ('two', {'axis': 0, 'label': 'Two'})]),
@@ -232,11 +232,11 @@ cont_cat_dims_multi_metric_schema = {
 
 # Mock DF with continuous and boolean dimensions and one metric column
 cont_bool_dims_single_metric_df = pd.DataFrame(
-        np.array([
-            np.arange(24),
-        ]).T,
-        columns=['one'],
-        index=cont_bool_idx
+    np.array([
+        np.arange(24),
+    ]).T,
+    columns=['one'],
+    index=cont_bool_idx
 )
 cont_bool_dims_single_metric_schema = {
     'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'})]),
@@ -245,12 +245,12 @@ cont_bool_dims_single_metric_schema = {
 
 # Mock DF with continuous and boolean dimensions and two metric columns
 cont_bool_dims_multi_metric_df = pd.DataFrame(
-        np.array([
-            np.arange(24),
-            2 * np.arange(24),
-        ]).T,
-        columns=['one', 'two'],
-        index=cont_bool_idx
+    np.array([
+        np.arange(24),
+        2 * np.arange(24),
+    ]).T,
+    columns=['one', 'two'],
+    index=cont_bool_idx
 )
 cont_bool_dims_multi_metric_schema = {
     'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'}), ('two', {'axis': 0, 'label': 'Two'})]),
@@ -259,9 +259,9 @@ cont_bool_dims_multi_metric_schema = {
 
 # Mock DF with continuous and unique dimensions and two metric columns
 _cont_uni = pd.DataFrame(
-        np.array([np.arange(24), np.arange(100, 124)]).T,
-        columns=['one', 'two'],
-        index=cont_uni_idx
+    np.array([np.arange(24), np.arange(100, 124)]).T,
+    columns=['one', 'two'],
+    index=cont_uni_idx
 )
 _cont_uni['uni_label'] = None
 for uni_id, label in uni_idx:
@@ -283,11 +283,11 @@ cont_uni_dims_single_metric_schema = {
 
 # Mock DF with two categorical dimensions and one metric column
 cat_cat_dims_single_metric_df = pd.DataFrame(
-        np.array([
-            np.arange(4),
-        ]).T,
-        columns=['one'],
-        index=cat_cat_idx,
+    np.array([
+        np.arange(4),
+    ]).T,
+    columns=['one'],
+    index=cat_cat_idx,
 )
 
 cat_cat_dims_single_metric_empty_df = pd.DataFrame([], columns=['one'],
@@ -300,12 +300,12 @@ cat_cat_dims_single_metric_schema = {
 
 # Mock DF with two categorical dimensions and two metric columns
 cat_cat_dims_multi_metric_df = pd.DataFrame(
-        np.array([
-            np.arange(4),
-            2 * np.arange(4),
-        ]).T,
-        columns=['one', 'two'],
-        index=cat_cat_idx,
+    np.array([
+        np.arange(4),
+        2 * np.arange(4),
+    ]).T,
+    columns=['one', 'two'],
+    index=cat_cat_idx,
 )
 cat_cat_dims_multi_metric_schema = {
     'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'}), ('two', {'axis': 0, 'label': 'Two'})]),
@@ -314,12 +314,12 @@ cat_cat_dims_multi_metric_schema = {
 
 # Mock DF with continuous and two categorical dimensions and two metric columns
 cont_cat_cat_dims_multi_metric_df = pd.DataFrame(
-        np.array([
-            np.arange(32),
-            2 * np.arange(32),
-        ]).T,
-        columns=['one', 'two'],
-        index=cont_cat_cat_idx
+    np.array([
+        np.arange(32),
+        2 * np.arange(32),
+    ]).T,
+    columns=['one', 'two'],
+    index=cont_cat_cat_idx
 )
 cont_cat_cat_dims_multi_metric_schema = {
     'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'}), ('two', {'axis': 0, 'label': 'Two'})]),
@@ -328,9 +328,9 @@ cont_cat_cat_dims_multi_metric_schema = {
 
 # Mock DF with continuous and two categorical dimensions and two metric columns
 _cont_cat_uni = pd.DataFrame(
-        np.array([np.arange(48), np.arange(100, 148)]).T,
-        columns=['one', 'two'],
-        index=cont_cat_uni_idx
+    np.array([np.arange(48), np.arange(100, 148)]).T,
+    columns=['one', 'two'],
+    index=cont_cat_uni_idx
 )
 _cont_cat_uni['uni_label'] = None
 for uni_id, label in uni_idx:
@@ -344,12 +344,12 @@ cont_cat_uni_dims_multi_metric_schema = {
 
 # Mock DF with continuous and two categorical dimensions and two metric columns using rollup for totals
 rollup_cont_cat_cat_dims_multi_metric_df = pd.DataFrame(
-        np.array([
-            np.arange(32),
-            2 * np.arange(32),
-        ]).T,
-        columns=['one', 'two'],
-        index=cont_cat_cat_idx
+    np.array([
+        np.arange(32),
+        2 * np.arange(32),
+    ]).T,
+    columns=['one', 'two'],
+    index=cont_cat_cat_idx
 )
 rollup_cont_cat_cat_dims_multi_metric_df = rollup(rollup_cont_cat_cat_dims_multi_metric_df, [0, 1])
 rollup_cont_cat_cat_dims_multi_metric_df = rollup(rollup_cont_cat_cat_dims_multi_metric_df, [0])
@@ -368,9 +368,9 @@ rollup_cont_cat_uni_dims_multi_metric_schema = {
 
 # Mock DF with single continuous dimension and two metric columns
 cont_dim_pretty_df = pd.DataFrame(
-        np.array([0.12345, 0.23456, 0.34567, 0.45678, 0.56789, 0.67891, 0.78912, 0.89123]).T,
-        columns=['pretty'],
-        index=cont_idx
+    np.array([0.12345, 0.23456, 0.34567, 0.45678, 0.56789, 0.67891, 0.78912, 0.89123]).T,
+    columns=['pretty'],
+    index=cont_idx
 )
 cont_dim_pretty_schema = {
     'metrics': OrderedDict([('pretty', {'axis': 0, 'label': 'One', 'prefix': '!', 'suffix': '~', 'precision': 1})]),
