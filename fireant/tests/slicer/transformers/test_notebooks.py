@@ -1,10 +1,19 @@
 # coding: utf-8
 from datetime import datetime
 from unittest import TestCase
-from mock import patch, ANY, call, MagicMock
+
+from mock import (
+    ANY,
+    MagicMock,
+    call,
+    patch,
+)
 
 from fireant.slicer.operations import Totals
-from fireant.slicer.transformers import PandasRowIndexTransformer, TransformationException
+from fireant.slicer.transformers import (
+    PandasRowIndexTransformer,
+    TransformationException,
+)
 from fireant.tests import mock_dataframes as mock_df
 
 
@@ -132,6 +141,17 @@ class PandasRowIndexTransformerTests(TestCase):
                               344, 82, 40, 42, 90, 44, 46,
                               408, 98, 48, 50, 106, 52, 54,
                               472, 114, 56, 58, 122, 60, 62], list(result['Two']))
+
+    def test_empty_dataframe_is_handled(self):
+        df = mock_df.cat_cat_dims_single_metric_empty_df
+
+        result = self.pd_tx.transform(df, mock_df.cat_cat_dims_single_metric_schema)
+
+        self.assertTrue(result.empty)
+        self.assertEqual(result.index.names, ['Cat1', 'Cat2'])
+        self.assertEqual(list(result.index.levels[0]), [])
+        self.assertEqual(list(result.index.levels[1]), [])
+        self.assertEqual(list(result.columns), ['One'])
 
 
 class PandasColumnIndexTransformerTests(TestCase):
