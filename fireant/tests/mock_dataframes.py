@@ -289,6 +289,10 @@ cat_cat_dims_single_metric_df = pd.DataFrame(
     columns=['one'],
     index=cat_cat_idx,
 )
+
+cat_cat_dims_single_metric_empty_df = pd.DataFrame([], columns=['one'],
+                                                   index=pd.MultiIndex([[], []], [[], []], names=['cat1', 'cat2']))
+
 cat_cat_dims_single_metric_schema = {
     'metrics': OrderedDict([('one', {'axis': 0, 'label': 'One'})]),
     'dimensions': OrderedDict([('cat1', cat1_dim), ('cat2', cat2_dim)])

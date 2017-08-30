@@ -28,12 +28,18 @@ class PandasRowIndexTransformer(Transformer):
         return dataframe
 
     def _set_display_options(self, dataframe, display_schema):
+        """
+        Replaces the dimension options with those that the user has specified manually e.g. change 'm' to 'mobile'
+        """
         dataframe = dataframe.copy()
 
         for key, dimension in display_schema['dimensions'].items():
             if 'display_options' in dimension:
                 display_values = [dimension['display_options'].get(value, value)
                                   for value in dataframe.index.get_level_values(key).unique()]
+
+                if not display_values:
+                    continue
 
                 if isinstance(dataframe.index, pd.MultiIndex):
                     dataframe.index.set_levels(display_values, key, inplace=True)
@@ -65,6 +71,7 @@ class PandasRowIndexTransformer(Transformer):
             dataframe.columns = labels
 
         return dataframe
+
 
 class PandasColumnIndexTransformer(PandasRowIndexTransformer):
     def transform(self, dataframe, display_schema):
