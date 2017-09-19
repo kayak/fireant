@@ -92,17 +92,15 @@ class HighchartsLineTransformer(Transformer):
         else:
             series = self._make_series(dataframe, dim_ordinal, display_schema)
 
-        result = {
+        return {
             'chart': {'type': self.chart_type, 'zoomType': 'x'},
             'title': {'text': None},
             'plotOptions': {},
             'xAxis': self.xaxis_options(dataframe, dim_ordinal, display_schema),
             'yAxis': self.yaxis_options(dataframe, dim_ordinal, display_schema),
-            'tooltip': {'shared': True},
+            'tooltip': {'shared': True, 'useHTML': True},
             'series': series
         }
-
-        return result
 
     def xaxis_options(self, dataframe, dim_ordinal, display_schema):
         return {
@@ -514,11 +512,13 @@ class HighchartsPieTransformer(HighchartsLineTransformer):
                                           'Current number of data points: {}.'.format(max_data_points, num_data_points))
 
         metric_key = self._get_metric_key(dataframe)
+        tooltip = self._format_tooltip(display_schema['metrics'][metric_key])
+        tooltip['useHTML'] = True
 
         result = {
             'chart': {'type': self.chart_type},
             'title': {'text': None},
-            'tooltip': self._format_tooltip(display_schema['metrics'][metric_key]),
+            'tooltip': tooltip,
             'series': [series],
             'plotOptions': {
                 'pie': {
