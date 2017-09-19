@@ -5,15 +5,16 @@ import time
 from itertools import chain
 
 import pandas as pd
+from pypika import (
+    JoinType,
+    MySQLQuery,
+)
+
 from fireant import utils
 from fireant.slicer.references import (
     Delta,
     DeltaPercentage,
     YoY,
-)
-from pypika import (
-    JoinType,
-    MySQLQuery,
 )
 
 query_logger = logging.getLogger('fireant.query_log$')
@@ -129,7 +130,7 @@ class QueryManager(object):
             raise QueryNotSupportedError("MySQL currently doesn't support ROLLUP operations!")
 
         query = self._build_data_query(
-                database, table, joins, metrics, dimensions, dfilters, mfilters, references, rollup, pagination
+            database, table, joins, metrics, dimensions, dfilters, mfilters, references, rollup, pagination
         )
 
         dataframe = self._get_dataframe_from_query(database, query)
@@ -145,8 +146,8 @@ class QueryManager(object):
 
         if dimensions:
             dataframe = dataframe.set_index(
-                    # Removed the reference keys for now
-                    list(dimensions.keys())  # + ['{1}_{0}'.format(*ref) for ref in references.items()]
+                # Removed the reference keys for now
+                list(dimensions.keys())  # + ['{1}_{0}'.format(*ref) for ref in references.items()]
             )
 
         if references:
@@ -170,8 +171,8 @@ class QueryManager(object):
         dataframe = database.fetch_dataframe(query_string)
 
         query_logger.info('[duration: {duration} seconds]: {query}'.format(
-                duration=round(time.time() - start_time, 4),
-                query=query_string)
+            duration=round(time.time() - start_time, 4),
+            query=query_string)
         )
 
         return dataframe
@@ -230,8 +231,18 @@ class QueryManager(object):
 
             # The interval term from pypika does not take into account leap years, therefore the interval
             # needs to be replaced with a database specific one when appropriate.
-            if reference_key in [YoY.key, Delta.generate_key(YoY.key), DeltaPercentage.generate_key(YoY.key)]:
+            yoy_keys = [YoY.key, Delta.generate_key(YoY.key), DeltaPercentage.generate_key(YoY.key)]
+            if reference_key in yoy_keys:
                 interval = database.interval(years=1)
+
+                # If YoY reference is used with the week interval, the dates will fail to match in the join
+                # as the first day of the ISO year is different. Therefore, we truncate the reference date by adding
+                # a year, truncating it and removing a year so the dates match.
+                from fireant.slicer import DatetimeDimension
+                week = DatetimeDimension.week
+                dim = dimensions[dimension_key]
+                if hasattr(dim, 'date_format') and dim.date_format in [week, database.DATETIME_INTERVALS[week].size]:
+                    dimensions[dimension_key] = database.trunc_date(dim.field + interval, 'week') - interval
 
             schema['interval'] = interval
 
@@ -259,8 +270,8 @@ class QueryManager(object):
                 get_reference_field = lambda key: ref_query.field(key)
 
             wrapper_query = wrapper_query.select(
-                    *[get_reference_field(key).as_(self._suffix(key, reference_key))
-                      for key in metrics.keys()]
+                *[get_reference_field(key).as_(self._suffix(key, reference_key))
+                  for key in metrics.keys()]
             )
 
         if pagination:
@@ -386,7 +397,7 @@ class QueryManager(object):
         ref_join_criteria = []
         if dimension_key in dimensions:
             ref_join_criteria.append(
-                    query.field(dimension_key) == ref_query.field(dimension_key) + interval
+                query.field(dimension_key) == ref_query.field(dimension_key) + interval
             )
 
         # The below set is sorted to ensure that the ON part of the join is always consistently ordered
