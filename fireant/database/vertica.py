@@ -1,8 +1,5 @@
 # coding: utf-8
-from pypika import (
-    VerticaQuery,
-    terms,
-)
+from pypika import terms, VerticaQuery
 
 from fireant.database import Database
 from fireant.slicer import DatetimeInterval
@@ -15,11 +12,6 @@ class Trunc(terms.Function):
 
     def __init__(self, field, date_format, alias=None):
         super(Trunc, self).__init__('TRUNC', field, date_format, alias=alias)
-        # TODO fix pypika Function to expose kwargs (only args are exposed, which is more hacky to access).
-        # Therefore setting the fields here means we can access the TRUNC args by name.
-        self.field = field
-        self.date_format = date_format
-        self.alias = alias
 
 
 class Interval(terms.Interval):
@@ -61,7 +53,7 @@ class Interval(terms.Interval):
             # This has day as its maximum interval granularity, so it does not take into account leap years.
             query = 'INTERVAL \'{expr} {unit}\''
 
-        return query.format(expr=expr, unit=unit)
+        return query.format(expr=expr,  unit=unit)
 
 
 class VerticaDatabase(Database):
@@ -70,15 +62,6 @@ class VerticaDatabase(Database):
     """
     # The pypika query class to use for constructing queries
     query_cls = VerticaQuery
-
-    DATETIME_INTERVALS = {
-        'hour': DatetimeInterval('HH'),
-        'day': DatetimeInterval('DD'),
-        'week': DatetimeInterval('IW'),
-        'month': DatetimeInterval('MM'),
-        'quarter': DatetimeInterval('Q'),
-        'year': DatetimeInterval('Y')
-    }
 
     def __init__(self, host='localhost', port=5433, database='vertica',
                  user='vertica', password=None,
@@ -100,7 +83,16 @@ class VerticaDatabase(Database):
         )
 
     def trunc_date(self, field, interval):
-        interval = self.DATETIME_INTERVALS[interval]
+        datetime_intervals = {
+            'hour': DatetimeInterval('HH'),
+            'day': DatetimeInterval('DD'),
+            'week': DatetimeInterval('IW'),
+            'month': DatetimeInterval('MM'),
+            'quarter': DatetimeInterval('Q'),
+            'year': DatetimeInterval('Y')
+        }
+
+        interval = datetime_intervals[interval]
         return Trunc(field, interval.size)
 
     def interval(self, **kwargs):

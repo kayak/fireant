@@ -76,48 +76,48 @@ class ExampleTests(QueryTests):
         """
         dt = self.mock_table.dt
         query = self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[
-                (self.mock_join1, self.mock_table.join1_id == self.mock_join1.id, JoinType.inner),
-                (self.mock_join2, self.mock_table.join2_id == self.mock_join2.id, JoinType.left),
-            ],
-            metrics=OrderedDict([
-                # Examples using a field of a table
-                ('foo', fn.Sum(self.mock_table.foo)),
+                database=settings.database,
+                table=self.mock_table,
+                joins=[
+                    (self.mock_join1, self.mock_table.join1_id == self.mock_join1.id, JoinType.inner),
+                    (self.mock_join2, self.mock_table.join2_id == self.mock_join2.id, JoinType.left),
+                ],
+                metrics=OrderedDict([
+                    # Examples using a field of a table
+                    ('foo', fn.Sum(self.mock_table.foo)),
 
-                # Examples using a field of a table
-                ('bar', fn.Avg(self.mock_join1.bar)),
+                    # Examples using a field of a table
+                    ('bar', fn.Avg(self.mock_join1.bar)),
 
-                # Example using functions and Arithmetic
-                ('ratio', fn.Sum(self.mock_table.numerator) / fn.Sum(self.mock_table.denominator)),
-            ]),
-            dimensions=OrderedDict([
-                # Example of using a continuous datetime dimension, where the values are truncated to the nearest day
-                ('date', settings.database.trunc_date(dt, 'day')),
+                    # Example using functions and Arithmetic
+                    ('ratio', fn.Sum(self.mock_table.numerator) / fn.Sum(self.mock_table.denominator)),
+                ]),
+                dimensions=OrderedDict([
+                    # Example of using a continuous datetime dimension, where the values are truncated to the nearest day
+                    ('date', settings.database.trunc_date(dt, 'day')),
 
-                # Example of using a categorical dimension from a joined table
-                ('fiz', self.mock_join2.fiz),
-            ]),
-            mfilters=[
-                fn.Sum(self.mock_join2.buz) > 100
-            ],
-            dfilters=[
-                # Example of filtering the query to a date range
-                dt[date(2016, 1, 1):date(2016, 12, 31)],
+                    # Example of using a categorical dimension from a joined table
+                    ('fiz', self.mock_join2.fiz),
+                ]),
+                mfilters=[
+                    fn.Sum(self.mock_join2.buz) > 100
+                ],
+                dfilters=[
+                    # Example of filtering the query to a date range
+                    dt[date(2016, 1, 1):date(2016, 12, 31)],
 
-                # Example of filtering the query to certain categories
-                self.mock_join2.fiz.isin(['a', 'b', 'c']),
-            ],
-            references=OrderedDict([
-                # Example of adding a Week-over-Week comparison to the query
-                (references.WoW.key, {
-                    'dimension': 'date', 'definition': dt,
-                    'interval': references.WoW.interval,
-                })
-            ]),
-            rollup=[],
-            pagination=None,
+                    # Example of filtering the query to certain categories
+                    self.mock_join2.fiz.isin(['a', 'b', 'c']),
+                ],
+                references=OrderedDict([
+                    # Example of adding a Week-over-Week comparison to the query
+                    (references.WoW.key, {
+                        'dimension': 'date', 'definition': dt,
+                        'interval': references.WoW.interval,
+                    })
+                ]),
+                rollup=[],
+                pagination=None,
         )
 
         self.assertEqual('SELECT '
@@ -167,19 +167,19 @@ class ExampleTests(QueryTests):
 class MetricsTests(QueryTests):
     def test_metrics(self):
         query = self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[],
-            metrics=OrderedDict([
-                ('clicks', fn.Sum(self.mock_table.clicks)),
-                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
-            ]),
-            dimensions={},
-            mfilters=[],
-            dfilters=[],
-            references={},
-            rollup=[],
-            pagination=None,
+                database=settings.database,
+                table=self.mock_table,
+                joins=[],
+                metrics=OrderedDict([
+                    ('clicks', fn.Sum(self.mock_table.clicks)),
+                    ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
+                ]),
+                dimensions={},
+                mfilters=[],
+                dfilters=[],
+                references={},
+                rollup=[],
+                pagination=None,
         )
 
         self.assertEqual('SELECT SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
@@ -187,89 +187,89 @@ class MetricsTests(QueryTests):
 
     def test_metrics_dimensions(self):
         query = self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[],
-            metrics=OrderedDict([
-                ('clicks', fn.Sum(self.mock_table.clicks)),
-                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
-            ]),
-            dimensions=OrderedDict([
-                ('device_type', self.mock_table.device_type)
-            ]),
-            mfilters=[],
-            dfilters=[],
-            references={},
-            rollup=[],
-            pagination=None,
+                database=settings.database,
+                table=self.mock_table,
+                joins=[],
+                metrics=OrderedDict([
+                    ('clicks', fn.Sum(self.mock_table.clicks)),
+                    ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
+                ]),
+                dimensions=OrderedDict([
+                    ('device_type', self.mock_table.device_type)
+                ]),
+                mfilters=[],
+                dfilters=[],
+                references={},
+                rollup=[],
+                pagination=None,
         )
 
         self.assertEqual(
-            'SELECT "device_type" "device_type",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-            'FROM "test_table" '
-            'GROUP BY "device_type" '
-            'ORDER BY "device_type"', str(query))
+                'SELECT "device_type" "device_type",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+                'FROM "test_table" '
+                'GROUP BY "device_type" '
+                'ORDER BY "device_type"', str(query))
 
     def test_metrics_filters(self):
         query = self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[],
-            metrics=OrderedDict([
-                ('clicks', fn.Sum(self.mock_table.clicks)),
-                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
-            ]),
-            dimensions=OrderedDict([
-                ('device_type', self.mock_table.device_type)
-            ]),
-            mfilters=[],
-            dfilters=[
-                self.mock_table.dt[date(2000, 1, 1):date(2001, 1, 1)]
-            ],
-            references={},
-            rollup=[],
-            pagination=None,
+                database=settings.database,
+                table=self.mock_table,
+                joins=[],
+                metrics=OrderedDict([
+                    ('clicks', fn.Sum(self.mock_table.clicks)),
+                    ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
+                ]),
+                dimensions=OrderedDict([
+                    ('device_type', self.mock_table.device_type)
+                ]),
+                mfilters=[],
+                dfilters=[
+                    self.mock_table.dt[date(2000, 1, 1):date(2001, 1, 1)]
+                ],
+                references={},
+                rollup=[],
+                pagination=None,
         )
 
         self.assertEqual(
-            'SELECT "device_type" "device_type",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-            'FROM "test_table" '
-            'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2001-01-01\' '
-            'GROUP BY "device_type" '
-            'ORDER BY "device_type"', str(query))
+                'SELECT "device_type" "device_type",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+                'FROM "test_table" '
+                'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2001-01-01\' '
+                'GROUP BY "device_type" '
+                'ORDER BY "device_type"', str(query))
 
     def test_metrics_dimensions_filters(self):
         query = self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[],
-            metrics=OrderedDict([
-                ('clicks', fn.Sum(self.mock_table.clicks)),
-                ('roi', (fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost))),
-            ]),
-            dimensions=OrderedDict([
-                ('device_type', self.mock_table.device_type),
-                ('locale', self.mock_table.locale),
-            ]),
-            mfilters=[],
-            dfilters=[
-                self.mock_table.locale.isin(['US', 'CA', 'UK'])
-            ],
-            references={},
-            rollup=[],
-            pagination=None,
+                database=settings.database,
+                table=self.mock_table,
+                joins=[],
+                metrics=OrderedDict([
+                    ('clicks', fn.Sum(self.mock_table.clicks)),
+                    ('roi', (fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost))),
+                ]),
+                dimensions=OrderedDict([
+                    ('device_type', self.mock_table.device_type),
+                    ('locale', self.mock_table.locale),
+                ]),
+                mfilters=[],
+                dfilters=[
+                    self.mock_table.locale.isin(['US', 'CA', 'UK'])
+                ],
+                references={},
+                rollup=[],
+                pagination=None,
         )
 
         self.assertEqual(
-            'SELECT '
-            '"device_type" "device_type",'
-            '"locale" "locale",'
-            'SUM("clicks") "clicks",'
-            'SUM("revenue")/SUM("cost") "roi" '
-            'FROM "test_table" '
-            'WHERE "locale" IN (\'US\',\'CA\',\'UK\') '
-            'GROUP BY "device_type","locale" '
-            'ORDER BY "device_type","locale"', str(query))
+                'SELECT '
+                '"device_type" "device_type",'
+                '"locale" "locale",'
+                'SUM("clicks") "clicks",'
+                'SUM("revenue")/SUM("cost") "roi" '
+                'FROM "test_table" '
+                'WHERE "locale" IN (\'US\',\'CA\',\'UK\') '
+                'GROUP BY "device_type","locale" '
+                'ORDER BY "device_type","locale"', str(query))
 
 
 class DimensionTests(QueryTests):
@@ -277,161 +277,161 @@ class DimensionTests(QueryTests):
         truncated_dt = settings.database.trunc_date(self.mock_table.dt, increment)
 
         return self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[],
-            metrics=OrderedDict([
-                ('clicks', fn.Sum(self.mock_table.clicks)),
-                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
-            ]),
-            dimensions=OrderedDict([
-                ('date', truncated_dt)
-            ]),
-            mfilters=[],
-            dfilters=[],
-            references={},
-            rollup=[],
-            pagination=None,
+                database=settings.database,
+                table=self.mock_table,
+                joins=[],
+                metrics=OrderedDict([
+                    ('clicks', fn.Sum(self.mock_table.clicks)),
+                    ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
+                ]),
+                dimensions=OrderedDict([
+                    ('date', truncated_dt)
+                ]),
+                mfilters=[],
+                dfilters=[],
+                references={},
+                rollup=[],
+                pagination=None,
         )
 
     def test_timeseries_hour(self):
         query = self._test_truncated_timeseries('hour')
 
         self.assertEqual(
-            'SELECT TRUNC("dt",\'HH\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-            'FROM "test_table" '
-            'GROUP BY TRUNC("dt",\'HH\') '
-            'ORDER BY TRUNC("dt",\'HH\')', str(query))
+                'SELECT TRUNC("dt",\'HH\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+                'FROM "test_table" '
+                'GROUP BY TRUNC("dt",\'HH\') '
+                'ORDER BY TRUNC("dt",\'HH\')', str(query))
 
     def test_timeseries_DD(self):
         query = self._test_truncated_timeseries('day')
 
         self.assertEqual(
-            'SELECT TRUNC("dt",\'DD\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-            'FROM "test_table" '
-            'GROUP BY TRUNC("dt",\'DD\') '
-            'ORDER BY TRUNC("dt",\'DD\')', str(query))
+                'SELECT TRUNC("dt",\'DD\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+                'FROM "test_table" '
+                'GROUP BY TRUNC("dt",\'DD\') '
+                'ORDER BY TRUNC("dt",\'DD\')', str(query))
 
     def test_timeseries_week(self):
         query = self._test_truncated_timeseries('week')
 
         self.assertEqual(
-            'SELECT TRUNC("dt",\'IW\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-            'FROM "test_table" '
-            'GROUP BY TRUNC("dt",\'IW\') '
-            'ORDER BY TRUNC("dt",\'IW\')', str(query))
+                'SELECT TRUNC("dt",\'IW\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+                'FROM "test_table" '
+                'GROUP BY TRUNC("dt",\'IW\') '
+                'ORDER BY TRUNC("dt",\'IW\')', str(query))
 
     def test_timeseries_month(self):
         query = self._test_truncated_timeseries('month')
 
         self.assertEqual(
-            'SELECT TRUNC("dt",\'MM\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-            'FROM "test_table" '
-            'GROUP BY TRUNC("dt",\'MM\') '
-            'ORDER BY TRUNC("dt",\'MM\')', str(query))
+                'SELECT TRUNC("dt",\'MM\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+                'FROM "test_table" '
+                'GROUP BY TRUNC("dt",\'MM\') '
+                'ORDER BY TRUNC("dt",\'MM\')', str(query))
 
     def test_timeseries_quarter(self):
         query = self._test_truncated_timeseries('quarter')
 
         self.assertEqual(
-            'SELECT TRUNC("dt",\'Q\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-            'FROM "test_table" '
-            'GROUP BY TRUNC("dt",\'Q\') '
-            'ORDER BY TRUNC("dt",\'Q\')', str(query))
+                'SELECT TRUNC("dt",\'Q\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+                'FROM "test_table" '
+                'GROUP BY TRUNC("dt",\'Q\') '
+                'ORDER BY TRUNC("dt",\'Q\')', str(query))
 
     def test_timeseries_year(self):
         query = self._test_truncated_timeseries('year')
 
         self.assertEqual(
-            'SELECT TRUNC("dt",\'Y\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-            'FROM "test_table" '
-            'GROUP BY TRUNC("dt",\'Y\') '
-            'ORDER BY TRUNC("dt",\'Y\')', str(query))
+                'SELECT TRUNC("dt",\'Y\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+                'FROM "test_table" '
+                'GROUP BY TRUNC("dt",\'Y\') '
+                'ORDER BY TRUNC("dt",\'Y\')', str(query))
 
     def test_multidimension_categorical(self):
         query = self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[],
-            metrics=OrderedDict([
-                ('clicks', fn.Sum(self.mock_table.clicks)),
-                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
-            ]),
-            dimensions=OrderedDict([
-                ('device_type', self.mock_table.device_type),
-                ('locale', self.mock_table.locale),
-            ]),
-            mfilters=[],
-            dfilters=[],
-            references={},
-            rollup=[],
-            pagination=None,
+                database=settings.database,
+                table=self.mock_table,
+                joins=[],
+                metrics=OrderedDict([
+                    ('clicks', fn.Sum(self.mock_table.clicks)),
+                    ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
+                ]),
+                dimensions=OrderedDict([
+                    ('device_type', self.mock_table.device_type),
+                    ('locale', self.mock_table.locale),
+                ]),
+                mfilters=[],
+                dfilters=[],
+                references={},
+                rollup=[],
+                pagination=None,
         )
 
         self.assertEqual(
-            'SELECT "device_type" "device_type","locale" "locale",'
-            'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-            'FROM "test_table" '
-            'GROUP BY "device_type","locale" '
-            'ORDER BY "device_type","locale"', str(query))
+                'SELECT "device_type" "device_type","locale" "locale",'
+                'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+                'FROM "test_table" '
+                'GROUP BY "device_type","locale" '
+                'ORDER BY "device_type","locale"', str(query))
 
     def test_multidimension_timeseries_categorical(self):
         truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'day')
         device_type = self.mock_table.device_type
 
         query = self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[],
-            metrics=OrderedDict([
-                ('clicks', fn.Sum(self.mock_table.clicks)),
-                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
-            ]),
-            dimensions=OrderedDict([
-                ('date', truncated_dt),
-                ('device_type', device_type),
-            ]),
-            mfilters=[],
-            dfilters=[],
-            references={},
-            rollup=[],
-            pagination=None,
+                database=settings.database,
+                table=self.mock_table,
+                joins=[],
+                metrics=OrderedDict([
+                    ('clicks', fn.Sum(self.mock_table.clicks)),
+                    ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
+                ]),
+                dimensions=OrderedDict([
+                    ('date', truncated_dt),
+                    ('device_type', device_type),
+                ]),
+                mfilters=[],
+                dfilters=[],
+                references={},
+                rollup=[],
+                pagination=None,
         )
 
         self.assertEqual(
-            'SELECT TRUNC("dt",\'DD\') "date","device_type" "device_type",'
-            'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-            'FROM "test_table" '
-            'GROUP BY TRUNC("dt",\'DD\'),"device_type" '
-            'ORDER BY TRUNC("dt",\'DD\'),"device_type"', str(query))
+                'SELECT TRUNC("dt",\'DD\') "date","device_type" "device_type",'
+                'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+                'FROM "test_table" '
+                'GROUP BY TRUNC("dt",\'DD\'),"device_type" '
+                'ORDER BY TRUNC("dt",\'DD\'),"device_type"', str(query))
 
     def test_metrics_with_joins(self):
         truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'day')
         locale = self.mock_table.locale
 
         query = self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[
-                (self.mock_join1, self.mock_table.hotel_id == self.mock_join1.hotel_id, JoinType.left),
-            ],
-            metrics=OrderedDict([
-                ('clicks', fn.Sum(self.mock_table.clicks)),
-                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
-                ('hotel_name', self.mock_join1.hotel_name),
-                ('hotel_address', self.mock_join1.address),
-                ('city_id', self.mock_join1.ctid),
-                ('city_name', self.mock_join1.city_name),
-            ]),
-            dimensions=OrderedDict([
-                ('date', truncated_dt),
-                ('locale', locale),
-            ]),
-            mfilters=[],
-            dfilters=[],
-            references={},
-            rollup=[],
-            pagination=None,
+                database=settings.database,
+                table=self.mock_table,
+                joins=[
+                    (self.mock_join1, self.mock_table.hotel_id == self.mock_join1.hotel_id, JoinType.left),
+                ],
+                metrics=OrderedDict([
+                    ('clicks', fn.Sum(self.mock_table.clicks)),
+                    ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
+                    ('hotel_name', self.mock_join1.hotel_name),
+                    ('hotel_address', self.mock_join1.address),
+                    ('city_id', self.mock_join1.ctid),
+                    ('city_name', self.mock_join1.city_name),
+                ]),
+                dimensions=OrderedDict([
+                    ('date', truncated_dt),
+                    ('locale', locale),
+                ]),
+                mfilters=[],
+                dfilters=[],
+                references={},
+                rollup=[],
+                pagination=None,
         )
 
         self.assertEqual('SELECT '
@@ -449,23 +449,23 @@ class DimensionTests(QueryTests):
 class FilterTests(QueryTests):
     def test_single_dimension_filter(self):
         query = self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[],
-            metrics=OrderedDict([
-                ('clicks', fn.Sum(self.mock_table.clicks)),
-                ('roi', (fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost))),
-            ]),
-            dimensions=OrderedDict([
-                ('locale', self.mock_table.locale),
-            ]),
-            mfilters=[],
-            dfilters=[
-                self.mock_table.locale.isin(['US', 'CA', 'UK'])
-            ],
-            references={},
-            rollup=[],
-            pagination=None,
+                database=settings.database,
+                table=self.mock_table,
+                joins=[],
+                metrics=OrderedDict([
+                    ('clicks', fn.Sum(self.mock_table.clicks)),
+                    ('roi', (fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost))),
+                ]),
+                dimensions=OrderedDict([
+                    ('locale', self.mock_table.locale),
+                ]),
+                mfilters=[],
+                dfilters=[
+                    self.mock_table.locale.isin(['US', 'CA', 'UK'])
+                ],
+                references={},
+                rollup=[],
+                pagination=None,
         )
 
         self.assertEqual('SELECT '
@@ -479,25 +479,25 @@ class FilterTests(QueryTests):
 
     def test_multi_dimension_filter(self):
         query = self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[],
-            metrics=OrderedDict([
-                ('clicks', fn.Sum(self.mock_table.clicks)),
-                ('roi', (fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost))),
-            ]),
-            dimensions=OrderedDict([
-                ('locale', self.mock_table.locale),
-            ]),
-            mfilters=[],
-            dfilters=[
-                self.mock_table.locale.isin(['US', 'CA', 'UK']),
-                self.mock_table.device_type == 'desktop',
-                self.mock_table.dt > date(2016, 1, 1),
-            ],
-            references={},
-            rollup=[],
-            pagination=None,
+                database=settings.database,
+                table=self.mock_table,
+                joins=[],
+                metrics=OrderedDict([
+                    ('clicks', fn.Sum(self.mock_table.clicks)),
+                    ('roi', (fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost))),
+                ]),
+                dimensions=OrderedDict([
+                    ('locale', self.mock_table.locale),
+                ]),
+                mfilters=[],
+                dfilters=[
+                    self.mock_table.locale.isin(['US', 'CA', 'UK']),
+                    self.mock_table.device_type == 'desktop',
+                    self.mock_table.dt > date(2016, 1, 1),
+                ],
+                references={},
+                rollup=[],
+                pagination=None,
         )
 
         self.assertEqual('SELECT '
@@ -513,23 +513,23 @@ class FilterTests(QueryTests):
 
     def test_single_metric_filter(self):
         query = self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[],
-            metrics=OrderedDict([
-                ('clicks', fn.Sum(self.mock_table.clicks)),
-                ('roi', (fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost))),
-            ]),
-            dimensions=OrderedDict([
-                ('locale', self.mock_table.locale),
-            ]),
-            mfilters=[
-                fn.Sum(self.mock_table.clicks) > 100
-            ],
-            dfilters=[],
-            references={},
-            rollup=[],
-            pagination=None,
+                database=settings.database,
+                table=self.mock_table,
+                joins=[],
+                metrics=OrderedDict([
+                    ('clicks', fn.Sum(self.mock_table.clicks)),
+                    ('roi', (fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost))),
+                ]),
+                dimensions=OrderedDict([
+                    ('locale', self.mock_table.locale),
+                ]),
+                mfilters=[
+                    fn.Sum(self.mock_table.clicks) > 100
+                ],
+                dfilters=[],
+                references={},
+                rollup=[],
+                pagination=None,
         )
 
         self.assertEqual('SELECT '
@@ -543,25 +543,25 @@ class FilterTests(QueryTests):
 
     def test_multi_metric_filter(self):
         query = self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[],
-            metrics=OrderedDict([
-                ('clicks', fn.Sum(self.mock_table.clicks)),
-                ('roi', (fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost))),
-            ]),
-            dimensions=OrderedDict([
-                ('locale', self.mock_table.locale),
-            ]),
-            mfilters=[
-                fn.Sum(self.mock_table.clicks) > 100,
-                (fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)) < 0.7,
-                fn.Sum(self.mock_table.conversions) >= 10,
-            ],
-            dfilters=[],
-            references={},
-            rollup=[],
-            pagination=None,
+                database=settings.database,
+                table=self.mock_table,
+                joins=[],
+                metrics=OrderedDict([
+                    ('clicks', fn.Sum(self.mock_table.clicks)),
+                    ('roi', (fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost))),
+                ]),
+                dimensions=OrderedDict([
+                    ('locale', self.mock_table.locale),
+                ]),
+                mfilters=[
+                    fn.Sum(self.mock_table.clicks) > 100,
+                    (fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)) < 0.7,
+                    fn.Sum(self.mock_table.conversions) >= 10,
+                ],
+                dfilters=[],
+                references={},
+                rollup=[],
+                pagination=None,
         )
 
         self.assertEqual('SELECT '
@@ -589,29 +589,27 @@ class ReferenceTests(QueryTests):
         dt = self.mock_table.dt
         device_type = self.mock_table.device_type
         query = self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[],
-            metrics=OrderedDict([
-                ('clicks', fn.Sum(self.mock_table.clicks)),
-                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
-            ]),
-            dimensions=OrderedDict([
-                ('date', settings.database.trunc_date(dt, 'day')),
-                ('device_type', device_type),
-            ]),
-            mfilters=[],
-            dfilters=[
-                dt[date(2000, 1, 1):date(2000, 3, 1)]
-            ],
-            references=OrderedDict([
-                (ref.key, {
-                    'dimension': ref.element_key, 'definition': dt,
-                    'interval': ref.interval, 'modifier': ref.modifier
-                })
-            ]),
-            rollup=[],
-            pagination=None,
+                database=settings.database,
+                table=self.mock_table,
+                joins=[],
+                metrics=OrderedDict([
+                    ('clicks', fn.Sum(self.mock_table.clicks)),
+                    ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
+                ]),
+                dimensions=OrderedDict([
+                    ('date', settings.database.trunc_date(dt, 'day')),
+                    ('device_type', device_type),
+                ]),
+                mfilters=[],
+                dfilters=[
+                    dt[date(2000, 1, 1):date(2000, 3, 1)]
+                ],
+                references=OrderedDict([
+                    (ref.key, {'dimension': ref.element_key, 'definition': dt,
+                               'interval': ref.interval, 'modifier': ref.modifier})
+                ]),
+                rollup=[],
+                pagination=None,
         )
         return query
 
@@ -619,96 +617,96 @@ class ReferenceTests(QueryTests):
         interval = interval if interval else '\'{expr}\''.format(expr=self.intervals[key])
 
         self.assertEqual(
-            'SELECT '
-            '"sq0"."date" "date","sq0"."device_type" "device_type",'
-            '"sq0"."clicks" "clicks","sq0"."roi" "roi",'
-            '"sq1"."clicks" "clicks_{key}",'
-            '"sq1"."roi" "roi_{key}" '
-            'FROM ('
-            'SELECT '
-            'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
-            'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-            'FROM "test_table" '
-            'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
-            ') "sq0" '
-            'LEFT JOIN ('
-            'SELECT '
-            'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
-            'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-            'FROM "test_table" '
-            'WHERE "dt"+INTERVAL {interval} BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
-            ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL {interval} '
-            'AND "sq0"."device_type"="sq1"."device_type" '
-            'ORDER BY "sq0"."date","sq0"."device_type"'.format(
-                key=key,
-                interval=interval
-            ), str(query)
+                'SELECT '
+                '"sq0"."date" "date","sq0"."device_type" "device_type",'
+                '"sq0"."clicks" "clicks","sq0"."roi" "roi",'
+                '"sq1"."clicks" "clicks_{key}",'
+                '"sq1"."roi" "roi_{key}" '
+                'FROM ('
+                'SELECT '
+                'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
+                'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+                'FROM "test_table" '
+                'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+                'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
+                ') "sq0" '
+                'LEFT JOIN ('
+                'SELECT '
+                'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
+                'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+                'FROM "test_table" '
+                'WHERE "dt"+INTERVAL {interval} BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+                'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
+                ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL {interval} '
+                'AND "sq0"."device_type"="sq1"."device_type" '
+                'ORDER BY "sq0"."date","sq0"."device_type"'.format(
+                        key=key,
+                        interval=interval
+                ), str(query)
         )
 
     def assert_reference_delta(self, query, key, interval=None):
         interval = interval if interval else '\'{expr}\''.format(expr=self.intervals[key])
 
         self.assertEqual(
-            'SELECT '
-            '"sq0"."date" "date","sq0"."device_type" "device_type",'
-            '"sq0"."clicks" "clicks","sq0"."roi" "roi",'
-            '"sq0"."clicks"-"sq1"."clicks" "clicks_{key}_delta",'
-            '"sq0"."roi"-"sq1"."roi" "roi_{key}_delta" '
-            'FROM ('
-            'SELECT '
-            'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
-            'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-            'FROM "test_table" '
-            'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
-            ') "sq0" '
-            'LEFT JOIN ('
-            'SELECT '
-            'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
-            'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-            'FROM "test_table" '
-            'WHERE "dt"+INTERVAL {interval} BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
-            ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL {interval} '
-            'AND "sq0"."device_type"="sq1"."device_type" '
-            'ORDER BY "sq0"."date","sq0"."device_type"'.format(
-                key=key,
-                interval=interval
-            ), str(query)
+                'SELECT '
+                '"sq0"."date" "date","sq0"."device_type" "device_type",'
+                '"sq0"."clicks" "clicks","sq0"."roi" "roi",'
+                '"sq0"."clicks"-"sq1"."clicks" "clicks_{key}_delta",'
+                '"sq0"."roi"-"sq1"."roi" "roi_{key}_delta" '
+                'FROM ('
+                'SELECT '
+                'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
+                'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+                'FROM "test_table" '
+                'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+                'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
+                ') "sq0" '
+                'LEFT JOIN ('
+                'SELECT '
+                'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
+                'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+                'FROM "test_table" '
+                'WHERE "dt"+INTERVAL {interval} BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+                'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
+                ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL {interval} '
+                'AND "sq0"."device_type"="sq1"."device_type" '
+                'ORDER BY "sq0"."date","sq0"."device_type"'.format(
+                        key=key,
+                        interval=interval
+                ), str(query)
         )
 
     def assert_reference_delta_percent(self, query, key, interval=None):
         interval = interval if interval else '\'{expr}\''.format(expr=self.intervals[key])
 
         self.assertEqual(
-            'SELECT '
-            '"sq0"."date" "date","sq0"."device_type" "device_type",'
-            '"sq0"."clicks" "clicks","sq0"."roi" "roi",'
-            '("sq0"."clicks"-"sq1"."clicks")*100/NULLIF("sq1"."clicks",0) "clicks_{key}_delta_percent",'
-            '("sq0"."roi"-"sq1"."roi")*100/NULLIF("sq1"."roi",0) "roi_{key}_delta_percent" '
-            'FROM ('
-            'SELECT '
-            'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
-            'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-            'FROM "test_table" '
-            'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
-            ') "sq0" '
-            'LEFT JOIN ('
-            'SELECT '
-            'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
-            'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-            'FROM "test_table" '
-            'WHERE "dt"+INTERVAL {interval} BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
-            ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL {interval} '
-            'AND "sq0"."device_type"="sq1"."device_type" '
-            'ORDER BY "sq0"."date","sq0"."device_type"'.format(
-                key=key,
-                interval=interval
-            ), str(query)
+                'SELECT '
+                '"sq0"."date" "date","sq0"."device_type" "device_type",'
+                '"sq0"."clicks" "clicks","sq0"."roi" "roi",'
+                '("sq0"."clicks"-"sq1"."clicks")*100/NULLIF("sq1"."clicks",0) "clicks_{key}_delta_percent",'
+                '("sq0"."roi"-"sq1"."roi")*100/NULLIF("sq1"."roi",0) "roi_{key}_delta_percent" '
+                'FROM ('
+                'SELECT '
+                'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
+                'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+                'FROM "test_table" '
+                'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+                'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
+                ') "sq0" '
+                'LEFT JOIN ('
+                'SELECT '
+                'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
+                'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+                'FROM "test_table" '
+                'WHERE "dt"+INTERVAL {interval} BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+                'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
+                ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL {interval} '
+                'AND "sq0"."device_type"="sq1"."device_type" '
+                'ORDER BY "sq0"."date","sq0"."device_type"'.format(
+                        key=key,
+                        interval=interval
+                ), str(query)
         )
 
     def test_metrics_dimensions_filters_references__yoy(self):
@@ -793,57 +791,55 @@ class ReferenceTests(QueryTests):
         device_type = self.mock_table.device_type
 
         query = self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[],
-            metrics=OrderedDict([
-                ('clicks', fn.Sum(self.mock_table.clicks)),
-                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
-            ]),
-            dimensions=OrderedDict([
-                # NO Date Dimension
-                ('device_type', device_type),
-            ]),
-            mfilters=[],
-            dfilters=[
-                dt[date(2000, 1, 1):date(2000, 3, 1)]
-            ],
-            references=OrderedDict([
-                (ref.key, {
-                    'dimension': ref.element_key, 'definition': self.mock_table.dt,
-                    'interval': ref.interval, 'modifier': ref.modifier
-                })
-            ]),
-            rollup=[],
-            pagination=None,
+                database=settings.database,
+                table=self.mock_table,
+                joins=[],
+                metrics=OrderedDict([
+                    ('clicks', fn.Sum(self.mock_table.clicks)),
+                    ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
+                ]),
+                dimensions=OrderedDict([
+                    # NO Date Dimension
+                    ('device_type', device_type),
+                ]),
+                mfilters=[],
+                dfilters=[
+                    dt[date(2000, 1, 1):date(2000, 3, 1)]
+                ],
+                references=OrderedDict([
+                    (ref.key, {'dimension': ref.element_key, 'definition': self.mock_table.dt,
+                               'interval': ref.interval, 'modifier': ref.modifier})
+                ]),
+                rollup=[],
+                pagination=None,
         )
 
         self.assertEqual(
-            'SELECT '
-            '"sq0"."device_type" "device_type",'
-            '"sq0"."clicks" "clicks","sq0"."roi" "roi",'
-            '"sq1"."clicks" "clicks_{key}",'
-            '"sq1"."roi" "roi_{key}" '
-            'FROM ('
-            'SELECT '
-            '"device_type" "device_type",'
-            'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-            'FROM "test_table" '
-            'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY "device_type"'
-            ') "sq0" '
-            'LEFT JOIN ('
-            'SELECT '
-            '"device_type" "device_type",'
-            'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-            'FROM "test_table" '
-            'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY "device_type"'
-            ') "sq1" ON "sq0"."device_type"="sq1"."device_type" '
-            'ORDER BY "sq0"."device_type"'.format(
-                key=ref.key,
-                expr=self.intervals[ref.key]
-            ), str(query)
+                'SELECT '
+                '"sq0"."device_type" "device_type",'
+                '"sq0"."clicks" "clicks","sq0"."roi" "roi",'
+                '"sq1"."clicks" "clicks_{key}",'
+                '"sq1"."roi" "roi_{key}" '
+                'FROM ('
+                'SELECT '
+                '"device_type" "device_type",'
+                'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+                'FROM "test_table" '
+                'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+                'GROUP BY "device_type"'
+                ') "sq0" '
+                'LEFT JOIN ('
+                'SELECT '
+                '"device_type" "device_type",'
+                'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+                'FROM "test_table" '
+                'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+                'GROUP BY "device_type"'
+                ') "sq1" ON "sq0"."device_type"="sq1"."device_type" '
+                'ORDER BY "sq0"."device_type"'.format(
+                        key=ref.key,
+                        expr=self.intervals[ref.key]
+                ), str(query)
         )
 
     def test_metrics_dimensions_filters_references__no_dimensions(self):
@@ -851,47 +847,45 @@ class ReferenceTests(QueryTests):
         dt = self.mock_table.dt
 
         query = self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[],
-            metrics=OrderedDict([
-                ('clicks', fn.Sum(self.mock_table.clicks)),
-                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
-            ]),
-            dimensions={},
-            mfilters=[],
-            dfilters=[
-                dt[date(2000, 1, 1):date(2000, 3, 1)]
-            ],
-            references=OrderedDict([
-                (ref.key, {
-                    'dimension': ref.element_key, 'definition': self.mock_table.dt,
-                    'interval': ref.interval, 'modifier': ref.modifier
-                })
-            ]),
-            rollup=[],
-            pagination=None,
+                database=settings.database,
+                table=self.mock_table,
+                joins=[],
+                metrics=OrderedDict([
+                    ('clicks', fn.Sum(self.mock_table.clicks)),
+                    ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
+                ]),
+                dimensions={},
+                mfilters=[],
+                dfilters=[
+                    dt[date(2000, 1, 1):date(2000, 3, 1)]
+                ],
+                references=OrderedDict([
+                    (ref.key, {'dimension': ref.element_key, 'definition': self.mock_table.dt,
+                               'interval': ref.interval, 'modifier': ref.modifier})
+                ]),
+                rollup=[],
+                pagination=None,
         )
 
         self.assertEqual(
-            'SELECT '
-            '"sq0"."clicks" "clicks","sq0"."roi" "roi",'
-            '"sq1"."clicks" "clicks_{key}",'
-            '"sq1"."roi" "roi_{key}" '
-            'FROM ('
-            'SELECT '
-            'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-            'FROM "test_table" '
-            'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\''
-            ') "sq0",('
-            'SELECT '
-            'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
-            'FROM "test_table" '
-            'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\''
-            ') "sq1"'.format(
-                key=ref.key,
-                expr=self.intervals[ref.key]
-            ), str(query)
+                'SELECT '
+                '"sq0"."clicks" "clicks","sq0"."roi" "roi",'
+                '"sq1"."clicks" "clicks_{key}",'
+                '"sq1"."roi" "roi_{key}" '
+                'FROM ('
+                'SELECT '
+                'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+                'FROM "test_table" '
+                'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\''
+                ') "sq0",('
+                'SELECT '
+                'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
+                'FROM "test_table" '
+                'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\''
+                ') "sq1"'.format(
+                        key=ref.key,
+                        expr=self.intervals[ref.key]
+                ), str(query)
         )
 
 
@@ -901,22 +895,22 @@ class TotalsQueryTests(QueryTests):
         locale = self.mock_table.locale
 
         query = self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[],
-            metrics=OrderedDict([
-                ('clicks', fn.Sum(self.mock_table.clicks)),
-                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
-            ]),
-            dimensions=OrderedDict([
-                ('date', truncated_dt),
-                ('locale', locale),
-            ]),
-            mfilters=[],
-            dfilters=[],
-            references={},
-            rollup=[['locale']],
-            pagination=None,
+                database=settings.database,
+                table=self.mock_table,
+                joins=[],
+                metrics=OrderedDict([
+                    ('clicks', fn.Sum(self.mock_table.clicks)),
+                    ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
+                ]),
+                dimensions=OrderedDict([
+                    ('date', truncated_dt),
+                    ('locale', locale),
+                ]),
+                mfilters=[],
+                dfilters=[],
+                references={},
+                rollup=[['locale']],
+                pagination=None,
         )
 
         self.assertEqual('SELECT '
@@ -932,23 +926,23 @@ class TotalsQueryTests(QueryTests):
         device_type = self.mock_table.device_type
 
         query = self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[],
-            metrics=OrderedDict([
-                ('clicks', fn.Sum(self.mock_table.clicks)),
-                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
-            ]),
-            dimensions=OrderedDict([
-                ('date', truncated_dt),
-                ('locale', locale),
-                ('device_type', device_type),
-            ]),
-            mfilters=[],
-            dfilters=[],
-            references={},
-            rollup=[['locale'], ['device_type']],
-            pagination=None,
+                database=settings.database,
+                table=self.mock_table,
+                joins=[],
+                metrics=OrderedDict([
+                    ('clicks', fn.Sum(self.mock_table.clicks)),
+                    ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
+                ]),
+                dimensions=OrderedDict([
+                    ('date', truncated_dt),
+                    ('locale', locale),
+                    ('device_type', device_type),
+                ]),
+                mfilters=[],
+                dfilters=[],
+                references={},
+                rollup=[['locale'], ['device_type']],
+                pagination=None,
         )
 
         self.assertEqual('SELECT '
@@ -966,23 +960,23 @@ class TotalsQueryTests(QueryTests):
         device_type = self.mock_table.device_type
 
         query = self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[],
-            metrics=OrderedDict([
-                ('clicks', fn.Sum(self.mock_table.clicks)),
-                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
-            ]),
-            dimensions=OrderedDict([
-                ('date', truncated_dt),
-                ('locale', locale),
-                ('device_type', device_type),
-            ]),
-            mfilters=[],
-            dfilters=[],
-            references={},
-            rollup=[['locale']],
-            pagination=None,
+                database=settings.database,
+                table=self.mock_table,
+                joins=[],
+                metrics=OrderedDict([
+                    ('clicks', fn.Sum(self.mock_table.clicks)),
+                    ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
+                ]),
+                dimensions=OrderedDict([
+                    ('date', truncated_dt),
+                    ('locale', locale),
+                    ('device_type', device_type),
+                ]),
+                mfilters=[],
+                dfilters=[],
+                references={},
+                rollup=[['locale']],
+                pagination=None,
         )
 
         self.assertEqual('SELECT '
@@ -1000,23 +994,23 @@ class TotalsQueryTests(QueryTests):
         locale_display = self.mock_table.locale_display
 
         query = self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[],
-            metrics=OrderedDict([
-                ('clicks', fn.Sum(self.mock_table.clicks)),
-                ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
-            ]),
-            dimensions=OrderedDict([
-                ('date', truncated_dt),
-                ('locale', locale),
-                ('locale_display', locale_display),
-            ]),
-            mfilters=[],
-            dfilters=[],
-            references={},
-            rollup=[['locale', 'locale_display']],
-            pagination=None,
+                database=settings.database,
+                table=self.mock_table,
+                joins=[],
+                metrics=OrderedDict([
+                    ('clicks', fn.Sum(self.mock_table.clicks)),
+                    ('roi', fn.Sum(self.mock_table.revenue) / fn.Sum(self.mock_table.cost)),
+                ]),
+                dimensions=OrderedDict([
+                    ('date', truncated_dt),
+                    ('locale', locale),
+                    ('locale_display', locale_display),
+                ]),
+                mfilters=[],
+                dfilters=[],
+                references={},
+                rollup=[['locale', 'locale_display']],
+                pagination=None,
         )
 
         self.assertEqual('SELECT '
@@ -1034,12 +1028,12 @@ class DimensionOptionTests(QueryTests):
         locale = self.mock_table.locale
 
         query = self.manager._build_dimension_query(
-            table=self.mock_table,
-            joins=[],
-            dimensions=OrderedDict([
-                ('locale', locale),
-            ]),
-            filters=[],
+                table=self.mock_table,
+                joins=[],
+                dimensions=OrderedDict([
+                    ('locale', locale),
+                ]),
+                filters=[],
         )
 
         self.assertEqual('SELECT DISTINCT '
@@ -1050,13 +1044,13 @@ class DimensionOptionTests(QueryTests):
         locale = self.mock_table.locale
 
         query = self.manager._build_dimension_query(
-            table=self.mock_table,
-            joins=[],
-            dimensions=OrderedDict([
-                ('locale', locale),
-            ]),
-            filters=[],
-            limit=10,
+                table=self.mock_table,
+                joins=[],
+                dimensions=OrderedDict([
+                    ('locale', locale),
+                ]),
+                filters=[],
+                limit=10,
         )
 
         self.assertEqual('SELECT DISTINCT '
@@ -1068,14 +1062,14 @@ class DimensionOptionTests(QueryTests):
         locale = self.mock_table.locale
 
         query = self.manager._build_dimension_query(
-            table=self.mock_table,
-            joins=[],
-            dimensions=OrderedDict([
-                ('locale', locale),
-            ]),
-            filters=[
-                self.mock_table.device_type == 'desktop',
-            ],
+                table=self.mock_table,
+                joins=[],
+                dimensions=OrderedDict([
+                    ('locale', locale),
+                ]),
+                filters=[
+                    self.mock_table.device_type == 'desktop',
+                ],
         )
 
         self.assertEqual('SELECT DISTINCT '
@@ -1088,14 +1082,14 @@ class DimensionOptionTests(QueryTests):
         account_name = self.mock_table.account_name
 
         query = self.manager._build_dimension_query(
-            table=self.mock_table,
-            joins=[],
-            dimensions=OrderedDict([
-                ('account_id', account_id),
-                ('account_name', account_name),
-            ]),
-            filters=[],
-            limit=10
+                table=self.mock_table,
+                joins=[],
+                dimensions=OrderedDict([
+                    ('account_id', account_id),
+                    ('account_name', account_name),
+                ]),
+                filters=[],
+                limit=10
         )
 
         self.assertEqual('SELECT DISTINCT '
@@ -1108,15 +1102,15 @@ class DimensionOptionTests(QueryTests):
         account_id = self.mock_table.account_id
 
         query = self.manager._build_dimension_query(
-            table=self.mock_table,
-            joins=[
-                (self.mock_join1, account_id == self.mock_join1.account_id, JoinType.left),
-            ],
-            dimensions=OrderedDict([
-                ('account_id', account_id),
-                ('account_name', self.mock_join1.account_name),
-            ]),
-            filters=[],
+                table=self.mock_table,
+                joins=[
+                    (self.mock_join1, account_id == self.mock_join1.account_id, JoinType.left),
+                ],
+                dimensions=OrderedDict([
+                    ('account_id', account_id),
+                    ('account_name', self.mock_join1.account_name),
+                ]),
+                filters=[],
         )
 
         self.assertEqual('SELECT DISTINCT '
@@ -1134,66 +1128,26 @@ class DimensionOptionTests(QueryTests):
         with self.assertRaises(QueryNotSupportedError):
             manager.query_data(db, self.mock_table, rollup=[['locale']])
 
-    def test_yoy_week_interval(self):
-        ref = references.YoY('date')
-        dt = self.mock_table.dt
-
-        query = self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[],
-            metrics=OrderedDict([
-                ('clicks', fn.Sum(self.mock_table.clicks)),
-            ]),
-            dimensions=OrderedDict([
-                ('date', settings.database.trunc_date(dt, 'week'))
-            ]),
-            mfilters=[],
-            dfilters=[],
-            references=OrderedDict([
-                (ref.key, {
-                    'dimension': ref.element_key, 'definition': dt,
-                    'interval': ref.interval, 'modifier': ref.modifier
-                })
-            ]),
-            rollup=[],
-            pagination=None,
-        )
-
-        self.assertEqual('SELECT "sq0"."date" "date","sq0"."clicks" "clicks","sq1"."clicks" "clicks_yoy" '
-                         'FROM ('
-                         'SELECT TRUNC("dt",\'IW\') "date",SUM("clicks") "clicks" '
-                         'FROM "test_table" '
-                         'GROUP BY TRUNC("dt",\'IW\')) "sq0" '
-                         'LEFT JOIN ('
-                         'SELECT TRUNC("dt"+INTERVAL \'1\' YEAR,\'IW\')-INTERVAL \'1\' YEAR "date",'
-                         'SUM("clicks") "clicks" '
-                         'FROM "test_table" '
-                         'GROUP BY TRUNC("dt"+INTERVAL \'1\' YEAR,\'IW\')-INTERVAL \'1\' YEAR) '
-                         '"sq1" '
-                         'ON "sq0"."date"="sq1"."date"+INTERVAL \'1\' YEAR '
-                         'ORDER BY "sq0"."date"', str(query))
-
 
 class PaginationNonReferenceQueryTests(QueryTests):
     def get_non_reference_query(self, paginator):
         return self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[],
-            metrics=OrderedDict([
-                ('clicks', fn.Sum(self.mock_table.clicks)),
-                ('impressions', fn.Sum(self.mock_table.impressions)),
-            ]),
-            dimensions=OrderedDict([
-                ('locale', self.mock_table.locale),
-                ('locale_display', self.mock_table.locale_display),
-            ]),
-            mfilters=[],
-            dfilters=[],
-            references={},
-            rollup=[],
-            pagination=paginator,
+                database=settings.database,
+                table=self.mock_table,
+                joins=[],
+                metrics=OrderedDict([
+                    ('clicks', fn.Sum(self.mock_table.clicks)),
+                    ('impressions', fn.Sum(self.mock_table.impressions)),
+                ]),
+                dimensions=OrderedDict([
+                    ('locale', self.mock_table.locale),
+                    ('locale_display', self.mock_table.locale_display),
+                ]),
+                mfilters=[],
+                dfilters=[],
+                references={},
+                rollup=[],
+                pagination=paginator,
         )
 
     def test_offset_0_limit_0_no_orderby_applied_to_query(self):
@@ -1332,28 +1286,26 @@ class PaginationReferenceQueryTests(QueryTests):
         dt = self.mock_table.dt
 
         return self.manager._build_data_query(
-            database=settings.database,
-            table=self.mock_table,
-            joins=[],
-            metrics=OrderedDict([
-                ('clicks', fn.Sum(self.mock_table.clicks)),
-                ('impressions', fn.Sum(self.mock_table.impressions)),
-            ]),
-            dimensions=OrderedDict([
-                ('date', dt),
-                ('locale', self.mock_table.locale),
-                ('locale_display', self.mock_table.locale_display),
-            ]),
-            mfilters=[],
-            dfilters=[],
-            references=OrderedDict([
-                (ref.key, {
-                    'dimension': ref.element_key, 'definition': dt,
-                    'interval': ref.interval, 'modifier': ref.modifier
-                })
-            ]),
-            rollup=[],
-            pagination=paginator,
+                database=settings.database,
+                table=self.mock_table,
+                joins=[],
+                metrics=OrderedDict([
+                    ('clicks', fn.Sum(self.mock_table.clicks)),
+                    ('impressions', fn.Sum(self.mock_table.impressions)),
+                ]),
+                dimensions=OrderedDict([
+                    ('date', dt),
+                    ('locale', self.mock_table.locale),
+                    ('locale_display', self.mock_table.locale_display),
+                ]),
+                mfilters=[],
+                dfilters=[],
+                references=OrderedDict([
+                    (ref.key, {'dimension': ref.element_key, 'definition': dt,
+                               'interval': ref.interval, 'modifier': ref.modifier})
+                ]),
+                rollup=[],
+                pagination=paginator,
         )
 
     def test_offset_0_limit_0_no_orderby_applied_to_query(self):
