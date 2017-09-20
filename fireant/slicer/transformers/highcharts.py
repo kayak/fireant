@@ -99,6 +99,7 @@ class HighchartsLineTransformer(Transformer):
             'xAxis': self.xaxis_options(dataframe, dim_ordinal, display_schema),
             'yAxis': self.yaxis_options(dataframe, dim_ordinal, display_schema),
             'tooltip': {'shared': True, 'useHTML': True},
+            'legend': {'useHTML': True},
             'series': series
         }
 
@@ -515,8 +516,9 @@ class HighchartsPieTransformer(HighchartsLineTransformer):
         tooltip = self._format_tooltip(display_schema['metrics'][metric_key])
         tooltip['useHTML'] = True
 
-        result = {
+        return {
             'chart': {'type': self.chart_type},
+            'legend': {'useHTML': True},
             'title': {'text': None},
             'tooltip': tooltip,
             'series': [series],
@@ -534,8 +536,6 @@ class HighchartsPieTransformer(HighchartsLineTransformer):
                 }
             },
         }
-
-        return result
 
     def _prepare_dataframe(self, dataframe, dim_ordinal, dimensions):
         """
