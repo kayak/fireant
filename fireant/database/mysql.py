@@ -14,6 +14,10 @@ class Trunc(terms.Function):
 
     def __init__(self, field, date_format, alias=None):
         super(Trunc, self).__init__('dashmore.TRUNC', field, date_format, alias=alias)
+        # Setting the fields here means we can access the TRUNC args by name.
+        self.field = field
+        self.date_format = date_format
+        self.alias = alias
 
 
 class MySQLDatabase(Database):
