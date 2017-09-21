@@ -15,8 +15,7 @@ class Trunc(terms.Function):
 
     def __init__(self, field, date_format, alias=None):
         super(Trunc, self).__init__('TRUNC', field, date_format, alias=alias)
-        # TODO fix pypika Function to expose kwargs (only args are exposed, which is more hacky to access).
-        # Therefore setting the fields here means we can access the TRUNC args by name.
+        # Setting the fields here means we can access the TRUNC args by name.
         self.field = field
         self.date_format = date_format
         self.alias = alias
