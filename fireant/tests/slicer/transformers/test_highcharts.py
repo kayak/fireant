@@ -84,7 +84,7 @@ class HighchartsLineTransformerTests(BaseHighchartsTransformerTests):
         )
 
     def evaluate_chart_options(self, result, num_series=1, xaxis_type='linear', dash_style='Solid'):
-        self.assertSetEqual({'title', 'series', 'chart', 'plotOptions', 'tooltip', 'xAxis', 'yAxis'},
+        self.assertSetEqual({'title', 'legend', 'series', 'chart', 'plotOptions', 'tooltip', 'xAxis', 'yAxis'},
                             set(result.keys()))
         self.assertEqual(num_series, len(result['series']))
 
@@ -330,7 +330,7 @@ class HighchartsAreaTransformerTests(HighchartsLineTransformerTests):
         cls.hc_tx = HighchartsAreaTransformer()
 
     def evaluate_chart_options(self, result, num_series=1, xaxis_type='linear', dash_style='Solid'):
-        self.assertSetEqual({'title', 'series', 'chart', 'plotOptions', 'tooltip', 'xAxis', 'yAxis'},
+        self.assertSetEqual({'title', 'series', 'chart', 'plotOptions', 'legend', 'tooltip', 'xAxis', 'yAxis'},
                             set(result.keys()))
         self.assertEqual(num_series, len(result['series']))
 
@@ -369,7 +369,7 @@ class HighchartsColumnTransformerTests(TestCase):
         cls.hc_tx = HighchartsColumnTransformer()
 
     def evaluate_chart_options(self, result, num_results=1, categories=None):
-        self.assertSetEqual({'title', 'series', 'chart', 'tooltip', 'xAxis', 'yAxis', 'plotOptions'},
+        self.assertSetEqual({'title', 'series', 'chart', 'legend', 'tooltip', 'xAxis', 'yAxis', 'plotOptions'},
                             set(result.keys()))
         self.assertEqual(num_results, len(result['series']))
 
@@ -552,7 +552,7 @@ class HighchartsStackedColumnTransformerTests(HighchartsColumnTransformerTests):
         cls.hc_tx = HighchartsStackedColumnTransformer()
 
     def evaluate_chart_options(self, result, num_results=1, categories=None):
-        self.assertSetEqual({'title', 'series', 'chart', 'tooltip', 'xAxis', 'yAxis', 'plotOptions'},
+        self.assertSetEqual({'title', 'series', 'chart', 'legend', 'tooltip', 'xAxis', 'yAxis', 'plotOptions'},
                             set(result.keys()))
         self.assertEqual(num_results, len(result['series']))
 
@@ -619,7 +619,7 @@ class HighChartsPieChartTests(BaseHighchartsTransformerTests):
         cls.hc_tx = HighchartsPieTransformer()
 
     def evaluate_chart_options(self, result, num_results=1):
-        self.assertSetEqual({'title', 'series', 'chart', 'tooltip', 'plotOptions'}, set(result.keys()))
+        self.assertSetEqual({'title', 'series', 'legend', 'chart', 'tooltip', 'plotOptions'}, set(result.keys()))
         self.assertEqual(num_results, len(result['series']))
 
         self.assertSetEqual({'text'}, set(result['title'].keys()))
