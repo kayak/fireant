@@ -62,3 +62,33 @@ class TestMySQLDatabase(TestCase):
         result = MySQLDatabase(database='testdb').trunc_date(Field('date'), 'year')
 
         self.assertEqual('dashmore.TRUNC("date",\'year\')', str(result))
+
+    def test_date_add_hour(self):
+        result = MySQLDatabase(database='testdb').date_add('hour', 1, Field('date'))
+
+        self.assertEqual('DATE_ADD("date",INTERVAL 1 HOUR)', str(result))
+
+    def test_date_add_day(self):
+        result = MySQLDatabase(database='testdb').date_add('day', 1, Field('date'))
+
+        self.assertEqual('DATE_ADD("date",INTERVAL 1 DAY)', str(result))
+
+    def test_date_add_week(self):
+        result = MySQLDatabase(database='testdb').date_add('week', 1, Field('date'))
+
+        self.assertEqual('DATE_ADD("date",INTERVAL 1 WEEK)', str(result))
+
+    def test_date_add_month(self):
+        result = MySQLDatabase(database='testdb').date_add('month', 1, Field('date'))
+
+        self.assertEqual('DATE_ADD("date",INTERVAL 1 MONTH)', str(result))
+
+    def test_date_add_quarter(self):
+        result = MySQLDatabase(database='testdb').date_add('quarter', 1, Field('date'))
+
+        self.assertEqual('DATE_ADD("date",INTERVAL 1 QUARTER)', str(result))
+
+    def test_date_add_year(self):
+        result = MySQLDatabase(database='testdb').date_add('year', 1, Field('date'))
+
+        self.assertEqual('DATE_ADD("date",INTERVAL 1 YEAR)', str(result))

@@ -1,15 +1,17 @@
 # coding: utf-8
 import pandas as pd
-from pypika import (MySQLQuery,
-                    terms)
-from pypika.terms import Interval
+from pypika import (
+    Dialects,
+    MySQLQuery,
+    terms,
+)
 
 from fireant.database import Database
 
 
 class Trunc(terms.Function):
     """
-    Wrapper for a custom MySQL TRUNC function (installed via a custon FireAnt MySQL script
+    Wrapper for a custom MySQL TRUNC function (installed via a custom FireAnt MySQL script)
     """
 
     def __init__(self, field, date_format, alias=None):
@@ -18,6 +20,16 @@ class Trunc(terms.Function):
         self.field = field
         self.date_format = date_format
         self.alias = alias
+
+
+class DateAdd(terms.Function):
+    """
+    Override for the MySQL specific DateAdd function which expects an interval instead of the date part and interval
+    unit e.g. DATE_ADD("date", INTERVAL 1 YEAR)
+    """
+
+    def __init__(self, field, interval_term, alias=None):
+        super(DateAdd, self).__init__('DATE_ADD', field, interval_term, alias=alias)
 
 
 class MySQLDatabase(Database):
@@ -57,5 +69,7 @@ class MySQLDatabase(Database):
     def trunc_date(self, field, interval):
         return Trunc(field, interval)
 
-    def interval(self, **kwargs):
-        return Interval(**kwargs)
+    def date_add(self, date_part, interval, field):
+        # adding an extra 's' as MySQL's interval doesn't work with 'year', 'week' etc, it expects a plural
+        interval_term = terms.Interval(**{'{}s'.format(str(date_part)): interval, 'dialect': Dialects.MYSQL})
+        return DateAdd(field, interval_term)

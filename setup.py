@@ -66,7 +66,9 @@ setup(
     ],
     extras_require={
         'vertica': ['vertica-python>=0.6'],
-        'mysql': ['pymysql==0.7.11'],
+        'mysql': ['pymysql>=0.7.11'],
+        'redshift': ['psycopg2>=2.7.3.1'],
+        'postgresql': ['psycopg2>=2.7.3.1'],
         'matplotlib': ['matplotlib'],
     },
 

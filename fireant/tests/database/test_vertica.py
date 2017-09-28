@@ -58,3 +58,34 @@ class TestVertica(TestCase):
         result = VerticaDatabase().trunc_date(Field('date'), 'year')
 
         self.assertEqual('TRUNC("date",\'Y\')', str(result))
+
+    def test_date_add_hour(self):
+        result = VerticaDatabase().date_add('hour', 1, Field('date'))
+
+        self.assertEqual('TIMESTAMPADD(\'hour\',1,"date")', str(result))
+
+    def test_date_add_day(self):
+        result = VerticaDatabase().date_add('day', 1, Field('date'))
+
+        self.assertEqual('TIMESTAMPADD(\'day\',1,"date")', str(result))
+
+    def test_date_add_week(self):
+        result = VerticaDatabase().date_add('week', 1, Field('date'))
+
+        self.assertEqual('TIMESTAMPADD(\'week\',1,"date")', str(result))
+
+    def test_date_add_month(self):
+        result = VerticaDatabase().date_add('month', 1, Field('date'))
+
+        self.assertEqual('TIMESTAMPADD(\'month\',1,"date")', str(result))
+
+    def test_date_add_quarter(self):
+        result = VerticaDatabase().date_add('quarter', 1, Field('date'))
+
+        self.assertEqual('TIMESTAMPADD(\'quarter\',1,"date")', str(result))
+
+    def test_date_add_year(self):
+        result = VerticaDatabase().date_add('year', 1, Field('date'))
+
+        self.assertEqual('TIMESTAMPADD(\'year\',1,"date")', str(result))
+

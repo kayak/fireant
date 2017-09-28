@@ -809,8 +809,9 @@ class SlicerSchemaReferenceTests(SlicerSchemaTests):
             reference.key: {
                 'dimension': reference.element_key,
                 'definition': '"test"."dt"',
-                'interval': reference.interval,
                 'modifier': reference.modifier,
+                'time_unit': reference.time_unit,
+                'interval': reference.interval,
             }
         }, query_schema['references'])
 

@@ -368,8 +368,9 @@ class SlicerManager(QueryManager, OperationManager):
             schema_references[reference.key] = {
                 'dimension': reference.element_key,
                 'definition': self.slicer.dimensions[reference.element_key].definition,
-                'interval': reference.interval,
                 'modifier': reference.modifier,
+                'time_unit': reference.time_unit,
+                'interval': reference.interval,
             }
 
         return schema_references

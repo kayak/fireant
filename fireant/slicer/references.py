@@ -1,12 +1,13 @@
 # coding: utf-8
-from pypika import Interval, functions as fn
+from pypika import functions as fn
 
 
 class Reference(object):
     key = None
     label = None
-    interval = None
-    modifier = None
+    modifier = None  # Modifier calculation function e.g. delta percentage arithmetic
+    time_unit = None  # The time unit to perform the reference on - WoW is week, YoY is year etc.
+    interval = None  # The number unit used in the interval e.g. for 1 week it is 1
 
     def __init__(self, element_key):
         self.element_key = element_key
@@ -29,6 +30,7 @@ class Delta(Reference):
         super(Delta, self).__init__(reference.element_key)
         self.key = self.generate_key(reference.key)
         self.label = '%s Δ' % reference.label
+        self.time_unit = reference.time_unit
         self.interval = reference.interval
 
     @staticmethod
@@ -45,6 +47,7 @@ class DeltaPercentage(Reference):
         super(DeltaPercentage, self).__init__(reference.element_key)
         self.key = self.generate_key(reference.key)
         self.label = '%s Δ%%' % reference.label
+        self.time_unit = reference.time_unit
         self.interval = reference.interval
 
     @staticmethod
@@ -59,28 +62,33 @@ class DeltaPercentage(Reference):
 class DoD(Reference):
     key = 'dod'
     label = 'DoD'
-    interval = Interval(days=1)
+    time_unit = 'day'
+    interval = 1
 
 
 class WoW(Reference):
     key = 'wow'
     label = 'WoW'
-    interval = Interval(weeks=1)
+    time_unit = 'week'
+    interval = 1
 
 
 class MoM(Reference):
     key = 'mom'
     label = 'MoM'
-    interval = Interval(months=1)
+    time_unit = 'month'
+    interval = 1
 
 
 class QoQ(Reference):
     key = 'qoq'
     label = 'QoQ'
-    interval = Interval(quarters=1)
+    time_unit = 'quarter'
+    interval = 1
 
 
 class YoY(Reference):
     key = 'yoy'
     label = 'YoY'
-    interval = Interval(years=1)
+    time_unit = 'year'
+    interval = 1
