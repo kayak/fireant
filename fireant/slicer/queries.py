@@ -10,6 +10,7 @@ from pypika import (
     JoinType,
     MySQLQuery,
     RedshiftQuery,
+    PostgreSQLQuery,
 )
 
 from fireant import utils
@@ -126,8 +127,8 @@ class QueryManager(object):
         :return:
             A pd.DataFrame indexed by the provided dimensions parameters containing columns for each metrics parameter.
         """
-        if rollup and issubclass(database.query_cls, (MySQLQuery, RedshiftQuery)):
-            # MySQL doesn't currently support query rollups in the same way as Vertica, Oracle etc.
+        if rollup and issubclass(database.query_cls, (MySQLQuery, PostgreSQLQuery, RedshiftQuery)):
+            # MySQL, postgreSQL and Redshift doesn't support query rollups in the same way as Vertica, Oracle etc.
             # We therefore don't support it for now.
             raise QueryNotSupportedError("This database type currently doesn't support ROLLUP operations!")
 

@@ -12,7 +12,11 @@ from pypika import (
 )
 
 from fireant import settings
-from fireant.database import MySQLDatabase
+from fireant.database import (
+    MySQLDatabase,
+    PostgreSQLDatabase,
+    RedshiftDatabase,
+)
 from fireant.slicer import references
 from fireant.slicer.pagination import Paginator
 from fireant.slicer.queries import (
@@ -1128,6 +1132,23 @@ class DimensionOptionTests(QueryTests):
 
         with self.assertRaises(QueryNotSupportedError):
             manager.query_data(db, self.mock_table, rollup=[['locale']])
+
+    @patch.object(PostgreSQLDatabase, 'fetch_dataframe')
+    def test_exception_raised_if_rollup_requested_for_a_postgres_database(self, mock_db):
+        db = PostgreSQLDatabase(database='testdb')
+        manager = QueryManager(database=db)
+
+        with self.assertRaises(QueryNotSupportedError):
+            manager.query_data(db, self.mock_table, rollup=[['locale']])
+
+    @patch.object(RedshiftDatabase, 'fetch_dataframe')
+    def test_exception_raised_if_rollup_requested_for_a_redshift_database(self, mock_db):
+        db = RedshiftDatabase(database='testdb')
+        manager = QueryManager(database=db)
+
+        with self.assertRaises(QueryNotSupportedError):
+            manager.query_data(db, self.mock_table, rollup=[['locale']])
+
 
     def test_yoy_week_interval(self):
         ref = references.YoY('date')
