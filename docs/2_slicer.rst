@@ -373,7 +373,7 @@ Totals adds ``ROLLUP`` to the SQL query to load the data and aggregated across d
 
 .. note::
 
-    Please note, the ROLLUP functionality is not currently supported for MySQL, as it implements ROLLUP differently to many Database platforms. An exception will be raised if you try and use this.
+    Please note, the ROLLUP functionality is not currently supported for MySQL, PostgreSQL and Amazon Redshift as they either implement ROLLUP differently to other Database platforms, or do not support ROLLUP operations at all. An exception will be raised if you try and use this.
 
 .. code-block:: python
 
