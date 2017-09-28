@@ -31,7 +31,7 @@ Slicers
 
 Slicers are the core component of |Brand|.  A Slicer is a configuration of two types of elements, metrics and dimensions, which represent what kinds of data exist and how the data can be organized.  A metric is a type of data, a measurement such as clicks and a dimension is a range over which metrics can be extended or grouped by.  Concretely, metrics represent the data *in* a chart or table and dimensions represent the rows and columns, axes, or categories.
 
-To configure a slicer, instantiate a |ClassSlicer| with either a |ClassVerticaDatabase| or a |ClassMySQLDatabase| and a |ClassTable| or |ClassTables|, with a list of |ClassMetric| and |ClassDimension|.
+To configure a slicer, instantiate a |ClassSlicer| with either a |ClassVerticaDatabase|, |ClassMySQLDatabase|, |ClassPostgreSQLDatabase| or a |ClassRedshiftDatabase| and a |ClassTable| or |ClassTables|, with a list of |ClassMetric| and |ClassDimension|.
 
 .. _slicer_example_start:
 
@@ -265,9 +265,11 @@ Crafted with ♥ in Berlin.
 .. |ClassDatabase| replace:: ``fireant.database.Database``
 .. |ClassVerticaDatabase| replace:: ``fireant.database.VerticaDatabase``
 .. |ClassMySQLDatabase| replace:: ``fireant.database.MySQLDatabase``
+.. |ClassPostgreSQLDatabase| replace:: ``fireant.database.PostgreSQLDatabase``
+.. |ClassRedshiftDatabase| replace:: ``fireant.database.RedshiftDatabase``
 
-.. |ClassTable| replace:: `pypika.Table`
-.. |ClassTables| replace:: `pypika.Tables`
+.. |ClassTable| replace:: ``pypika.Table``
+.. |ClassTables| replace:: ``pypika.Tables``
 
 .. _PyPika: https://github.com/kayak/pypika/
 .. _Pandas: http://pandas.pydata.org/
