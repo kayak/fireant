@@ -12,7 +12,11 @@ from pypika import (
 )
 
 from fireant import settings
-from fireant.database import MySQLDatabase
+from fireant.database import (
+    MySQLDatabase,
+    PostgreSQLDatabase,
+    RedshiftDatabase,
+)
 from fireant.slicer import references
 from fireant.slicer.pagination import Paginator
 from fireant.slicer.queries import (
@@ -113,7 +117,7 @@ class ExampleTests(QueryTests):
                 # Example of adding a Week-over-Week comparison to the query
                 (references.WoW.key, {
                     'dimension': 'date', 'definition': dt,
-                    'interval': references.WoW.interval,
+                    'time_unit': references.WoW.time_unit, 'interval': references.WoW.interval
                 })
             ]),
             rollup=[],
@@ -155,11 +159,11 @@ class ExampleTests(QueryTests):
                          'FROM "test_table" '
                          'JOIN "test_join1" ON "test_table"."join1_id"="test_join1"."id" '
                          'LEFT JOIN "test_join2" ON "test_table"."join2_id"="test_join2"."id" '
-                         'WHERE "test_table"."dt"+INTERVAL \'1 WEEK\' BETWEEN \'2016-01-01\' AND \'2016-12-31\' '
+                         'WHERE TIMESTAMPADD(\'week\',1,"test_table"."dt") BETWEEN \'2016-01-01\' AND \'2016-12-31\' '
                          'AND "test_join2"."fiz" IN (\'a\',\'b\',\'c\') '
                          'GROUP BY TRUNC("test_table"."dt",\'DD\'),"test_join2"."fiz" '
                          'HAVING SUM("test_join2"."buz")>100'
-                         ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL \'1 WEEK\' '
+                         ') "sq1" ON "sq0"."date"=TIMESTAMPADD(\'week\',1,"sq1"."date") '
                          'AND "sq0"."fiz"="sq1"."fiz" '
                          'ORDER BY "sq0"."date","sq0"."fiz"', str(query))
 
@@ -606,8 +610,8 @@ class ReferenceTests(QueryTests):
             ],
             references=OrderedDict([
                 (ref.key, {
-                    'dimension': ref.element_key, 'definition': dt,
-                    'interval': ref.interval, 'modifier': ref.modifier
+                    'dimension': ref.element_key, 'definition': dt, 'interval': ref.interval,
+                    'modifier': ref.modifier, 'time_unit': ref.time_unit
                 })
             ]),
             rollup=[],
@@ -615,8 +619,7 @@ class ReferenceTests(QueryTests):
         )
         return query
 
-    def assert_reference(self, query, key, interval=None):
-        interval = interval if interval else '\'{expr}\''.format(expr=self.intervals[key])
+    def assert_reference(self, query, key, time_unit):
 
         self.assertEqual(
             'SELECT '
@@ -637,19 +640,17 @@ class ReferenceTests(QueryTests):
             'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'WHERE "dt"+INTERVAL {interval} BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+            'WHERE TIMESTAMPADD(\'{time_unit}\',1,"dt") BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
             'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
-            ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL {interval} '
+            ') "sq1" ON "sq0"."date"=TIMESTAMPADD(\'{time_unit}\',1,"sq1"."date") '
             'AND "sq0"."device_type"="sq1"."device_type" '
             'ORDER BY "sq0"."date","sq0"."device_type"'.format(
                 key=key,
-                interval=interval
+                time_unit=time_unit
             ), str(query)
         )
 
-    def assert_reference_delta(self, query, key, interval=None):
-        interval = interval if interval else '\'{expr}\''.format(expr=self.intervals[key])
-
+    def assert_reference_delta(self, query, key, time_unit):
         self.assertEqual(
             'SELECT '
             '"sq0"."date" "date","sq0"."device_type" "device_type",'
@@ -669,19 +670,17 @@ class ReferenceTests(QueryTests):
             'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'WHERE "dt"+INTERVAL {interval} BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+            'WHERE TIMESTAMPADD(\'{time_unit}\',1,"dt") BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
             'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
-            ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL {interval} '
+            ') "sq1" ON "sq0"."date"=TIMESTAMPADD(\'{time_unit}\',1,"sq1"."date") '
             'AND "sq0"."device_type"="sq1"."device_type" '
             'ORDER BY "sq0"."date","sq0"."device_type"'.format(
                 key=key,
-                interval=interval
+                time_unit=time_unit
             ), str(query)
         )
 
-    def assert_reference_delta_percent(self, query, key, interval=None):
-        interval = interval if interval else '\'{expr}\''.format(expr=self.intervals[key])
-
+    def assert_reference_delta_percent(self, query, key, time_unit):
         self.assertEqual(
             'SELECT '
             '"sq0"."date" "date","sq0"."device_type" "device_type",'
@@ -701,91 +700,90 @@ class ReferenceTests(QueryTests):
             'TRUNC("dt",\'DD\') "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'WHERE "dt"+INTERVAL {interval} BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+            'WHERE TIMESTAMPADD(\'{time_unit}\',1,"dt") BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
             'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
-            ') "sq1" ON "sq0"."date"="sq1"."date"+INTERVAL {interval} '
+            ') "sq1" ON "sq0"."date"=TIMESTAMPADD(\'{time_unit}\',1,"sq1"."date") '
             'AND "sq0"."device_type"="sq1"."device_type" '
             'ORDER BY "sq0"."date","sq0"."device_type"'.format(
                 key=key,
-                interval=interval
+                time_unit=time_unit
             ), str(query)
         )
 
     def test_metrics_dimensions_filters_references__yoy(self):
         reference = references.YoY('date')
         query = self._get_compare_query(reference)
-        self.assert_reference(query, reference.key, '\'{expr}\' YEAR'.format(expr=self.intervals[reference.key]))
+        self.assert_reference(query, reference.key, reference.time_unit)
 
     def test_metrics_dimensions_filters_references__qoq(self):
         reference = references.QoQ('date')
         query = self._get_compare_query(reference)
-        self.assert_reference(query, reference.key)
+        self.assert_reference(query, reference.key, reference.time_unit)
 
     def test_metrics_dimensions_filters_references__mom(self):
         reference = references.MoM('date')
         query = self._get_compare_query(reference)
-        self.assert_reference(query, reference.key)
+        self.assert_reference(query, reference.key, reference.time_unit)
 
     def test_metrics_dimensions_filters_references__wow(self):
         reference = references.WoW('date')
         query = self._get_compare_query(reference)
-        self.assert_reference(query, reference.key)
+        self.assert_reference(query, reference.key, reference.time_unit)
 
     def test_metrics_dimensions_filters_references__dod(self):
         reference = references.DoD('date')
         query = self._get_compare_query(reference)
-        self.assert_reference(query, reference.key)
+        self.assert_reference(query, reference.key, reference.time_unit)
 
     def test_metrics_dimensions_filters_references__yoy_delta(self):
         reference = references.YoY('date')
         query = self._get_compare_query(references.Delta(reference))
-        self.assert_reference_delta(query, reference.key, '\'{expr}\' YEAR'.format(expr=self.intervals[reference.key]))
+        self.assert_reference_delta(query, reference.key, reference.time_unit)
 
     def test_metrics_dimensions_filters_references__qoq_delta(self):
         reference = references.QoQ('date')
         query = self._get_compare_query(references.Delta(reference))
-        self.assert_reference_delta(query, reference.key)
+        self.assert_reference_delta(query, reference.key, reference.time_unit)
 
     def test_metrics_dimensions_filters_references__mom_delta(self):
         reference = references.MoM('date')
         query = self._get_compare_query(references.Delta(reference))
-        self.assert_reference_delta(query, reference.key)
+        self.assert_reference_delta(query, reference.key, reference.time_unit)
 
     def test_metrics_dimensions_filters_references__wow_delta(self):
         reference = references.WoW('date')
         query = self._get_compare_query(references.Delta(reference))
-        self.assert_reference_delta(query, reference.key)
+        self.assert_reference_delta(query, reference.key, reference.time_unit)
 
     def test_metrics_dimensions_filters_references__dod_delta(self):
         reference = references.DoD('date')
         query = self._get_compare_query(references.Delta(reference))
-        self.assert_reference_delta(query, reference.key)
+        self.assert_reference_delta(query, reference.key, reference.time_unit)
 
     def test_metrics_dimensions_filters_references__yoy_delta_percent(self):
         reference = references.YoY('date')
         query = self._get_compare_query(references.DeltaPercentage(reference))
-        self.assert_reference_delta_percent(query, reference.key,
-                                            '\'{expr}\' YEAR'.format(expr=self.intervals[reference.key]))
+        self.assert_reference_delta_percent(query, reference.key, reference.time_unit)
 
     def test_metrics_dimensions_filters_references__qoq_delta_percent(self):
         reference = references.QoQ('date')
         query = self._get_compare_query(references.DeltaPercentage(reference))
-        self.assert_reference_delta_percent(query, reference.key)
+        self.assert_reference_delta_percent(query, reference.key, reference.time_unit)
 
     def test_metrics_dimensions_filters_references__mom_delta_percent(self):
         reference = references.MoM('date')
         query = self._get_compare_query(references.DeltaPercentage(reference))
-        self.assert_reference_delta_percent(query, reference.key)
+        self.assert_reference_delta_percent(query, reference.key, reference.time_unit)
 
     def test_metrics_dimensions_filters_references__wow_delta_percent(self):
         reference = references.WoW('date')
         query = self._get_compare_query(references.DeltaPercentage(reference))
-        self.assert_reference_delta_percent(query, reference.key)
+        self.assert_reference_delta_percent(query, reference.key, reference.time_unit)
 
     def test_metrics_dimensions_filters_references__dod_delta_percent(self):
         reference = references.DoD('date')
         query = self._get_compare_query(references.DeltaPercentage(reference))
-        self.assert_reference_delta_percent(query, reference.key)
+        self.assert_reference_delta_percent(query, reference.key, reference.time_unit)
 
     def test_metrics_dimensions_filters_references__no_date_dimension(self):
         ref = references.DoD('date')
@@ -811,7 +809,8 @@ class ReferenceTests(QueryTests):
             references=OrderedDict([
                 (ref.key, {
                     'dimension': ref.element_key, 'definition': self.mock_table.dt,
-                    'interval': ref.interval, 'modifier': ref.modifier
+                    'modifier': ref.modifier,
+                    'time_unit': ref.time_unit, 'interval': ref.interval
                 })
             ]),
             rollup=[],
@@ -837,12 +836,11 @@ class ReferenceTests(QueryTests):
             '"device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+            'WHERE TIMESTAMPADD(\'day\',1,"dt") BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
             'GROUP BY "device_type"'
             ') "sq1" ON "sq0"."device_type"="sq1"."device_type" '
             'ORDER BY "sq0"."device_type"'.format(
                 key=ref.key,
-                expr=self.intervals[ref.key]
             ), str(query)
         )
 
@@ -866,7 +864,9 @@ class ReferenceTests(QueryTests):
             references=OrderedDict([
                 (ref.key, {
                     'dimension': ref.element_key, 'definition': self.mock_table.dt,
-                    'interval': ref.interval, 'modifier': ref.modifier
+                    'modifier': ref.modifier,
+                    'time_unit': ref.time_unit, 'interval': ref.interval
+
                 })
             ]),
             rollup=[],
@@ -887,10 +887,9 @@ class ReferenceTests(QueryTests):
             'SELECT '
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'WHERE "dt"+INTERVAL \'{expr}\' BETWEEN \'2000-01-01\' AND \'2000-03-01\''
+            'WHERE TIMESTAMPADD(\'day\',1,"dt") BETWEEN \'2000-01-01\' AND \'2000-03-01\''
             ') "sq1"'.format(
                 key=ref.key,
-                expr=self.intervals[ref.key]
             ), str(query)
         )
 
@@ -1134,6 +1133,23 @@ class DimensionOptionTests(QueryTests):
         with self.assertRaises(QueryNotSupportedError):
             manager.query_data(db, self.mock_table, rollup=[['locale']])
 
+    @patch.object(PostgreSQLDatabase, 'fetch_dataframe')
+    def test_exception_raised_if_rollup_requested_for_a_postgres_database(self, mock_db):
+        db = PostgreSQLDatabase(database='testdb')
+        manager = QueryManager(database=db)
+
+        with self.assertRaises(QueryNotSupportedError):
+            manager.query_data(db, self.mock_table, rollup=[['locale']])
+
+    @patch.object(RedshiftDatabase, 'fetch_dataframe')
+    def test_exception_raised_if_rollup_requested_for_a_redshift_database(self, mock_db):
+        db = RedshiftDatabase(database='testdb')
+        manager = QueryManager(database=db)
+
+        with self.assertRaises(QueryNotSupportedError):
+            manager.query_data(db, self.mock_table, rollup=[['locale']])
+
+
     def test_yoy_week_interval(self):
         ref = references.YoY('date')
         dt = self.mock_table.dt
@@ -1153,7 +1169,8 @@ class DimensionOptionTests(QueryTests):
             references=OrderedDict([
                 (ref.key, {
                     'dimension': ref.element_key, 'definition': dt,
-                    'interval': ref.interval, 'modifier': ref.modifier
+                    'modifier': ref.modifier,
+                    'time_unit': ref.time_unit, 'interval': ref.interval
                 })
             ]),
             rollup=[],
@@ -1166,12 +1183,12 @@ class DimensionOptionTests(QueryTests):
                          'FROM "test_table" '
                          'GROUP BY TRUNC("dt",\'IW\')) "sq0" '
                          'LEFT JOIN ('
-                         'SELECT TRUNC("dt"+INTERVAL \'1\' YEAR,\'IW\')-INTERVAL \'1\' YEAR "date",'
+                         'SELECT TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"dt"),\'IW\')) "date",'
                          'SUM("clicks") "clicks" '
                          'FROM "test_table" '
-                         'GROUP BY TRUNC("dt"+INTERVAL \'1\' YEAR,\'IW\')-INTERVAL \'1\' YEAR) '
+                         'GROUP BY TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"dt"),\'IW\'))) '
                          '"sq1" '
-                         'ON "sq0"."date"="sq1"."date"+INTERVAL \'1\' YEAR '
+                         'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'ORDER BY "sq0"."date"', str(query))
 
 
@@ -1349,7 +1366,8 @@ class PaginationReferenceQueryTests(QueryTests):
             references=OrderedDict([
                 (ref.key, {
                     'dimension': ref.element_key, 'definition': dt,
-                    'interval': ref.interval, 'modifier': ref.modifier
+                    'modifier': ref.modifier,
+                    'time_unit': ref.time_unit, 'interval': ref.interval
                 })
             ]),
             rollup=[],
@@ -1383,7 +1401,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
                          'GROUP BY "dt","locale","locale_display") "sq1" '
-                         'ON "sq0"."date"="sq1"."date"+INTERVAL \'1\' YEAR '
+                         'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display"', str(query))
 
@@ -1414,7 +1432,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
                          'GROUP BY "dt","locale","locale_display") "sq1" '
-                         'ON "sq0"."date"="sq1"."date"+INTERVAL \'1\' YEAR '
+                         'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
                          'LIMIT 50', str(query))
@@ -1446,7 +1464,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
                          'GROUP BY "dt","locale","locale_display") "sq1" '
-                         'ON "sq0"."date"="sq1"."date"+INTERVAL \'1\' YEAR '
+                         'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
                          'LIMIT 50 OFFSET 10', str(query))
@@ -1478,7 +1496,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
                          'GROUP BY "dt","locale","locale_display") "sq1" '
-                         'ON "sq0"."date"="sq1"."date"+INTERVAL \'1\' YEAR '
+                         'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
                          'ORDER BY "locale" DESC '
@@ -1511,7 +1529,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
                          'GROUP BY "dt","locale","locale_display") "sq1" '
-                         'ON "sq0"."date"="sq1"."date"+INTERVAL \'1\' YEAR '
+                         'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
                          'ORDER BY SUM("clicks") DESC '
@@ -1545,7 +1563,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
                          'GROUP BY "dt","locale","locale_display") "sq1" '
-                         'ON "sq0"."date"="sq1"."date"+INTERVAL \'1\' YEAR '
+                         'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
                          'ORDER BY "locale" DESC,"locale_display" ASC', str(query))
@@ -1578,7 +1596,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
                          'GROUP BY "dt","locale","locale_display") "sq1" '
-                         'ON "sq0"."date"="sq1"."date"+INTERVAL \'1\' YEAR '
+                         'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
                          'ORDER BY SUM("clicks") DESC,SUM("impressions") ASC', str(query))
@@ -1611,7 +1629,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
                          'GROUP BY "dt","locale","locale_display") "sq1" '
-                         'ON "sq0"."date"="sq1"."date"+INTERVAL \'1\' YEAR '
+                         'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
                          'ORDER BY "locale" DESC,"locale_display" ASC '
@@ -1645,7 +1663,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
                          'GROUP BY "dt","locale","locale_display") "sq1" '
-                         'ON "sq0"."date"="sq1"."date"+INTERVAL \'1\' YEAR '
+                         'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
                          'ORDER BY "locale" DESC,"locale_display" ASC '
@@ -1679,7 +1697,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
                          'GROUP BY "dt","locale","locale_display") "sq1" '
-                         'ON "sq0"."date"="sq1"."date"+INTERVAL \'1\' YEAR '
+                         'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
                          'ORDER BY SUM("clicks") DESC,"locale_display" ASC '

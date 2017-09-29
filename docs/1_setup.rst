@@ -24,6 +24,18 @@ MySQL
 
     pip install fireant[mysql]
 
+PostgreSQL
+
+.. code-block:: bash
+
+    pip install fireant[postgresql]
+
+Amazon Redshift
+
+.. code-block:: bash
+
+    pip install fireant[redshift]
+
 Transformer add-ons
 -------------------
 
@@ -37,7 +49,7 @@ matplotlib
     pip install fireant[matplotlib]
 
 
-Once you have added |Brand| to your project, you must provide some additional settings.  A database connection is required in order to execute queries.  Currently, only Vertica and MySQL are supported via ``vertica_python`` and ``pymysql`` respectively, however future plans include support for various other databases such as MSSQL, PostgreSQL and Oracle.
+Once you have added |Brand| to your project, you must provide some additional settings.  A database connection is required in order to execute queries.  Currently, only Vertica, MySQL, PostgreSQL and Amazon Redshift are supported, however future plans include support for various other databases such as MSSQL and Oracle.
 
 To configure a database, instantiate a subclass of |ClassDatabase| and set it in ``fireant.settings``.  This must be only set once.
 
@@ -74,6 +86,37 @@ MySQL
 
 To enable full MySQL support, please install the custom database and MySQL date truncate function found in fireant/scripts/mysql_functions.sql. Further information is provided in this script on how to grant permissions on this function to your MySQL users.
 
+
+PostgreSQL
+
+.. code-block:: python
+
+    import fireant.settings
+    from fireant.database import PostgreSQLDatabase
+
+    fireant.settings = PostgreSQLDatabase(
+        database='testdb',
+        host='example.com',
+        port=5432,
+        user='user',
+        password='password123',
+    )
+
+Amazon Redshift
+
+.. code-block:: python
+
+    import fireant.settings
+    from fireant.database import RedshiftDatabase
+
+    fireant.settings = RedshiftDatabase(
+        database='testdb',
+        host='example.com',
+        port=5439,
+        user='user',
+        password='password123',
+    )
+
 Custom Database
 ---------------
 
@@ -105,7 +148,10 @@ Instead of using one of the built in database connectors, you can provide your o
             )
 
         def trunc_date(self, field, interval):
-            return Trunc(field, interval)
+            return Trunc(...)  # custom Trunc function
+
+        def date_add(self, date_part, interval, field):
+            return DateAdd(...)  # custom DateAdd function
 
     hostage.settings = MyVertica(
         host='example.com',
@@ -116,9 +162,7 @@ Instead of using one of the built in database connectors, you can provide your o
     )
 
 In a custom database connector, the ``connect`` function must be overridden to provide a ``connection`` to the database.
-The ``trunc_date`` function must also be overridden since there is no common way to trunc dates in SQL databases.
-|ClassDatabase| also implements a default ``interval`` method which can be overridden if necessary.
-
+The ``trunc_date`` and ``date_add`` functions must also be overridden since are no common ways to truncate/add dates in SQL databases.
 
 
 .. include:: ../README.rst

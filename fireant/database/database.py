@@ -2,7 +2,7 @@
 
 import pandas as pd
 
-from pypika import Interval, Query
+from pypika import Query
 
 
 class Database(object):
@@ -15,8 +15,9 @@ class Database(object):
     def trunc_date(self, field, interval):
         raise NotImplementedError
 
-    def interval(self, **kwargs):
-        return Interval(**kwargs)
+    def date_add(self, date_part, interval, field):
+        """ Database specific function for adding or subtracting dates """
+        raise NotImplementedError
 
     def fetch(self, query):
         with self.connect() as connection:

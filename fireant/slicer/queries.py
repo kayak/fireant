@@ -3,11 +3,14 @@ import copy
 import logging
 import time
 from itertools import chain
+from functools import partial
 
 import pandas as pd
 from pypika import (
     JoinType,
     MySQLQuery,
+    RedshiftQuery,
+    PostgreSQLQuery,
 )
 
 from fireant import utils
@@ -124,10 +127,10 @@ class QueryManager(object):
         :return:
             A pd.DataFrame indexed by the provided dimensions parameters containing columns for each metrics parameter.
         """
-        if rollup and database.query_cls is MySQLQuery:
-            # MySQL doesn't currently support query rollups in the same way as Vertica, Oracle etc.
+        if rollup and issubclass(database.query_cls, (MySQLQuery, PostgreSQLQuery, RedshiftQuery)):
+            # MySQL, postgreSQL and Redshift doesn't support query rollups in the same way as Vertica, Oracle etc.
             # We therefore don't support it for now.
-            raise QueryNotSupportedError("MySQL currently doesn't support ROLLUP operations!")
+            raise QueryNotSupportedError("This database type currently doesn't support ROLLUP operations!")
 
         query = self._build_data_query(
             database, table, joins, metrics, dimensions, dfilters, mfilters, references, rollup, pagination
@@ -227,30 +230,30 @@ class QueryManager(object):
                                                              for key in list(dimensions.keys()) + list(metrics.keys())])
 
         for reference_key, schema in references.items():
-            dimension_key, interval = schema['dimension'], schema['interval']
+            dimension_key = schema['dimension']
+
+            date_add = partial(database.date_add, date_part=schema['time_unit'], interval=schema['interval'])
 
             # The interval term from pypika does not take into account leap years, therefore the interval
             # needs to be replaced with a database specific one when appropriate.
             yoy_keys = [YoY.key, Delta.generate_key(YoY.key), DeltaPercentage.generate_key(YoY.key)]
             if reference_key in yoy_keys:
-                interval = database.interval(years=1)
-
                 # If YoY reference is used with the week interval, the dates will fail to match in the join
                 # as the first day of the ISO year is different. Therefore, we truncate the reference date by adding
                 # a year, truncating it and removing a year so the dates match.
                 from fireant.slicer import DatetimeDimension
                 week = DatetimeDimension.week
                 dim = dimensions[dimension_key]
-                if hasattr(dim, 'date_format') and dim.date_format in [week, database.DATETIME_INTERVALS[week].size]:
-                    dimensions[dimension_key] = database.trunc_date(dim.field + interval, 'week') - interval
-
-            schema['interval'] = interval
+                # week is the default date format. Vertica uses 'IW'.
+                if hasattr(dim, 'date_format') and dim.date_format in [week, 'IW']:
+                    trunc_and_add = database.trunc_date(database.date_add('year', 1, dim.field), 'week')
+                    dimensions[dimension_key] = database.date_add('year', -1, field=trunc_and_add)
 
             # Don't reuse the dfilters arg otherwise intervals will be aggregated on each iteration
-            replaced_dfilters = self._replace_filters_for_ref(dfilters, schema['definition'], interval)
+            replaced_dfilters = self._replace_filters_for_ref(dfilters, schema['definition'], date_add)
             ref_query = self._build_query_inner(table, joins, metrics, dimensions,
                                                 replaced_dfilters, mfilters, rollup)
-            join_criteria = self._build_reference_join_criteria(dimension_key, dimensions, interval, query, ref_query)
+            join_criteria = self._build_reference_join_criteria(dimension_key, dimensions, date_add, query, ref_query)
 
             # Optional modifier function to modify the metric in the reference query. This is for delta and delta
             # percentage references. It is None for normal references and this default should be used
@@ -368,7 +371,7 @@ class QueryManager(object):
         return '%s_%s' % (key, suffix) if suffix else key
 
     @staticmethod
-    def _replace_filters_for_ref(dfilters, target_dimension, interval):
+    def _replace_filters_for_ref(dfilters, target_dimension, date_add):
         """
         Replaces the dimension used by a reference in the dimension schema and dimension filter schema.
 
@@ -383,7 +386,8 @@ class QueryManager(object):
                 target_fields = ''.join(str(f) for f in target_dimension.fields())
                 if filter_fields == target_fields:
                     dfilter = copy.deepcopy(dfilter)
-                    dfilter.term = dfilter.term + interval
+                    # Note: date_add is only passed the field as it is a partial/curried function
+                    dfilter.term = date_add(field=dfilter.term)
 
             except (AttributeError, IndexError):
                 pass  # If the above if-expression cannot be evaluated, then its not the filter we are looking for
@@ -393,11 +397,12 @@ class QueryManager(object):
         return new_dfilters
 
     @staticmethod
-    def _build_reference_join_criteria(dimension_key, dimensions, interval, query, ref_query):
+    def _build_reference_join_criteria(dimension_key, dimensions, date_add, query, ref_query):
         ref_join_criteria = []
         if dimension_key in dimensions:
             ref_join_criteria.append(
-                query.field(dimension_key) == ref_query.field(dimension_key) + interval
+                # Note: date_add is only passed the field as it is a partial/curried function
+                query.field(dimension_key) == date_add(field=ref_query.field(dimension_key))
             )
 
         # The below set is sorted to ensure that the ON part of the join is always consistently ordered

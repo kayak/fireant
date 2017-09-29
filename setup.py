@@ -57,16 +57,18 @@ setup(
     install_requires=[
         'six',
         'pandas<0.20',
-        'pypika>=0.6.4',
+        'pypika>=0.8.0',
         'vertica-python>=0.6',
-        'pymysql==0.7.11'
+        'pymysql>=0.7.11'
     ],
     tests_require=[
         'mock'
     ],
     extras_require={
         'vertica': ['vertica-python>=0.6'],
-        'mysql': ['pymysql==0.7.11'],
+        'mysql': ['pymysql>=0.7.11'],
+        'redshift': ['psycopg2>=2.7.3.1'],
+        'postgresql': ['psycopg2>=2.7.3.1'],
         'matplotlib': ['matplotlib'],
     },
 
