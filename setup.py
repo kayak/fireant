@@ -57,7 +57,7 @@ setup(
     install_requires=[
         'six',
         'pandas<0.20',
-        'pypika>=0.6.4',
+        'pypika>=0.8.0',
         'vertica-python>=0.6',
         'pymysql>=0.7.11'
     ],
