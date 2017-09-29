@@ -13,7 +13,7 @@ class TestRedshift(TestPostgreSQL):
     """ Inherits from TestPostgreSQL as Redshift is almost identical to PostgreSQL so the tests are similar """
     @classmethod
     def setUpClass(cls):
-        super().setUpClass()
+        super(TestRedshift, cls).setUpClass()
         cls.database = RedshiftDatabase()
 
     def test_defaults(self):

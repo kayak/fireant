@@ -13,7 +13,7 @@ from fireant.database import PostgreSQLDatabase
 class TestPostgreSQL(TestCase):
     @classmethod
     def setUpClass(cls):
-        super().setUpClass()
+        super(TestPostgreSQL, cls).setUpClass()
         cls.database = PostgreSQLDatabase()
 
     def test_defaults(self):
