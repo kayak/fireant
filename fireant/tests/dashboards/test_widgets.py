@@ -2,9 +2,15 @@
 from unittest import TestCase
 
 from fireant.dashboards import *
-from fireant.slicer.transformers import (HighchartsLineTransformer, HighchartsColumnTransformer,
-                                         HighchartsBarTransformer,
-                                         DataTablesRowIndexTransformer, DataTablesColumnIndexTransformer)
+from fireant.slicer.transformers import (
+    CSVColumnIndexTransformer,
+    CSVRowIndexTransformer,
+    DataTablesColumnIndexTransformer,
+    DataTablesRowIndexTransformer,
+    HighchartsBarTransformer,
+    HighchartsColumnTransformer,
+    HighchartsLineTransformer,
+)
 
 
 class DashboardTests(TestCase):
@@ -39,3 +45,13 @@ class DashboardTests(TestCase):
         tx = DataTablesColumnIndexTransformer()
         widget = self._widget_test(ColumnIndexTableWidget, ['clicks', 'conversions'], tx)
         self.assertEqual(DataTablesColumnIndexTransformer, type(widget.transformer))
+
+    def test_row_index_csv(self):
+        tx = CSVRowIndexTransformer()
+        widget = self._widget_test(RowIndexCSVWidget, ['clicks', 'conversions'], tx)
+        self.assertEqual(CSVRowIndexTransformer, type(widget.transformer))
+
+    def test_column_index_csv(self):
+        tx = CSVColumnIndexTransformer()
+        widget = self._widget_test(ColumnIndexCSVWidget, ['clicks', 'conversions'], tx)
+        self.assertEqual(CSVColumnIndexTransformer, type(widget.transformer))

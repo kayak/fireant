@@ -87,6 +87,20 @@ class ColumnIndexTableWidget(Widget):
     transformer = DataTablesColumnIndexTransformer()
 
 
+class RowIndexCSVWidget(Widget):
+    """
+    The `RowIndexCSVWidget` class outputs data as a CSV string with row-indexed dimensions.
+    """
+    transformer = CSVRowIndexTransformer()
+
+
+class ColumnIndexCSVWidget(Widget):
+    """
+    The `ColumnIndexCSVWidget` class outputs data as a CSV string with column-indexed dimensions.
+    """
+    transformer = CSVColumnIndexTransformer()
+
+
 class WidgetGroup(object):
     def __init__(self, slicer, widgets=None, dimensions=None, dimension_filters=None, references=None, operations=None):
         self.slicer = slicer
