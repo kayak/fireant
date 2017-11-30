@@ -620,7 +620,6 @@ class ReferenceTests(QueryTests):
         return query
 
     def assert_reference(self, query, key, time_unit):
-
         self.assertEqual(
             'SELECT '
             '"sq0"."date" "date","sq0"."device_type" "device_type",'
@@ -1149,7 +1148,6 @@ class DimensionOptionTests(QueryTests):
         with self.assertRaises(QueryNotSupportedError):
             manager.query_data(db, self.mock_table, rollup=[['locale']])
 
-
     def test_yoy_week_interval(self):
         ref = references.YoY('date')
         dt = self.mock_table.dt
@@ -1271,7 +1269,7 @@ class PaginationNonReferenceQueryTests(QueryTests):
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
                          'GROUP BY "locale","locale_display" '
-                         'ORDER BY SUM("clicks") DESC '
+                         'ORDER BY "clicks" DESC '
                          'LIMIT 50', str(query))
 
     def test_offset_0_limit_0_with_multiple_dim_orderby_applied_to_query(self):
@@ -1298,7 +1296,7 @@ class PaginationNonReferenceQueryTests(QueryTests):
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
                          'GROUP BY "locale","locale_display" '
-                         'ORDER BY SUM("clicks") DESC,SUM("impressions") ASC', str(query))
+                         'ORDER BY "clicks" DESC,"impressions" ASC', str(query))
 
     def test_offset_0_limit_10_with_multiple_dim_orderby_applied_to_query(self):
         query = self.get_non_reference_query(Paginator(offset=0, limit=50, order=[('locale', Order.desc),
@@ -1339,7 +1337,7 @@ class PaginationNonReferenceQueryTests(QueryTests):
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
                          'GROUP BY "locale","locale_display" '
-                         'ORDER BY SUM("clicks") DESC,"locale_display" ASC '
+                         'ORDER BY "clicks" DESC,"locale_display" ASC '
                          'LIMIT 50 OFFSET 10', str(query))
 
 
@@ -1532,7 +1530,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
-                         'ORDER BY SUM("clicks") DESC '
+                         'ORDER BY "clicks" DESC '
                          'LIMIT 50', str(query))
 
     def test_offset_0_limit_0_with_multiple_dim_orderby_applied_to_query(self):
@@ -1599,7 +1597,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
-                         'ORDER BY SUM("clicks") DESC,SUM("impressions") ASC', str(query))
+                         'ORDER BY "clicks" DESC,"impressions" ASC', str(query))
 
     def test_offset_0_limit_10_with_multiple_dim_orderby_applied_to_query(self):
         query = self.get_reference_query(Paginator(offset=0, limit=50, order=[('locale', Order.desc),
@@ -1700,5 +1698,72 @@ class PaginationReferenceQueryTests(QueryTests):
                          'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
-                         'ORDER BY SUM("clicks") DESC,"locale_display" ASC '
+                         'ORDER BY "clicks" DESC,"locale_display" ASC '
+                         'LIMIT 50 OFFSET 10', str(query))
+
+    def test_offset_10_limit_50_with_reference_orderby_applied_to_query(self):
+        query = self.get_reference_query(Paginator(offset=10, limit=50, order=[('clicks_yoy', Order.desc)]))
+
+        self.assertEqual('SELECT '
+                         '"sq0"."date" "date",'
+                         '"sq0"."locale" "locale",'
+                         '"sq0"."locale_display" "locale_display",'
+                         '"sq0"."clicks" "clicks",'
+                         '"sq0"."impressions" "impressions",'
+                         '"sq1"."clicks" "clicks_yoy",'
+                         '"sq1"."impressions" "impressions_yoy" '
+                         'FROM '
+                         '(SELECT "dt" "date",'
+                         '"locale" "locale",'
+                         '"locale_display" "locale_display",'
+                         'SUM("clicks") "clicks",'
+                         'SUM("impressions") "impressions" '
+                         'FROM "test_table" '
+                         'GROUP BY "dt","locale","locale_display") "sq0" '
+                         'LEFT JOIN '
+                         '(SELECT "dt" "date",'
+                         '"locale" "locale",'
+                         '"locale_display" "locale_display",'
+                         'SUM("clicks") "clicks",'
+                         'SUM("impressions") "impressions" '
+                         'FROM "test_table" '
+                         'GROUP BY "dt","locale","locale_display") "sq1" '
+                         'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
+                         'AND "sq0"."locale"="sq1"."locale" '
+                         'AND "sq0"."locale_display"="sq1"."locale_display" '
+                         'ORDER BY "clicks_yoy" DESC '
+                         'LIMIT 50 OFFSET 10', str(query))
+
+    def test_offset_10_limit_50_with_multiple_reference_orderby_applied_to_query(self):
+        query = self.get_reference_query(Paginator(offset=10, limit=50, order=[('clicks_yoy', Order.desc),
+                                                                               ('impressions_yoy', Order.desc)]))
+
+        self.assertEqual('SELECT '
+                         '"sq0"."date" "date",'
+                         '"sq0"."locale" "locale",'
+                         '"sq0"."locale_display" "locale_display",'
+                         '"sq0"."clicks" "clicks",'
+                         '"sq0"."impressions" "impressions",'
+                         '"sq1"."clicks" "clicks_yoy",'
+                         '"sq1"."impressions" "impressions_yoy" '
+                         'FROM '
+                         '(SELECT "dt" "date",'
+                         '"locale" "locale",'
+                         '"locale_display" "locale_display",'
+                         'SUM("clicks") "clicks",'
+                         'SUM("impressions") "impressions" '
+                         'FROM "test_table" '
+                         'GROUP BY "dt","locale","locale_display") "sq0" '
+                         'LEFT JOIN '
+                         '(SELECT "dt" "date",'
+                         '"locale" "locale",'
+                         '"locale_display" "locale_display",'
+                         'SUM("clicks") "clicks",'
+                         'SUM("impressions") "impressions" '
+                         'FROM "test_table" '
+                         'GROUP BY "dt","locale","locale_display") "sq1" '
+                         'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
+                         'AND "sq0"."locale"="sq1"."locale" '
+                         'AND "sq0"."locale_display"="sq1"."locale_display" '
+                         'ORDER BY "clicks_yoy" DESC,"impressions_yoy" DESC '
                          'LIMIT 50 OFFSET 10', str(query))

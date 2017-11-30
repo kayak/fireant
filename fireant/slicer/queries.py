@@ -2,15 +2,15 @@
 import copy
 import logging
 import time
-from itertools import chain
 from functools import partial
+from itertools import chain
 
 import pandas as pd
 from pypika import (
     JoinType,
     MySQLQuery,
-    RedshiftQuery,
     PostgreSQLQuery,
+    RedshiftQuery,
 )
 
 from fireant import utils
@@ -220,7 +220,7 @@ class QueryManager(object):
             return self._build_reference_query(query, database, references, *args)
 
         if pagination:
-            return self._add_pagination(query, pagination, metrics, dimensions, references=[])
+            return self._add_pagination(query, pagination)
 
         return self._add_sorting(query, list(dimensions.values()))
 
@@ -278,7 +278,7 @@ class QueryManager(object):
             )
 
         if pagination:
-            return self._add_pagination(wrapper_query, pagination, metrics or [], dimensions or [], references or [])
+            return self._add_pagination(wrapper_query, pagination)
 
         return self._add_sorting(wrapper_query, [query.field(dkey) for dkey in dimensions.keys()])
 
@@ -355,15 +355,11 @@ class QueryManager(object):
         return query
 
     @staticmethod
-    def _add_pagination(query, pagination, metrics, dimensions, references):
+    def _add_pagination(query, pagination):
         """ Add offset, limit and order pagination to the query """
         query = query[pagination.offset: pagination.limit]
-        query_objects = utils.merge_dicts(metrics, dimensions, references)
-
         for key, order in pagination.order:
-            field = query_objects.get(key)
-            query = query.orderby(field, order=order)
-
+            query = query.orderby(key, order=order)
         return query
 
     @staticmethod
