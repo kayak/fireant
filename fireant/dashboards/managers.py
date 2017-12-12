@@ -16,7 +16,7 @@ class WidgetGroupManager(object):
                      for widget in self.widget_group.widgets
                      for metric in utils.flatten(widget.metrics)],
             dimensions=dimensions,
-            metric_filters=metric_filters or [],
+            metric_filters=self.widget_group.metric_filters + (metric_filters or []),
             dimension_filters=self.widget_group.dimension_filters + (dimension_filters or []),
             references=references,
             operations=operations,
