@@ -102,11 +102,14 @@ class ColumnIndexCSVWidget(Widget):
 
 
 class WidgetGroup(object):
-    def __init__(self, slicer, widgets=None, dimensions=None, dimension_filters=None, references=None, operations=None):
+    def __init__(self, slicer, widgets=None, dimensions=None,
+                 metric_filters=None, dimension_filters=None,
+                 references=None, operations=None):
         self.slicer = slicer
         self.widgets = widgets
 
         self.dimensions = dimensions or []
+        self.metric_filters = metric_filters or []
         self.dimension_filters = dimension_filters or []
         self.references = references or []
         self.operations = operations or []
