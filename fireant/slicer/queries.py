@@ -6,18 +6,18 @@ from functools import partial
 from itertools import chain
 
 import pandas as pd
-from pypika import (
-    JoinType,
-    MySQLQuery,
-    PostgreSQLQuery,
-    RedshiftQuery,
-)
 
 from fireant import utils
 from fireant.slicer.references import (
     Delta,
     DeltaPercentage,
     YoY,
+)
+from pypika import (
+    JoinType,
+    MySQLQuery,
+    PostgreSQLQuery,
+    RedshiftQuery,
 )
 
 query_logger = logging.getLogger('fireant.query_log$')
@@ -222,7 +222,8 @@ class QueryManager(object):
         if pagination:
             return self._add_pagination(query, pagination)
 
-        return self._add_sorting(query, list(dimensions.values()))
+        return self._add_sorting(query, [query.field(dkey).as_(alias)
+                                         for alias, dkey in dimensions.items()])
 
     def _build_reference_query(self, query, database, references, table, joins, metrics, dimensions, dfilters,
                                mfilters, rollup, pagination):
@@ -280,7 +281,7 @@ class QueryManager(object):
         if pagination:
             return self._add_pagination(wrapper_query, pagination)
 
-        return self._add_sorting(wrapper_query, [query.field(dkey) for dkey in dimensions.keys()])
+        return self._add_sorting(wrapper_query, [query.field(dkey).as_(alias) for alias, dkey in dimensions.items()])
 
     def _build_dimension_query(self, table, joins, dimensions, filters, limit=None):
         query = self.query_cls.from_(table).distinct()
@@ -358,8 +359,13 @@ class QueryManager(object):
     def _add_pagination(query, pagination):
         """ Add offset, limit and order pagination to the query """
         query = query[pagination.offset: pagination.limit]
+        select_mapping = {s.alias:s for s in query._selects}
         for key, order in pagination.order:
-            query = query.orderby(key, order=order)
+            pagination_field = select_mapping[key]
+            if not pagination_field:
+                raise Exception("Invalid metric or dimension key used for pagination: {key}"
+                                .format(key=key))
+            query = query.orderby(pagination_field, order=order)
         return query
 
     @staticmethod
