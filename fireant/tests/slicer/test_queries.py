@@ -146,7 +146,7 @@ class ExampleTests(QueryTests):
                          'LEFT JOIN "test_join2" ON "test_table"."join2_id"="test_join2"."id" '
                          'WHERE "test_table"."dt" BETWEEN \'2016-01-01\' AND \'2016-12-31\' '
                          'AND "test_join2"."fiz" IN (\'a\',\'b\',\'c\') '
-                         'GROUP BY TRUNC("test_table"."dt",\'DD\'),"test_join2"."fiz" '
+                         'GROUP BY "date","fiz" '
                          'HAVING SUM("test_join2"."buz")>100'
                          ') "sq0" '
                          'LEFT JOIN ('
@@ -161,11 +161,11 @@ class ExampleTests(QueryTests):
                          'LEFT JOIN "test_join2" ON "test_table"."join2_id"="test_join2"."id" '
                          'WHERE TIMESTAMPADD(\'week\',1,"test_table"."dt") BETWEEN \'2016-01-01\' AND \'2016-12-31\' '
                          'AND "test_join2"."fiz" IN (\'a\',\'b\',\'c\') '
-                         'GROUP BY TRUNC("test_table"."dt",\'DD\'),"test_join2"."fiz" '
+                         'GROUP BY "date","fiz" '
                          'HAVING SUM("test_join2"."buz")>100'
                          ') "sq1" ON "sq0"."date"=TIMESTAMPADD(\'week\',1,"sq1"."date") '
                          'AND "sq0"."fiz"="sq1"."fiz" '
-                         'ORDER BY "sq0"."date","sq0"."fiz"', str(query))
+                         'ORDER BY "date","fiz"', str(query))
 
 
 class MetricsTests(QueryTests):
@@ -304,8 +304,8 @@ class DimensionTests(QueryTests):
         self.assertEqual(
             'SELECT TRUNC("dt",\'HH\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'GROUP BY TRUNC("dt",\'HH\') '
-            'ORDER BY TRUNC("dt",\'HH\')', str(query))
+            'GROUP BY "date" '
+            'ORDER BY "date"', str(query))
 
     def test_timeseries_DD(self):
         query = self._test_truncated_timeseries('day')
@@ -313,8 +313,8 @@ class DimensionTests(QueryTests):
         self.assertEqual(
             'SELECT TRUNC("dt",\'DD\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'GROUP BY TRUNC("dt",\'DD\') '
-            'ORDER BY TRUNC("dt",\'DD\')', str(query))
+            'GROUP BY "date" '
+            'ORDER BY "date"', str(query))
 
     def test_timeseries_week(self):
         query = self._test_truncated_timeseries('week')
@@ -322,8 +322,8 @@ class DimensionTests(QueryTests):
         self.assertEqual(
             'SELECT TRUNC("dt",\'IW\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'GROUP BY TRUNC("dt",\'IW\') '
-            'ORDER BY TRUNC("dt",\'IW\')', str(query))
+            'GROUP BY "date" '
+            'ORDER BY "date"', str(query))
 
     def test_timeseries_month(self):
         query = self._test_truncated_timeseries('month')
@@ -331,8 +331,8 @@ class DimensionTests(QueryTests):
         self.assertEqual(
             'SELECT TRUNC("dt",\'MM\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'GROUP BY TRUNC("dt",\'MM\') '
-            'ORDER BY TRUNC("dt",\'MM\')', str(query))
+            'GROUP BY "date" '
+            'ORDER BY "date"', str(query))
 
     def test_timeseries_quarter(self):
         query = self._test_truncated_timeseries('quarter')
@@ -340,8 +340,8 @@ class DimensionTests(QueryTests):
         self.assertEqual(
             'SELECT TRUNC("dt",\'Q\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'GROUP BY TRUNC("dt",\'Q\') '
-            'ORDER BY TRUNC("dt",\'Q\')', str(query))
+            'GROUP BY "date" '
+            'ORDER BY "date"', str(query))
 
     def test_timeseries_year(self):
         query = self._test_truncated_timeseries('year')
@@ -349,8 +349,8 @@ class DimensionTests(QueryTests):
         self.assertEqual(
             'SELECT TRUNC("dt",\'Y\') "date",SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'GROUP BY TRUNC("dt",\'Y\') '
-            'ORDER BY TRUNC("dt",\'Y\')', str(query))
+            'GROUP BY "date" '
+            'ORDER BY "date"', str(query))
 
     def test_multidimension_categorical(self):
         query = self.manager._build_data_query(
@@ -406,8 +406,8 @@ class DimensionTests(QueryTests):
             'SELECT TRUNC("dt",\'DD\') "date","device_type" "device_type",'
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
-            'GROUP BY TRUNC("dt",\'DD\'),"device_type" '
-            'ORDER BY TRUNC("dt",\'DD\'),"device_type"', str(query))
+            'GROUP BY "date","device_type" '
+            'ORDER BY "date","device_type"', str(query))
 
     def test_metrics_with_joins(self):
         truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'day')
@@ -446,8 +446,8 @@ class DimensionTests(QueryTests):
                          '"test_join1"."ctid" "city_id","test_join1"."city_name" "city_name" '
                          'FROM "test_table" '
                          'LEFT JOIN "test_join1" ON "test_table"."hotel_id"="test_join1"."hotel_id" '
-                         'GROUP BY TRUNC("test_table"."dt",\'DD\'),"test_table"."locale" '
-                         'ORDER BY TRUNC("test_table"."dt",\'DD\'),"test_table"."locale"', str(query))
+                         'GROUP BY "date","locale" '
+                         'ORDER BY "date","locale"', str(query))
 
 
 class FilterTests(QueryTests):
@@ -632,7 +632,7 @@ class ReferenceTests(QueryTests):
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
+            'GROUP BY "date","device_type"'
             ') "sq0" '
             'LEFT JOIN ('
             'SELECT '
@@ -640,10 +640,10 @@ class ReferenceTests(QueryTests):
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'WHERE TIMESTAMPADD(\'{time_unit}\',1,"dt") BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
+            'GROUP BY "date","device_type"'
             ') "sq1" ON "sq0"."date"=TIMESTAMPADD(\'{time_unit}\',1,"sq1"."date") '
             'AND "sq0"."device_type"="sq1"."device_type" '
-            'ORDER BY "sq0"."date","sq0"."device_type"'.format(
+            'ORDER BY "date","device_type"'.format(
                 key=key,
                 time_unit=time_unit
             ), str(query)
@@ -662,7 +662,7 @@ class ReferenceTests(QueryTests):
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
+            'GROUP BY "date","device_type"'
             ') "sq0" '
             'LEFT JOIN ('
             'SELECT '
@@ -670,10 +670,10 @@ class ReferenceTests(QueryTests):
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'WHERE TIMESTAMPADD(\'{time_unit}\',1,"dt") BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
+            'GROUP BY "date","device_type"'
             ') "sq1" ON "sq0"."date"=TIMESTAMPADD(\'{time_unit}\',1,"sq1"."date") '
             'AND "sq0"."device_type"="sq1"."device_type" '
-            'ORDER BY "sq0"."date","sq0"."device_type"'.format(
+            'ORDER BY "date","device_type"'.format(
                 key=key,
                 time_unit=time_unit
             ), str(query)
@@ -692,7 +692,7 @@ class ReferenceTests(QueryTests):
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'WHERE "dt" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
+            'GROUP BY "date","device_type"'
             ') "sq0" '
             'LEFT JOIN ('
             'SELECT '
@@ -700,10 +700,10 @@ class ReferenceTests(QueryTests):
             'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
             'FROM "test_table" '
             'WHERE TIMESTAMPADD(\'{time_unit}\',1,"dt") BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-            'GROUP BY TRUNC("dt",\'DD\'),"device_type"'
+            'GROUP BY "date","device_type"'
             ') "sq1" ON "sq0"."date"=TIMESTAMPADD(\'{time_unit}\',1,"sq1"."date") '
             'AND "sq0"."device_type"="sq1"."device_type" '
-            'ORDER BY "sq0"."date","sq0"."device_type"'.format(
+            'ORDER BY "date","device_type"'.format(
                 key=key,
                 time_unit=time_unit
             ), str(query)
@@ -838,7 +838,7 @@ class ReferenceTests(QueryTests):
             'WHERE TIMESTAMPADD(\'day\',1,"dt") BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
             'GROUP BY "device_type"'
             ') "sq1" ON "sq0"."device_type"="sq1"."device_type" '
-            'ORDER BY "sq0"."device_type"'.format(
+            'ORDER BY "device_type"'.format(
                 key=ref.key,
             ), str(query)
         )
@@ -921,8 +921,8 @@ class TotalsQueryTests(QueryTests):
                          'TRUNC("dt",\'DD\') "date","locale" "locale",'
                          'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
                          'FROM "test_table" '
-                         'GROUP BY TRUNC("dt",\'DD\'),ROLLUP(("locale")) '
-                         'ORDER BY TRUNC("dt",\'DD\'),"locale"', str(query))
+                         'GROUP BY "date",ROLLUP(("locale")) '
+                         'ORDER BY "date","locale"', str(query))
 
     def test_add_rollup_two_dimensions(self):
         truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'day')
@@ -955,8 +955,8 @@ class TotalsQueryTests(QueryTests):
                          '"device_type" "device_type",'
                          'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
                          'FROM "test_table" '
-                         'GROUP BY TRUNC("dt",\'DD\'),ROLLUP(("locale"),("device_type")) '
-                         'ORDER BY TRUNC("dt",\'DD\'),"locale","device_type"', str(query))
+                         'GROUP BY "date",ROLLUP(("locale"),("device_type")) '
+                         'ORDER BY "date","locale","device_type"', str(query))
 
     def test_add_rollup_two_dimensions_partial(self):
         truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'day')
@@ -989,8 +989,8 @@ class TotalsQueryTests(QueryTests):
                          '"locale" "locale",'  # Order is changed, rollup dims move to end
                          'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
                          'FROM "test_table" '
-                         'GROUP BY TRUNC("dt",\'DD\'),"device_type",ROLLUP(("locale")) '
-                         'ORDER BY TRUNC("dt",\'DD\'),"locale","device_type"', str(query))
+                         'GROUP BY "date","device_type",ROLLUP(("locale")) '
+                         'ORDER BY "date","locale","device_type"', str(query))
 
     def test_add_rollup_uni_dimension(self):
         truncated_dt = settings.database.trunc_date(self.mock_table.dt, 'day')
@@ -1023,8 +1023,8 @@ class TotalsQueryTests(QueryTests):
                          '"locale_display" "locale_display",'
                          'SUM("clicks") "clicks",SUM("revenue")/SUM("cost") "roi" '
                          'FROM "test_table" '
-                         'GROUP BY TRUNC("dt",\'DD\'),ROLLUP(("locale","locale_display")) '
-                         'ORDER BY TRUNC("dt",\'DD\'),"locale","locale_display"', str(query))
+                         'GROUP BY "date",ROLLUP(("locale","locale_display")) '
+                         'ORDER BY "date","locale","locale_display"', str(query))
 
 
 class DimensionOptionTests(QueryTests):
@@ -1179,15 +1179,16 @@ class DimensionOptionTests(QueryTests):
                          'FROM ('
                          'SELECT TRUNC("dt",\'IW\') "date",SUM("clicks") "clicks" '
                          'FROM "test_table" '
-                         'GROUP BY TRUNC("dt",\'IW\')) "sq0" '
+                         'GROUP BY "date"'
+                         ') "sq0" '
                          'LEFT JOIN ('
                          'SELECT TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"dt"),\'IW\')) "date",'
                          'SUM("clicks") "clicks" '
                          'FROM "test_table" '
-                         'GROUP BY TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"dt"),\'IW\'))) '
+                         'GROUP BY "date") '
                          '"sq1" '
                          'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
-                         'ORDER BY "sq0"."date"', str(query))
+                         'ORDER BY "date"', str(query))
 
 
 class PaginationNonReferenceQueryTests(QueryTests):
@@ -1390,7 +1391,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq0" '
+                         'GROUP BY "date","locale","locale_display") "sq0" '
                          'LEFT JOIN '
                          '(SELECT "dt" "date",'
                          '"locale" "locale",'
@@ -1398,7 +1399,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq1" '
+                         'GROUP BY "date","locale","locale_display") "sq1" '
                          'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display"', str(query))
@@ -1421,7 +1422,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq0" '
+                         'GROUP BY "date","locale","locale_display") "sq0" '
                          'LEFT JOIN '
                          '(SELECT "dt" "date",'
                          '"locale" "locale",'
@@ -1429,7 +1430,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq1" '
+                         'GROUP BY "date","locale","locale_display") "sq1" '
                          'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
@@ -1453,7 +1454,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq0" '
+                         'GROUP BY "date","locale","locale_display") "sq0" '
                          'LEFT JOIN '
                          '(SELECT "dt" "date",'
                          '"locale" "locale",'
@@ -1461,7 +1462,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq1" '
+                         'GROUP BY "date","locale","locale_display") "sq1" '
                          'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
@@ -1485,7 +1486,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq0" '
+                         'GROUP BY "date","locale","locale_display") "sq0" '
                          'LEFT JOIN '
                          '(SELECT "dt" "date",'
                          '"locale" "locale",'
@@ -1493,7 +1494,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq1" '
+                         'GROUP BY "date","locale","locale_display") "sq1" '
                          'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
@@ -1518,7 +1519,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq0" '
+                         'GROUP BY "date","locale","locale_display") "sq0" '
                          'LEFT JOIN '
                          '(SELECT "dt" "date",'
                          '"locale" "locale",'
@@ -1526,7 +1527,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq1" '
+                         'GROUP BY "date","locale","locale_display") "sq1" '
                          'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
@@ -1552,7 +1553,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq0" '
+                         'GROUP BY "date","locale","locale_display") "sq0" '
                          'LEFT JOIN '
                          '(SELECT "dt" "date",'
                          '"locale" "locale",'
@@ -1560,7 +1561,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq1" '
+                         'GROUP BY "date","locale","locale_display") "sq1" '
                          'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
@@ -1585,7 +1586,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq0" '
+                         'GROUP BY "date","locale","locale_display") "sq0" '
                          'LEFT JOIN '
                          '(SELECT "dt" "date",'
                          '"locale" "locale",'
@@ -1593,7 +1594,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq1" '
+                         'GROUP BY "date","locale","locale_display") "sq1" '
                          'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
@@ -1618,7 +1619,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq0" '
+                         'GROUP BY "date","locale","locale_display") "sq0" '
                          'LEFT JOIN '
                          '(SELECT "dt" "date",'
                          '"locale" "locale",'
@@ -1626,7 +1627,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq1" '
+                         'GROUP BY "date","locale","locale_display") "sq1" '
                          'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
@@ -1652,7 +1653,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq0" '
+                         'GROUP BY "date","locale","locale_display") "sq0" '
                          'LEFT JOIN '
                          '(SELECT "dt" "date",'
                          '"locale" "locale",'
@@ -1660,7 +1661,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq1" '
+                         'GROUP BY "date","locale","locale_display") "sq1" '
                          'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
@@ -1686,7 +1687,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq0" '
+                         'GROUP BY "date","locale","locale_display") "sq0" '
                          'LEFT JOIN '
                          '(SELECT "dt" "date",'
                          '"locale" "locale",'
@@ -1694,7 +1695,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq1" '
+                         'GROUP BY "date","locale","locale_display") "sq1" '
                          'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
@@ -1719,7 +1720,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq0" '
+                         'GROUP BY "date","locale","locale_display") "sq0" '
                          'LEFT JOIN '
                          '(SELECT "dt" "date",'
                          '"locale" "locale",'
@@ -1727,7 +1728,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq1" '
+                         'GROUP BY "date","locale","locale_display") "sq1" '
                          'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
@@ -1753,7 +1754,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq0" '
+                         'GROUP BY "date","locale","locale_display") "sq0" '
                          'LEFT JOIN '
                          '(SELECT "dt" "date",'
                          '"locale" "locale",'
@@ -1761,7 +1762,7 @@ class PaginationReferenceQueryTests(QueryTests):
                          'SUM("clicks") "clicks",'
                          'SUM("impressions") "impressions" '
                          'FROM "test_table" '
-                         'GROUP BY "dt","locale","locale_display") "sq1" '
+                         'GROUP BY "date","locale","locale_display") "sq1" '
                          'ON "sq0"."date"=TIMESTAMPADD(\'year\',1,"sq1"."date") '
                          'AND "sq0"."locale"="sq1"."locale" '
                          'AND "sq0"."locale_display"="sq1"."locale_display" '
