@@ -1,85 +1,43 @@
-# coding: utf8
+from .metrics import Metric
 
 
 class Operation(object):
     """
     The `Operation` class represents an operation in the `Slicer` API.
     """
-    key = None
-    label = None
+    pass
 
-    def schemas(self):
-        pass
 
+class _Loss(Operation):
+    def __init__(self, expected, actual):
+        self.expected = expected
+        self.actual = actual
+
+    @property
     def metrics(self):
-        return []
+        return [metric
+                for metric in [self.expected, self.actual]
+                if isinstance(metric, Metric)]
 
 
-class Totals(Operation):
-    """
-    `Operation` for rolling up totals across dimensions in queries.  This will append the totals across a dimension to
-    a dimension.
-    """
-    key = '_total'
-    label = 'Total'
-
-    def __init__(self, *dimension_keys):
-        self.dimension_keys = dimension_keys
+class L1Loss(_Loss): pass
 
 
-class L1Loss(Operation):
-    """
-    Performs L1 Loss (mean abs. error) operation on a metric using another metric as the target.
-    """
-    key = 'l1loss'
-    label = 'L1 loss'
+class L2Loss(_Loss): pass
 
-    def __init__(self, metric_key, target_metric_key):
-        self.metric_key = metric_key
-        self.target_metric_key = target_metric_key
 
-    def schemas(self):
-        return {
-            'key': self.key,
-            'metric': self.metric_key,
-            'target': self.target_metric_key,
-        }
+class _Cumulative(Operation):
+    def __init__(self, arg):
+        self.arg = arg
 
+    @property
     def metrics(self):
-        return [self.metric_key, self.target_metric_key]
+        return [metric
+                for metric in [self.arg]
+                if isinstance(metric, Metric)]
 
 
-class L2Loss(L1Loss):
-    """
-    Performs L2 Loss (mean sqr. error) operation on a metric using another metric as the target.
-    """
-    key = 'l2loss'
-    label = 'L2 loss'
+class CumSum(_Cumulative): pass
 
 
-class CumSum(Operation):
-    """
-    Accumulates the sum of one or more metrics.
-    """
-    key = 'cumsum'
-    label = 'cum. sum'
-
-    def __init__(self, metric_key):
-        self.metric_key = metric_key
-
-    def schemas(self):
-        return {
-            'key': self.key,
-            'metric': self.metric_key,
-        }
-
-    def metrics(self):
-        return (self.metric_key,)
-
-
-class CumMean(CumSum):
-    """
-    Accumulates the mean of one or more metrics
-    """
-    key = 'cummean'
-    label = 'cum. mean'
+class CumAvg(_Cumulative): pass

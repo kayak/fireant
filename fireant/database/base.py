@@ -1,11 +1,15 @@
-# coding: utf-8
-
 import pandas as pd
 
-from pypika import Query
+from pypika import (
+    Query,
+    terms,
+)
 
 
 class Database(object):
+    """
+    WRITEME
+    """
     # The pypika query class to use for constructing queries
     query_cls = Query
 
@@ -15,7 +19,7 @@ class Database(object):
     def trunc_date(self, field, interval):
         raise NotImplementedError
 
-    def date_add(self, date_part, interval, field):
+    def date_add(self, field: terms.Term, date_part: str, interval: int):
         """ Database specific function for adding or subtracting dates """
         raise NotImplementedError
 

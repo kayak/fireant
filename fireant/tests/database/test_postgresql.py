@@ -1,4 +1,3 @@
-# coding: utf-8
 from unittest import TestCase
 
 from mock import (
@@ -13,7 +12,6 @@ from fireant.database import PostgreSQLDatabase
 class TestPostgreSQL(TestCase):
     @classmethod
     def setUpClass(cls):
-        super(TestPostgreSQL, cls).setUpClass()
         cls.database = PostgreSQLDatabase()
 
     def test_defaults(self):
@@ -63,31 +61,31 @@ class TestPostgreSQL(TestCase):
         self.assertEqual('date_trunc(\'year\',"date")', str(result))
 
     def test_date_add_hour(self):
-        result = self.database.date_add('hour', 1, Field('date'))
+        result = self.database.date_add(Field('date'), 'hour', 1)
 
         self.assertEqual('DATE_ADD(\'hour\',1,"date")', str(result))
 
     def test_date_add_day(self):
-        result = self.database.date_add('day', 1, Field('date'))
+        result = self.database.date_add(Field('date'), 'day', 1)
 
         self.assertEqual('DATE_ADD(\'day\',1,"date")', str(result))
 
     def test_date_add_week(self):
-        result = self.database.date_add('week', 1, Field('date'))
+        result = self.database.date_add(Field('date'), 'week', 1)
 
         self.assertEqual('DATE_ADD(\'week\',1,"date")', str(result))
 
     def test_date_add_month(self):
-        result = self.database.date_add('month', 1, Field('date'))
+        result = self.database.date_add(Field('date'), 'month', 1)
 
         self.assertEqual('DATE_ADD(\'month\',1,"date")', str(result))
 
     def test_date_add_quarter(self):
-        result = self.database.date_add('quarter', 1, Field('date'))
+        result = self.database.date_add(Field('date'), 'quarter', 1)
 
         self.assertEqual('DATE_ADD(\'quarter\',1,"date")', str(result))
 
     def test_date_add_year(self):
-        result = self.database.date_add('year', 1, Field('date'))
+        result = self.database.date_add(Field('date'), 'year', 1)
 
         self.assertEqual('DATE_ADD(\'year\',1,"date")', str(result))

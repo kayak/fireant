@@ -1,12 +1,11 @@
-# coding: utf-8
 import pandas as pd
+
 from pypika import (
     PostgreSQLQuery,
     functions as fn,
     terms,
 )
-
-from fireant.database import Database
+from .base import Database
 
 
 class Trunc(terms.Function):
@@ -40,10 +39,8 @@ class PostgreSQLDatabase(Database):
     def connect(self):
         import psycopg2
 
-        return psycopg2.connect(
-            host=self.host, port=self.port, dbname=self.database,
-            user=self.user, password=self.password,
-        )
+        return psycopg2.connect(host=self.host, port=self.port, dbname=self.database,
+                                user=self.user, password=self.password)
 
     def fetch(self, query):
         with self.connect().cursor() as cursor:
@@ -56,5 +53,5 @@ class PostgreSQLDatabase(Database):
     def trunc_date(self, field, interval):
         return Trunc(field, interval)
 
-    def date_add(self, date_part, interval, field):
+    def date_add(self, field, date_part, interval):
         return fn.DateAdd(date_part, interval, field)

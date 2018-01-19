@@ -1,0 +1,480 @@
+import locale as lc
+from unittest import (
+    TestCase,
+)
+
+import pandas as pd
+from datetime import date
+from mock import Mock
+
+from fireant.slicer.widgets.datatables import (
+    DataTablesJS,
+    _format_metric_cell,
+)
+from fireant.tests.slicer.mocks import (
+    mock_politics_database as mock_df,
+    slicer,
+)
+
+lc.setlocale(lc.LC_ALL, 'C')
+
+
+class DataTablesTransformerTests(TestCase):
+    maxDiff = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.single_metric_df = pd.DataFrame(mock_df[['votes']]
+                                            .sum()).T
+
+        cls.multi_metric_df = pd.DataFrame(mock_df[['votes', 'wins']]
+                                           .sum()).T
+
+        cls.cont_dim_df = mock_df[['timestamp', 'votes', 'wins']] \
+            .groupby('timestamp') \
+            .sum()
+
+        cls.cat_dim_df = mock_df[['political_party', 'votes', 'wins']] \
+            .groupby('political_party') \
+            .sum()
+
+        cls.uni_dim_df = mock_df[['candidate', 'candidate_display', 'votes', 'wins']] \
+            .groupby(['candidate', 'candidate_display']) \
+            .sum() \
+            .reset_index('candidate_display')
+
+        cls.cont_cat_dim_df = mock_df[['timestamp', 'political_party', 'votes', 'wins']] \
+            .groupby(['timestamp', 'political_party']) \
+            .sum()
+
+        cls.cont_uni_dim_df = mock_df[['timestamp', 'state', 'state_display', 'votes', 'wins']] \
+            .groupby(['timestamp', 'state', 'state_display']) \
+            .sum() \
+            .reset_index('state_display')
+
+    def test_single_metric(self):
+        result = DataTablesJS(metrics=[slicer.metrics.votes]) \
+            .transform(self.single_metric_df, slicer)
+
+        self.assertEqual({
+            'columns': [{
+                'data': 'votes',
+                'title': 'Votes',
+                'render': {'_': 'value', 'display': 'display'},
+            }],
+            'data': [{
+                'votes': {'value': 111674336, 'display': '111674336'}
+            }],
+        }, result)
+
+    def test_single_metric_with_dataframe_containing_more(self):
+        result = DataTablesJS(metrics=[slicer.metrics.votes]) \
+            .transform(self.multi_metric_df, slicer)
+
+        self.assertEqual({
+            'columns': [{
+                'data': 'votes',
+                'title': 'Votes',
+                'render': {'_': 'value', 'display': 'display'},
+            }],
+            'data': [{
+                'votes': {'value': 111674336, 'display': '111674336'}
+            }],
+        }, result)
+
+    def test_multiple_metrics(self):
+        result = DataTablesJS(metrics=[slicer.metrics.votes, slicer.metrics.wins]) \
+            .transform(self.multi_metric_df, slicer)
+
+        self.assertEqual({
+            'columns': [{
+                'data': 'votes',
+                'title': 'Votes',
+                'render': {'_': 'value', 'display': 'display'},
+            }, {
+                'data': 'wins',
+                'title': 'Wins',
+                'render': {'_': 'value', 'display': 'display'},
+            }],
+            'data': [{
+                'votes': {'value': 111674336, 'display': '111674336'},
+                'wins': {'value': 12, 'display': '12'},
+            }],
+        }, result)
+
+    def test_multiple_metrics_reversed(self):
+        result = DataTablesJS(metrics=[slicer.metrics.wins, slicer.metrics.votes]) \
+            .transform(self.multi_metric_df, slicer)
+
+        self.assertEqual({
+            'columns': [{
+                'data': 'wins',
+                'title': 'Wins',
+                'render': {'_': 'value', 'display': 'display'},
+            }, {
+                'data': 'votes',
+                'title': 'Votes',
+                'render': {'_': 'value', 'display': 'display'},
+            }],
+            'data': [{
+                'wins': {'value': 12, 'display': '12'},
+                'votes': {'value': 111674336, 'display': '111674336'},
+            }],
+        }, result)
+
+    def test_time_series_dim(self):
+        result = DataTablesJS(metrics=[slicer.metrics.wins]) \
+            .transform(self.cont_dim_df, slicer)
+
+        self.assertEqual({
+            'columns': [{
+                'data': 'timestamp',
+                'title': 'Timestamp',
+                'render': {'_': 'value'},
+            }, {
+                'data': 'wins',
+                'title': 'Wins',
+                'render': {'_': 'value', 'display': 'display'},
+            }],
+            'data': [{
+                'timestamp': {'value': '1996-01-01'},
+                'wins': {'display': '2', 'value': 2}
+            }, {
+                'timestamp': {'value': '2000-01-01'},
+                'wins': {'display': '2', 'value': 2}
+            }, {
+                'timestamp': {'value': '2004-01-01'},
+                'wins': {'display': '2', 'value': 2}
+            }, {
+                'timestamp': {'value': '2008-01-01'},
+                'wins': {'display': '2', 'value': 2}
+            }, {
+                'timestamp': {'value': '2012-01-01'},
+                'wins': {'display': '2', 'value': 2}
+            }, {
+                'timestamp': {'value': '2016-01-01'},
+                'wins': {'display': '2', 'value': 2}
+            }],
+        }, result)
+
+    def test_cat_dim(self):
+        result = DataTablesJS(metrics=[slicer.metrics.wins]) \
+            .transform(self.cat_dim_df, slicer)
+
+        self.assertEqual({
+            'columns': [{
+                'data': 'political_party',
+                'title': 'Party',
+                'render': {'_': 'value', 'display': 'display'},
+            }, {
+                'data': 'wins',
+                'title': 'Wins',
+                'render': {'_': 'value', 'display': 'display'},
+            }],
+            'data': [{
+                'political_party': {'display': 'Democrat', 'value': 'd'},
+                'wins': {'display': '6', 'value': 6}
+            }, {
+                'political_party': {'display': 'Independent', 'value': 'i'},
+                'wins': {'display': '0', 'value': 0}
+            }, {
+                'political_party': {'display': 'Republican', 'value': 'r'},
+                'wins': {'display': '6', 'value': 6}
+            }],
+        }, result)
+
+    def test_uni_dim(self):
+        result = DataTablesJS(metrics=[slicer.metrics.wins]) \
+            .transform(self.uni_dim_df, slicer)
+
+        print(result['data'][0])
+
+        self.assertEqual({
+            'columns': [{
+                'data': 'candidate',
+                'render': {'_': 'value', 'display': 'display'},
+                'title': 'Candidate'
+            }, {
+                'data': 'wins',
+                'render': {'_': 'value', 'display': 'display'},
+                'title': 'Wins'
+            }],
+            'data': [{
+                'candidate': {'display': 'Bill Clinton', 'value': 1},
+                'wins': {'display': '2', 'value': 2}
+            }, {
+                'candidate': {'display': 'Bob Dole', 'value': 2},
+                'wins': {'display': '0', 'value': 0}
+            }, {
+                'candidate': {'display': 'Ross Perot', 'value': 3},
+                'wins': {'display': '0', 'value': 0}
+            }, {
+                'candidate': {'display': 'George Bush', 'value': 4},
+                'wins': {'display': '4', 'value': 4}
+            }, {
+                'candidate': {'display': 'Al Gore', 'value': 5},
+                'wins': {'display': '0', 'value': 0}
+            }, {
+                'candidate': {'display': 'John Kerry', 'value': 6},
+                'wins': {'display': '0', 'value': 0}
+            }, {
+                'candidate': {'display': 'Barrack Obama', 'value': 7},
+                'wins': {'display': '4', 'value': 4}
+            }, {
+                'candidate': {'display': 'John McCain', 'value': 8},
+                'wins': {'display': '0', 'value': 0}
+            }, {
+                'candidate': {'display': 'Mitt Romney', 'value': 9},
+                'wins': {'display': '0', 'value': 0}
+            }, {
+                'candidate': {'display': 'Donald Trump', 'value': 10},
+                'wins': {'display': '2', 'value': 2}
+            }, {
+                'candidate': {'display': 'Hillary Clinton', 'value': 11},
+                'wins': {'display': '0', 'value': 0}
+            }],
+        }, result)
+
+    def test_multi_dims_time_series_and_uni(self):
+        result = DataTablesJS(metrics=[slicer.metrics.wins]) \
+            .transform(self.cont_uni_dim_df, slicer)
+
+        self.assertEqual({
+            'columns': [{
+                'data': 'timestamp',
+                'title': 'Timestamp',
+                'render': {'_': 'value'},
+            }, {
+                'data': 'state',
+                'render': {'_': 'value', 'display': 'display'},
+                'title': 'State'
+            }, {
+                'data': 'wins',
+                'title': 'Wins',
+                'render': {'_': 'value', 'display': 'display'},
+            }],
+            'data': [{
+                'timestamp': {'value': '1996-01-01'},
+                'state': {'display': 'Texas', 'value': 1},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'timestamp': {'value': '1996-01-01'},
+                'state': {'display': 'California', 'value': 2},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'timestamp': {'value': '2000-01-01'},
+                'state': {'display': 'Texas', 'value': 1},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'timestamp': {'value': '2000-01-01'},
+                'state': {'display': 'California', 'value': 2},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'timestamp': {'value': '2004-01-01'},
+                'state': {'display': 'Texas', 'value': 1},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'timestamp': {'value': '2004-01-01'},
+                'state': {'display': 'California', 'value': 2},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'timestamp': {'value': '2008-01-01'},
+                'state': {'display': 'Texas', 'value': 1},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'timestamp': {'value': '2008-01-01'},
+                'state': {'display': 'California', 'value': 2},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'timestamp': {'value': '2012-01-01'},
+                'state': {'display': 'Texas', 'value': 1},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'timestamp': {'value': '2012-01-01'},
+                'state': {'display': 'California', 'value': 2},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'timestamp': {'value': '2016-01-01'},
+                'state': {'display': 'Texas', 'value': 1},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'timestamp': {'value': '2016-01-01'},
+                'state': {'display': 'California', 'value': 2},
+                'wins': {'display': '1', 'value': 1}
+            }],
+        }, result)
+
+    def test_pivoted_single_dimension_no_effect(self):
+        result = DataTablesJS(metrics=[slicer.metrics.wins], pivot=True) \
+            .transform(self.cat_dim_df, slicer)
+
+        self.assertEqual({
+            'columns': [{
+                'data': 'political_party',
+                'title': 'Party',
+                'render': {'_': 'value', 'display': 'display'},
+            }, {
+                'data': 'wins',
+                'title': 'Wins',
+                'render': {'_': 'value', 'display': 'display'},
+            }],
+            'data': [{
+                'political_party': {'display': 'Democrat', 'value': 'd'},
+                'wins': {'display': '6', 'value': 6}
+            }, {
+                'political_party': {'display': 'Independent', 'value': 'i'},
+                'wins': {'display': '0', 'value': 0}
+            }, {
+                'political_party': {'display': 'Republican', 'value': 'r'},
+                'wins': {'display': '6', 'value': 6}
+            }],
+        }, result)
+
+    def test_pivoted_multi_dims_time_series_and_cat(self):
+        result = DataTablesJS(metrics=[slicer.metrics.wins], pivot=True) \
+            .transform(self.cont_cat_dim_df, slicer)
+
+        self.assertEqual({
+            'columns': [{
+                'data': 'timestamp',
+                'title': 'Timestamp',
+                'render': {'_': 'value'},
+            }, {
+                'data': 'wins.d',
+                'title': 'Wins (Democrat)',
+                'render': {'_': 'value', 'display': 'display'},
+            }, {
+                'data': 'wins.i',
+                'title': 'Wins (Independent)',
+                'render': {'_': 'value', 'display': 'display'},
+            }, {
+                'data': 'wins.r',
+                'title': 'Wins (Republican)',
+                'render': {'_': 'value', 'display': 'display'},
+            }],
+            'data': [{
+                'timestamp': {'value': '1996-01-01'},
+                'wins': {
+                    'd': {'display': '2', 'value': 2.0},
+                    'i': {'display': '0', 'value': 0.0},
+                    'r': {'display': '0', 'value': 0.0}
+                }
+            }, {
+                'timestamp': {'value': '2000-01-01'},
+                'wins': {
+                    'd': {'display': '0', 'value': 0.0},
+                    'i': {'display': '0', 'value': 0.0},
+                    'r': {'display': '2', 'value': 2.0}
+                }
+            }, {
+                'timestamp': {'value': '2004-01-01'},
+                'wins': {
+                    'd': {'display': '0', 'value': 0.0},
+                    'i': {'display': '0', 'value': 0.0},
+                    'r': {'display': '2', 'value': 2.0}
+                }
+            }, {
+                'timestamp': {'value': '2008-01-01'},
+                'wins': {
+                    'd': {'display': '2', 'value': 2.0},
+                    'i': {'display': '0', 'value': 0.0},
+                    'r': {'display': '0', 'value': 0.0}
+                }
+            }, {
+                'timestamp': {'value': '2012-01-01'},
+                'wins': {
+                    'd': {'display': '2', 'value': 2.0},
+                    'i': {'display': '0', 'value': 0.0},
+                    'r': {'display': '0', 'value': 0.0}
+                }
+            }, {
+                'timestamp': {'value': '2016-01-01'},
+                'wins': {
+                    'd': {'display': '0', 'value': 0.0},
+                    'i': {'display': '0', 'value': 0.0},
+                    'r': {'display': '2', 'value': 2.0}
+                }
+            }],
+        }, result)
+
+    def test_pivoted_multi_dims_time_series_and_uni(self):
+        result = DataTablesJS(metrics=[slicer.metrics.votes], pivot=True) \
+            .transform(self.cont_uni_dim_df, slicer)
+
+        self.assertEqual({
+            'columns': [{
+                'data': 'timestamp',
+                'title': 'Timestamp',
+                'render': {'_': 'value'},
+            }, {
+                'data': 'votes.1',
+                'title': 'Votes (Texas)',
+                'render': {'_': 'value', 'display': 'display'},
+            }, {
+                'data': 'votes.2',
+                'title': 'Votes (California)',
+                'render': {'_': 'value', 'display': 'display'},
+            }],
+            'data': [{
+                'timestamp': {'value': '1996-01-01'},
+                'votes': {
+                    1: {'display': '5574387', 'value': 5574387},
+                    2: {'display': '9646062', 'value': 9646062}
+                }
+            }, {
+                'timestamp': {'value': '2000-01-01'},
+                'votes': {
+                    1: {'display': '6233385', 'value': 6233385},
+                    2: {'display': '10428632', 'value': 10428632}
+                }
+            }, {
+                'timestamp': {'value': '2004-01-01'},
+                'votes': {
+                    1: {'display': '7359621', 'value': 7359621},
+                    2: {'display': '12255311', 'value': 12255311}
+                }
+            }, {
+                'timestamp': {'value': '2008-01-01'},
+                'votes': {
+                    1: {'display': '8007961', 'value': 8007961},
+                    2: {'display': '13286254', 'value': 13286254}
+                }
+            }, {
+                'timestamp': {'value': '2012-01-01'},
+                'votes': {
+                    1: {'display': '7877967', 'value': 7877967},
+                    2: {'display': '12694243', 'value': 12694243}
+                }
+            }, {
+                'timestamp': {'value': '2016-01-01'},
+                'votes': {
+                    1: {'display': '5072915', 'value': 5072915},
+                    2: {'display': '13237598', 'value': 13237598}
+                }
+            }],
+        }, result)
+
+
+class MetricCellFormatTests(TestCase):
+    def _mock_metric(self, prefix=None, suffix=None, precision=None):
+        mock_metric = Mock()
+        mock_metric.prefix = prefix
+        mock_metric.suffix = suffix
+        mock_metric.precision = precision
+        return mock_metric
+
+    def test_does_not_prettify_none_string(self):
+        value = _format_metric_cell('None', self._mock_metric())
+        self.assertDictEqual(value, {'value': 'None', 'display': 'None'})
+
+    def test_does_prettify_non_none_strings(self):
+        value = _format_metric_cell('abcde', self._mock_metric())
+        self.assertDictEqual(value, {'value': 'abcde', 'display': 'abcde'})
+
+    def test_does_prettify_int_values(self):
+        value = _format_metric_cell(123, self._mock_metric())
+        self.assertDictEqual(value, {'value': 123, 'display': '123'})
+
+    def test_does_prettify_pandas_date_objects(self):
+        value = _format_metric_cell(pd.Timestamp(date(2016, 5, 10)), self._mock_metric())
+        self.assertDictEqual(value, {'value': '2016-05-10', 'display': '2016-05-10'})
