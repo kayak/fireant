@@ -2,4 +2,5 @@ from .base import Widget
 
 
 class Matplotlib(Widget):
-    pass
+    def transform(self, data_frame, slicer, dimensions):
+        raise NotImplementedError()

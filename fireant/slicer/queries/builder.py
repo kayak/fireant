@@ -1,15 +1,15 @@
 from collections import defaultdict
 
-from toposort import (
-    CircularDependencyError,
-    toposort_flatten,
-)
-
 from fireant.utils import (
     immutable,
     ordered_distinct_list,
     ordered_distinct_list_by_attr,
 )
+from toposort import (
+    CircularDependencyError,
+    toposort_flatten,
+)
+
 from .database import fetch_data
 from .references import join_reference
 from ..exceptions import (
@@ -54,7 +54,6 @@ class QueryBuilder(object):
         """
 
         :param dimension:
-        :param rollup:
         :return:
         """
         self._dimensions.append(dimension)
@@ -62,7 +61,6 @@ class QueryBuilder(object):
     @immutable
     def filter(self, filter):
         """
-
         :param filter:
         :return:
         """
@@ -213,12 +211,14 @@ class QueryBuilder(object):
 
         :return:
         """
-        dataframe = fetch_data(self.slicer.database, self.query, index_levels=[dimension.key
-                                                                               for dimension in self._dimensions])
+        data_frame = fetch_data(self.slicer.database,
+                                self.query,
+                                index_levels=[dimension.key
+                                              for dimension in self._dimensions])
 
         # Apply operations
         ...
 
         # Apply transformations
-        return [widget.transform(dataframe, self.slicer)
+        return [widget.transform(data_frame, self.slicer)
                 for widget in self._widgets]

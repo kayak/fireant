@@ -1,7 +1,12 @@
 from fireant.utils import immutable
 
 
-class Widget(object):
+class Widget:
+    def transform(self, data_frame, slicer, dimensions):
+        raise NotImplementedError()
+
+
+class MetricsWidget(Widget):
     def __init__(self, metrics=()):
         self._metrics = list(metrics)
 
@@ -13,7 +18,7 @@ class Widget(object):
     def metrics(self):
         return [metric
                 for group in self._metrics
-                for metric in (group.metrics if hasattr(group, 'metrics') else [group])]
+                for metric in getattr(group, 'metrics', [group])]
 
-    def transform(self, data_frame, slicer):
-        raise NotImplementedError()
+    def transform(self, data_frame, slicer, dimensions):
+        super(MetricsWidget, self).transform(data_frame, slicer, dimensions)

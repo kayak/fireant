@@ -1,60 +1,32 @@
-import locale as lc
-from unittest import (
-    TestCase,
-)
+from unittest import TestCase
 
 import pandas as pd
 from datetime import date
-from mock import Mock
-
 from fireant.slicer.widgets.datatables import (
     DataTablesJS,
     _format_metric_cell,
 )
 from fireant.tests.slicer.mocks import (
-    mock_politics_database as mock_df,
+    ElectionOverElection,
+    cat_dim_df,
+    cont_cat_dim_df,
+    cont_dim_df,
+    cont_uni_dim_df,
+    cont_uni_dim_ref_df,
+    multi_metric_df,
+    single_metric_df,
     slicer,
+    uni_dim_df,
 )
-
-lc.setlocale(lc.LC_ALL, 'C')
+from mock import Mock
 
 
 class DataTablesTransformerTests(TestCase):
     maxDiff = None
 
-    @classmethod
-    def setUpClass(cls):
-        cls.single_metric_df = pd.DataFrame(mock_df[['votes']]
-                                            .sum()).T
-
-        cls.multi_metric_df = pd.DataFrame(mock_df[['votes', 'wins']]
-                                           .sum()).T
-
-        cls.cont_dim_df = mock_df[['timestamp', 'votes', 'wins']] \
-            .groupby('timestamp') \
-            .sum()
-
-        cls.cat_dim_df = mock_df[['political_party', 'votes', 'wins']] \
-            .groupby('political_party') \
-            .sum()
-
-        cls.uni_dim_df = mock_df[['candidate', 'candidate_display', 'votes', 'wins']] \
-            .groupby(['candidate', 'candidate_display']) \
-            .sum() \
-            .reset_index('candidate_display')
-
-        cls.cont_cat_dim_df = mock_df[['timestamp', 'political_party', 'votes', 'wins']] \
-            .groupby(['timestamp', 'political_party']) \
-            .sum()
-
-        cls.cont_uni_dim_df = mock_df[['timestamp', 'state', 'state_display', 'votes', 'wins']] \
-            .groupby(['timestamp', 'state', 'state_display']) \
-            .sum() \
-            .reset_index('state_display')
-
     def test_single_metric(self):
         result = DataTablesJS(metrics=[slicer.metrics.votes]) \
-            .transform(self.single_metric_df, slicer)
+            .transform(single_metric_df, slicer, [])
 
         self.assertEqual({
             'columns': [{
@@ -69,7 +41,7 @@ class DataTablesTransformerTests(TestCase):
 
     def test_single_metric_with_dataframe_containing_more(self):
         result = DataTablesJS(metrics=[slicer.metrics.votes]) \
-            .transform(self.multi_metric_df, slicer)
+            .transform(multi_metric_df, slicer, [])
 
         self.assertEqual({
             'columns': [{
@@ -84,7 +56,7 @@ class DataTablesTransformerTests(TestCase):
 
     def test_multiple_metrics(self):
         result = DataTablesJS(metrics=[slicer.metrics.votes, slicer.metrics.wins]) \
-            .transform(self.multi_metric_df, slicer)
+            .transform(multi_metric_df, slicer, [])
 
         self.assertEqual({
             'columns': [{
@@ -104,7 +76,7 @@ class DataTablesTransformerTests(TestCase):
 
     def test_multiple_metrics_reversed(self):
         result = DataTablesJS(metrics=[slicer.metrics.wins, slicer.metrics.votes]) \
-            .transform(self.multi_metric_df, slicer)
+            .transform(multi_metric_df, slicer, [])
 
         self.assertEqual({
             'columns': [{
@@ -124,7 +96,7 @@ class DataTablesTransformerTests(TestCase):
 
     def test_time_series_dim(self):
         result = DataTablesJS(metrics=[slicer.metrics.wins]) \
-            .transform(self.cont_dim_df, slicer)
+            .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp])
 
         self.assertEqual({
             'columns': [{
@@ -159,7 +131,7 @@ class DataTablesTransformerTests(TestCase):
 
     def test_cat_dim(self):
         result = DataTablesJS(metrics=[slicer.metrics.wins]) \
-            .transform(self.cat_dim_df, slicer)
+            .transform(cat_dim_df, slicer, [slicer.dimensions.political_party])
 
         self.assertEqual({
             'columns': [{
@@ -185,9 +157,7 @@ class DataTablesTransformerTests(TestCase):
 
     def test_uni_dim(self):
         result = DataTablesJS(metrics=[slicer.metrics.wins]) \
-            .transform(self.uni_dim_df, slicer)
-
-        print(result['data'][0])
+            .transform(uni_dim_df, slicer, [slicer.dimensions.candidate])
 
         self.assertEqual({
             'columns': [{
@@ -237,7 +207,7 @@ class DataTablesTransformerTests(TestCase):
 
     def test_multi_dims_time_series_and_uni(self):
         result = DataTablesJS(metrics=[slicer.metrics.wins]) \
-            .transform(self.cont_uni_dim_df, slicer)
+            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state])
 
         self.assertEqual({
             'columns': [{
@@ -306,7 +276,7 @@ class DataTablesTransformerTests(TestCase):
 
     def test_pivoted_single_dimension_no_effect(self):
         result = DataTablesJS(metrics=[slicer.metrics.wins], pivot=True) \
-            .transform(self.cat_dim_df, slicer)
+            .transform(cat_dim_df, slicer, [slicer.dimensions.political_party])
 
         self.assertEqual({
             'columns': [{
@@ -332,7 +302,7 @@ class DataTablesTransformerTests(TestCase):
 
     def test_pivoted_multi_dims_time_series_and_cat(self):
         result = DataTablesJS(metrics=[slicer.metrics.wins], pivot=True) \
-            .transform(self.cont_cat_dim_df, slicer)
+            .transform(cont_cat_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.political_party])
 
         self.assertEqual({
             'columns': [{
@@ -399,7 +369,7 @@ class DataTablesTransformerTests(TestCase):
 
     def test_pivoted_multi_dims_time_series_and_uni(self):
         result = DataTablesJS(metrics=[slicer.metrics.votes], pivot=True) \
-            .transform(self.cont_uni_dim_df, slicer)
+            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state])
 
         self.assertEqual({
             'columns': [{
@@ -451,6 +421,82 @@ class DataTablesTransformerTests(TestCase):
                     1: {'display': '5072915', 'value': 5072915},
                     2: {'display': '13237598', 'value': 13237598}
                 }
+            }],
+        }, result)
+
+    def test_time_series_ref(self):
+        result = DataTablesJS(metrics=[slicer.metrics.votes]) \
+            .transform(cont_uni_dim_ref_df, slicer, [slicer.dimensions.timestamp.reference(ElectionOverElection),
+                                                     slicer.dimensions.state])
+
+        self.assertEqual({
+            'columns': [{
+                'data': 'timestamp',
+                'title': 'Timestamp',
+                'render': {'_': 'value'},
+            }, {
+                'data': 'state',
+                'render': {'_': 'value', 'display': 'display'},
+                'title': 'State'
+            }, {
+                'data': 'votes',
+                'title': 'Votes',
+                'render': {'_': 'value', 'display': 'display'},
+            }, {
+                'data': 'votes_eoe',
+                'title': 'Votes (EoE)',
+                'render': {'_': 'value', 'display': 'display'},
+            }],
+            'data': [{
+                'timestamp': {'value': '2000-01-01'},
+                'state': {'display': 'Texas', 'value': 1},
+                'votes': {'display': '6233385', 'value': 6233385.},
+                'votes_eoe': {'display': '5574387', 'value': 5574387.},
+            }, {
+                'timestamp': {'value': '2000-01-01'},
+                'state': {'display': 'California', 'value': 2},
+                'votes': {'display': '10428632', 'value': 10428632.},
+                'votes_eoe': {'display': '9646062', 'value': 9646062.},
+            }, {
+                'timestamp': {'value': '2004-01-01'},
+                'state': {'display': 'Texas', 'value': 1},
+                'votes': {'display': '7359621', 'value': 7359621.},
+                'votes_eoe': {'display': '6233385', 'value': 6233385.},
+            }, {
+                'timestamp': {'value': '2004-01-01'},
+                'state': {'display': 'California', 'value': 2},
+                'votes': {'display': '12255311', 'value': 12255311.},
+                'votes_eoe': {'display': '10428632', 'value': 10428632.},
+            }, {
+                'timestamp': {'value': '2008-01-01'},
+                'state': {'display': 'Texas', 'value': 1},
+                'votes': {'display': '8007961', 'value': 8007961.},
+                'votes_eoe': {'display': '7359621', 'value': 7359621.},
+            }, {
+                'timestamp': {'value': '2008-01-01'},
+                'state': {'display': 'California', 'value': 2},
+                'votes': {'display': '13286254', 'value': 13286254.},
+                'votes_eoe': {'display': '12255311', 'value': 12255311.},
+            }, {
+                'timestamp': {'value': '2012-01-01'},
+                'state': {'display': 'Texas', 'value': 1},
+                'votes': {'display': '7877967', 'value': 7877967.},
+                'votes_eoe': {'display': '8007961', 'value': 8007961.},
+            }, {
+                'timestamp': {'value': '2012-01-01'},
+                'state': {'display': 'California', 'value': 2},
+                'votes': {'display': '12694243', 'value': 12694243.},
+                'votes_eoe': {'display': '13286254', 'value': 13286254.},
+            }, {
+                'timestamp': {'value': '2016-01-01'},
+                'state': {'display': 'Texas', 'value': 1},
+                'votes': {'display': '5072915', 'value': 5072915.},
+                'votes_eoe': {'display': '7877967', 'value': 7877967.},
+            }, {
+                'timestamp': {'value': '2016-01-01'},
+                'state': {'display': 'California', 'value': 2},
+                'votes': {'display': '13237598', 'value': 13237598.},
+                'votes_eoe': {'display': '12694243', 'value': 12694243.},
             }],
         }, result)
 

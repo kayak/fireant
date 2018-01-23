@@ -1,13 +1,19 @@
 import itertools
 
 import pandas as pd
-
 from fireant import (
     ContinuousDimension,
     utils,
 )
+
 from . import formats
-from .base import Widget
+from .base import MetricsWidget
+from .helpers import (
+    dimensional_metric_label,
+    extract_display_values,
+    reference_key,
+    reference_label,
+)
 
 
 def _format_dimension_cell(dimension_value, display_values):
@@ -49,7 +55,7 @@ def _format_metric_cell(value, metric):
 HARD_MAX_COLUMNS = 24
 
 
-class DataTablesJS(Widget):
+class DataTablesJS(MetricsWidget):
     def __init__(self, metrics=(), pivot=False, max_columns=None):
         super(DataTablesJS, self).__init__(metrics)
         self.pivot = pivot
@@ -57,19 +63,23 @@ class DataTablesJS(Widget):
             if max_columns is not None \
             else HARD_MAX_COLUMNS
 
-    def transform(self, data_frame, slicer):
+    def transform(self, data_frame, slicer, dimensions):
         """
 
         :param data_frame:
         :param slicer:
+        :param dimensions:
         :return:
         """
-        dimension_keys = list(filter(None, data_frame.index.names))
-        dimensions = [getattr(slicer.dimensions, key)
-                      for key in dimension_keys]
-        dimension_display_values = self._dimension_display_values(dimensions, data_frame)
+        dimension_display_values = extract_display_values(dimensions, data_frame)
 
-        metric_keys = [metric.key for metric in self.metrics]
+        references = [reference
+                      for dimension in dimensions
+                      for reference in getattr(dimension, 'references', ())]
+
+        metric_keys = [reference_key(metric, reference)
+                       for metric in self.metrics
+                       for reference in [None] + references]
         data_frame = data_frame[metric_keys]
 
         pivot_index_to_columns = self.pivot and isinstance(data_frame.index, pd.MultiIndex)
@@ -79,34 +89,33 @@ class DataTablesJS(Widget):
                 .unstack(level=levels) \
                 .fillna(value=0)
 
-            columns = self._dimension_columns(dimensions[:1]) \
-                      + self._metric_columns_pivoted(data_frame.columns, dimension_display_values)
+            dimension_columns = self._dimension_columns(dimensions[:1])
+
+            render_column_label = dimensional_metric_label(dimensions, dimension_display_values)
+            metric_columns = self._metric_columns_pivoted(references,
+                                                          data_frame.columns,
+                                                          render_column_label)
+
 
         else:
-            columns = self._dimension_columns(dimensions) + self._metric_columns()
+            dimension_columns = self._dimension_columns(dimensions)
+            metric_columns = self._metric_columns(references)
 
-        data = [self._data_row(dimensions, dimension_values, dimension_display_values, row_data)
+        columns = (dimension_columns + metric_columns)[:self.max_columns]
+        data = [self._data_row(dimensions,
+                               dimension_values,
+                               dimension_display_values,
+                               references,
+                               row_data)
                 for dimension_values, row_data in data_frame.iterrows()]
 
         return dict(columns=columns, data=data)
 
-    def _dimension_display_values(self, dimensions, data_frame):
-        dv_by_dimension = {}
-
-        for dimension in dimensions:
-            dkey = dimension.key
-            if hasattr(dimension, 'display_values'):
-                dv_by_dimension[dkey] = dimension.display_values
-            elif hasattr(dimension, 'display_key'):
-                dv_by_dimension[dkey] = data_frame[dimension.display_key].groupby(level=dkey).first()
-
-        return dv_by_dimension
-
-    def _dimension_columns(self, dimensions):
+    @staticmethod
+    def _dimension_columns(dimensions):
         """
 
-        :param data_frame:
-        :param slicer:
+        :param dimensions:
         :return:
         """
         columns = []
@@ -122,48 +131,67 @@ class DataTablesJS(Widget):
 
         return columns
 
-    def _metric_columns(self):
+    def _metric_columns(self, references):
         """
 
         :return:
         """
         columns = []
         for metric in self.metrics:
-            columns.append(dict(title=metric.label or metric.key,
-                                data=metric.key,
-                                render=dict(_='value', display='display')))
-        return columns
+            for reference in [None] + references:
+                title = reference_label(metric, reference)
+                data = reference_key(metric, reference)
 
-    def _metric_columns_pivoted(self, df_columns, display_values):
-        """
-
-        :param index_levels:
-        :param display_values:
-        :return:
-        """
-        columns = []
-        for metric in self.metrics:
-            dimension_keys = df_columns.names[1:]
-            for level_values in itertools.product(*map(list, df_columns.levels[1:])):
-                level_display_values = [utils.deep_get(display_values, [key, raw_value], raw_value)
-                                        for key, raw_value in zip(dimension_keys, level_values)]
-
-                columns.append(dict(title="{metric} ({dimensions})".format(metric=metric.label or metric.key,
-                                                                           dimensions=", ".join(level_display_values)),
-                                    data='.'.join([metric.key] + [str(x) for x in level_values]),
+                columns.append(dict(title=title,
+                                    data=data,
                                     render=dict(_='value', display='display')))
+        return columns
+
+    def _metric_columns_pivoted(self, references, df_columns, render_column_label):
+        """
+
+        :param references:
+        :param df_columns:
+        :param render_column_label:
+        :return:
+        """
+        columns = []
+        for metric in self.metrics:
+            dimension_value_sets = [list(level)
+                                    for level in df_columns.levels[1:]]
+
+            for dimension_values in itertools.product(*dimension_value_sets):
+                for reference in [None] + references:
+                    key = reference_key(metric, reference)
+                    title = render_column_label(metric, reference, dimension_values)
+                    data = '.'.join([key] + [str(x) for x in dimension_values])
+
+                    columns.append(dict(title=title,
+                                        data=data,
+                                        render=dict(_='value', display='display')))
 
         return columns
 
-    def _data_row(self, dimensions, dimension_values, dimension_display_values, row_data):
+    def _data_row(self, dimensions, dimension_values, dimension_display_values, references, row_data):
+        """
+
+        :param dimensions:
+        :param dimension_values:
+        :param dimension_display_values:
+        :param row_data:
+        :return:
+        """
         row = {}
 
         for dimension, dimension_value in zip(dimensions, utils.wrap_list(dimension_values)):
             row[dimension.key] = _format_dimension_cell(dimension_value, dimension_display_values.get(dimension.key))
 
         for metric in self.metrics:
-            row[metric.key] = _format_dimensional_metric_cell(row_data, metric) \
-                if isinstance(row_data.index, pd.MultiIndex) \
-                else _format_metric_cell(row_data[metric.key], metric)
+            for reference in [None] + references:
+                key = reference_key(metric, reference)
+
+                row[key] = _format_dimensional_metric_cell(row_data, metric) \
+                    if isinstance(row_data.index, pd.MultiIndex) \
+                    else _format_metric_cell(row_data[key], metric)
 
         return row

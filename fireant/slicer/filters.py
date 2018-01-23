@@ -50,13 +50,13 @@ class BooleanFilter(DimensionFilter):
 class ContainsFilter(DimensionFilter):
     def __init__(self, dimension_definition, values):
         definition = dimension_definition.isin(values)
-        super(DimensionFilter, self).__init__(definition)
+        super(ContainsFilter, self).__init__(definition)
 
 
 class ExcludesFilter(DimensionFilter):
     def __init__(self, dimension_definition, values):
         definition = dimension_definition.notin(values)
-        super(DimensionFilter, self).__init__(definition)
+        super(ExcludesFilter, self).__init__(definition)
 
 
 class RangeFilter(DimensionFilter):

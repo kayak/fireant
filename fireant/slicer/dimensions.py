@@ -1,4 +1,5 @@
 from fireant.utils import immutable
+
 from .base import SlicerElement
 from .exceptions import QueryException
 from .filters import (
@@ -30,7 +31,9 @@ class BooleanDimension(Dimension):
     """
 
     def __init__(self, key, label=None, definition=None):
-        super(BooleanDimension, self).__init__(key=key, label=label, definition=definition)
+        super(BooleanDimension, self).__init__(key=key,
+                                               label=label,
+                                               definition=definition)
 
     def is_(self, value):
         return BooleanFilter(self.definition, value)
@@ -43,7 +46,9 @@ class CategoricalDimension(Dimension):
     """
 
     def __init__(self, key, label=None, definition=None, display_values=()):
-        super(CategoricalDimension, self).__init__(key=key, label=label, definition=definition)
+        super(CategoricalDimension, self).__init__(key=key,
+                                                   label=label,
+                                                   definition=definition)
         self.display_values = dict(display_values)
 
     def isin(self, values):
@@ -89,17 +94,23 @@ class ContinuousDimension(Dimension):
     """
 
     def __init__(self, key, label=None, definition=None, default_interval=NumericInterval(1, 0)):
-        super(ContinuousDimension, self).__init__(key=key, label=label, definition=definition)
+        super(ContinuousDimension, self).__init__(key=key,
+                                                  label=label,
+                                                  definition=definition)
         self.interval = default_interval
 
 
 class DatetimeDimension(ContinuousDimension):
     """
-    WRITEME
+    A subclass of ContinuousDimension which reflects a date/time data type. Intervals are replaced with time intervals
+    such as daily, weekly, annually, etc.  A reference can be used to show a comparison over time such as
+    week-over-week or month-over-month.
     """
 
     def __init__(self, key, label=None, definition=None, default_interval=daily):
-        super(DatetimeDimension, self).__init__(key=key, label=label, definition=definition,
+        super(DatetimeDimension, self).__init__(key=key,
+                                                label=label,
+                                                definition=definition,
                                                 default_interval=default_interval)
         self.references = []
 

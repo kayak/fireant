@@ -5,10 +5,12 @@ from collections import (
 from unittest.mock import Mock
 
 import pandas as pd
-from datetime import date
-
+from datetime import (
+    datetime,
+)
 from fireant import *
 from fireant import VerticaDatabase
+
 from pypika import (
     JoinType,
     Table,
@@ -213,7 +215,7 @@ for (election_id, candidate_id, state_id), votes in election_candidate_state_vot
     election_year = elections[election_id]
     winner = election_candidate_wins[(election_id, candidate_id)]
     records.append(PoliticsRow(
-          timestamp=date(int(election_year), 1, 1),
+          timestamp=datetime(int(election_year), 1, 1),
           candidate=candidate_id, candidate_display=candidates[candidate_id],
           political_party=candidate_parties[candidate_id],
           election=election_id, election_display=elections[election_id],
@@ -224,3 +226,63 @@ for (election_id, candidate_id, state_id), votes in election_candidate_state_vot
     ))
 
 mock_politics_database = pd.DataFrame.from_records(records, columns=columns)
+
+single_metric_df = pd.DataFrame(mock_politics_database[['votes']]
+                                .sum()).T
+
+multi_metric_df = pd.DataFrame(mock_politics_database[['votes', 'wins']]
+                               .sum()).T
+
+cont_dim_df = mock_politics_database[['timestamp', 'votes', 'wins']] \
+    .groupby('timestamp') \
+    .sum()
+
+cat_dim_df = mock_politics_database[['political_party', 'votes', 'wins']] \
+    .groupby('political_party') \
+    .sum()
+
+uni_dim_df = mock_politics_database[['candidate', 'candidate_display', 'votes', 'wins']] \
+    .groupby(['candidate', 'candidate_display']) \
+    .sum() \
+    .reset_index('candidate_display')
+
+cont_cat_dim_df = mock_politics_database[['timestamp', 'political_party', 'votes', 'wins']] \
+    .groupby(['timestamp', 'political_party']) \
+    .sum()
+
+cont_uni_dim_df = mock_politics_database[['timestamp', 'state', 'state_display', 'votes', 'wins']] \
+    .groupby(['timestamp', 'state', 'state_display']) \
+    .sum() \
+    .reset_index('state_display')
+
+
+def ref(data_frame, columns):
+    ref_cols = {column: '%s_eoe' % column
+                for column in columns}
+
+    ref_df = cont_uni_dim_df \
+        .shift(2) \
+        .rename(columns=ref_cols)[list(ref_cols.values())]
+
+    return (cont_uni_dim_df
+            .copy()
+            .join(ref_df)
+            .iloc[2:])
+
+
+def ref_delta(ref_data_frame, columns):
+    ref_columns = ['%s_eoe' % column for column in columns]
+
+    delta_data_frame = pd.DataFrame(
+          data=ref_data_frame[ref_columns].values - ref_data_frame[columns].values,
+          columns=['%s_eoe_delta' % column for column in columns],
+          index=ref_data_frame.index
+    )
+    return ref_data_frame.join(delta_data_frame)
+
+
+_columns = ['votes', 'wins']
+cont_uni_dim_ref_df = ref(cont_uni_dim_df, _columns)
+cont_uni_dim_ref_delta_df = ref_delta(cont_uni_dim_ref_df, _columns)
+
+ElectionOverElection = Reference('eoe', 'EoE', 'year', 4)

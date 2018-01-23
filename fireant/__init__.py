@@ -10,4 +10,4 @@ from .slicer.widgets import (
     Pandas,
 )
 
-__version__ = '{major}.{minor}.{patch}'.format(major=1, minor=0, patch=0)
+__version__ = '1.0.0'
