@@ -18,11 +18,5 @@ class SlicerElement(object):
         self.label = label or key
         self.definition = definition
 
-    def __unicode__(self):
-        return self.key
-
     def __repr__(self):
-        return self.key
-
-    def __str__(self):
         return self.key

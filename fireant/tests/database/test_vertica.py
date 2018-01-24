@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from mock import patch, Mock
+from unittest.mock import patch, Mock
 
 from fireant import (
     hourly,

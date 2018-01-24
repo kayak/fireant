@@ -60,7 +60,7 @@ class MySQLDatabase(Database):
             cursor.execute(query)
             return cursor.fetchall()
 
-    def fetch_dataframe(self, query):
+    def fetch_data(self, query):
         return pd.read_sql(query, self.connect())
 
     def trunc_date(self, field, interval):

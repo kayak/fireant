@@ -11,7 +11,7 @@ class NumericInterval(object):
     def __hash__(self):
         return hash('NumericInterval %d %d' % (self.size, self.offset))
 
-    def __str__(self):
+    def __repr__(self):
         return 'NumericInterval(size=%d,offset=%d)' % (self.size, self.offset)
 
 

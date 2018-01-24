@@ -18,6 +18,7 @@ from ..exceptions import (
 )
 from ..filters import DimensionFilter
 from ..intervals import DatetimeInterval
+from ..operations import Operation
 
 
 def _build_dimension_definition(dimension, interval_func):
@@ -41,30 +42,30 @@ class QueryBuilder(object):
         self._orders = []
 
     @immutable
-    def widget(self, widget):
+    def widget(self, *widgets):
         """
 
         :param widget:
         :return:
         """
-        self._widgets.append(widget)
+        self._widgets += widgets
 
     @immutable
-    def dimension(self, dimension):
+    def dimension(self, *dimensions):
         """
 
         :param dimension:
         :return:
         """
-        self._dimensions.append(dimension)
+        self._dimensions += dimensions
 
     @immutable
-    def filter(self, filter):
+    def filter(self, *filters):
         """
         :param filter:
         :return:
         """
-        self._filters.append(filter)
+        self._filters += filters
 
     @property
     def tables(self):
@@ -89,6 +90,17 @@ class QueryBuilder(object):
         return ordered_distinct_list_by_attr([metric
                                               for widget in self._widgets
                                               for metric in widget.metrics])
+
+    @property
+    def operations(self):
+        """
+        :return:
+            an ordered, distinct list of metrics used in all widgets as part of this query.
+        """
+        return ordered_distinct_list_by_attr([metric
+                                              for widget in self._widgets
+                                              for metric in widget.metrics
+                                              if isinstance(metric, Operation)])
 
     @property
     def joins(self):
@@ -217,8 +229,9 @@ class QueryBuilder(object):
                                               for dimension in self._dimensions])
 
         # Apply operations
-        ...
+        for operation in self.operations:
+            data_frame[operation.key] = operation.apply(data_frame)
 
         # Apply transformations
-        return [widget.transform(data_frame, self.slicer)
+        return [widget.transform(data_frame, self.slicer, self._dimensions)
                 for widget in self._widgets]

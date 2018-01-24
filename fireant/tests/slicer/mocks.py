@@ -2,7 +2,6 @@ from collections import (
     OrderedDict,
     namedtuple,
 )
-from unittest.mock import Mock
 
 import pandas as pd
 from datetime import (
@@ -10,6 +9,7 @@ from datetime import (
 )
 from fireant import *
 from fireant import VerticaDatabase
+from unittest.mock import Mock
 
 from pypika import (
     JoinType,
@@ -22,6 +22,9 @@ class TestDatabase(VerticaDatabase):
     # Vertica client that uses the vertica_python driver.
 
     connect = Mock()
+
+    def __eq__(self, other):
+        return isinstance(other, TestDatabase)
 
 
 test_database = TestDatabase()

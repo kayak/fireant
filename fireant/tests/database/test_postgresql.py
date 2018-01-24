@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from mock import (
+from unittest.mock import (
     Mock,
     patch,
 )

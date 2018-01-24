@@ -9,5 +9,6 @@ class QueryException(SlicerException):
 class MissingTableJoinException(SlicerException):
     pass
 
+
 class CircularJoinsException(SlicerException):
     pass

@@ -1,9 +1,15 @@
 from unittest import TestCase
-
-from datetime import date
+from unittest.mock import (
+    ANY,
+    Mock,
+    patch,
+)
 
 import fireant as f
-from .mocks import slicer
+from datetime import date
+
+from ..matchers import DimensionMatcher
+from ..mocks import slicer
 
 
 class SlicerShortcutTests(TestCase):
@@ -537,9 +543,9 @@ class QueryBuilderOperationTests(TestCase):
                          'GROUP BY "timestamp" '
                          'ORDER BY "timestamp"', query)
 
-    def test_build_query_with_cumavg_operation(self):
+    def test_build_query_with_cummean_operation(self):
         query = slicer.query() \
-            .widget(f.DataTablesJS([f.CumAvg(slicer.metrics.votes)])) \
+            .widget(f.DataTablesJS([f.CumMean(slicer.metrics.votes)])) \
             .dimension(slicer.dimensions.timestamp) \
             .query
 
@@ -547,40 +553,6 @@ class QueryBuilderOperationTests(TestCase):
                          'TRUNC("timestamp",\'DD\') "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "timestamp" '
-                         'ORDER BY "timestamp"', query)
-
-    def test_build_query_with_l1loss_operation_constant(self):
-        query = slicer.query() \
-            .widget(f.DataTablesJS([f.L1Loss(slicer.metrics.turnout, 1)])) \
-            .dimension(slicer.dimensions.timestamp) \
-            .query
-
-        self.assertEqual('SELECT '
-                         'TRUNC("politician"."timestamp",\'DD\') "timestamp",'
-                         'SUM("politician"."votes")/COUNT("voter"."id") "turnout" '
-                         'FROM "politics"."politician" '
-                         'OUTER JOIN "locations"."district" '
-                         'ON "politician"."district_id"="district"."id" '
-                         'JOIN "politics"."voter" '
-                         'ON "district"."id"="voter"."district_id" '
-                         'GROUP BY "timestamp" '
-                         'ORDER BY "timestamp"', query)
-
-    def test_build_query_with_l2loss_operation_constant(self):
-        query = slicer.query() \
-            .widget(f.DataTablesJS([f.L2Loss(slicer.metrics.turnout, 1)])) \
-            .dimension(slicer.dimensions.timestamp) \
-            .query
-
-        self.assertEqual('SELECT '
-                         'TRUNC("politician"."timestamp",\'DD\') "timestamp",'
-                         'SUM("politician"."votes")/COUNT("voter"."id") "turnout" '
-                         'FROM "politics"."politician" '
-                         'OUTER JOIN "locations"."district" '
-                         'ON "politician"."district_id"="district"."id" '
-                         'JOIN "politics"."voter" '
-                         'ON "district"."id"="voter"."district_id" '
                          'GROUP BY "timestamp" '
                          'ORDER BY "timestamp"', query)
 
@@ -1159,3 +1131,122 @@ class QueryBuilderValidationTests(TestCase):
 
     def test_query_requires_at_least_one_metric(self):
         pass
+
+
+# noinspection SqlDialectInspection,SqlNoDataSourceInspection
+@patch('fireant.slicer.queries.builder.fetch_data')
+class QueryBuilderRenderTests(TestCase):
+    def test_pass_slicer_database_as_arg(self, mock_fetch_data: Mock):
+        mock_widget = Mock(name='mock_widget')
+        mock_widget.metrics = [slicer.metrics.votes]
+
+        slicer.query() \
+            .widget(mock_widget) \
+            .render()
+
+        mock_fetch_data.assert_called_once_with(slicer.database,
+                                                ANY,
+                                                index_levels=ANY)
+
+    def test_pass_query_from_builder_as_arg(self, mock_fetch_data: Mock):
+        mock_widget = Mock(name='mock_widget')
+        mock_widget.metrics = [slicer.metrics.votes]
+
+        slicer.query() \
+            .widget(mock_widget) \
+            .render()
+
+        mock_fetch_data.assert_called_once_with(ANY,
+                                                'SELECT SUM("votes") "votes" FROM "politics"."politician"',
+                                                index_levels=ANY)
+
+    def test_builder_dimensions_as_arg_with_zero_dimensions(self, mock_fetch_data: Mock):
+        mock_widget = Mock(name='mock_widget')
+        mock_widget.metrics = [slicer.metrics.votes]
+
+        slicer.query() \
+            .widget(mock_widget) \
+            .render()
+
+        mock_fetch_data.assert_called_once_with(ANY, ANY, index_levels=[])
+
+    def test_builder_dimensions_as_arg_with_one_dimension(self, mock_fetch_data: Mock):
+        mock_widget = Mock(name='mock_widget')
+        mock_widget.metrics = [slicer.metrics.votes]
+
+        slicer.query() \
+            .widget(mock_widget) \
+            .dimension(slicer.dimensions.state) \
+            .render()
+
+        mock_fetch_data.assert_called_once_with(ANY, ANY, index_levels=['state'])
+
+    def test_builder_dimensions_as_arg_with_multiple_dimensions(self, mock_fetch_data: Mock):
+        mock_widget = Mock(name='mock_widget')
+        mock_widget.metrics = [slicer.metrics.votes]
+
+        slicer.query() \
+            .widget(mock_widget) \
+            .dimension(slicer.dimensions.timestamp, slicer.dimensions.state, slicer.dimensions.political_party) \
+            .render()
+
+        mock_fetch_data.assert_called_once_with(ANY, ANY, index_levels=['timestamp', 'state', 'political_party'])
+
+    def test_call_transform_on_widget(self, mock_fetch_data: Mock):
+        mock_widget = Mock(name='mock_widget')
+        mock_widget.metrics = [slicer.metrics.votes]
+
+        # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
+        slicer.query() \
+            .dimension(slicer.dimensions.timestamp) \
+            .widget(mock_widget) \
+            .render()
+
+        mock_widget.transform.assert_called_once_with(mock_fetch_data.return_value,
+                                                      slicer,
+                                                      DimensionMatcher(slicer.dimensions.timestamp))
+
+    def test_returns_results_from_widget_transform(self, mock_fetch_data: Mock):
+        mock_widget = Mock(name='mock_widget')
+        mock_widget.metrics = [slicer.metrics.votes]
+
+        # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
+        result = slicer.query() \
+            .dimension(slicer.dimensions.timestamp) \
+            .widget(mock_widget) \
+            .render()
+
+        self.assertListEqual(result, [mock_widget.transform.return_value])
+
+    def test_operations_evaluated(self, mock_fetch_data: Mock):
+        mock_widget = Mock(name='mock_widget')
+        mock_operation = Mock(name='mock_operation ', spec=f.Operation)
+        mock_operation.key, mock_operation.definition = 'mock_operation', slicer.table.abc
+        mock_widget.metrics = [mock_operation]
+        mock_df = {}
+        mock_fetch_data.return_value = mock_df
+
+        # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
+        slicer.query() \
+            .dimension(slicer.dimensions.timestamp) \
+            .widget(mock_widget) \
+            .render()
+
+        mock_operation.apply.assert_called_once_with(mock_df)
+
+    def test_operations_results_stored_in_data_frame(self, mock_fetch_data: Mock):
+        mock_widget = Mock(name='mock_widget')
+        mock_operation = Mock(name='mock_operation ', spec=f.Operation)
+        mock_operation.key, mock_operation.definition = 'mock_operation', slicer.table.abc
+        mock_widget.metrics = [mock_operation]
+        mock_df = {}
+        mock_fetch_data.return_value = mock_df
+
+        # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
+        slicer.query() \
+            .dimension(slicer.dimensions.timestamp) \
+            .widget(mock_widget) \
+            .render()
+
+        self.assertIn(mock_operation.key, mock_df)
+        self.assertEqual(mock_df[mock_operation.key], mock_operation.apply.return_value)

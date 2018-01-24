@@ -29,6 +29,6 @@ class Database(object):
             cursor.execute(query)
             return cursor.fetchall()
 
-    def fetch_dataframe(self, query):
+    def fetch_data(self, query):
         with self.connect() as connection:
             return pd.read_sql(query, connection)

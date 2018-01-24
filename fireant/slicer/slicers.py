@@ -1,5 +1,13 @@
+import itertools
+
 from .queries import QueryBuilder
 
+
+def _match_items(left, right, key):
+    return all([a is not None
+                and b is not None
+                and getattr(a, key) == getattr(b, key)
+                for a, b in itertools.zip_longest(left, right)])
 
 class _Container(object):
     def __init__(self, items):
@@ -60,3 +68,13 @@ class Slicer(object):
         WRITEME
         """
         return QueryBuilder(self)
+
+    def __eq__(self, other):
+        return isinstance(other, Slicer) \
+               and _match_items(self.metrics, other.metrics, 'key') \
+               and _match_items(self.dimensions, other.dimensions, 'key')
+
+    def __repr__(self):
+        return 'Slicer(metrics=[{}],dimensions=[{}])' \
+            .format(','.join([m.key for m in self.metrics]),
+                    ','.join([d.key for d in self.dimensions]))

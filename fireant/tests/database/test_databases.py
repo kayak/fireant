@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from mock import patch, MagicMock
+from unittest.mock import patch, MagicMock
 
 from fireant.database import Database
 from pypika import Field
@@ -26,7 +26,7 @@ class DatabaseTests(TestCase):
         query = 'SELECT 1'
         mock_read_sql.return_value = 'OK'
 
-        result = Database().fetch_dataframe(query)
+        result = Database().fetch_data(query)
 
         self.assertEqual(mock_read_sql.return_value, result)
 

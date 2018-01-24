@@ -24,10 +24,10 @@ from .intervals import (
 from .joins import Join
 from .metrics import Metric
 from .operations import (
-    CumAvg,
+    CumMean,
+    CumProd,
     CumSum,
-    L1Loss,
-    L2Loss,
+    Operation,
 )
 from .references import (
     DayOverDay,

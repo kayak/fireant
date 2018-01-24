@@ -9,13 +9,7 @@ class Filter(object):
         return isinstance(other, self.__class__) \
                and str(self.definition) == str(other.definition)
 
-    def __str__(self):
-        return str(self.definition)
-
     def __repr__(self):
-        return str(self.definition)
-
-    def __unicode__(self):
         return str(self.definition)
 
 

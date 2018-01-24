@@ -1,29 +1,22 @@
+import numpy as np
+import pandas as pd
+
 from .metrics import Metric
+
+
+def _extract_key_or_arg(data_frame, key):
+    return data_frame[key] \
+        if key in data_frame \
+        else key
 
 
 class Operation(object):
     """
     The `Operation` class represents an operation in the `Slicer` API.
     """
-    pass
 
-
-class _Loss(Operation):
-    def __init__(self, expected, actual):
-        self.expected = expected
-        self.actual = actual
-
-    @property
-    def metrics(self):
-        return [metric
-                for metric in [self.expected, self.actual]
-                if isinstance(metric, Metric)]
-
-
-class L1Loss(_Loss): pass
-
-
-class L2Loss(_Loss): pass
+    def apply(self, data_frame):
+        raise NotImplementedError()
 
 
 class _Cumulative(Operation):
@@ -36,8 +29,39 @@ class _Cumulative(Operation):
                 for metric in [self.arg]
                 if isinstance(metric, Metric)]
 
+    def apply(self, data_frame):
+        raise NotImplementedError()
 
-class CumSum(_Cumulative): pass
+
+class CumSum(_Cumulative):
+    def apply(self, data_frame):
+        if isinstance(data_frame.index, pd.MultiIndex):
+            return data_frame[self.arg.key] \
+                .groupby(level=data_frame.index.names[1:]) \
+                .cumsum()
+
+        return data_frame[self.arg.key].cumsum()
 
 
-class CumAvg(_Cumulative): pass
+class CumProd(_Cumulative):
+    def apply(self, data_frame):
+        if isinstance(data_frame.index, pd.MultiIndex):
+            return data_frame[self.arg.key] \
+                .groupby(level=data_frame.index.names[1:]) \
+                .cumprod()
+
+        return data_frame[self.arg.key].cumprod()
+
+
+class CumMean(_Cumulative):
+    @staticmethod
+    def cummean(x):
+        return x.cumsum() / np.arange(1, len(x) + 1)
+
+    def apply(self, data_frame):
+        if isinstance(data_frame.index, pd.MultiIndex):
+            return data_frame[self.arg.key] \
+                .groupby(level=data_frame.index.names[1:]) \
+                .apply(self.cummean)
+
+        return self.cummean(data_frame[self.arg.key])

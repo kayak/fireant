@@ -1,5 +1,5 @@
 
-from mock import (
+from unittest.mock import (
     Mock,
     patch,
 )
