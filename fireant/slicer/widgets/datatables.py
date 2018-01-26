@@ -1,11 +1,12 @@
 import itertools
 
 import pandas as pd
+
 from fireant import (
     ContinuousDimension,
+    Metric,
     utils,
 )
-
 from . import formats
 from .base import MetricsWidget
 from .helpers import (
@@ -16,8 +17,20 @@ from .helpers import (
 )
 
 
-def _format_dimension_cell(dimension_value, display_values):
-    dimension_cell = {'value': formats.format_dimension_value(dimension_value)}
+def _render_dimension_cell(dimension_value: str, display_values: dict):
+    """
+    Renders a table cell in a dimension column.
+
+    :param dimension_value:
+        The raw value for the table cell.
+
+    :param display_values:
+        The display value mapped from the raw value.
+
+    :return:
+        A dict with the keys value and possible display.
+    """
+    dimension_cell = {'value': formats.dimension_value(dimension_value)}
 
     if display_values is not None:
         dimension_cell['display'] = display_values.get(dimension_value, dimension_value)
@@ -25,14 +38,30 @@ def _format_dimension_cell(dimension_value, display_values):
     return dimension_cell
 
 
-def _format_dimensional_metric_cell(row_data, metric):
+def _render_dimensional_metric_cell(row_data: pd.Series, metric: Metric):
+    """
+    Renders a table cell in a metric column for pivoted tables where there are two or more dimensions. This function
+    is recursive to traverse multi-dimensional indices.
+
+    :param row_data:
+        A series containing the value for the metric and it's index (for the dimension values).
+
+    :param metric:
+        A reference to the slicer metric to access the display formatting.
+
+    :return:
+        A deep dict in a tree structure with keys matching each dimension level. The top level will have keys matching
+        the first level of dimension values, and the next level will contain the next level of dimension values, for as
+        many index levels as there are. The last level will contain the return value of `_format_metric_cell`.
+    """
     level = {}
+
+    # Group by the last dimension, drop it, and fill the dict with either the raw metric values or the next level of
+    # dicts.
     for key, next_row in row_data.groupby(level=-1):
         next_row.reset_index(level=-1, drop=True, inplace=True)
 
-        safe_key = formats.format_dimension_value(key)
-
-        level[key] = _format_dimensional_metric_cell(next_row, metric) \
+        level[key] = _render_dimensional_metric_cell(next_row, metric) \
             if isinstance(next_row.index, pd.MultiIndex) \
             else _format_metric_cell(next_row[metric.key], metric)
 
@@ -40,13 +69,24 @@ def _format_dimensional_metric_cell(row_data, metric):
 
 
 def _format_metric_cell(value, metric):
-    raw_value = formats.format_metric_value(value)
+    """
+    Renders a table cell in a metric column for non-pivoted tables.
+
+    :param value:
+        The raw value of the metric.
+
+    :param metric:
+        A reference to the slicer metric to access the display formatting.
+    :return:
+        A dict containing the keys value and display with the raw and display metric values.
+    """
+    raw_value = formats.metric_value(value)
     return {
         'value': raw_value,
-        'display': formats.display(raw_value,
-                                   prefix=metric.prefix,
-                                   suffix=metric.suffix,
-                                   precision=metric.precision)
+        'display': formats.metric_display(raw_value,
+                                          prefix=metric.prefix,
+                                          suffix=metric.suffix,
+                                          precision=metric.precision)
         if raw_value is not None
         else None
     }
@@ -183,13 +223,13 @@ class DataTablesJS(MetricsWidget):
         row = {}
 
         for dimension, dimension_value in zip(dimensions, utils.wrap_list(dimension_values)):
-            row[dimension.key] = _format_dimension_cell(dimension_value, dimension_display_values.get(dimension.key))
+            row[dimension.key] = _render_dimension_cell(dimension_value, dimension_display_values.get(dimension.key))
 
         for metric in self.metrics:
             for reference in [None] + references:
                 key = reference_key(metric, reference)
 
-                row[key] = _format_dimensional_metric_cell(row_data, metric) \
+                row[key] = _render_dimensional_metric_cell(row_data, metric) \
                     if isinstance(row_data.index, pd.MultiIndex) \
                     else _format_metric_cell(row_data[key], metric)
 

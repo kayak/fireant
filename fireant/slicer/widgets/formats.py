@@ -4,14 +4,31 @@ import numpy as np
 import pandas as pd
 from datetime import (
     date,
+    datetime,
     time,
 )
 
 NO_TIME = time(0)
 
+epoch = np.datetime64(datetime.utcfromtimestamp(0))
+milliseconds = np.timedelta64(1, 'ms')
 
-def format_dimension_value(value):
+
+def dimension_value(value, str_date=True):
+    """
+    Format a dimension value. This will coerce the raw string or date values into a proper primitive value like a
+    string, float, or int.
+
+    :param value:
+        The raw str or datetime value
+    :param str_date:
+        When True, dates and datetimes will be converted to ISO strings. The time is omitted for dates. When False, the
+        datetime will be converted to a POSIX timestamp (millis-since-epoch).
+    """
     if isinstance(value, date):
+        if not str_date:
+            return 1000 * value.timestamp()
+
         if not hasattr(value, 'time') or value.time() == NO_TIME:
             return value.strftime('%Y-%m-%d')
         else:
@@ -31,7 +48,14 @@ def format_dimension_value(value):
     return value
 
 
-def format_metric_value(value):
+def metric_value(value):
+    """
+    Converts a raw metric value into a safe type. This will change dates into strings, NaNs into Nones, and np types
+    into their corresponding python types.
+
+    :param value:
+        The raw metric value.
+    """
     if isinstance(value, date):
         if not hasattr(value, 'time') or value.time() == NO_TIME:
             return value.strftime('%Y-%m-%d')
@@ -51,7 +75,21 @@ def format_metric_value(value):
     return value
 
 
-def display(value, prefix=None, suffix=None, precision=None):
+def metric_display(value, prefix=None, suffix=None, precision=None):
+    """
+    Converts a metric value into the display value by applying formatting.
+
+    :param value:
+        The raw metric value.
+    :param prefix:
+        An optional prefix.
+    :param suffix:
+        An optional suffix.
+    :param precision:
+        The decimal precision, the number of decimal places to round to.
+    :return:
+        A formatted string containing the display value for the metric.
+    """
     if isinstance(value, float):
         if precision is not None:
             float_format = '%d' if precision == 0 else '%.{}f'.format(precision)

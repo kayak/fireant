@@ -1,11 +1,13 @@
 import itertools
 
-import numpy as np
 import pandas as pd
-from datetime import datetime
 
 from fireant import utils
 from fireant.utils import immutable
+from slicer.widgets.formats import (
+    dimension_value,
+    metric_value,
+)
 from .base import (
     MetricsWidget,
     Widget,
@@ -167,13 +169,11 @@ class HighCharts(Widget):
                                           references)
 
         x_axis = self._render_x_axis(data_frame, dimension_display_values)
-        plot_options = self._render_plot_options(data_frame)
 
         return {
             "title": {"text": self.title},
             "xAxis": x_axis,
             "yAxis": y_axes,
-            "plotOptions": plot_options,
             "series": series,
             "tooltip": {"shared": True, "useHTML": True},
             "legend": {"useHTML": True},
@@ -212,7 +212,7 @@ class HighCharts(Widget):
     @staticmethod
     def _render_y_axis(axis_idx, color, references):
         """
-        Renders the yAxis configuraiton.
+        Renders the yAxis configuration.
 
         https://api.highcharts.com/highcharts/yAxis
 
@@ -238,37 +238,7 @@ class HighCharts(Widget):
 
         return y_axes
 
-    @staticmethod
-    def _render_plot_options(data_frame):
-        """
-        Renders the plotOptions configuration
-
-        https://api.highcharts.com/highcharts/plotOptions
-
-        :param data_frame:
-        :return:
-        """
-        first_level = data_frame.index.levels[0] \
-            if isinstance(data_frame.index, pd.MultiIndex) \
-            else data_frame.index
-
-        if isinstance(first_level, pd.DatetimeIndex):
-            epoch = np.datetime64(datetime.utcfromtimestamp(0))
-            ms = np.timedelta64(1, 'ms')
-            millis = [d / ms
-                      for d in first_level.values[:2] - epoch]
-
-            return {
-                "series": {
-                    "pointStart": millis[0],
-                    "pointInterval": np.diff(millis)[0]
-                }
-            }
-
-        return {}
-
-    @staticmethod
-    def _render_series(axis, axis_idx, axis_color, colors, data_frame_groups, render_series_label, references):
+    def _render_series(self, axis, axis_idx, axis_color, colors, data_frame_groups, render_series_label, references):
         """
         Renders the series configuration.
 
@@ -292,11 +262,17 @@ class HighCharts(Widget):
             series_color = next(colors) if has_multi_metric else None
 
             for (dimension_values, group_df), symbol in zip(data_frame_groups, symbols):
+                dimension_values = utils.wrap_list(dimension_values)
+
+                is_timeseries = isinstance(group_df.index.levels[0]
+                                           if isinstance(group_df.index, pd.MultiIndex)
+                                           else group_df.index, pd.DatetimeIndex)
+
                 if not has_multi_metric:
                     series_color = next(colors)
 
                 for reference, dash_style in zip([None] + references, itertools.cycle(DASH_STYLES)):
-                    key = reference_key(metric, reference)
+                    metric_key = reference_key(metric, reference)
 
                     series.append({
                         "type": axis.type,
@@ -304,9 +280,9 @@ class HighCharts(Widget):
                         "dashStyle": dash_style,
                         "visible": visible,
 
-                        "name": render_series_label(metric, reference, utils.wrap_list(dimension_values)),
+                        "name": render_series_label(metric, reference, dimension_values),
 
-                        "data": [float(x) for x in group_df[key].values],
+                        "data": self._render_data(group_df, metric_key, is_timeseries),
 
                         "yAxis": ("{}_{}".format(axis_idx, reference.key)
                                   if reference is not None and reference.is_delta
@@ -324,3 +300,13 @@ class HighCharts(Widget):
                 visible = False  # Only display the first in each group
 
         return series
+
+    def _render_data(self, group_df, metric_key, is_timeseries):
+        if is_timeseries:
+            return [[dimension_value(utils.wrap_list(dimension_values)[0],
+                                     str_date=False),
+                     metric_value(y)]
+                    for dimension_values, y in group_df[metric_key].iteritems()]
+
+        return [metric_value(y)
+                for y in group_df[metric_key].values]

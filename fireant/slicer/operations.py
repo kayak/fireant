@@ -23,6 +23,16 @@ class _Cumulative(Operation):
     def __init__(self, arg):
         self.arg = arg
 
+    def _group_levels(self, index):
+        """
+        Get the index levels that need to be grouped. This is to avoid apply the cumulative function across separate
+        dimensions. Only the first dimension should be accumulated across.
+
+        :param index:
+        :return:
+        """
+        return index.names[1:]
+
     @property
     def metrics(self):
         return [metric
@@ -36,8 +46,10 @@ class _Cumulative(Operation):
 class CumSum(_Cumulative):
     def apply(self, data_frame):
         if isinstance(data_frame.index, pd.MultiIndex):
+            levels = self._group_levels(data_frame.index)
+
             return data_frame[self.arg.key] \
-                .groupby(level=data_frame.index.names[1:]) \
+                .groupby(level=levels) \
                 .cumsum()
 
         return data_frame[self.arg.key].cumsum()
@@ -46,8 +58,10 @@ class CumSum(_Cumulative):
 class CumProd(_Cumulative):
     def apply(self, data_frame):
         if isinstance(data_frame.index, pd.MultiIndex):
+            levels = self._group_levels(data_frame.index)
+
             return data_frame[self.arg.key] \
-                .groupby(level=data_frame.index.names[1:]) \
+                .groupby(level=levels) \
                 .cumprod()
 
         return data_frame[self.arg.key].cumprod()
@@ -60,8 +74,10 @@ class CumMean(_Cumulative):
 
     def apply(self, data_frame):
         if isinstance(data_frame.index, pd.MultiIndex):
+            levels = self._group_levels(data_frame.index)
+
             return data_frame[self.arg.key] \
-                .groupby(level=data_frame.index.names[1:]) \
+                .groupby(level=levels) \
                 .apply(self.cummean)
 
         return self.cummean(data_frame[self.arg.key])

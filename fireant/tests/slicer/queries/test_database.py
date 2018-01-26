@@ -57,9 +57,6 @@ cont_uni_dim_nans_df = cont_uni_dim_df \
     .sort_index()
 
 
-# print(cont_uni_dim_nans_df)
-
-
 def totals(df):
     return pd.DataFrame([[None] + list(df.sum())],
                         columns=df.columns,
@@ -70,9 +67,6 @@ cont_uni_dim_nans_totals_df = cont_uni_dim_nans_df \
     .append(cont_uni_dim_nans_df.groupby(level='timestamp').apply(totals)) \
     .sort_index() \
     .sortlevel(level=[0, 1], ascending=False)  # This sorts the DF so that the first instance of NaN is the totals
-
-
-# print(cont_uni_dim_nans_totals_df)
 
 
 class FetchDataCleanIndexTests(TestCase):
@@ -126,5 +120,4 @@ class FetchDataCleanIndexTests(TestCase):
         result = clean_and_apply_index(cont_uni_dim_nans_totals_df.reset_index(),
                                        [slicer.dimensions.timestamp, slicer.dimensions.state.rollup()])
 
-        print(result)
         self.assertListEqual(list(result.index.levels[1]), ['', '1', '2', 'Totals'])

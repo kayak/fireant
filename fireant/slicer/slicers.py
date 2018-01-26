@@ -3,13 +3,20 @@ import itertools
 from .queries import QueryBuilder
 
 
-def _match_items(left, right, key):
-    return all([a is not None
-                and b is not None
-                and getattr(a, key) == getattr(b, key)
-                for a, b in itertools.zip_longest(left, right)])
-
 class _Container(object):
+    """
+    This is a list of slicer elements, metrics or dimensions, used for accessing an element by key with a dot syntax.
+
+    For Example:
+    ```
+    slicer = Slicer(
+        dimensions=[
+            Dimension(key='my_dimension1')
+        ]
+    )
+    slicer.dimensions.my_dimension1
+    ```
+    """
     def __init__(self, items):
         self._items = items
         for item in items:
@@ -17,6 +24,16 @@ class _Container(object):
 
     def __iter__(self):
         return iter(self._items)
+
+    def __eq__(self, other):
+        """
+        Checks if the other object is an instance of _Container and has the same number of items with matching keys.
+        """
+        return isinstance(other, _Container) \
+               and all([a is not None
+                        and b is not None
+                        and a.key == b.key
+                        for a, b in itertools.zip_longest(self._items, other._items)])
 
 
 class Slicer(object):
@@ -71,8 +88,8 @@ class Slicer(object):
 
     def __eq__(self, other):
         return isinstance(other, Slicer) \
-               and _match_items(self.metrics, other.metrics, 'key') \
-               and _match_items(self.dimensions, other.dimensions, 'key')
+               and self.metrics == other.metrics \
+               and self.dimensions == other.dimensions
 
     def __repr__(self):
         return 'Slicer(metrics=[{}],dimensions=[{}])' \

@@ -6,6 +6,7 @@ from toposort import (
 )
 
 from fireant.utils import (
+    flatten,
     immutable,
     ordered_distinct_list,
     ordered_distinct_list_by_attr,
@@ -94,14 +95,20 @@ class QueryBuilder(object):
     @property
     def tables(self):
         """
+        Collect all the tables from all of the definitions of all of the elements in the slicer query. This looks
+        through the metrics, dimensions, and filter included in this slicer query. It also checks both the definition
+        field of each element as well as the display definition for Unique Dimensions.
+
         :return:
             A collection of tables required to execute a query,
         """
+
         return ordered_distinct_list([table
-                                      for group in [self.metrics, self._dimensions, self._filters]
-                                      for element in group
-                                      for attr in [getattr(element, 'definition', None),
+                                      for element in flatten([self.metrics, self._dimensions, self._filters])
+                                      # Need extra for-loop to incl. the `display_definition` from `UniqueDimension`
+                                      for attr in [element.definition,
                                                    getattr(element, 'display_definition', None)]
+                                      # ... but then filter Nones since most elements do not have `display_definition`
                                       if attr is not None
                                       for table in attr.tables_])
 
