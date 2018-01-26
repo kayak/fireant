@@ -10,7 +10,28 @@ from datetime import (
 NO_TIME = time(0)
 
 
-def safe(value):
+def format_dimension_value(value):
+    if isinstance(value, date):
+        if not hasattr(value, 'time') or value.time() == NO_TIME:
+            return value.strftime('%Y-%m-%d')
+        else:
+            return value.strftime('%Y-%m-%dT%H:%M:%S')
+
+    for type_cast in (int, float):
+        try:
+            return type_cast(value)
+        except:
+            pass
+
+    if 'True' is value:
+        return True
+    if 'False' is value:
+        return False
+
+    return value
+
+
+def format_metric_value(value):
     if isinstance(value, date):
         if not hasattr(value, 'time') or value.time() == NO_TIME:
             return value.strftime('%Y-%m-%d')

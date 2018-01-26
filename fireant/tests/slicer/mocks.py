@@ -2,15 +2,15 @@ from collections import (
     OrderedDict,
     namedtuple,
 )
+from unittest.mock import Mock
 
 import pandas as pd
 from datetime import (
     datetime,
 )
+
 from fireant import *
 from fireant import VerticaDatabase
-from unittest.mock import Mock
-
 from pypika import (
     JoinType,
     Table,
@@ -203,15 +203,15 @@ election_candidate_wins = {
     (6, 11): False,
 }
 
-columns = ['timestamp',
-           'candidate', 'candidate_display',
-           'political_party',
-           'election', 'election_display',
-           'state', 'state_display',
-           'winner',
-           'votes',
-           'wins']
-PoliticsRow = namedtuple('PoliticsRow', columns)
+df_columns = ['timestamp',
+              'candidate', 'candidate_display',
+              'political_party',
+              'election', 'election_display',
+              'state', 'state_display',
+              'winner',
+              'votes',
+              'wins']
+PoliticsRow = namedtuple('PoliticsRow', df_columns)
 
 records = []
 for (election_id, candidate_id, state_id), votes in election_candidate_state_votes.items():
@@ -228,7 +228,7 @@ for (election_id, candidate_id, state_id), votes in election_candidate_state_vot
           wins=(1 if winner else 0),
     ))
 
-mock_politics_database = pd.DataFrame.from_records(records, columns=columns)
+mock_politics_database = pd.DataFrame.from_records(records, columns=df_columns)
 
 single_metric_df = pd.DataFrame(mock_politics_database[['votes']]
                                 .sum()).T
@@ -263,7 +263,7 @@ def ref(data_frame, columns):
     ref_cols = {column: '%s_eoe' % column
                 for column in columns}
 
-    ref_df = cont_uni_dim_df \
+    ref_df = data_frame \
         .shift(2) \
         .rename(columns=ref_cols)[list(ref_cols.values())]
 
@@ -287,5 +287,34 @@ def ref_delta(ref_data_frame, columns):
 _columns = ['votes', 'wins']
 cont_uni_dim_ref_df = ref(cont_uni_dim_df, _columns)
 cont_uni_dim_ref_delta_df = ref_delta(cont_uni_dim_ref_df, _columns)
+
+
+def totals(data_frame, dimensions, columns):
+    """
+    Computes the totals across a dimension and adds the total as an extra row.
+    """
+    dfx = data_frame.unstack(level=dimensions)
+    for c in columns:
+        dfx[(c, 'Total')] = dfx[c].sum(axis=1)
+
+    return dfx.stack(level=dimensions)
+
+
+# Convert all index values to string
+for l in list(locals().values()):
+    if not isinstance(l, pd.DataFrame):
+        continue
+
+    if hasattr(l.index, 'levels'):
+        l.index = pd.MultiIndex(levels=[level.astype('str')
+                                        if not isinstance(level, (pd.DatetimeIndex, pd.RangeIndex))
+                                        else level
+                                        for level in l.index.levels],
+                                labels=l.index.labels)
+    elif not isinstance(l.index, (pd.DatetimeIndex, pd.RangeIndex)):
+        l.index = l.index.astype('str')
+
+cont_cat_dim_totals_df = totals(cont_cat_dim_df, ['political_party'], _columns)
+cont_uni_dim_totals_df = totals(cont_uni_dim_df, ['state'], _columns)
 
 ElectionOverElection = Reference('eoe', 'EoE', 'year', 4)

@@ -30,7 +30,7 @@ class DatabaseTests(TestCase):
 
         self.assertEqual(mock_read_sql.return_value, result)
 
-        mock_read_sql.assert_called_once_with(query, mock_connect().__enter__())
+        mock_read_sql.assert_called_once_with(query, mock_connect().__enter__(), coerce_float=True, parse_dates=True)
 
     def test_database_api(self):
         db = Database()

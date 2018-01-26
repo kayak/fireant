@@ -5,9 +5,10 @@ from unittest.mock import (
     patch,
 )
 
-import fireant as f
 from datetime import date
 
+import fireant as f
+from fireant.slicer.exceptions import RollupException
 from ..matchers import DimensionMatcher
 from ..mocks import slicer
 
@@ -255,6 +256,93 @@ class QueryBuilderDimensionTests(TestCase):
                          'GROUP BY "timestamp","political_party" '
                          'ORDER BY "timestamp","political_party"', query)
 
+
+# noinspection SqlDialectInspection,SqlNoDataSourceInspection
+class QueryBuilderDimensionRollupTests(TestCase):
+    maxDiff = None
+
+    def test_build_query_with_rollup_cat_dimension(self):
+        query = slicer.query() \
+            .widget(f.DataTablesJS([slicer.metrics.votes])) \
+            .dimension(slicer.dimensions.political_party.rollup()) \
+            .query
+
+        self.assertEqual('SELECT '
+                         '"political_party" "political_party",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY ROLLUP("political_party") '
+                         'ORDER BY "political_party"', query)
+
+    def test_build_query_with_rollup_uni_dimension(self):
+        query = slicer.query() \
+            .widget(f.DataTablesJS([slicer.metrics.votes])) \
+            .dimension(slicer.dimensions.candidate.rollup()) \
+            .query
+
+        self.assertEqual('SELECT '
+                         '"candidate_id" "candidate",'
+                         '"candidate_name" "candidate_display",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY ROLLUP(("candidate_id","candidate_name")) '
+                         'ORDER BY "candidate"', query)
+
+    def test_rollup_following_non_rolled_up_dimensions(self):
+        query = slicer.query() \
+            .widget(f.DataTablesJS([slicer.metrics.votes])) \
+            .dimension(slicer.dimensions.timestamp,
+                       slicer.dimensions.candidate.rollup()) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         '"candidate_id" "candidate",'
+                         '"candidate_name" "candidate_display",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp",ROLLUP(("candidate_id","candidate_name")) '
+                         'ORDER BY "timestamp","candidate"', query)
+
+    def test_force_all_dimensions_following_rollup_to_be_rolled_up(self):
+        query = slicer.query() \
+            .widget(f.DataTablesJS([slicer.metrics.votes])) \
+            .dimension(slicer.dimensions.political_party.rollup(),
+                       slicer.dimensions.candidate) \
+            .query
+
+        self.assertEqual('SELECT '
+                         '"political_party" "political_party",'
+                         '"candidate_id" "candidate",'
+                         '"candidate_name" "candidate_display",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY ROLLUP("political_party",("candidate_id","candidate_name")) '
+                         'ORDER BY "political_party","candidate"', query)
+
+    def test_force_all_dimensions_following_rollup_to_be_rolled_up_with_split_dimension_calls(self):
+        query = slicer.query() \
+            .widget(f.DataTablesJS([slicer.metrics.votes])) \
+            .dimension(slicer.dimensions.political_party.rollup()) \
+            .dimension(slicer.dimensions.candidate) \
+            .query
+
+        self.assertEqual('SELECT '
+                         '"political_party" "political_party",'
+                         '"candidate_id" "candidate",'
+                         '"candidate_name" "candidate_display",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY ROLLUP("political_party",("candidate_id","candidate_name")) '
+                         'ORDER BY "political_party","candidate"', query)
+
+    def test_raise_exception_when_trying_to_rollup_continuous_dimension(self):
+        with self.assertRaises(RollupException):
+            slicer.query() \
+                .widget(f.DataTablesJS([slicer.metrics.votes])) \
+                .dimension(slicer.dimensions.political_party.rollup(),
+                           slicer.dimensions.timestamp) \
+                .query
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 class QueryBuilderDimensionFilterTests(TestCase):
@@ -1146,7 +1234,7 @@ class QueryBuilderRenderTests(TestCase):
 
         mock_fetch_data.assert_called_once_with(slicer.database,
                                                 ANY,
-                                                index_levels=ANY)
+                                                dimensions=ANY)
 
     def test_pass_query_from_builder_as_arg(self, mock_fetch_data: Mock):
         mock_widget = Mock(name='mock_widget')
@@ -1158,7 +1246,7 @@ class QueryBuilderRenderTests(TestCase):
 
         mock_fetch_data.assert_called_once_with(ANY,
                                                 'SELECT SUM("votes") "votes" FROM "politics"."politician"',
-                                                index_levels=ANY)
+                                                dimensions=ANY)
 
     def test_builder_dimensions_as_arg_with_zero_dimensions(self, mock_fetch_data: Mock):
         mock_widget = Mock(name='mock_widget')
@@ -1168,29 +1256,33 @@ class QueryBuilderRenderTests(TestCase):
             .widget(mock_widget) \
             .render()
 
-        mock_fetch_data.assert_called_once_with(ANY, ANY, index_levels=[])
+        mock_fetch_data.assert_called_once_with(ANY, ANY, dimensions=[])
 
     def test_builder_dimensions_as_arg_with_one_dimension(self, mock_fetch_data: Mock):
         mock_widget = Mock(name='mock_widget')
         mock_widget.metrics = [slicer.metrics.votes]
 
+        dimensions = [slicer.dimensions.state]
+
         slicer.query() \
             .widget(mock_widget) \
-            .dimension(slicer.dimensions.state) \
+            .dimension(*dimensions) \
             .render()
 
-        mock_fetch_data.assert_called_once_with(ANY, ANY, index_levels=['state'])
+        mock_fetch_data.assert_called_once_with(ANY, ANY, dimensions=DimensionMatcher(*dimensions))
 
     def test_builder_dimensions_as_arg_with_multiple_dimensions(self, mock_fetch_data: Mock):
         mock_widget = Mock(name='mock_widget')
         mock_widget.metrics = [slicer.metrics.votes]
 
+        dimensions = slicer.dimensions.timestamp, slicer.dimensions.state, slicer.dimensions.political_party
+
         slicer.query() \
             .widget(mock_widget) \
-            .dimension(slicer.dimensions.timestamp, slicer.dimensions.state, slicer.dimensions.political_party) \
+            .dimension(*dimensions) \
             .render()
 
-        mock_fetch_data.assert_called_once_with(ANY, ANY, index_levels=['timestamp', 'state', 'political_party'])
+        mock_fetch_data.assert_called_once_with(ANY, ANY, dimensions=DimensionMatcher(*dimensions))
 
     def test_call_transform_on_widget(self, mock_fetch_data: Mock):
         mock_widget = Mock(name='mock_widget')

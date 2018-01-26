@@ -12,3 +12,10 @@ class MissingTableJoinException(SlicerException):
 
 class CircularJoinsException(SlicerException):
     pass
+
+
+class RollupException(SlicerException):
+    pass
+
+class MissingMetricsException(SlicerException):
+    pass

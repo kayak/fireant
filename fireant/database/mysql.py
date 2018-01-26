@@ -70,3 +70,6 @@ class MySQLDatabase(Database):
         # adding an extra 's' as MySQL's interval doesn't work with 'year', 'week' etc, it expects a plural
         interval_term = terms.Interval(**{'{}s'.format(str(date_part)): interval, 'dialect': Dialects.MYSQL})
         return DateAdd(field, interval_term)
+
+    def totals(self, query, *terms):
+        raise NotImplementedError

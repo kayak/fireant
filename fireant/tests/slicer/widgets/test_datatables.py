@@ -388,38 +388,38 @@ class DataTablesTransformerTests(TestCase):
             'data': [{
                 'timestamp': {'value': '1996-01-01'},
                 'votes': {
-                    1: {'display': '5574387', 'value': 5574387},
-                    2: {'display': '9646062', 'value': 9646062}
+                    '1': {'display': '5574387', 'value': 5574387},
+                    '2': {'display': '9646062', 'value': 9646062}
                 }
             }, {
                 'timestamp': {'value': '2000-01-01'},
                 'votes': {
-                    1: {'display': '6233385', 'value': 6233385},
-                    2: {'display': '10428632', 'value': 10428632}
+                    '1': {'display': '6233385', 'value': 6233385},
+                    '2': {'display': '10428632', 'value': 10428632}
                 }
             }, {
                 'timestamp': {'value': '2004-01-01'},
                 'votes': {
-                    1: {'display': '7359621', 'value': 7359621},
-                    2: {'display': '12255311', 'value': 12255311}
+                    '1': {'display': '7359621', 'value': 7359621},
+                    '2': {'display': '12255311', 'value': 12255311}
                 }
             }, {
                 'timestamp': {'value': '2008-01-01'},
                 'votes': {
-                    1: {'display': '8007961', 'value': 8007961},
-                    2: {'display': '13286254', 'value': 13286254}
+                    '1': {'display': '8007961', 'value': 8007961},
+                    '2': {'display': '13286254', 'value': 13286254}
                 }
             }, {
                 'timestamp': {'value': '2012-01-01'},
                 'votes': {
-                    1: {'display': '7877967', 'value': 7877967},
-                    2: {'display': '12694243', 'value': 12694243}
+                    '1': {'display': '7877967', 'value': 7877967},
+                    '2': {'display': '12694243', 'value': 12694243}
                 }
             }, {
                 'timestamp': {'value': '2016-01-01'},
                 'votes': {
-                    1: {'display': '5072915', 'value': 5072915},
-                    2: {'display': '13237598', 'value': 13237598}
+                    '1': {'display': '5072915', 'value': 5072915},
+                    '2': {'display': '13237598', 'value': 13237598}
                 }
             }],
         }, result)

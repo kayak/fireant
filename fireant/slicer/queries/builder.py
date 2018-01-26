@@ -1,20 +1,22 @@
 from collections import defaultdict
 
-from fireant.utils import (
-    immutable,
-    ordered_distinct_list,
-    ordered_distinct_list_by_attr,
-)
 from toposort import (
     CircularDependencyError,
     toposort_flatten,
 )
 
+from fireant.utils import (
+    immutable,
+    ordered_distinct_list,
+    ordered_distinct_list_by_attr,
+)
 from .database import fetch_data
 from .references import join_reference
+from ..dimensions import RollupDimension
 from ..exceptions import (
     CircularJoinsException,
     MissingTableJoinException,
+    RollupException,
 )
 from ..filters import DimensionFilter
 from ..intervals import DatetimeInterval
@@ -27,6 +29,55 @@ def _build_dimension_definition(dimension, interval_func):
                              dimension.interval).as_(dimension.key)
 
     return dimension.definition.as_(dimension.key)
+
+
+def _select_groups(terms, query, rollup, database):
+    query = query.select(*terms)
+
+    if not rollup:
+        return query.groupby(*terms)
+
+    if 1 < len(terms):
+        # This step packs multiple terms together so that they are rolled up together. This is needed for unique
+        # dimensions to keep the display field grouped together with the definition field.
+        terms = [terms]
+
+    return database.totals(query, terms)
+
+
+def is_rolling_up(dimension, rolling_up):
+    if rolling_up:
+        if not isinstance(dimension, RollupDimension):
+            raise RollupException('Cannot roll up dimension {}'.format(dimension))
+        return True
+    return getattr(dimension, "is_rollup", False)
+
+
+def clean(index):
+    import pandas as pd
+
+    if isinstance(index, (pd.DatetimeIndex, pd.RangeIndex)):
+        return index
+
+    return index.astype('str')
+
+
+def clean_index(data_frame):
+    import pandas as pd
+
+    if hasattr(data_frame.index, 'levels'):
+        data_frame.index = pd.MultiIndex(
+              levels=[level.astype('str')
+                      if not isinstance(level, (pd.DatetimeIndex, pd.RangeIndex))
+                      else level
+                      for level in data_frame.index.levels],
+              labels=data_frame.index.labels
+        )
+
+    elif not isinstance(data_frame.index, (pd.DatetimeIndex, pd.RangeIndex)):
+        data_frame.index = data_frame.index.astype('str')
+
+    return data_frame
 
 
 class QueryBuilder(object):
@@ -45,7 +96,7 @@ class QueryBuilder(object):
     def widget(self, *widgets):
         """
 
-        :param widget:
+        :param widgets:
         :return:
         """
         self._widgets += widgets
@@ -54,7 +105,7 @@ class QueryBuilder(object):
     def dimension(self, *dimensions):
         """
 
-        :param dimension:
+        :param dimensions:
         :return:
         """
         self._dimensions += dimensions
@@ -62,7 +113,7 @@ class QueryBuilder(object):
     @immutable
     def filter(self, *filters):
         """
-        :param filter:
+        :param filters:
         :return:
         """
         self._filters += filters
@@ -153,14 +204,21 @@ class QueryBuilder(object):
             query = query.join(join.table, how=join.join_type).on(join.criterion)
 
         # Add dimensions
+        rolling_up = False
         for dimension in self._dimensions:
-            dimension_definition = _build_dimension_definition(dimension, self.slicer.database.trunc_date)
-            query = query.select(dimension_definition).groupby(dimension_definition)
+            rolling_up = is_rolling_up(dimension, rolling_up)
 
-            # Add display definition field
+            dimension_definition = _build_dimension_definition(dimension, self.slicer.database.trunc_date)
+
             if hasattr(dimension, 'display_definition'):
+                # Add display definition field
                 dimension_display_definition = dimension.display_definition.as_(dimension.display_key)
-                query = query.select(dimension_display_definition).groupby(dimension_display_definition)
+                fields = [dimension_definition, dimension_display_definition]
+
+            else:
+                fields = [dimension_definition]
+
+            query = _select_groups(fields, query, rolling_up, self.slicer.database)
 
         # Add metrics
         query = query.select(*[metric.definition.as_(metric.key)
@@ -223,10 +281,11 @@ class QueryBuilder(object):
 
         :return:
         """
+        query = self.query
+
         data_frame = fetch_data(self.slicer.database,
-                                self.query,
-                                index_levels=[dimension.key
-                                              for dimension in self._dimensions])
+                                query,
+                                dimensions=self._dimensions)
 
         # Apply operations
         for operation in self.operations:
@@ -235,3 +294,9 @@ class QueryBuilder(object):
         # Apply transformations
         return [widget.transform(data_frame, self.slicer, self._dimensions)
                 for widget in self._widgets]
+
+    def __str__(self):
+        return self.query
+
+    def __iter__(self):
+        return iter(self.render())

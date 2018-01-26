@@ -17,7 +17,7 @@ from .helpers import (
 
 
 def _format_dimension_cell(dimension_value, display_values):
-    dimension_cell = {'value': formats.safe(dimension_value)}
+    dimension_cell = {'value': formats.format_dimension_value(dimension_value)}
 
     if display_values is not None:
         dimension_cell['display'] = display_values.get(dimension_value, dimension_value)
@@ -30,9 +30,9 @@ def _format_dimensional_metric_cell(row_data, metric):
     for key, next_row in row_data.groupby(level=-1):
         next_row.reset_index(level=-1, drop=True, inplace=True)
 
-        safe_key = formats.safe(key)
+        safe_key = formats.format_dimension_value(key)
 
-        level[safe_key] = _format_dimensional_metric_cell(next_row, metric) \
+        level[key] = _format_dimensional_metric_cell(next_row, metric) \
             if isinstance(next_row.index, pd.MultiIndex) \
             else _format_metric_cell(next_row[metric.key], metric)
 
@@ -40,7 +40,7 @@ def _format_dimensional_metric_cell(row_data, metric):
 
 
 def _format_metric_cell(value, metric):
-    raw_value = formats.safe(value)
+    raw_value = formats.format_metric_value(value)
     return {
         'value': raw_value,
         'display': formats.display(raw_value,
@@ -84,7 +84,7 @@ class DataTablesJS(MetricsWidget):
 
         pivot_index_to_columns = self.pivot and isinstance(data_frame.index, pd.MultiIndex)
         if pivot_index_to_columns:
-            levels = list(range(1, len(dimensions)))
+            levels = data_frame.index.names[1:]
             data_frame = data_frame \
                 .unstack(level=levels) \
                 .fillna(value=0)
@@ -95,7 +95,6 @@ class DataTablesJS(MetricsWidget):
             metric_columns = self._metric_columns_pivoted(references,
                                                           data_frame.columns,
                                                           render_column_label)
-
 
         else:
             dimension_columns = self._dimension_columns(dimensions)

@@ -1,3 +1,4 @@
+from fireant.slicer.exceptions import MissingMetricsException
 from fireant.utils import immutable
 
 
@@ -16,9 +17,16 @@ class MetricsWidget(Widget):
 
     @property
     def metrics(self):
+        if 0 == len(self._metrics):
+            raise MissingMetricsException(str(self))
+
         return [metric
                 for group in self._metrics
                 for metric in getattr(group, 'metrics', [group])]
 
     def transform(self, data_frame, slicer, dimensions):
         super(MetricsWidget, self).transform(data_frame, slicer, dimensions)
+
+    def __repr__(self):
+        return '{}(metrics={})'.format(self.__class__.__name__,
+                                       ','.join(str(m) for m in self._metrics))

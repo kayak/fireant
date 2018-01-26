@@ -24,7 +24,23 @@ class Dimension(SlicerElement):
         super(Dimension, self).__init__(key, label, definition)
 
 
-class BooleanDimension(Dimension):
+class RollupDimension(Dimension):
+    """
+    This represents a dimension which can be rolled up to display the totals across the dimension in addition to the
+    break-down by dimension. Rollup returns `NULL` for the dimension value in most databases and therefore it is not
+    safe to use roll up in combination with dimension definitions that can return `NULL`.
+    """
+
+    def __init__(self, key, label=None, definition=None):
+        super(Dimension, self).__init__(key, label, definition)
+        self.is_rollup = False
+
+    @immutable
+    def rollup(self):
+        self.is_rollup = True
+
+
+class BooleanDimension(RollupDimension):
     """
     This is a dimension that represents a boolean true/false value.  The expression should always result in a boolean
     value.
@@ -39,7 +55,7 @@ class BooleanDimension(Dimension):
         return BooleanFilter(self.definition, value)
 
 
-class CategoricalDimension(Dimension):
+class CategoricalDimension(RollupDimension):
     """
     This is a dimension that represents an enum-like database field, with a finite list of options to chose from. It
     provides support for configuring a display value for each of the possible values.
@@ -58,7 +74,7 @@ class CategoricalDimension(Dimension):
         return ExcludesFilter(self.definition, values)
 
 
-class UniqueDimension(Dimension):
+class UniqueDimension(RollupDimension):
     """
     This is a dimension that represents a field in a database which is a unique identifier, such as a primary/foreign
     key. It provides support for a display value field which is selected and used in the results.

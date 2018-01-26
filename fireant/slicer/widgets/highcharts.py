@@ -57,7 +57,7 @@ class ChartWidget(MetricsWidget):
     needs_marker = False
     stacked = False
 
-    def __init__(self, name=None, metrics=(), stacked=False):
+    def __init__(self, metrics=(), name=None, stacked=False):
         super(ChartWidget, self).__init__(metrics=metrics)
         self.name = name
         self.stacked = self.stacked or stacked
@@ -137,7 +137,7 @@ class HighCharts(Widget):
         """
         colors = itertools.cycle(self.colors)
 
-        levels = list(range(1, len(dimensions)))
+        levels = data_frame.index.names[1:]
         groups = list(data_frame.groupby(level=levels)) \
             if levels \
             else [([], data_frame)]
@@ -179,8 +179,8 @@ class HighCharts(Widget):
             "legend": {"useHTML": True},
         }
 
-
-    def _render_x_axis(self, data_frame, dimension_display_values):
+    @staticmethod
+    def _render_x_axis(data_frame, dimension_display_values):
         """
         Renders the xAxis configuraiton.
 
@@ -209,7 +209,8 @@ class HighCharts(Widget):
             "categories": categories,
         }
 
-    def _render_y_axis(self, axis_idx, color, references):
+    @staticmethod
+    def _render_y_axis(axis_idx, color, references):
         """
         Renders the yAxis configuraiton.
 
@@ -237,7 +238,8 @@ class HighCharts(Widget):
 
         return y_axes
 
-    def _render_plot_options(self, data_frame):
+    @staticmethod
+    def _render_plot_options(data_frame):
         """
         Renders the plotOptions configuration
 
@@ -265,7 +267,8 @@ class HighCharts(Widget):
 
         return {}
 
-    def _render_series(self, axis, axis_idx, axis_color, colors, data_frame_groups, render_series_label, references):
+    @staticmethod
+    def _render_series(axis, axis_idx, axis_color, colors, data_frame_groups, render_series_label, references):
         """
         Renders the series configuration.
 
@@ -309,13 +312,13 @@ class HighCharts(Widget):
                                   if reference is not None and reference.is_delta
                                   else str(axis_idx)),
 
-                        "marker": {"symbol": symbol, "fillColor": axis_color or series_color} \
-                            if axis.needs_marker \
-                            else {},
+                        "marker": ({"symbol": symbol, "fillColor": axis_color or series_color}
+                                   if axis.needs_marker
+                                   else {}),
 
-                        "stacking": "normal" \
-                            if axis.stacked \
-                            else None,
+                        "stacking": ("normal"
+                                     if axis.stacked
+                                     else None),
                     })
 
                 visible = False  # Only display the first in each group

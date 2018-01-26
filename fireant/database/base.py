@@ -31,4 +31,7 @@ class Database(object):
 
     def fetch_data(self, query):
         with self.connect() as connection:
-            return pd.read_sql(query, connection)
+            return pd.read_sql(query, connection, coerce_float=True, parse_dates=True)
+
+    def totals(self, query, terms):
+        raise NotImplementedError
