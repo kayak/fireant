@@ -66,7 +66,7 @@ class MySQLDatabase(Database):
     def trunc_date(self, field, interval):
         return Trunc(field, interval)
 
-    def date_add(self, field, date_part, interval):
+    def date_add(self, field, date_part, interval, align_weekday=False):
         # adding an extra 's' as MySQL's interval doesn't work with 'year', 'week' etc, it expects a plural
         interval_term = terms.Interval(**{'{}s'.format(str(date_part)): interval, 'dialect': Dialects.MYSQL})
         return DateAdd(field, interval_term)

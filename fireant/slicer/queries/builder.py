@@ -53,33 +53,6 @@ def is_rolling_up(dimension, rolling_up):
     return getattr(dimension, "is_rollup", False)
 
 
-def clean(index):
-    import pandas as pd
-
-    if isinstance(index, (pd.DatetimeIndex, pd.RangeIndex)):
-        return index
-
-    return index.astype('str')
-
-
-def clean_index(data_frame):
-    import pandas as pd
-
-    if hasattr(data_frame.index, 'levels'):
-        data_frame.index = pd.MultiIndex(
-              levels=[level.astype('str')
-                      if not isinstance(level, (pd.DatetimeIndex, pd.RangeIndex))
-                      else level
-                      for level in data_frame.index.levels],
-              labels=data_frame.index.labels
-        )
-
-    elif not isinstance(data_frame.index, (pd.DatetimeIndex, pd.RangeIndex)):
-        data_frame.index = data_frame.index.astype('str')
-
-    return data_frame
-
-
 class QueryBuilder(object):
     """
 

@@ -1094,8 +1094,110 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
                          'ORDER BY "timestamp"', query)
 
-    def test_references_adapt_for_leap_year(self):
-        pass
+    def test_adapt_dow_for_leap_year_for_yoy_reference(self):
+        query = slicer.query() \
+            .widget(f.HighCharts(
+              axes=[f.HighCharts.LineChart(
+                    metrics=[slicer.metrics.votes])])) \
+            .dimension(slicer.dimensions.timestamp(f.weekly)
+                       .reference(f.YearOverYear)) \
+            .query
+
+        self.assertEqual('SELECT '
+                         '"base"."timestamp" "timestamp",'
+                         '"base"."votes" "votes",'
+                         '"sq1"."votes" "votes_yoy" '
+                         'FROM '
+
+                         '('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'IW\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "base" '  # end-nested
+
+                         'LEFT JOIN ('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'IW\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "sq1" '  # end-nested
+
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',-1,'
+                         'TRUNC(TIMESTAMPADD(\'year\',1,"sq1"."timestamp"),\'IW\')) '
+                         'ORDER BY "timestamp"', query)
+
+    def test_adapt_dow_for_leap_year_for_yoy_delta_reference(self):
+        query = slicer.query() \
+            .widget(f.HighCharts(
+              axes=[f.HighCharts.LineChart(
+                    metrics=[slicer.metrics.votes])])) \
+            .dimension(slicer.dimensions.timestamp(f.weekly)
+                       .reference(f.YearOverYear.delta())) \
+            .query
+
+        self.assertEqual('SELECT '
+                         '"base"."timestamp" "timestamp",'
+                         '"base"."votes" "votes",'
+                         '"base"."votes"-"sq1"."votes" "votes_yoy_delta" '
+                         'FROM '
+
+                         '('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'IW\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "base" '  # end-nested
+
+                         'LEFT JOIN ('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'IW\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "sq1" '  # end-nested
+
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',-1,'
+                         'TRUNC(TIMESTAMPADD(\'year\',1,"sq1"."timestamp"),\'IW\')) '
+                         'ORDER BY "timestamp"', query)
+
+    def test_adapt_dow_for_leap_year_for_yoy_delta_percent_reference(self):
+        query = slicer.query() \
+            .widget(f.HighCharts(
+              axes=[f.HighCharts.LineChart(
+                    metrics=[slicer.metrics.votes])])) \
+            .dimension(slicer.dimensions.timestamp(f.weekly)
+                       .reference(f.YearOverYear.delta(True))) \
+            .query
+
+        self.assertEqual('SELECT '
+                         '"base"."timestamp" "timestamp",'
+                         '"base"."votes" "votes",'
+                         '("base"."votes"-"sq1"."votes")*100/NULLIF("sq1"."votes",0) "votes_yoy_delta_percent" '
+                         'FROM '
+
+                         '('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'IW\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "base" '  # end-nested
+
+                         'LEFT JOIN ('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'IW\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "sq1" '  # end-nested
+
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',-1,'
+                         'TRUNC(TIMESTAMPADD(\'year\',1,"sq1"."timestamp"),\'IW\')) '
+                         'ORDER BY "timestamp"', query)
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection

@@ -1,5 +1,5 @@
 class Reference(object):
-    def __init__(self, key, label, time_unit, interval, delta=False, percent=False):
+    def __init__(self, key, label, time_unit: str, interval: int, delta=False, percent=False):
         self.key = key
         self.label = label
 

@@ -63,8 +63,14 @@ class VerticaDatabase(Database):
         trunc_date_interval = self.DATETIME_INTERVALS.get(interval, 'DD')
         return Trunc(field, trunc_date_interval)
 
-    def date_add(self, field, date_part, interval):
-        return fn.TimestampAdd(date_part, interval, field)
+    def date_add(self, field, date_part, interval, align_weekday=False):
+        shifted_date = fn.TimestampAdd(date_part, interval, field)
+
+        if align_weekday:
+            truncated = self.trunc_date(shifted_date, weekly)
+            return fn.TimestampAdd(date_part, -interval, truncated)
+
+        return shifted_date
 
     def totals(self, query, terms):
         return query.rollup(*terms)

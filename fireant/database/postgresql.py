@@ -53,5 +53,5 @@ class PostgreSQLDatabase(Database):
     def trunc_date(self, field, interval):
         return Trunc(field, interval)
 
-    def date_add(self, field, date_part, interval):
+    def date_add(self, field, date_part, interval, align_weekday=False):
         return fn.DateAdd(date_part, interval, field)

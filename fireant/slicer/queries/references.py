@@ -16,7 +16,11 @@ from pypika.terms import (
     Criterion,
     Term,
 )
-from ..dimensions import Dimension
+from ..dimensions import (
+    DatetimeDimension,
+    Dimension,
+)
+from ..intervals import weekly
 from ..metrics import Metric
 from ..references import Reference
 
@@ -24,12 +28,16 @@ from ..references import Reference
 def join_reference(reference: Reference,
                    metrics: Iterator[Metric],
                    dimensions: Iterator[Dimension],
-                   ref_dimension: Dimension,
+                   ref_dimension: DatetimeDimension,
                    date_add: Callable,
                    original_query,
                    outer_query: QueryBuilder):
     ref_query = original_query.as_(reference.key)
-    date_add = partial(date_add, date_part=reference.time_unit, interval=reference.interval)
+
+    date_add = partial(date_add,
+                       date_part=reference.time_unit,
+                       interval=reference.interval,
+                       align_weekday=weekly == ref_dimension.interval)
 
     # FIXME this is a bit hacky, need to replace the ref dimension term in all of the filters with the offset
     if ref_query._wheres:
@@ -43,14 +51,17 @@ def join_reference(reference: Reference,
                                                      original_query,
                                                      ref_query,
                                                      date_add)
-    outer_query = outer_query.join(ref_query, JoinType.left).on(join_criterion)
+    outer_query = outer_query \
+        .join(ref_query, JoinType.left) \
+        .on(join_criterion)
+
     # Add metrics
     ref_metric = _reference_metric(reference,
                                    original_query,
                                    ref_query)
-    outer_query = outer_query.select(*[ref_metric(metric).as_("{}_{}".format(metric.key, reference.key))
+
+    return outer_query.select(*[ref_metric(metric).as_("{}_{}".format(metric.key, reference.key))
                                        for metric in metrics])
-    return outer_query
 
 
 def _apply_to_term_in_criterion(target: Term,

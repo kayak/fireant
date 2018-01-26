@@ -19,7 +19,7 @@ class Database(object):
     def trunc_date(self, field, interval):
         raise NotImplementedError
 
-    def date_add(self, field: terms.Term, date_part: str, interval: int):
+    def date_add(self, field: terms.Term, date_part: str, interval: int, align_weekday=False):
         """ Database specific function for adding or subtracting dates """
         raise NotImplementedError
 

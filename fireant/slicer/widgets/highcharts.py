@@ -3,9 +3,9 @@ import itertools
 import numpy as np
 import pandas as pd
 from datetime import datetime
+
 from fireant import utils
 from fireant.utils import immutable
-
 from .base import (
     MetricsWidget,
     Widget,
@@ -228,13 +228,13 @@ class HighCharts(Widget):
         }]
 
         y_axes += [{
-            "id": "{}_{}".format(axis_idx, reference.key),
-            "title": {"text": reference.label},
-            "opposite": True,
-            "labels": {"style": {"color": color}}
-        }
-            for reference in references
-            if reference.is_delta]
+                       "id": "{}_{}".format(axis_idx, reference.key),
+                       "title": {"text": reference.label},
+                       "opposite": True,
+                       "labels": {"style": {"color": color}}
+                   }
+                   for reference in references
+                   if reference.is_delta]
 
         return y_axes
 
