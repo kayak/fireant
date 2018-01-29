@@ -1,1 +1,4 @@
-from .builder import QueryBuilder
+from .builder import (
+    DimensionOptionQueryBuilder,
+    SlicerQueryBuilder,
+)

@@ -55,15 +55,128 @@ def is_rolling_up(dimension, rolling_up):
 
 
 class QueryBuilder(object):
-    """
+    def __init__(self, slicer, table):
+        self.slicer = slicer
+        self.table = table
+        self._dimensions = []
+        self._filters = []
 
+    @immutable
+    def filter(self, *filters):
+        """
+        :param filters:
+        :return:
+        """
+        self._filters += filters
+
+    @property
+    def _elements(self):
+        return flatten([self._dimensions, self._filters])
+
+    @property
+    def _tables(self):
+        """
+        Collect all the tables from all of the definitions of all of the elements in the slicer query. This looks
+        through the metrics, dimensions, and filter included in this slicer query. It also checks both the definition
+        field of each element as well as the display definition for Unique Dimensions.
+
+        :return:
+            A collection of tables required to execute a query,
+        """
+
+        return ordered_distinct_list([table
+                                      for element in self._elements
+                                      # Need extra for-loop to incl. the `display_definition` from `UniqueDimension`
+                                      for attr in [element.definition,
+                                                   getattr(element, 'display_definition', None)]
+                                      # ... but then filter Nones since most elements do not have `display_definition`
+                                      if attr is not None
+                                      for table in attr.tables_])
+
+    @property
+    def _joins(self):
+        """
+        Given a set of tables required for a slicer query, this function finds the joins required for the query and
+        sorts them topologically.
+
+        :return:
+            A list of joins in the order that they must be joined to the query.
+        :raises:
+            MissingTableJoinException - If a table is required but there is no join for that table
+            CircularJoinsException - If there is a circular dependency between two or more joins
+        """
+        dependencies = defaultdict(set)
+        slicer_joins = {join.table: join
+                        for join in self.slicer.joins}
+        tables_to_eval = list(self._tables)
+
+        while tables_to_eval:
+            table = tables_to_eval.pop()
+
+            if self.table == table:
+                continue
+
+            if table not in slicer_joins:
+                raise MissingTableJoinException('Could not find a join for table {table}'
+                                                .format(table=str(table)))
+
+            join = slicer_joins[table]
+            tables_required_for_join = set(join.criterion.tables_) - {self.table, join.table}
+
+            dependencies[join] |= {slicer_joins[table]
+                                   for table in tables_required_for_join}
+            tables_to_eval += tables_required_for_join - {d.table for d in dependencies}
+
+        try:
+            return toposort_flatten(dependencies)
+        except CircularDependencyError as e:
+            raise CircularJoinsException(str(e))
+
+    @property
+    def query(self):
+        """
+        WRITEME
+        """
+        query = self.slicer.database.query_cls.from_(self.table)
+
+        # Add joins
+        for join in self._joins:
+            query = query.join(join.table, how=join.join_type).on(join.criterion)
+
+        # Add dimensions
+        rolling_up = False
+        for dimension in self._dimensions:
+            rolling_up = is_rolling_up(dimension, rolling_up)
+
+            dimension_definition = _build_dimension_definition(dimension, self.slicer.database.trunc_date)
+
+            if hasattr(dimension, 'display_definition') and dimension.display_definition is not None:
+                # Add display definition field
+                dimension_display_definition = dimension.display_definition.as_(dimension.display_key)
+                fields = [dimension_definition, dimension_display_definition]
+
+            else:
+                fields = [dimension_definition]
+
+            query = _select_groups(fields, query, rolling_up, self.slicer.database)
+
+        # Add filters
+        for filter_ in self._filters:
+            query = query.where(filter_.definition) \
+                if isinstance(filter_, DimensionFilter) \
+                else query.having(filter_.definition)
+
+        return query
+
+
+class SlicerQueryBuilder(QueryBuilder):
+    """
+    WRITEME
     """
 
     def __init__(self, slicer):
-        self.slicer = slicer
+        super(SlicerQueryBuilder, self).__init__(slicer, slicer.table)
         self._widgets = []
-        self._dimensions = []
-        self._filters = []
         self._orders = []
 
     @immutable
@@ -83,34 +196,6 @@ class QueryBuilder(object):
         :return:
         """
         self._dimensions += dimensions
-
-    @immutable
-    def filter(self, *filters):
-        """
-        :param filters:
-        :return:
-        """
-        self._filters += filters
-
-    @property
-    def tables(self):
-        """
-        Collect all the tables from all of the definitions of all of the elements in the slicer query. This looks
-        through the metrics, dimensions, and filter included in this slicer query. It also checks both the definition
-        field of each element as well as the display definition for Unique Dimensions.
-
-        :return:
-            A collection of tables required to execute a query,
-        """
-
-        return ordered_distinct_list([table
-                                      for element in flatten([self.metrics, self._dimensions, self._filters])
-                                      # Need extra for-loop to incl. the `display_definition` from `UniqueDimension`
-                                      for attr in [element.definition,
-                                                   getattr(element, 'display_definition', None)]
-                                      # ... but then filter Nones since most elements do not have `display_definition`
-                                      if attr is not None
-                                      for table in attr.tables_])
 
     @property
     def metrics(self):
@@ -134,81 +219,19 @@ class QueryBuilder(object):
                                               if isinstance(metric, Operation)])
 
     @property
-    def joins(self):
-        """
-        Given a set of tables required for a slicer query, this function finds the joins required for the query and
-        sorts them topologically.
-
-        :return:
-            A list of joins in the order that they must be joined to the query.
-        :raises:
-            MissingTableJoinException - If a table is required but there is no join for that table
-            CircularJoinsException - If there is a circular dependency between two or more joins
-        """
-        dependencies = defaultdict(set)
-        slicer_joins = {join.table: join
-                        for join in self.slicer.joins}
-        tables_to_eval = list(self.tables)
-
-        while tables_to_eval:
-            table = tables_to_eval.pop()
-
-            if self.slicer.table == table:
-                continue
-
-            if table not in slicer_joins:
-                raise MissingTableJoinException('Could not find a join for table {table}'
-                                                .format(table=str(table)))
-
-            join = slicer_joins[table]
-            tables_required_for_join = set(join.criterion.tables_) - {self.slicer.table, join.table}
-
-            dependencies[join] |= {slicer_joins[table]
-                                   for table in tables_required_for_join}
-            tables_to_eval += tables_required_for_join - {d.table for d in dependencies}
-
-        try:
-            return toposort_flatten(dependencies)
-        except CircularDependencyError as e:
-            raise CircularJoinsException(str(e))
+    def _elements(self):
+        return flatten([self.metrics, self._dimensions, self._filters])
 
     @property
     def query(self):
         """
         WRITEME
         """
-        query = self.slicer.database.query_cls.from_(self.slicer.table)
-
-        # Add joins
-        for join in self.joins:
-            query = query.join(join.table, how=join.join_type).on(join.criterion)
-
-        # Add dimensions
-        rolling_up = False
-        for dimension in self._dimensions:
-            rolling_up = is_rolling_up(dimension, rolling_up)
-
-            dimension_definition = _build_dimension_definition(dimension, self.slicer.database.trunc_date)
-
-            if hasattr(dimension, 'display_definition'):
-                # Add display definition field
-                dimension_display_definition = dimension.display_definition.as_(dimension.display_key)
-                fields = [dimension_definition, dimension_display_definition]
-
-            else:
-                fields = [dimension_definition]
-
-            query = _select_groups(fields, query, rolling_up, self.slicer.database)
+        query = super(SlicerQueryBuilder, self).query
 
         # Add metrics
         query = query.select(*[metric.definition.as_(metric.key)
                                for metric in self.metrics])
-
-        # Add filters
-        for filter_ in self._filters:
-            query = query.where(filter_.definition) \
-                if isinstance(filter_, DimensionFilter) \
-                else query.having(filter_.definition)
 
         # Add references
         references = [(reference, dimension)
@@ -220,7 +243,9 @@ class QueryBuilder(object):
 
         # Add ordering
         order = self._orders if self._orders else self._dimensions
-        query = query.orderby(*[element.definition.as_(element.key)
+        query = query.orderby(*[element.display_definition.as_(element.display_key)
+                                if hasattr(element, 'display_definition')
+                                else element.definition.as_(element.key)
                                 for element in order])
 
         return str(query)
@@ -280,3 +305,20 @@ class QueryBuilder(object):
 
     def __iter__(self):
         return iter(self.render())
+
+
+class DimensionOptionQueryBuilder(QueryBuilder):
+    def __init__(self, slicer, dimension):
+        super(DimensionOptionQueryBuilder, self).__init__(slicer, slicer.hint_table or slicer.table)
+        self._dimensions.append(dimension)
+
+    @property
+    def query(self):
+        query = super(DimensionOptionQueryBuilder, self).query
+
+        # Add ordering
+        query = query.orderby(*[element.display_definition.as_(element.display_key)
+                                if hasattr(element, 'display_definition')
+                                else element.definition.as_(element.key)
+                                for element in self._dimensions])
+        return str(query.distinct())

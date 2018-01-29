@@ -30,7 +30,7 @@ class QueryBuilderMetricTests(TestCase):
     maxDiff = None
 
     def test_build_query_with_single_metric(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .query
 
@@ -39,7 +39,7 @@ class QueryBuilderMetricTests(TestCase):
                          'FROM "politics"."politician"', query)
 
     def test_build_query_with_multiple_metrics(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes, slicer.metrics.wins])) \
             .query
 
@@ -49,7 +49,7 @@ class QueryBuilderMetricTests(TestCase):
                          'FROM "politics"."politician"', query)
 
     def test_build_query_with_multiple_visualizations(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .widget(f.DataTablesJS([slicer.metrics.wins])) \
             .query
@@ -60,7 +60,7 @@ class QueryBuilderMetricTests(TestCase):
                          'FROM "politics"."politician"', query)
 
     def test_build_query_for_chart_visualization_with_single_axis(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.HighCharts(
               axes=[
                   f.HighCharts.PieChart(metrics=[slicer.metrics.votes])
@@ -72,7 +72,7 @@ class QueryBuilderMetricTests(TestCase):
                          'FROM "politics"."politician"', query)
 
     def test_build_query_for_chart_visualization_with_multiple_axes(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.HighCharts()
                     .axis(f.HighCharts.PieChart(metrics=[slicer.metrics.votes]))
                     .axis(f.HighCharts.PieChart(metrics=[slicer.metrics.wins]))) \
@@ -89,7 +89,7 @@ class QueryBuilderDimensionTests(TestCase):
     maxDiff = None
 
     def test_build_query_with_datetime_dimension(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.timestamp) \
             .query
@@ -102,7 +102,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'ORDER BY "timestamp"', query)
 
     def test_build_query_with_datetime_dimension_hourly(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.timestamp(f.hourly)) \
             .query
@@ -115,7 +115,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'ORDER BY "timestamp"', query)
 
     def test_build_query_with_datetime_dimension_daily(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.timestamp(f.daily)) \
             .query
@@ -128,7 +128,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'ORDER BY "timestamp"', query)
 
     def test_build_query_with_datetime_dimension_weekly(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.timestamp(f.weekly)) \
             .query
@@ -141,7 +141,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'ORDER BY "timestamp"', query)
 
     def test_build_query_with_datetime_dimension_monthly(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.timestamp(f.monthly)) \
             .query
@@ -154,7 +154,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'ORDER BY "timestamp"', query)
 
     def test_build_query_with_datetime_dimension_quarterly(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.timestamp(f.quarterly)) \
             .query
@@ -167,7 +167,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'ORDER BY "timestamp"', query)
 
     def test_build_query_with_datetime_dimension_annually(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.timestamp(f.annually)) \
             .query
@@ -180,7 +180,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'ORDER BY "timestamp"', query)
 
     def test_build_query_with_boolean_dimension(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.winner) \
             .query
@@ -193,7 +193,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'ORDER BY "winner"', query)
 
     def test_build_query_with_categorical_dimension(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.political_party) \
             .query
@@ -206,7 +206,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'ORDER BY "political_party"', query)
 
     def test_build_query_with_unique_dimension(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.election) \
             .query
@@ -217,10 +217,10 @@ class QueryBuilderDimensionTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "election","election_display" '
-                         'ORDER BY "election"', query)
+                         'ORDER BY "election_display"', query)
 
     def test_build_query_with_multiple_dimensions(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.timestamp) \
             .dimension(slicer.dimensions.candidate) \
@@ -233,10 +233,10 @@ class QueryBuilderDimensionTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp","candidate","candidate_display" '
-                         'ORDER BY "timestamp","candidate"', query)
+                         'ORDER BY "timestamp","candidate_display"', query)
 
     def test_build_query_with_multiple_dimensions_and_visualizations(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes, slicer.metrics.wins])) \
             .widget(f.HighCharts(
               axes=[
@@ -262,7 +262,7 @@ class QueryBuilderDimensionRollupTests(TestCase):
     maxDiff = None
 
     def test_build_query_with_rollup_cat_dimension(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.political_party.rollup()) \
             .query
@@ -275,7 +275,7 @@ class QueryBuilderDimensionRollupTests(TestCase):
                          'ORDER BY "political_party"', query)
 
     def test_build_query_with_rollup_uni_dimension(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.candidate.rollup()) \
             .query
@@ -286,10 +286,10 @@ class QueryBuilderDimensionRollupTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY ROLLUP(("candidate_id","candidate_name")) '
-                         'ORDER BY "candidate"', query)
+                         'ORDER BY "candidate_display"', query)
 
     def test_rollup_following_non_rolled_up_dimensions(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.timestamp,
                        slicer.dimensions.candidate.rollup()) \
@@ -302,10 +302,10 @@ class QueryBuilderDimensionRollupTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp",ROLLUP(("candidate_id","candidate_name")) '
-                         'ORDER BY "timestamp","candidate"', query)
+                         'ORDER BY "timestamp","candidate_display"', query)
 
     def test_force_all_dimensions_following_rollup_to_be_rolled_up(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.political_party.rollup(),
                        slicer.dimensions.candidate) \
@@ -318,10 +318,10 @@ class QueryBuilderDimensionRollupTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY ROLLUP("political_party",("candidate_id","candidate_name")) '
-                         'ORDER BY "political_party","candidate"', query)
+                         'ORDER BY "political_party","candidate_display"', query)
 
     def test_force_all_dimensions_following_rollup_to_be_rolled_up_with_split_dimension_calls(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.political_party.rollup()) \
             .dimension(slicer.dimensions.candidate) \
@@ -334,11 +334,11 @@ class QueryBuilderDimensionRollupTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY ROLLUP("political_party",("candidate_id","candidate_name")) '
-                         'ORDER BY "political_party","candidate"', query)
+                         'ORDER BY "political_party","candidate_display"', query)
 
     def test_raise_exception_when_trying_to_rollup_continuous_dimension(self):
         with self.assertRaises(RollupException):
-            slicer.query() \
+            slicer.data \
                 .widget(f.DataTablesJS([slicer.metrics.votes])) \
                 .dimension(slicer.dimensions.political_party.rollup(),
                            slicer.dimensions.timestamp) \
@@ -349,7 +349,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
     maxDiff = None
 
     def test_build_query_with_filter_isin_categorical_dim(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(slicer.dimensions.political_party.isin(['d'])) \
             .query
@@ -360,7 +360,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
                          'WHERE "political_party" IN (\'d\')', query)
 
     def test_build_query_with_filter_notin_categorical_dim(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(slicer.dimensions.political_party.notin(['d'])) \
             .query
@@ -371,7 +371,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
                          'WHERE "political_party" NOT IN (\'d\')', query)
 
     def test_build_query_with_filter_isin_unique_dim(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(slicer.dimensions.candidate.isin([1])) \
             .query
@@ -382,7 +382,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
                          'WHERE "candidate_id" IN (1)', query)
 
     def test_build_query_with_filter_notin_unique_dim(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(slicer.dimensions.candidate.notin([1])) \
             .query
@@ -393,7 +393,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
                          'WHERE "candidate_id" NOT IN (1)', query)
 
     def test_build_query_with_filter_isin_unique_dim_display(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(slicer.dimensions.candidate.isin(['Donald Trump'], use_display=True)) \
             .query
@@ -404,7 +404,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
                          'WHERE "candidate_name" IN (\'Donald Trump\')', query)
 
     def test_build_query_with_filter_notin_unique_dim_display(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(slicer.dimensions.candidate.notin(['Donald Trump'], use_display=True)) \
             .query
@@ -415,7 +415,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
                          'WHERE "candidate_name" NOT IN (\'Donald Trump\')', query)
 
     def test_build_query_with_filter_wildcard_unique_dim(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(slicer.dimensions.candidate.wildcard('%Trump')) \
             .query
@@ -427,24 +427,24 @@ class QueryBuilderDimensionFilterTests(TestCase):
 
     def test_build_query_with_filter_isin_raise_exception_when_display_definition_undefined(self):
         with self.assertRaises(f.QueryException):
-            slicer.query() \
+            slicer.data \
                 .widget(f.DataTablesJS([slicer.metrics.votes])) \
                 .filter(slicer.dimensions.deepjoin.isin([1], use_display=True))
 
     def test_build_query_with_filter_notin_raise_exception_when_display_definition_undefined(self):
         with self.assertRaises(f.QueryException):
-            slicer.query() \
+            slicer.data \
                 .widget(f.DataTablesJS([slicer.metrics.votes])) \
                 .filter(slicer.dimensions.deepjoin.notin([1], use_display=True))
 
     def test_build_query_with_filter_wildcard_raise_exception_when_display_definition_undefined(self):
         with self.assertRaises(f.QueryException):
-            slicer.query() \
+            slicer.data \
                 .widget(f.DataTablesJS([slicer.metrics.votes])) \
                 .filter(slicer.dimensions.deepjoin.wildcard('test'))
 
     def test_build_query_with_filter_range_datetime_dimension(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(slicer.dimensions.timestamp.between(date(2009, 1, 20), date(2017, 1, 20))) \
             .query
@@ -455,7 +455,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
                          'WHERE "timestamp" BETWEEN \'2009-01-20\' AND \'2017-01-20\'', query)
 
     def test_build_query_with_filter_boolean_true(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(slicer.dimensions.winner.is_(True)) \
             .query
@@ -466,7 +466,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
                          'WHERE "is_winner"', query)
 
     def test_build_query_with_filter_boolean_false(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(slicer.dimensions.winner.is_(False)) \
             .query
@@ -482,7 +482,7 @@ class QueryBuilderMetricFilterTests(TestCase):
     maxDiff = None
 
     def test_build_query_with_metric_filter_eq(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(slicer.metrics.votes == 5) \
             .query
@@ -493,7 +493,7 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'HAVING SUM("votes")=5', query)
 
     def test_build_query_with_metric_filter_eq_left(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(5 == slicer.metrics.votes) \
             .query
@@ -504,7 +504,7 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'HAVING SUM("votes")=5', query)
 
     def test_build_query_with_metric_filter_ne(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(slicer.metrics.votes != 5) \
             .query
@@ -515,7 +515,7 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'HAVING SUM("votes")<>5', query)
 
     def test_build_query_with_metric_filter_ne_left(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(5 != slicer.metrics.votes) \
             .query
@@ -526,7 +526,7 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'HAVING SUM("votes")<>5', query)
 
     def test_build_query_with_metric_filter_gt(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(slicer.metrics.votes > 5) \
             .query
@@ -537,7 +537,7 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'HAVING SUM("votes")>5', query)
 
     def test_build_query_with_metric_filter_gt_left(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(5 < slicer.metrics.votes) \
             .query
@@ -548,7 +548,7 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'HAVING SUM("votes")>5', query)
 
     def test_build_query_with_metric_filter_gte(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(slicer.metrics.votes >= 5) \
             .query
@@ -559,7 +559,7 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'HAVING SUM("votes")>=5', query)
 
     def test_build_query_with_metric_filter_gte_left(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(5 <= slicer.metrics.votes) \
             .query
@@ -570,7 +570,7 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'HAVING SUM("votes")>=5', query)
 
     def test_build_query_with_metric_filter_lt(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(slicer.metrics.votes < 5) \
             .query
@@ -581,7 +581,7 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'HAVING SUM("votes")<5', query)
 
     def test_build_query_with_metric_filter_lt_left(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(5 > slicer.metrics.votes) \
             .query
@@ -592,7 +592,7 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'HAVING SUM("votes")<5', query)
 
     def test_build_query_with_metric_filter_lte(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(slicer.metrics.votes <= 5) \
             .query
@@ -603,7 +603,7 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'HAVING SUM("votes")<=5', query)
 
     def test_build_query_with_metric_filter_lte_left(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(5 >= slicer.metrics.votes) \
             .query
@@ -619,7 +619,7 @@ class QueryBuilderOperationTests(TestCase):
     maxDiff = None
 
     def test_build_query_with_cumsum_operation(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([f.CumSum(slicer.metrics.votes)])) \
             .dimension(slicer.dimensions.timestamp) \
             .query
@@ -632,7 +632,7 @@ class QueryBuilderOperationTests(TestCase):
                          'ORDER BY "timestamp"', query)
 
     def test_build_query_with_cummean_operation(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([f.CumMean(slicer.metrics.votes)])) \
             .dimension(slicer.dimensions.timestamp) \
             .query
@@ -650,7 +650,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     maxDiff = None
 
     def test_dimension_with_single_reference_dod(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     metrics=[slicer.metrics.votes])])) \
@@ -684,7 +684,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'ORDER BY "timestamp"', query)
 
     def test_dimension_with_single_reference_wow(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     metrics=[slicer.metrics.votes])])) \
@@ -718,7 +718,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'ORDER BY "timestamp"', query)
 
     def test_dimension_with_single_reference_mom(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     metrics=[slicer.metrics.votes])])) \
@@ -752,7 +752,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'ORDER BY "timestamp"', query)
 
     def test_dimension_with_single_reference_qoq(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     metrics=[slicer.metrics.votes])])) \
@@ -786,7 +786,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'ORDER BY "timestamp"', query)
 
     def test_dimension_with_single_reference_yoy(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     metrics=[slicer.metrics.votes])])) \
@@ -820,7 +820,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'ORDER BY "timestamp"', query)
 
     def test_dimension_with_single_reference_as_a_delta(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     metrics=[slicer.metrics.votes])])) \
@@ -854,7 +854,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'ORDER BY "timestamp"', query)
 
     def test_dimension_with_single_reference_as_a_delta_percentage(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     metrics=[slicer.metrics.votes])])) \
@@ -888,7 +888,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'ORDER BY "timestamp"', query)
 
     def test_dimension_with_multiple_references(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     metrics=[slicer.metrics.votes])])) \
@@ -934,7 +934,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'ORDER BY "timestamp"', query)
 
     def test_reference_joins_nested_query_on_dimensions(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     metrics=[slicer.metrics.votes])])) \
@@ -973,7 +973,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'ORDER BY "timestamp","political_party"', query)
 
     def test_reference_with_unique_dimension_includes_display_definition(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     metrics=[slicer.metrics.votes])])) \
@@ -1012,10 +1012,10 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
                          'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"sq1"."timestamp") '
                          'AND "base"."candidate"="sq1"."candidate" '
-                         'ORDER BY "timestamp","candidate"', query)
+                         'ORDER BY "timestamp","candidate_display"', query)
 
     def test_adjust_reference_dimension_filters_in_reference_query(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     metrics=[slicer.metrics.votes])])) \
@@ -1053,7 +1053,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'ORDER BY "timestamp"', query)
 
     def test_adjust_reference_dimension_filters_in_reference_query_with_multiple_filters(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     metrics=[slicer.metrics.votes])])) \
@@ -1095,7 +1095,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'ORDER BY "timestamp"', query)
 
     def test_adapt_dow_for_leap_year_for_yoy_reference(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     metrics=[slicer.metrics.votes])])) \
@@ -1130,7 +1130,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'ORDER BY "timestamp"', query)
 
     def test_adapt_dow_for_leap_year_for_yoy_delta_reference(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     metrics=[slicer.metrics.votes])])) \
@@ -1165,7 +1165,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'ORDER BY "timestamp"', query)
 
     def test_adapt_dow_for_leap_year_for_yoy_delta_percent_reference(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     metrics=[slicer.metrics.votes])])) \
@@ -1205,7 +1205,7 @@ class QueryBuilderJoinTests(TestCase):
     maxDiff = None
 
     def test_dimension_with_join_includes_join_in_query(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.timestamp) \
             .dimension(slicer.dimensions.district) \
@@ -1220,10 +1220,10 @@ class QueryBuilderJoinTests(TestCase):
                          'OUTER JOIN "locations"."district" '
                          'ON "politician"."district_id"="district"."id" '
                          'GROUP BY "timestamp","district","district_display" '
-                         'ORDER BY "timestamp","district"', query)
+                         'ORDER BY "timestamp","district_display"', query)
 
     def test_dimension_with_recursive_join_joins_all_join_tables(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.timestamp) \
             .dimension(slicer.dimensions.state) \
@@ -1240,10 +1240,10 @@ class QueryBuilderJoinTests(TestCase):
                          'JOIN "locations"."state" '
                          'ON "district"."state_id"="state"."id" '
                          'GROUP BY "timestamp","state","state_display" '
-                         'ORDER BY "timestamp","state"', query)
+                         'ORDER BY "timestamp","state_display"', query)
 
     def test_metric_with_join_includes_join_in_query(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.voters])) \
             .dimension(slicer.dimensions.district) \
             .query
@@ -1258,10 +1258,10 @@ class QueryBuilderJoinTests(TestCase):
                          'JOIN "politics"."voter" '
                          'ON "district"."id"="voter"."district_id" '
                          'GROUP BY "district","district_display" '
-                         'ORDER BY "district"', query)
+                         'ORDER BY "district_display"', query)
 
     def test_dimension_filter_with_join_on_display_definition_does_not_include_join_in_query(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(slicer.dimensions.district.isin([1])) \
             .query
@@ -1272,7 +1272,7 @@ class QueryBuilderJoinTests(TestCase):
                          'WHERE "district_id" IN (1)', query)
 
     def test_dimension_filter_display_field_with_join_includes_join_in_query(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(slicer.dimensions.district.isin(['District 4'], use_display=True)) \
             .query
@@ -1285,7 +1285,7 @@ class QueryBuilderJoinTests(TestCase):
                          'WHERE "district"."district_name" IN (\'District 4\')', query)
 
     def test_dimension_filter_with_recursive_join_includes_join_in_query(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(slicer.dimensions.state.isin([1])) \
             .query
@@ -1298,7 +1298,7 @@ class QueryBuilderJoinTests(TestCase):
                          'WHERE "district"."state_id" IN (1)', query)
 
     def test_dimension_filter_with_deep_recursive_join_includes_joins_in_query(self):
-        query = slicer.query() \
+        query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .filter(slicer.dimensions.deepjoin.isin([1])) \
             .query
@@ -1330,7 +1330,7 @@ class QueryBuilderRenderTests(TestCase):
         mock_widget = Mock(name='mock_widget')
         mock_widget.metrics = [slicer.metrics.votes]
 
-        slicer.query() \
+        slicer.data \
             .widget(mock_widget) \
             .render()
 
@@ -1342,7 +1342,7 @@ class QueryBuilderRenderTests(TestCase):
         mock_widget = Mock(name='mock_widget')
         mock_widget.metrics = [slicer.metrics.votes]
 
-        slicer.query() \
+        slicer.data \
             .widget(mock_widget) \
             .render()
 
@@ -1354,7 +1354,7 @@ class QueryBuilderRenderTests(TestCase):
         mock_widget = Mock(name='mock_widget')
         mock_widget.metrics = [slicer.metrics.votes]
 
-        slicer.query() \
+        slicer.data \
             .widget(mock_widget) \
             .render()
 
@@ -1366,7 +1366,7 @@ class QueryBuilderRenderTests(TestCase):
 
         dimensions = [slicer.dimensions.state]
 
-        slicer.query() \
+        slicer.data \
             .widget(mock_widget) \
             .dimension(*dimensions) \
             .render()
@@ -1379,7 +1379,7 @@ class QueryBuilderRenderTests(TestCase):
 
         dimensions = slicer.dimensions.timestamp, slicer.dimensions.state, slicer.dimensions.political_party
 
-        slicer.query() \
+        slicer.data \
             .widget(mock_widget) \
             .dimension(*dimensions) \
             .render()
@@ -1391,7 +1391,7 @@ class QueryBuilderRenderTests(TestCase):
         mock_widget.metrics = [slicer.metrics.votes]
 
         # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
-        slicer.query() \
+        slicer.data \
             .dimension(slicer.dimensions.timestamp) \
             .widget(mock_widget) \
             .render()
@@ -1405,7 +1405,7 @@ class QueryBuilderRenderTests(TestCase):
         mock_widget.metrics = [slicer.metrics.votes]
 
         # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
-        result = slicer.query() \
+        result = slicer.data \
             .dimension(slicer.dimensions.timestamp) \
             .widget(mock_widget) \
             .render()
@@ -1421,7 +1421,7 @@ class QueryBuilderRenderTests(TestCase):
         mock_fetch_data.return_value = mock_df
 
         # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
-        slicer.query() \
+        slicer.data \
             .dimension(slicer.dimensions.timestamp) \
             .widget(mock_widget) \
             .render()
@@ -1437,7 +1437,7 @@ class QueryBuilderRenderTests(TestCase):
         mock_fetch_data.return_value = mock_df
 
         # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
-        slicer.query() \
+        slicer.data \
             .dimension(slicer.dimensions.timestamp) \
             .widget(mock_widget) \
             .render()

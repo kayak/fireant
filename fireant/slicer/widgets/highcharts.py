@@ -4,13 +4,13 @@ import pandas as pd
 
 from fireant import utils
 from fireant.utils import immutable
-from slicer.widgets.formats import (
-    dimension_value,
-    metric_value,
-)
 from .base import (
     MetricsWidget,
     Widget,
+)
+from .formats import (
+    dimension_value,
+    metric_value,
 )
 from .helpers import (
     dimensional_metric_label,

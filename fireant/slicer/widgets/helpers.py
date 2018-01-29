@@ -3,26 +3,43 @@ from fireant import utils
 
 def extract_display_values(dimensions, data_frame):
     """
+    Retrieves the display values for each dimension.
+
+    For UniqueDimension, this will retrieve the display values from the data frame containing the data from the slicer
+    query. For CategoricalDimension, the values are retrieved from the set of display values configured in the slicer.
 
     :param dimensions:
+        A list of dimensions present in a slicer query.
     :param data_frame:
+        The data frame containing the data result of the slicer query.
     :return:
+        A dict containing keys for dimensions with display values (If there are no display values then the
+        dimension's key will not be present). The value of the dict will be either a dict or a data frame where the
+        display value can be accessed using the display value as the key.
     """
-    dv_by_dimension = {}
+    display_values = {}
 
     for dimension in dimensions:
-        dkey = dimension.key
+        key = dimension.key
 
         if hasattr(dimension, 'display_values'):
-            dv_by_dimension[dkey] = dimension.display_values
+            display_values[key] = dimension.display_values
 
-        elif hasattr(dimension, 'display_key'):
-            dv_by_dimension[dkey] = data_frame[dimension.display_key].groupby(level=dkey).first()
+        elif hasattr(dimension, 'display_key') and dimension.display_key is not None:
+            display_values[key] = data_frame[dimension.display_key] \
+                .groupby(level=key) \
+                .first()
 
-    return dv_by_dimension
+    return display_values
 
 
 def reference_key(metric, reference):
+    """
+    Format a metric key for a reference.
+
+    :return:
+        A string that is used as the key for a reference metric.
+    """
     key = metric.key
 
     if reference is not None:
@@ -32,6 +49,12 @@ def reference_key(metric, reference):
 
 
 def reference_label(metric, reference):
+    """
+    Format a metric label for a reference.
+
+    :return:
+        A string that is used as the display value for a reference metric.
+    """
     label = metric.label or metric.key
 
     if reference is not None:

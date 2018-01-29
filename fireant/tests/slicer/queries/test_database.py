@@ -64,9 +64,9 @@ def totals(df):
 
 
 cont_uni_dim_nans_totals_df = cont_uni_dim_nans_df \
-    .append(cont_uni_dim_nans_df.groupby(level='timestamp').apply(totals)) \
+    .append(cont_uni_dim_nans_df.groupby(level='timestamp').apply(totals))\
     .sort_index() \
-    .sortlevel(level=[0, 1], ascending=False)  # This sorts the DF so that the first instance of NaN is the totals
+    .sort_index(level=[0, 1], ascending=False)  # This sorts the DF so that the first instance of NaN is the totals
 
 
 class FetchDataCleanIndexTests(TestCase):

@@ -1,6 +1,13 @@
 import itertools
 
-from .queries import QueryBuilder
+from .dimensions import (
+    CategoricalDimension,
+    UniqueDimension,
+)
+from .queries import (
+    DimensionOptionQueryBuilder,
+    SlicerQueryBuilder,
+)
 
 
 class _Container(object):
@@ -52,7 +59,7 @@ class Slicer(object):
         Constructor for a slicer.  Contains all the fields to initialize the slicer.
 
         :param table: (Required)
-            A Pypika Table reference. The primary table that this slicer will retrieve data from.
+            A pypika Table reference. The primary table that this slicer will retrieve data from.
 
         :param database:  (Required)
             A Database reference. Holds the connection details used by this slicer to execute queries.
@@ -71,20 +78,23 @@ class Slicer(object):
         :param hint_table: (Optional)
             A hint table used for querying dimension options.  If not present, the table will be used.  The hint_table
             must have the same definition as the table omitting dimensions which do not have a set of options (such as
-            datetime dimensions) and the metrics.  This is provided to more efficiently query dimension options.
+            datetime or boolean dimensions) and the metrics.  This is provided to more efficiently query dimension
+            options.
         """
         self.table = table
         self.database = database
         self.joins = joins
+
+        self.hint_table = hint_table
         self.dimensions = Slicer.Dimensions(dimensions)
         self.metrics = Slicer.Metrics(metrics)
-        self.hint_table = hint_table
 
-    def query(self):
-        """
-        WRITEME
-        """
-        return QueryBuilder(self)
+        # add query builder entry points
+        self.data = SlicerQueryBuilder(self)
+        for dimension in dimensions:
+            if not isinstance(dimension, (UniqueDimension, CategoricalDimension)):
+                continue
+            dimension.options = DimensionOptionQueryBuilder(self, dimension)
 
     def __eq__(self, other):
         return isinstance(other, Slicer) \
