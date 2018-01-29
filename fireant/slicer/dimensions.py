@@ -33,7 +33,7 @@ class RollupDimension(Dimension):
     """
 
     def __init__(self, key, label=None, definition=None):
-        super(Dimension, self).__init__(key, label, definition)
+        super(RollupDimension, self).__init__(key, label, definition)
         self.is_rollup = False
 
     @immutable

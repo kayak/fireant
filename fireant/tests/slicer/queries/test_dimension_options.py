@@ -16,7 +16,7 @@ class DimensionsOptionsQueryBuilderTests(TestCase):
                          '"political_party" "political_party" '
                          'FROM "politics"."politician" '
                          'GROUP BY "political_party" '
-                         'ORDER BY "political_party"', query)
+                         'ORDER BY "political_party"', str(query))
 
     def test_query_options_for_uni_dimension(self):
         query = slicer.dimensions.candidate \
@@ -28,7 +28,7 @@ class DimensionsOptionsQueryBuilderTests(TestCase):
                          '"candidate_name" "candidate_display" '
                          'FROM "politics"."politician" '
                          'GROUP BY "candidate","candidate_display" '
-                         'ORDER BY "candidate_display"', query)
+                         'ORDER BY "candidate_display"', str(query))
 
     def test_query_options_for_uni_dimension_with_join(self):
         query = slicer.dimensions.district \
@@ -42,7 +42,7 @@ class DimensionsOptionsQueryBuilderTests(TestCase):
                          'OUTER JOIN "locations"."district" '
                          'ON "politician"."district_id"="district"."id" '
                          'GROUP BY "district","district_display" '
-                         'ORDER BY "district_display"', query)
+                         'ORDER BY "district_display"', str(query))
 
     def test_no_options_attr_for_datetime_dimension(self):
         with self.assertRaises(AttributeError):
@@ -64,4 +64,4 @@ class DimensionsOptionsQueryBuilderTests(TestCase):
                          'FROM "politics"."politician" '
                          'WHERE "political_party" IN (\'d\',\'r\') '
                          'GROUP BY "candidate","candidate_display" '
-                         'ORDER BY "candidate_display"', query)
+                         'ORDER BY "candidate_display"', str(query))

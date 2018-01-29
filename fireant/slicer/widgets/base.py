@@ -1,4 +1,4 @@
-from fireant.slicer.exceptions import MissingMetricsException
+from fireant.slicer.exceptions import MetricRequiredException
 from fireant.utils import immutable
 
 
@@ -18,7 +18,7 @@ class MetricsWidget(Widget):
     @property
     def metrics(self):
         if 0 == len(self._metrics):
-            raise MissingMetricsException(str(self))
+            raise MetricRequiredException(str(self))
 
         return [metric
                 for group in self._metrics

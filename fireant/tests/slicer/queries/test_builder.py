@@ -8,8 +8,14 @@ from unittest.mock import (
 from datetime import date
 
 import fireant as f
-from fireant.slicer.exceptions import RollupException
-from ..matchers import DimensionMatcher
+from fireant.slicer.exceptions import (
+    MetricRequiredException,
+    RollupException,
+)
+from ..matchers import (
+    DimensionMatcher,
+    PypikaQueryMatcher,
+)
 from ..mocks import slicer
 
 
@@ -36,7 +42,7 @@ class QueryBuilderMetricTests(TestCase):
 
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
-                         'FROM "politics"."politician"', query)
+                         'FROM "politics"."politician"', str(query))
 
     def test_build_query_with_multiple_metrics(self):
         query = slicer.data \
@@ -46,7 +52,7 @@ class QueryBuilderMetricTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes",'
                          'SUM("is_winner") "wins" '
-                         'FROM "politics"."politician"', query)
+                         'FROM "politics"."politician"', str(query))
 
     def test_build_query_with_multiple_visualizations(self):
         query = slicer.data \
@@ -57,7 +63,7 @@ class QueryBuilderMetricTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes",'
                          'SUM("is_winner") "wins" '
-                         'FROM "politics"."politician"', query)
+                         'FROM "politics"."politician"', str(query))
 
     def test_build_query_for_chart_visualization_with_single_axis(self):
         query = slicer.data \
@@ -69,7 +75,7 @@ class QueryBuilderMetricTests(TestCase):
 
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
-                         'FROM "politics"."politician"', query)
+                         'FROM "politics"."politician"', str(query))
 
     def test_build_query_for_chart_visualization_with_multiple_axes(self):
         query = slicer.data \
@@ -81,7 +87,7 @@ class QueryBuilderMetricTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes",'
                          'SUM("is_winner") "wins" '
-                         'FROM "politics"."politician"', query)
+                         'FROM "politics"."politician"', str(query))
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -99,7 +105,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp" '
-                         'ORDER BY "timestamp"', query)
+                         'ORDER BY "timestamp"', str(query))
 
     def test_build_query_with_datetime_dimension_hourly(self):
         query = slicer.data \
@@ -112,7 +118,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp" '
-                         'ORDER BY "timestamp"', query)
+                         'ORDER BY "timestamp"', str(query))
 
     def test_build_query_with_datetime_dimension_daily(self):
         query = slicer.data \
@@ -125,7 +131,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp" '
-                         'ORDER BY "timestamp"', query)
+                         'ORDER BY "timestamp"', str(query))
 
     def test_build_query_with_datetime_dimension_weekly(self):
         query = slicer.data \
@@ -138,7 +144,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp" '
-                         'ORDER BY "timestamp"', query)
+                         'ORDER BY "timestamp"', str(query))
 
     def test_build_query_with_datetime_dimension_monthly(self):
         query = slicer.data \
@@ -151,7 +157,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp" '
-                         'ORDER BY "timestamp"', query)
+                         'ORDER BY "timestamp"', str(query))
 
     def test_build_query_with_datetime_dimension_quarterly(self):
         query = slicer.data \
@@ -164,7 +170,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp" '
-                         'ORDER BY "timestamp"', query)
+                         'ORDER BY "timestamp"', str(query))
 
     def test_build_query_with_datetime_dimension_annually(self):
         query = slicer.data \
@@ -177,7 +183,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp" '
-                         'ORDER BY "timestamp"', query)
+                         'ORDER BY "timestamp"', str(query))
 
     def test_build_query_with_boolean_dimension(self):
         query = slicer.data \
@@ -190,7 +196,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "winner" '
-                         'ORDER BY "winner"', query)
+                         'ORDER BY "winner"', str(query))
 
     def test_build_query_with_categorical_dimension(self):
         query = slicer.data \
@@ -203,7 +209,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "political_party" '
-                         'ORDER BY "political_party"', query)
+                         'ORDER BY "political_party"', str(query))
 
     def test_build_query_with_unique_dimension(self):
         query = slicer.data \
@@ -217,7 +223,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "election","election_display" '
-                         'ORDER BY "election_display"', query)
+                         'ORDER BY "election_display"', str(query))
 
     def test_build_query_with_multiple_dimensions(self):
         query = slicer.data \
@@ -233,7 +239,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp","candidate","candidate_display" '
-                         'ORDER BY "timestamp","candidate_display"', query)
+                         'ORDER BY "timestamp","candidate_display"', str(query))
 
     def test_build_query_with_multiple_dimensions_and_visualizations(self):
         query = slicer.data \
@@ -254,7 +260,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'SUM("is_winner") "wins" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp","political_party" '
-                         'ORDER BY "timestamp","political_party"', query)
+                         'ORDER BY "timestamp","political_party"', str(query))
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -272,7 +278,7 @@ class QueryBuilderDimensionRollupTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY ROLLUP("political_party") '
-                         'ORDER BY "political_party"', query)
+                         'ORDER BY "political_party"', str(query))
 
     def test_build_query_with_rollup_uni_dimension(self):
         query = slicer.data \
@@ -286,7 +292,7 @@ class QueryBuilderDimensionRollupTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY ROLLUP(("candidate_id","candidate_name")) '
-                         'ORDER BY "candidate_display"', query)
+                         'ORDER BY "candidate_display"', str(query))
 
     def test_rollup_following_non_rolled_up_dimensions(self):
         query = slicer.data \
@@ -302,7 +308,7 @@ class QueryBuilderDimensionRollupTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp",ROLLUP(("candidate_id","candidate_name")) '
-                         'ORDER BY "timestamp","candidate_display"', query)
+                         'ORDER BY "timestamp","candidate_display"', str(query))
 
     def test_force_all_dimensions_following_rollup_to_be_rolled_up(self):
         query = slicer.data \
@@ -318,7 +324,7 @@ class QueryBuilderDimensionRollupTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY ROLLUP("political_party",("candidate_id","candidate_name")) '
-                         'ORDER BY "political_party","candidate_display"', query)
+                         'ORDER BY "political_party","candidate_display"', str(query))
 
     def test_force_all_dimensions_following_rollup_to_be_rolled_up_with_split_dimension_calls(self):
         query = slicer.data \
@@ -334,7 +340,7 @@ class QueryBuilderDimensionRollupTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY ROLLUP("political_party",("candidate_id","candidate_name")) '
-                         'ORDER BY "political_party","candidate_display"', query)
+                         'ORDER BY "political_party","candidate_display"', str(query))
 
     def test_raise_exception_when_trying_to_rollup_continuous_dimension(self):
         with self.assertRaises(RollupException):
@@ -343,6 +349,7 @@ class QueryBuilderDimensionRollupTests(TestCase):
                 .dimension(slicer.dimensions.political_party.rollup(),
                            slicer.dimensions.timestamp) \
                 .query
+
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 class QueryBuilderDimensionFilterTests(TestCase):
@@ -357,7 +364,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'WHERE "political_party" IN (\'d\')', query)
+                         'WHERE "political_party" IN (\'d\')', str(query))
 
     def test_build_query_with_filter_notin_categorical_dim(self):
         query = slicer.data \
@@ -368,7 +375,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'WHERE "political_party" NOT IN (\'d\')', query)
+                         'WHERE "political_party" NOT IN (\'d\')', str(query))
 
     def test_build_query_with_filter_isin_unique_dim(self):
         query = slicer.data \
@@ -379,7 +386,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'WHERE "candidate_id" IN (1)', query)
+                         'WHERE "candidate_id" IN (1)', str(query))
 
     def test_build_query_with_filter_notin_unique_dim(self):
         query = slicer.data \
@@ -390,7 +397,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'WHERE "candidate_id" NOT IN (1)', query)
+                         'WHERE "candidate_id" NOT IN (1)', str(query))
 
     def test_build_query_with_filter_isin_unique_dim_display(self):
         query = slicer.data \
@@ -401,7 +408,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'WHERE "candidate_name" IN (\'Donald Trump\')', query)
+                         'WHERE "candidate_name" IN (\'Donald Trump\')', str(query))
 
     def test_build_query_with_filter_notin_unique_dim_display(self):
         query = slicer.data \
@@ -412,7 +419,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'WHERE "candidate_name" NOT IN (\'Donald Trump\')', query)
+                         'WHERE "candidate_name" NOT IN (\'Donald Trump\')', str(query))
 
     def test_build_query_with_filter_wildcard_unique_dim(self):
         query = slicer.data \
@@ -423,7 +430,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'WHERE "candidate_name" LIKE \'%Trump\'', query)
+                         'WHERE "candidate_name" LIKE \'%Trump\'', str(query))
 
     def test_build_query_with_filter_isin_raise_exception_when_display_definition_undefined(self):
         with self.assertRaises(f.QueryException):
@@ -452,7 +459,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'WHERE "timestamp" BETWEEN \'2009-01-20\' AND \'2017-01-20\'', query)
+                         'WHERE "timestamp" BETWEEN \'2009-01-20\' AND \'2017-01-20\'', str(query))
 
     def test_build_query_with_filter_boolean_true(self):
         query = slicer.data \
@@ -463,7 +470,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'WHERE "is_winner"', query)
+                         'WHERE "is_winner"', str(query))
 
     def test_build_query_with_filter_boolean_false(self):
         query = slicer.data \
@@ -474,7 +481,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'WHERE NOT "is_winner"', query)
+                         'WHERE NOT "is_winner"', str(query))
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -490,7 +497,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'HAVING SUM("votes")=5', query)
+                         'HAVING SUM("votes")=5', str(query))
 
     def test_build_query_with_metric_filter_eq_left(self):
         query = slicer.data \
@@ -501,7 +508,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'HAVING SUM("votes")=5', query)
+                         'HAVING SUM("votes")=5', str(query))
 
     def test_build_query_with_metric_filter_ne(self):
         query = slicer.data \
@@ -512,7 +519,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'HAVING SUM("votes")<>5', query)
+                         'HAVING SUM("votes")<>5', str(query))
 
     def test_build_query_with_metric_filter_ne_left(self):
         query = slicer.data \
@@ -523,7 +530,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'HAVING SUM("votes")<>5', query)
+                         'HAVING SUM("votes")<>5', str(query))
 
     def test_build_query_with_metric_filter_gt(self):
         query = slicer.data \
@@ -534,7 +541,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'HAVING SUM("votes")>5', query)
+                         'HAVING SUM("votes")>5', str(query))
 
     def test_build_query_with_metric_filter_gt_left(self):
         query = slicer.data \
@@ -545,7 +552,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'HAVING SUM("votes")>5', query)
+                         'HAVING SUM("votes")>5', str(query))
 
     def test_build_query_with_metric_filter_gte(self):
         query = slicer.data \
@@ -556,7 +563,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'HAVING SUM("votes")>=5', query)
+                         'HAVING SUM("votes")>=5', str(query))
 
     def test_build_query_with_metric_filter_gte_left(self):
         query = slicer.data \
@@ -567,7 +574,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'HAVING SUM("votes")>=5', query)
+                         'HAVING SUM("votes")>=5', str(query))
 
     def test_build_query_with_metric_filter_lt(self):
         query = slicer.data \
@@ -578,7 +585,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'HAVING SUM("votes")<5', query)
+                         'HAVING SUM("votes")<5', str(query))
 
     def test_build_query_with_metric_filter_lt_left(self):
         query = slicer.data \
@@ -589,7 +596,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'HAVING SUM("votes")<5', query)
+                         'HAVING SUM("votes")<5', str(query))
 
     def test_build_query_with_metric_filter_lte(self):
         query = slicer.data \
@@ -600,7 +607,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'HAVING SUM("votes")<=5', query)
+                         'HAVING SUM("votes")<=5', str(query))
 
     def test_build_query_with_metric_filter_lte_left(self):
         query = slicer.data \
@@ -611,7 +618,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'HAVING SUM("votes")<=5', query)
+                         'HAVING SUM("votes")<=5', str(query))
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -629,7 +636,7 @@ class QueryBuilderOperationTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp" '
-                         'ORDER BY "timestamp"', query)
+                         'ORDER BY "timestamp"', str(query))
 
     def test_build_query_with_cummean_operation(self):
         query = slicer.data \
@@ -642,7 +649,7 @@ class QueryBuilderOperationTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp" '
-                         'ORDER BY "timestamp"', query)
+                         'ORDER BY "timestamp"', str(query))
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -681,7 +688,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          ') "sq1" '  # end-nested
 
                          'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
-                         'ORDER BY "timestamp"', query)
+                         'ORDER BY "timestamp"', str(query))
 
     def test_dimension_with_single_reference_wow(self):
         query = slicer.data \
@@ -715,7 +722,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          ') "sq1" '  # end-nested
 
                          'ON "base"."timestamp"=TIMESTAMPADD(\'week\',1,"sq1"."timestamp") '
-                         'ORDER BY "timestamp"', query)
+                         'ORDER BY "timestamp"', str(query))
 
     def test_dimension_with_single_reference_mom(self):
         query = slicer.data \
@@ -749,7 +756,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          ') "sq1" '  # end-nested
 
                          'ON "base"."timestamp"=TIMESTAMPADD(\'month\',1,"sq1"."timestamp") '
-                         'ORDER BY "timestamp"', query)
+                         'ORDER BY "timestamp"', str(query))
 
     def test_dimension_with_single_reference_qoq(self):
         query = slicer.data \
@@ -783,7 +790,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          ') "sq1" '  # end-nested
 
                          'ON "base"."timestamp"=TIMESTAMPADD(\'quarter\',1,"sq1"."timestamp") '
-                         'ORDER BY "timestamp"', query)
+                         'ORDER BY "timestamp"', str(query))
 
     def test_dimension_with_single_reference_yoy(self):
         query = slicer.data \
@@ -817,7 +824,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          ') "sq1" '  # end-nested
 
                          'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"sq1"."timestamp") '
-                         'ORDER BY "timestamp"', query)
+                         'ORDER BY "timestamp"', str(query))
 
     def test_dimension_with_single_reference_as_a_delta(self):
         query = slicer.data \
@@ -851,7 +858,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          ') "sq1" '  # end-nested
 
                          'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
-                         'ORDER BY "timestamp"', query)
+                         'ORDER BY "timestamp"', str(query))
 
     def test_dimension_with_single_reference_as_a_delta_percentage(self):
         query = slicer.data \
@@ -885,7 +892,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          ') "sq1" '  # end-nested
 
                          'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
-                         'ORDER BY "timestamp"', query)
+                         'ORDER BY "timestamp"', str(query))
 
     def test_dimension_with_multiple_references(self):
         query = slicer.data \
@@ -931,7 +938,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          ') "sq2" '  # end-nested
 
                          'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"sq2"."timestamp") '
-                         'ORDER BY "timestamp"', query)
+                         'ORDER BY "timestamp"', str(query))
 
     def test_reference_joins_nested_query_on_dimensions(self):
         query = slicer.data \
@@ -970,7 +977,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
                          'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"sq1"."timestamp") '
                          'AND "base"."political_party"="sq1"."political_party" '
-                         'ORDER BY "timestamp","political_party"', query)
+                         'ORDER BY "timestamp","political_party"', str(query))
 
     def test_reference_with_unique_dimension_includes_display_definition(self):
         query = slicer.data \
@@ -1012,7 +1019,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
                          'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"sq1"."timestamp") '
                          'AND "base"."candidate"="sq1"."candidate" '
-                         'ORDER BY "timestamp","candidate_display"', query)
+                         'ORDER BY "timestamp","candidate_display"', str(query))
 
     def test_adjust_reference_dimension_filters_in_reference_query(self):
         query = slicer.data \
@@ -1050,7 +1057,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          ') "sq1" '  # end-nested
 
                          'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
-                         'ORDER BY "timestamp"', query)
+                         'ORDER BY "timestamp"', str(query))
 
     def test_adjust_reference_dimension_filters_in_reference_query_with_multiple_filters(self):
         query = slicer.data \
@@ -1092,7 +1099,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          ') "sq1" '  # end-nested
 
                          'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
-                         'ORDER BY "timestamp"', query)
+                         'ORDER BY "timestamp"', str(query))
 
     def test_adapt_dow_for_leap_year_for_yoy_reference(self):
         query = slicer.data \
@@ -1127,7 +1134,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
                          'ON "base"."timestamp"=TIMESTAMPADD(\'year\',-1,'
                          'TRUNC(TIMESTAMPADD(\'year\',1,"sq1"."timestamp"),\'IW\')) '
-                         'ORDER BY "timestamp"', query)
+                         'ORDER BY "timestamp"', str(query))
 
     def test_adapt_dow_for_leap_year_for_yoy_delta_reference(self):
         query = slicer.data \
@@ -1162,7 +1169,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
                          'ON "base"."timestamp"=TIMESTAMPADD(\'year\',-1,'
                          'TRUNC(TIMESTAMPADD(\'year\',1,"sq1"."timestamp"),\'IW\')) '
-                         'ORDER BY "timestamp"', query)
+                         'ORDER BY "timestamp"', str(query))
 
     def test_adapt_dow_for_leap_year_for_yoy_delta_percent_reference(self):
         query = slicer.data \
@@ -1197,7 +1204,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
                          'ON "base"."timestamp"=TIMESTAMPADD(\'year\',-1,'
                          'TRUNC(TIMESTAMPADD(\'year\',1,"sq1"."timestamp"),\'IW\')) '
-                         'ORDER BY "timestamp"', query)
+                         'ORDER BY "timestamp"', str(query))
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -1220,7 +1227,7 @@ class QueryBuilderJoinTests(TestCase):
                          'OUTER JOIN "locations"."district" '
                          'ON "politician"."district_id"="district"."id" '
                          'GROUP BY "timestamp","district","district_display" '
-                         'ORDER BY "timestamp","district_display"', query)
+                         'ORDER BY "timestamp","district_display"', str(query))
 
     def test_dimension_with_recursive_join_joins_all_join_tables(self):
         query = slicer.data \
@@ -1240,7 +1247,7 @@ class QueryBuilderJoinTests(TestCase):
                          'JOIN "locations"."state" '
                          'ON "district"."state_id"="state"."id" '
                          'GROUP BY "timestamp","state","state_display" '
-                         'ORDER BY "timestamp","state_display"', query)
+                         'ORDER BY "timestamp","state_display"', str(query))
 
     def test_metric_with_join_includes_join_in_query(self):
         query = slicer.data \
@@ -1258,7 +1265,7 @@ class QueryBuilderJoinTests(TestCase):
                          'JOIN "politics"."voter" '
                          'ON "district"."id"="voter"."district_id" '
                          'GROUP BY "district","district_display" '
-                         'ORDER BY "district_display"', query)
+                         'ORDER BY "district_display"', str(query))
 
     def test_dimension_filter_with_join_on_display_definition_does_not_include_join_in_query(self):
         query = slicer.data \
@@ -1269,7 +1276,7 @@ class QueryBuilderJoinTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'WHERE "district_id" IN (1)', query)
+                         'WHERE "district_id" IN (1)', str(query))
 
     def test_dimension_filter_display_field_with_join_includes_join_in_query(self):
         query = slicer.data \
@@ -1282,7 +1289,7 @@ class QueryBuilderJoinTests(TestCase):
                          'FROM "politics"."politician" '
                          'OUTER JOIN "locations"."district" '
                          'ON "politician"."district_id"="district"."id" '
-                         'WHERE "district"."district_name" IN (\'District 4\')', query)
+                         'WHERE "district"."district_name" IN (\'District 4\')', str(query))
 
     def test_dimension_filter_with_recursive_join_includes_join_in_query(self):
         query = slicer.data \
@@ -1295,7 +1302,7 @@ class QueryBuilderJoinTests(TestCase):
                          'FROM "politics"."politician" '
                          'OUTER JOIN "locations"."district" '
                          'ON "politician"."district_id"="district"."id" '
-                         'WHERE "district"."state_id" IN (1)', query)
+                         'WHERE "district"."state_id" IN (1)', str(query))
 
     def test_dimension_filter_with_deep_recursive_join_includes_joins_in_query(self):
         query = slicer.data \
@@ -1312,15 +1319,81 @@ class QueryBuilderJoinTests(TestCase):
                          'ON "district"."state_id"="state"."id" '
                          'JOIN "test"."deep" '
                          'ON "deep"."id"="state"."ref_id" '
-                         'WHERE "deep"."id" IN (1)', query)
+                         'WHERE "deep"."id" IN (1)', str(query))
+
+
+@patch('fireant.slicer.queries.builder.fetch_data')
+class QueryBuildPaginationTests(TestCase):
+    def test_set_limit(self, mock_fetch_data: Mock):
+        slicer.data \
+            .widget(f.DataTablesJS([slicer.metrics.votes])) \
+            .dimension(slicer.dimensions.timestamp) \
+            .render(limit=20)
+
+        mock_fetch_data.assert_called_once_with(ANY,
+                                                PypikaQueryMatcher('SELECT '
+                                                                   'TRUNC("timestamp",\'DD\') "timestamp",'
+                                                                   'SUM("votes") "votes" '
+                                                                   'FROM "politics"."politician" '
+                                                                   'GROUP BY "timestamp" '
+                                                                   'ORDER BY "timestamp" LIMIT 20'),
+                                                dimensions=ANY)
+
+    def test_set_offset(self, mock_fetch_data: Mock):
+        slicer.data \
+            .widget(f.DataTablesJS([slicer.metrics.votes])) \
+            .dimension(slicer.dimensions.timestamp) \
+            .render(offset=20)
+
+        mock_fetch_data.assert_called_once_with(ANY,
+                                                PypikaQueryMatcher('SELECT '
+                                                                   'TRUNC("timestamp",\'DD\') "timestamp",'
+                                                                   'SUM("votes") "votes" '
+                                                                   'FROM "politics"."politician" '
+                                                                   'GROUP BY "timestamp" '
+                                                                   'ORDER BY "timestamp" '
+                                                                   'OFFSET 20'),
+                                                dimensions=ANY)
+
+    def test_set_limit_and_offset(self, mock_fetch_data: Mock):
+        slicer.data \
+            .widget(f.DataTablesJS([slicer.metrics.votes])) \
+            .dimension(slicer.dimensions.timestamp) \
+            .render(limit=20, offset=20)
+
+        mock_fetch_data.assert_called_once_with(ANY,
+                                                PypikaQueryMatcher('SELECT '
+                                                                   'TRUNC("timestamp",\'DD\') "timestamp",'
+                                                                   'SUM("votes") "votes" '
+                                                                   'FROM "politics"."politician" '
+                                                                   'GROUP BY "timestamp" '
+                                                                   'ORDER BY "timestamp" '
+                                                                   'LIMIT 20 '
+                                                                   'OFFSET 20'),
+                                                dimensions=ANY)
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 class QueryBuilderValidationTests(TestCase):
     maxDiff = None
 
-    def test_query_requires_at_least_one_metric(self):
-        pass
+    def test_highcharts_requires_at_least_one_axis(self):
+        with self.assertRaises(MetricRequiredException):
+            slicer.data \
+                .widget(f.HighCharts([])) \
+                .query
+
+    def test_highcharts_axis_requires_at_least_one_metric(self):
+        with self.assertRaises(MetricRequiredException):
+            slicer.data \
+                .widget(f.HighCharts([f.HighCharts.LineChart([])])) \
+                .query
+
+    def test_datatablesjs_requires_at_least_one_metric(self):
+        with self.assertRaises(MetricRequiredException):
+            slicer.data \
+                .widget(f.DataTablesJS([])) \
+                .query
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -1347,7 +1420,8 @@ class QueryBuilderRenderTests(TestCase):
             .render()
 
         mock_fetch_data.assert_called_once_with(ANY,
-                                                'SELECT SUM("votes") "votes" FROM "politics"."politician"',
+                                                PypikaQueryMatcher('SELECT SUM("votes") "votes" '
+                                                                   'FROM "politics"."politician"'),
                                                 dimensions=ANY)
 
     def test_builder_dimensions_as_arg_with_zero_dimensions(self, mock_fetch_data: Mock):

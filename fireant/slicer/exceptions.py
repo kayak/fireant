@@ -17,5 +17,6 @@ class CircularJoinsException(SlicerException):
 class RollupException(SlicerException):
     pass
 
-class MissingMetricsException(SlicerException):
+
+class MetricRequiredException(SlicerException):
     pass

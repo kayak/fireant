@@ -17,6 +17,7 @@ from .helpers import (
     extract_display_values,
     reference_key,
 )
+from ..exceptions import MetricRequiredException
 
 DEFAULT_COLORS = (
     "#DDDF0D",
@@ -114,6 +115,9 @@ class HighCharts(Widget):
         :return:
             A set of metrics used in this chart. This collects all metrics across all axes.
         """
+        if 0 == len(self.axes):
+            raise MetricRequiredException(str(self))
+
         seen = set()
         return [metric
                 for axis in self.axes

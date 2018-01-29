@@ -40,7 +40,7 @@ class _Container(object):
                and all([a is not None
                         and b is not None
                         and a.key == b.key
-                        for a, b in itertools.zip_longest(self._items, other._items)])
+                        for a, b in itertools.zip_longest(self._items, getattr(other, '_items', ()))])
 
 
 class Slicer(object):

@@ -25,6 +25,7 @@ class PostgreSQLDatabase(Database):
     """
     PostgreSQL client that uses the psycopg module.
     """
+
     # The pypika query class to use for constructing queries
     query_cls = PostgreSQLQuery
 
@@ -55,3 +56,6 @@ class PostgreSQLDatabase(Database):
 
     def date_add(self, field, date_part, interval, align_weekday=False):
         return fn.DateAdd(date_part, interval, field)
+
+    def totals(self, query, terms):
+        raise NotImplementedError

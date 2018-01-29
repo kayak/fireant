@@ -248,7 +248,7 @@ class SlicerQueryBuilder(QueryBuilder):
                                 else element.definition.as_(element.key)
                                 for element in order])
 
-        return str(query)
+        return query
 
     def _join_references(self, query, references):
         original_query = query.as_('base')
@@ -281,12 +281,12 @@ class SlicerQueryBuilder(QueryBuilder):
 
         return outer_query
 
-    def render(self):
+    def render(self, limit=None, offset=None):
         """
 
         :return:
         """
-        query = self.query
+        query = self.query.limit(limit).offset(offset)
 
         data_frame = fetch_data(self.slicer.database,
                                 query,
@@ -321,4 +321,5 @@ class DimensionOptionQueryBuilder(QueryBuilder):
                                 if hasattr(element, 'display_definition')
                                 else element.definition.as_(element.key)
                                 for element in self._dimensions])
-        return str(query.distinct())
+
+        return query.distinct()

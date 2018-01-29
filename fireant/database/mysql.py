@@ -71,5 +71,5 @@ class MySQLDatabase(Database):
         interval_term = terms.Interval(**{'{}s'.format(str(date_part)): interval, 'dialect': Dialects.MYSQL})
         return DateAdd(field, interval_term)
 
-    def totals(self, query, *terms):
+    def totals(self, query, terms):
         raise NotImplementedError
