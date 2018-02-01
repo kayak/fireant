@@ -42,21 +42,6 @@ class DataTablesTransformerTests(TestCase):
             }],
         }, result)
 
-    def test_single_metric_with_dataframe_containing_more(self):
-        result = DataTablesJS(items=[slicer.metrics.votes]) \
-            .transform(multi_metric_df, slicer, [])
-
-        self.assertEqual({
-            'columns': [{
-                'data': 'votes',
-                'title': 'Votes',
-                'render': {'_': 'value', 'display': 'display'},
-            }],
-            'data': [{
-                'votes': {'value': 111674336, 'display': '111674336'}
-            }],
-        }, result)
-
     def test_multiple_metrics(self):
         result = DataTablesJS(items=[slicer.metrics.votes, slicer.metrics.wins]) \
             .transform(multi_metric_df, slicer, [])
