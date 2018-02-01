@@ -25,7 +25,7 @@ def extract_display_values(dimensions, data_frame):
         if hasattr(dimension, 'display_values'):
             display_values[key] = dimension.display_values
 
-        elif hasattr(dimension, 'display_key') and dimension.display_key is not None:
+        elif getattr(dimension, 'display_key', None):
             display_values[key] = data_frame[dimension.display_key] \
                 .groupby(level=key) \
                 .first()

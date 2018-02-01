@@ -20,3 +20,7 @@ class SlicerElement(object):
 
     def __repr__(self):
         return self.key
+
+    @property
+    def has_display_field(self):
+        return getattr(self, 'display_definition', None) is not None

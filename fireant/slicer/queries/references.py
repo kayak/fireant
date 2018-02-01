@@ -1,5 +1,4 @@
 from functools import partial
-
 from typing import (
     Callable,
     Iterator,
@@ -16,13 +15,17 @@ from pypika.terms import (
     Criterion,
     Term,
 )
+
 from ..dimensions import (
     DatetimeDimension,
     Dimension,
 )
 from ..intervals import weekly
 from ..metrics import Metric
-from ..references import Reference
+from ..references import (
+    Reference,
+    YearOverYear,
+)
 
 
 def join_reference(reference: Reference,
@@ -37,7 +40,9 @@ def join_reference(reference: Reference,
     date_add = partial(date_add,
                        date_part=reference.time_unit,
                        interval=reference.interval,
-                       align_weekday=weekly == ref_dimension.interval)
+                       # Only need to adjust this for YoY references with weekly intervals
+                       align_weekday=weekly == ref_dimension.interval
+                                     and YearOverYear.time_unit == reference.time_unit)
 
     # FIXME this is a bit hacky, need to replace the ref dimension term in all of the filters with the offset
     if ref_query._wheres:
@@ -61,7 +66,7 @@ def join_reference(reference: Reference,
                                    ref_query)
 
     return outer_query.select(*[ref_metric(metric).as_("{}_{}".format(metric.key, reference.key))
-                                       for metric in metrics])
+                                for metric in metrics])
 
 
 def _apply_to_term_in_criterion(target: Term,

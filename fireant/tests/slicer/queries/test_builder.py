@@ -1,3 +1,4 @@
+from datetime import date
 from unittest import TestCase
 from unittest.mock import (
     ANY,
@@ -5,7 +6,7 @@ from unittest.mock import (
     patch,
 )
 
-from datetime import date
+from pypika import Order
 
 import fireant as f
 from fireant.slicer.exceptions import (
@@ -14,7 +15,6 @@ from fireant.slicer.exceptions import (
 )
 from ..matchers import (
     DimensionMatcher,
-    PypikaQueryMatcher,
 )
 from ..mocks import slicer
 
@@ -69,7 +69,7 @@ class QueryBuilderMetricTests(TestCase):
         query = slicer.data \
             .widget(f.HighCharts(
               axes=[
-                  f.HighCharts.PieChart(metrics=[slicer.metrics.votes])
+                  f.HighCharts.PieChart([slicer.metrics.votes])
               ])) \
             .query
 
@@ -80,8 +80,8 @@ class QueryBuilderMetricTests(TestCase):
     def test_build_query_for_chart_visualization_with_multiple_axes(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.PieChart(metrics=[slicer.metrics.votes]))
-                    .axis(f.HighCharts.PieChart(metrics=[slicer.metrics.wins]))) \
+                    .axis(f.HighCharts.PieChart([slicer.metrics.votes]))
+                    .axis(f.HighCharts.PieChart([slicer.metrics.wins]))) \
             .query
 
         self.assertEqual('SELECT '
@@ -246,8 +246,8 @@ class QueryBuilderDimensionTests(TestCase):
             .widget(f.DataTablesJS([slicer.metrics.votes, slicer.metrics.wins])) \
             .widget(f.HighCharts(
               axes=[
-                  f.HighCharts.PieChart(metrics=[slicer.metrics.votes]),
-                  f.HighCharts.ColumnChart(metrics=[slicer.metrics.wins]),
+                  f.HighCharts.PieChart([slicer.metrics.votes]),
+                  f.HighCharts.ColumnChart([slicer.metrics.wins]),
               ])) \
             .dimension(slicer.dimensions.timestamp) \
             .dimension(slicer.dimensions.political_party) \
@@ -660,7 +660,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
-                    metrics=[slicer.metrics.votes])])) \
+                    [slicer.metrics.votes])])) \
             .dimension(slicer.dimensions.timestamp
                        .reference(f.DayOverDay)) \
             .query
@@ -694,7 +694,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
-                    metrics=[slicer.metrics.votes])])) \
+                    [slicer.metrics.votes])])) \
             .dimension(slicer.dimensions.timestamp
                        .reference(f.WeekOverWeek)) \
             .query
@@ -728,7 +728,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
-                    metrics=[slicer.metrics.votes])])) \
+                    [slicer.metrics.votes])])) \
             .dimension(slicer.dimensions.timestamp
                        .reference(f.MonthOverMonth)) \
             .query
@@ -762,7 +762,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
-                    metrics=[slicer.metrics.votes])])) \
+                    [slicer.metrics.votes])])) \
             .dimension(slicer.dimensions.timestamp
                        .reference(f.QuarterOverQuarter)) \
             .query
@@ -796,7 +796,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
-                    metrics=[slicer.metrics.votes])])) \
+                    [slicer.metrics.votes])])) \
             .dimension(slicer.dimensions.timestamp
                        .reference(f.YearOverYear)) \
             .query
@@ -830,7 +830,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
-                    metrics=[slicer.metrics.votes])])) \
+                    [slicer.metrics.votes])])) \
             .dimension(slicer.dimensions.timestamp
                        .reference(f.DayOverDay.delta())) \
             .query
@@ -864,7 +864,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
-                    metrics=[slicer.metrics.votes])])) \
+                    [slicer.metrics.votes])])) \
             .dimension(slicer.dimensions.timestamp
                        .reference(f.DayOverDay.delta(percent=True))) \
             .query
@@ -894,11 +894,147 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
+    def test_reference_on_dimension_with_weekly_interval(self):
+        query = slicer.data \
+            .widget(f.HighCharts(
+              axes=[f.HighCharts.LineChart(
+                    [slicer.metrics.votes])])) \
+            .dimension(slicer.dimensions.timestamp(f.weekly)
+                       .reference(f.DayOverDay)) \
+            .query
+
+        self.assertEqual('SELECT '
+                         '"base"."timestamp" "timestamp",'
+                         '"base"."votes" "votes",'
+                         '"sq1"."votes" "votes_dod" '
+                         'FROM '
+
+                         '('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'IW\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "base" '  # end-nested
+
+                         'LEFT JOIN ('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'IW\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "sq1" '  # end-nested
+
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
+                         'ORDER BY "timestamp"', str(query))
+
+    def test_reference_on_dimension_with_monthly_interval(self):
+        query = slicer.data \
+            .widget(f.HighCharts(
+              axes=[f.HighCharts.LineChart(
+                    [slicer.metrics.votes])])) \
+            .dimension(slicer.dimensions.timestamp(f.monthly)
+                       .reference(f.DayOverDay)) \
+            .query
+
+        self.assertEqual('SELECT '
+                         '"base"."timestamp" "timestamp",'
+                         '"base"."votes" "votes",'
+                         '"sq1"."votes" "votes_dod" '
+                         'FROM '
+
+                         '('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'MM\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "base" '  # end-nested
+
+                         'LEFT JOIN ('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'MM\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "sq1" '  # end-nested
+
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
+                         'ORDER BY "timestamp"', str(query))
+
+    def test_reference_on_dimension_with_quarterly_interval(self):
+        query = slicer.data \
+            .widget(f.HighCharts(
+              axes=[f.HighCharts.LineChart(
+                    [slicer.metrics.votes])])) \
+            .dimension(slicer.dimensions.timestamp(f.quarterly)
+                       .reference(f.DayOverDay)) \
+            .query
+
+        self.assertEqual('SELECT '
+                         '"base"."timestamp" "timestamp",'
+                         '"base"."votes" "votes",'
+                         '"sq1"."votes" "votes_dod" '
+                         'FROM '
+
+                         '('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'Q\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "base" '  # end-nested
+
+                         'LEFT JOIN ('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'Q\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "sq1" '  # end-nested
+
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
+                         'ORDER BY "timestamp"', str(query))
+
+    def test_reference_on_dimension_with_annual_interval(self):
+        query = slicer.data \
+            .widget(f.HighCharts(
+              axes=[f.HighCharts.LineChart(
+                    [slicer.metrics.votes])])) \
+            .dimension(slicer.dimensions.timestamp(f.annually)
+                       .reference(f.DayOverDay)) \
+            .query
+
+        self.assertEqual('SELECT '
+                         '"base"."timestamp" "timestamp",'
+                         '"base"."votes" "votes",'
+                         '"sq1"."votes" "votes_dod" '
+                         'FROM '
+
+                         '('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'Y\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "base" '  # end-nested
+
+                         'LEFT JOIN ('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'Y\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "sq1" '  # end-nested
+
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
+                         'ORDER BY "timestamp"', str(query))
+
     def test_dimension_with_multiple_references(self):
         query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
-                    metrics=[slicer.metrics.votes])])) \
+                    [slicer.metrics.votes])])) \
             .dimension(slicer.dimensions.timestamp
                        .reference(f.DayOverDay)
                        .reference(f.YearOverYear.delta(percent=True))) \
@@ -944,7 +1080,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
-                    metrics=[slicer.metrics.votes])])) \
+                    [slicer.metrics.votes])])) \
             .dimension(slicer.dimensions.timestamp
                        .reference(f.YearOverYear)) \
             .dimension(slicer.dimensions.political_party) \
@@ -983,7 +1119,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
-                    metrics=[slicer.metrics.votes])])) \
+                    [slicer.metrics.votes])])) \
             .dimension(slicer.dimensions.timestamp
                        .reference(f.YearOverYear)) \
             .dimension(slicer.dimensions.candidate) \
@@ -1025,7 +1161,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
-                    metrics=[slicer.metrics.votes])])) \
+                    [slicer.metrics.votes])])) \
             .dimension(slicer.dimensions.timestamp
                        .reference(f.DayOverDay)) \
             .filter(slicer.dimensions.timestamp
@@ -1063,7 +1199,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
-                    metrics=[slicer.metrics.votes])])) \
+                    [slicer.metrics.votes])])) \
             .dimension(slicer.dimensions.timestamp
                        .reference(f.DayOverDay)) \
             .filter(slicer.dimensions.timestamp
@@ -1105,7 +1241,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
-                    metrics=[slicer.metrics.votes])])) \
+                    [slicer.metrics.votes])])) \
             .dimension(slicer.dimensions.timestamp(f.weekly)
                        .reference(f.YearOverYear)) \
             .query
@@ -1132,15 +1268,15 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp"'
                          ') "sq1" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',-1,'
-                         'TRUNC(TIMESTAMPADD(\'year\',1,"sq1"."timestamp"),\'IW\')) '
+                         'ON "base"."timestamp"='
+                         'TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"sq1"."timestamp"),\'IW\')) '
                          'ORDER BY "timestamp"', str(query))
 
     def test_adapt_dow_for_leap_year_for_yoy_delta_reference(self):
         query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
-                    metrics=[slicer.metrics.votes])])) \
+                    [slicer.metrics.votes])])) \
             .dimension(slicer.dimensions.timestamp(f.weekly)
                        .reference(f.YearOverYear.delta())) \
             .query
@@ -1175,7 +1311,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
-                    metrics=[slicer.metrics.votes])])) \
+                    [slicer.metrics.votes])])) \
             .dimension(slicer.dimensions.timestamp(f.weekly)
                        .reference(f.YearOverYear.delta(True))) \
             .query
@@ -1322,55 +1458,222 @@ class QueryBuilderJoinTests(TestCase):
                          'WHERE "deep"."id" IN (1)', str(query))
 
 
+class QueryBuilderOrderTests(TestCase):
+    maxDiff = None
+
+    def test_build_query_order_by_dimension(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS([slicer.metrics.votes])) \
+            .dimension(slicer.dimensions.timestamp) \
+            .orderby(slicer.dimensions.timestamp) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp" '
+                         'ORDER BY "timestamp"', str(query))
+
+    def test_build_query_order_by_dimension_display(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS([slicer.metrics.votes])) \
+            .dimension(slicer.dimensions.candidate) \
+            .orderby(slicer.dimensions.candidate_display) \
+            .query
+
+        self.assertEqual('SELECT '
+                         '"candidate_id" "candidate",'
+                         '"candidate_name" "candidate_display",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "candidate","candidate_display" '
+                         'ORDER BY "candidate_display"', str(query))
+
+    def test_build_query_order_by_dimension_asc(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS([slicer.metrics.votes])) \
+            .dimension(slicer.dimensions.timestamp) \
+            .orderby(slicer.dimensions.timestamp, orientation=Order.asc) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp" '
+                         'ORDER BY "timestamp" ASC', str(query))
+
+    def test_build_query_order_by_dimension_desc(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS([slicer.metrics.votes])) \
+            .dimension(slicer.dimensions.timestamp) \
+            .orderby(slicer.dimensions.timestamp, orientation=Order.desc) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp" '
+                         'ORDER BY "timestamp" DESC', str(query))
+
+    def test_build_query_order_by_metric(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS([slicer.metrics.votes])) \
+            .dimension(slicer.dimensions.timestamp) \
+            .orderby(slicer.metrics.votes) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp" '
+                         'ORDER BY "votes"', str(query))
+
+    def test_build_query_order_by_metric_asc(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS([slicer.metrics.votes])) \
+            .dimension(slicer.dimensions.timestamp) \
+            .orderby(slicer.metrics.votes, orientation=Order.asc) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp" '
+                         'ORDER BY "votes" ASC', str(query))
+
+    def test_build_query_order_by_metric_desc(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS([slicer.metrics.votes])) \
+            .dimension(slicer.dimensions.timestamp) \
+            .orderby(slicer.metrics.votes, orientation=Order.desc) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp" '
+                         'ORDER BY "votes" DESC', str(query))
+
+    def test_build_query_order_by_multiple_dimensions(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS([slicer.metrics.votes])) \
+            .dimension(slicer.dimensions.timestamp, slicer.dimensions.candidate) \
+            .orderby(slicer.dimensions.timestamp) \
+            .orderby(slicer.dimensions.candidate) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         '"candidate_id" "candidate",'
+                         '"candidate_name" "candidate_display",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp","candidate","candidate_display" '
+                         'ORDER BY "timestamp","candidate"', str(query))
+
+    def test_build_query_order_by_multiple_dimensions_with_different_orientations(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS([slicer.metrics.votes])) \
+            .dimension(slicer.dimensions.timestamp, slicer.dimensions.candidate) \
+            .orderby(slicer.dimensions.timestamp, orientation=Order.desc) \
+            .orderby(slicer.dimensions.candidate, orientation=Order.asc) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         '"candidate_id" "candidate",'
+                         '"candidate_name" "candidate_display",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp","candidate","candidate_display" '
+                         'ORDER BY "timestamp" DESC,"candidate" ASC', str(query))
+
+    def test_build_query_order_by_metrics_and_dimensions(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS([slicer.metrics.votes])) \
+            .dimension(slicer.dimensions.timestamp) \
+            .orderby(slicer.dimensions.timestamp) \
+            .orderby(slicer.metrics.votes) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp" '
+                         'ORDER BY "timestamp","votes"', str(query))
+
+    def test_build_query_order_by_metrics_and_dimensions_with_different_orientations(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS([slicer.metrics.votes])) \
+            .dimension(slicer.dimensions.timestamp) \
+            .orderby(slicer.dimensions.timestamp, orientation=Order.asc) \
+            .orderby(slicer.metrics.votes, orientation=Order.desc) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp" '
+                         'ORDER BY "timestamp" ASC,"votes" DESC', str(query))
+
+
 @patch('fireant.slicer.queries.builder.fetch_data')
 class QueryBuildPaginationTests(TestCase):
     def test_set_limit(self, mock_fetch_data: Mock):
         slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.timestamp) \
-            .render(limit=20)
+            .fetch(limit=20)
 
         mock_fetch_data.assert_called_once_with(ANY,
-                                                PypikaQueryMatcher('SELECT '
-                                                                   'TRUNC("timestamp",\'DD\') "timestamp",'
-                                                                   'SUM("votes") "votes" '
-                                                                   'FROM "politics"."politician" '
-                                                                   'GROUP BY "timestamp" '
-                                                                   'ORDER BY "timestamp" LIMIT 20'),
-                                                dimensions=ANY)
+                                                'SELECT '
+                                                'TRUNC("timestamp",\'DD\') "timestamp",'
+                                                'SUM("votes") "votes" '
+                                                'FROM "politics"."politician" '
+                                                'GROUP BY "timestamp" '
+                                                'ORDER BY "timestamp" LIMIT 20',
+                                                dimensions=DimensionMatcher(slicer.dimensions.timestamp))
 
     def test_set_offset(self, mock_fetch_data: Mock):
         slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.timestamp) \
-            .render(offset=20)
+            .fetch(offset=20)
 
         mock_fetch_data.assert_called_once_with(ANY,
-                                                PypikaQueryMatcher('SELECT '
-                                                                   'TRUNC("timestamp",\'DD\') "timestamp",'
-                                                                   'SUM("votes") "votes" '
-                                                                   'FROM "politics"."politician" '
-                                                                   'GROUP BY "timestamp" '
-                                                                   'ORDER BY "timestamp" '
-                                                                   'OFFSET 20'),
-                                                dimensions=ANY)
+                                                'SELECT '
+                                                'TRUNC("timestamp",\'DD\') "timestamp",'
+                                                'SUM("votes") "votes" '
+                                                'FROM "politics"."politician" '
+                                                'GROUP BY "timestamp" '
+                                                'ORDER BY "timestamp" '
+                                                'OFFSET 20',
+                                                dimensions=DimensionMatcher(slicer.dimensions.timestamp))
 
     def test_set_limit_and_offset(self, mock_fetch_data: Mock):
         slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.timestamp) \
-            .render(limit=20, offset=20)
+            .fetch(limit=20, offset=20)
 
         mock_fetch_data.assert_called_once_with(ANY,
-                                                PypikaQueryMatcher('SELECT '
-                                                                   'TRUNC("timestamp",\'DD\') "timestamp",'
-                                                                   'SUM("votes") "votes" '
-                                                                   'FROM "politics"."politician" '
-                                                                   'GROUP BY "timestamp" '
-                                                                   'ORDER BY "timestamp" '
-                                                                   'LIMIT 20 '
-                                                                   'OFFSET 20'),
-                                                dimensions=ANY)
+                                                'SELECT '
+                                                'TRUNC("timestamp",\'DD\') "timestamp",'
+                                                'SUM("votes") "votes" '
+                                                'FROM "politics"."politician" '
+                                                'GROUP BY "timestamp" '
+                                                'ORDER BY "timestamp" '
+                                                'LIMIT 20 '
+                                                'OFFSET 20',
+                                                dimensions=DimensionMatcher(slicer.dimensions.timestamp))
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -1381,12 +1684,14 @@ class QueryBuilderValidationTests(TestCase):
         with self.assertRaises(MetricRequiredException):
             slicer.data \
                 .widget(f.HighCharts([])) \
+                .dimension(slicer.dimensions.timestamp) \
                 .query
 
     def test_highcharts_axis_requires_at_least_one_metric(self):
         with self.assertRaises(MetricRequiredException):
             slicer.data \
                 .widget(f.HighCharts([f.HighCharts.LineChart([])])) \
+                .dimension(slicer.dimensions.timestamp) \
                 .query
 
     def test_datatablesjs_requires_at_least_one_metric(self):
@@ -1400,97 +1705,99 @@ class QueryBuilderValidationTests(TestCase):
 @patch('fireant.slicer.queries.builder.fetch_data')
 class QueryBuilderRenderTests(TestCase):
     def test_pass_slicer_database_as_arg(self, mock_fetch_data: Mock):
-        mock_widget = Mock(name='mock_widget')
-        mock_widget.metrics = [slicer.metrics.votes]
+        mock_widget = f.Widget([slicer.metrics.votes])
+        mock_widget.transform = Mock()
 
         slicer.data \
             .widget(mock_widget) \
-            .render()
+            .fetch()
 
         mock_fetch_data.assert_called_once_with(slicer.database,
                                                 ANY,
                                                 dimensions=ANY)
 
     def test_pass_query_from_builder_as_arg(self, mock_fetch_data: Mock):
-        mock_widget = Mock(name='mock_widget')
-        mock_widget.metrics = [slicer.metrics.votes]
+        mock_widget = f.Widget([slicer.metrics.votes])
+        mock_widget.transform = Mock()
 
         slicer.data \
             .widget(mock_widget) \
-            .render()
+            .fetch()
 
         mock_fetch_data.assert_called_once_with(ANY,
-                                                PypikaQueryMatcher('SELECT SUM("votes") "votes" '
-                                                                   'FROM "politics"."politician"'),
+                                                'SELECT SUM("votes") "votes" '
+                                                'FROM "politics"."politician"',
                                                 dimensions=ANY)
 
     def test_builder_dimensions_as_arg_with_zero_dimensions(self, mock_fetch_data: Mock):
-        mock_widget = Mock(name='mock_widget')
-        mock_widget.metrics = [slicer.metrics.votes]
+        mock_widget = f.Widget([slicer.metrics.votes])
+        mock_widget.transform = Mock()
 
         slicer.data \
             .widget(mock_widget) \
-            .render()
+            .fetch()
 
         mock_fetch_data.assert_called_once_with(ANY, ANY, dimensions=[])
 
     def test_builder_dimensions_as_arg_with_one_dimension(self, mock_fetch_data: Mock):
-        mock_widget = Mock(name='mock_widget')
-        mock_widget.metrics = [slicer.metrics.votes]
+        mock_widget = f.Widget([slicer.metrics.votes])
+        mock_widget.transform = Mock()
 
         dimensions = [slicer.dimensions.state]
 
         slicer.data \
             .widget(mock_widget) \
             .dimension(*dimensions) \
-            .render()
+            .fetch()
 
         mock_fetch_data.assert_called_once_with(ANY, ANY, dimensions=DimensionMatcher(*dimensions))
 
     def test_builder_dimensions_as_arg_with_multiple_dimensions(self, mock_fetch_data: Mock):
-        mock_widget = Mock(name='mock_widget')
-        mock_widget.metrics = [slicer.metrics.votes]
+        mock_widget = f.Widget([slicer.metrics.votes])
+        mock_widget.transform = Mock()
 
         dimensions = slicer.dimensions.timestamp, slicer.dimensions.state, slicer.dimensions.political_party
 
         slicer.data \
             .widget(mock_widget) \
             .dimension(*dimensions) \
-            .render()
+            .fetch()
 
         mock_fetch_data.assert_called_once_with(ANY, ANY, dimensions=DimensionMatcher(*dimensions))
 
     def test_call_transform_on_widget(self, mock_fetch_data: Mock):
-        mock_widget = Mock(name='mock_widget')
-        mock_widget.metrics = [slicer.metrics.votes]
+        mock_widget = f.Widget([slicer.metrics.votes])
+        mock_widget.transform = Mock()
 
         # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
         slicer.data \
             .dimension(slicer.dimensions.timestamp) \
             .widget(mock_widget) \
-            .render()
+            .fetch()
 
         mock_widget.transform.assert_called_once_with(mock_fetch_data.return_value,
                                                       slicer,
                                                       DimensionMatcher(slicer.dimensions.timestamp))
 
     def test_returns_results_from_widget_transform(self, mock_fetch_data: Mock):
-        mock_widget = Mock(name='mock_widget')
-        mock_widget.metrics = [slicer.metrics.votes]
+        mock_widget = f.Widget([slicer.metrics.votes])
+        mock_widget.transform = Mock()
 
         # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
         result = slicer.data \
             .dimension(slicer.dimensions.timestamp) \
             .widget(mock_widget) \
-            .render()
+            .fetch()
 
         self.assertListEqual(result, [mock_widget.transform.return_value])
 
     def test_operations_evaluated(self, mock_fetch_data: Mock):
-        mock_widget = Mock(name='mock_widget')
         mock_operation = Mock(name='mock_operation ', spec=f.Operation)
         mock_operation.key, mock_operation.definition = 'mock_operation', slicer.table.abc
-        mock_widget.metrics = [mock_operation]
+
+        mock_widget = f.Widget([mock_operation])
+        mock_widget.transform = Mock()
+
         mock_df = {}
         mock_fetch_data.return_value = mock_df
 
@@ -1498,15 +1805,17 @@ class QueryBuilderRenderTests(TestCase):
         slicer.data \
             .dimension(slicer.dimensions.timestamp) \
             .widget(mock_widget) \
-            .render()
+            .fetch()
 
         mock_operation.apply.assert_called_once_with(mock_df)
 
     def test_operations_results_stored_in_data_frame(self, mock_fetch_data: Mock):
-        mock_widget = Mock(name='mock_widget')
         mock_operation = Mock(name='mock_operation ', spec=f.Operation)
         mock_operation.key, mock_operation.definition = 'mock_operation', slicer.table.abc
-        mock_widget.metrics = [mock_operation]
+
+        mock_widget = f.Widget([mock_operation])
+        mock_widget.transform = Mock()
+
         mock_df = {}
         mock_fetch_data.return_value = mock_df
 
@@ -1514,7 +1823,7 @@ class QueryBuilderRenderTests(TestCase):
         slicer.data \
             .dimension(slicer.dimensions.timestamp) \
             .widget(mock_widget) \
-            .render()
+            .fetch()
 
         self.assertIn(mock_operation.key, mock_df)
         self.assertEqual(mock_df[mock_operation.key], mock_operation.apply.return_value)

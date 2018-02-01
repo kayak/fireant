@@ -14,6 +14,13 @@ class Reference(object):
         label = self.label + ' Δ%' if percent else self.label + ' Δ'
         return Reference(key, label, self.time_unit, self.interval, delta=True, percent=percent)
 
+    def __eq__(self, other):
+        return isinstance(self, Reference) \
+               and self.time_unit == other.time_unit \
+               and self.interval == other.interval \
+               and self.is_delta == other.is_delta \
+               and self.is_percent == other.is_percent
+
 
 DayOverDay = Reference('dod', 'DoD', 'day', 1)
 WeekOverWeek = Reference('wow', 'WoW', 'week', 1)

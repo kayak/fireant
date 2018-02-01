@@ -22,6 +22,13 @@ class Operation(object):
 class _Cumulative(Operation):
     def __init__(self, arg):
         self.arg = arg
+        self.key = '{}({})'.format(self.__class__.__name__.lower(),
+                                   getattr(arg, 'key', arg))
+        self.label = '{}({})'.format(self.__class__.__name__,
+                                     getattr(arg, 'label', arg))
+        self.prefix = getattr(arg, 'prefix')
+        self.suffix = getattr(arg, 'suffix')
+        self.precision = getattr(arg, 'precision')
 
     def _group_levels(self, index):
         """

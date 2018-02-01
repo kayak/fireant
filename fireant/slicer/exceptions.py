@@ -20,3 +20,7 @@ class RollupException(SlicerException):
 
 class MetricRequiredException(SlicerException):
     pass
+
+
+class ContinuousDimensionRequiredException(SlicerException):
+    pass

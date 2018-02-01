@@ -11,7 +11,7 @@ class PypikaQueryMatcher:
 
     def __eq__(self, other):
         return isinstance(other, QueryBuilder) \
-               and self.query_str == str(other)
+               and str(self.query_str) == str(other)
 
     def __repr__(self):
         return self.query_str

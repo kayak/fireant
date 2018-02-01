@@ -27,7 +27,7 @@ def dimension_value(value, str_date=True):
     """
     if isinstance(value, date):
         if not str_date:
-            return 1000 * value.timestamp()
+            return int(1000 * value.timestamp())
 
         if not hasattr(value, 'time') or value.time() == NO_TIME:
             return value.strftime('%Y-%m-%d')

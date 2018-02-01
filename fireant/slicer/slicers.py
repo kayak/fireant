@@ -2,6 +2,7 @@ import itertools
 
 from .dimensions import (
     CategoricalDimension,
+    DisplayDimension,
     UniqueDimension,
 )
 from .queries import (
@@ -29,8 +30,15 @@ class _Container(object):
         for item in items:
             setattr(self, item.key, item)
 
+            # Special case to include display definitions for filters
+            if item.has_display_field:
+                setattr(self, item.display_key, DisplayDimension(item))
+
     def __iter__(self):
         return iter(self._items)
+
+    def __getitem__(self, item):
+        return getattr(self, item)
 
     def __eq__(self, other):
         """

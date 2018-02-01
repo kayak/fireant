@@ -1,10 +1,21 @@
 from collections import defaultdict
+from typing import (
+    Dict,
+    Iterable,
+)
 
+import pandas as pd
+from pypika import (
+    Order,
+    functions as fn,
+)
+from pypika.enums import SqlTypes
 from toposort import (
     CircularDependencyError,
     toposort_flatten,
 )
 
+from fireant.slicer.base import SlicerElement
 from fireant.utils import (
     flatten,
     immutable,
@@ -87,7 +98,7 @@ class QueryBuilder(object):
         return ordered_distinct_list([table
                                       for element in self._elements
                                       # Need extra for-loop to incl. the `display_definition` from `UniqueDimension`
-                                      for attr in [element.definition,
+                                      for attr in [getattr(element, 'definition', None),
                                                    getattr(element, 'display_definition', None)]
                                       # ... but then filter Nones since most elements do not have `display_definition`
                                       if attr is not None
@@ -150,7 +161,7 @@ class QueryBuilder(object):
 
             dimension_definition = _build_dimension_definition(dimension, self.slicer.database.trunc_date)
 
-            if hasattr(dimension, 'display_definition') and dimension.display_definition is not None:
+            if dimension.has_display_field:
                 # Add display definition field
                 dimension_display_definition = dimension.display_definition.as_(dimension.display_key)
                 fields = [dimension_definition, dimension_display_definition]
@@ -197,6 +208,17 @@ class SlicerQueryBuilder(QueryBuilder):
         """
         self._dimensions += dimensions
 
+    @immutable
+    def orderby(self, element: SlicerElement, orientation=None):
+        """
+        :param element:
+            The element to order by, either a metric or dimension.
+        :param orientation:
+            The directionality to order by, either ascending or descending.
+        :return:
+        """
+        self._orders += [(element.definition.as_(element.key), orientation)]
+
     @property
     def metrics(self):
         """
@@ -213,10 +235,24 @@ class SlicerQueryBuilder(QueryBuilder):
         :return:
             an ordered, distinct list of metrics used in all widgets as part of this query.
         """
-        return ordered_distinct_list_by_attr([metric
+        return ordered_distinct_list_by_attr([item
                                               for widget in self._widgets
-                                              for metric in widget.metrics
-                                              if isinstance(metric, Operation)])
+                                              for item in widget.items
+                                              if isinstance(item, Operation)])
+
+    @property
+    def orders(self):
+        if self._orders:
+            return self._orders
+
+        definitions = [dimension.display_definition.as_(dimension.display_key)
+                       if dimension.has_display_field
+                       else dimension.definition.as_(dimension.key)
+                       for dimension in self._dimensions]
+
+        return [(definition, None)
+                for definition in definitions]
+
 
     @property
     def _elements(self):
@@ -225,8 +261,17 @@ class SlicerQueryBuilder(QueryBuilder):
     @property
     def query(self):
         """
-        WRITEME
+        Build the pypika query for this Slicer query. This collects all of the metrics in each widget, dimensions, and
+        filters and builds a corresponding pypika query to fetch the data.  When references are used, the base query
+        normally produced is wrapped in an outer query and a query for each reference is joined based on the referenced
+        dimension shifted.
         """
+
+        # Validate
+        for widget in self._widgets:
+            if hasattr(widget, 'validate'):
+                widget.validate(self._dimensions)
+
         query = super(SlicerQueryBuilder, self).query
 
         # Add metrics
@@ -236,21 +281,37 @@ class SlicerQueryBuilder(QueryBuilder):
         # Add references
         references = [(reference, dimension)
                       for dimension in self._dimensions
-                      if hasattr(dimension, 'references')
-                      for reference in dimension.references]
+                      for reference in getattr(dimension, 'references', ())]
         if references:
             query = self._join_references(query, references)
 
         # Add ordering
-        order = self._orders if self._orders else self._dimensions
-        query = query.orderby(*[element.display_definition.as_(element.display_key)
-                                if hasattr(element, 'display_definition')
-                                else element.definition.as_(element.key)
-                                for element in order])
+        for (definition, orientation) in self.orders:
+            query = query.orderby(definition, order=orientation)
 
         return query
 
     def _join_references(self, query, references):
+        """
+        This converts the pypika query built in `self.query()` into a query that includes references. This is achieved
+        by wrapping the original query with an outer query using the original query as the FROM clause, then joining
+        copies of the original query for each reference, with the reference dimension shifted by the appropriate
+        interval.
+
+        The outer query selects everything from the original query and each metric from the reference query using an
+        alias constructed from the metric key appended with the reference key.  For Delta references, the reference
+        metric is selected as the difference of the metric from the original query and the reference query. For Delta
+        Percentage references, the reference metric metric is selected as the difference divided by the reference
+        metric.
+
+        :param query:
+            The original query built by `self.query`
+        :param references:
+            A list of the references that should be included.
+        :return:
+            A new pypika query with the dimensions and metrics included from the original query plus each of the
+            metrics for each of the references.
+        """
         original_query = query.as_('base')
 
         def original_query_field(key):
@@ -262,7 +323,7 @@ class SlicerQueryBuilder(QueryBuilder):
         for dimension in self._dimensions:
             outer_query = outer_query.select(original_query_field(dimension.key))
 
-            if hasattr(dimension, 'display_definition'):
+            if dimension.has_display_field:
                 outer_query = outer_query.select(original_query_field(dimension.display_key))
 
         # Add metrics
@@ -281,15 +342,21 @@ class SlicerQueryBuilder(QueryBuilder):
 
         return outer_query
 
-    def render(self, limit=None, offset=None):
+    def fetch(self, limit=None, offset=None) -> Iterable[Dict]:
         """
+        Fetch the data for this query and transform it into the widgets.
 
+        :param limit:
+            A limit on the number of database rows returned.
+        :param offset:
+            A offset on the number of database rows returned.
         :return:
+            A list of dict (JSON) objects containing the widget configurations.
         """
         query = self.query.limit(limit).offset(offset)
 
         data_frame = fetch_data(self.slicer.database,
-                                query,
+                                str(query),
                                 dimensions=self._dimensions)
 
         # Apply operations
@@ -312,14 +379,44 @@ class DimensionOptionQueryBuilder(QueryBuilder):
         super(DimensionOptionQueryBuilder, self).__init__(slicer, slicer.hint_table or slicer.table)
         self._dimensions.append(dimension)
 
-    @property
-    def query(self):
-        query = super(DimensionOptionQueryBuilder, self).query
+    def fetch(self, limit=None, offset=None, force_include=()) -> pd.Series:
+        """
+        Fetch the data for this query and transform it into the widgets.
 
-        # Add ordering
-        query = query.orderby(*[element.display_definition.as_(element.display_key)
-                                if hasattr(element, 'display_definition')
-                                else element.definition.as_(element.key)
-                                for element in self._dimensions])
+        :param limit:
+            A limit on the number of database rows returned.
+        :param offset:
+            A offset on the number of database rows returned.
+        :param force_include:
+            A list of dimension values to include in the result set. This can be used to avoid having necessary results
+            cut off due to the pagination.  These results will be returned at the head of the results.
+        :return:
+            A list of dict (JSON) objects containing the widget configurations.
+        """
+        query = self.query
 
-        return query.distinct()
+        dimension = self._dimensions[0]
+        definition = dimension.display_definition.as_(dimension.display_key) \
+            if dimension.has_display_field \
+            else dimension.definition.as_(dimension.key)
+
+        if force_include:
+            include = fn.Cast(dimension.definition, SqlTypes.VARCHAR) \
+                .isin([str(x) for x in force_include])
+
+            # Ensure that these values are included
+            query = query.orderby(include, order=Order.desc)
+
+        # Add ordering and pagination
+        query = query.orderby(definition).limit(limit).offset(offset)
+
+        data = fetch_data(self.slicer.database,
+                          str(query),
+                          dimensions=self._dimensions)
+
+        display_key = getattr(dimension, 'display_key', 'display')
+        if hasattr(dimension, 'display_values'):
+            # Include provided display values
+            data[display_key] = pd.Series(dimension.display_values)
+
+        return data[display_key]

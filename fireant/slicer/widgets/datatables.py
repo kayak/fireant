@@ -8,7 +8,7 @@ from fireant import (
     utils,
 )
 from . import formats
-from .base import MetricsWidget
+from .base import Widget
 from .helpers import (
     dimensional_metric_label,
     extract_display_values,
@@ -95,9 +95,9 @@ def _format_metric_cell(value, metric):
 HARD_MAX_COLUMNS = 24
 
 
-class DataTablesJS(MetricsWidget):
-    def __init__(self, metrics=(), pivot=False, max_columns=None):
-        super(DataTablesJS, self).__init__(metrics)
+class DataTablesJS(Widget):
+    def __init__(self, items=(), pivot=False, max_columns=None):
+        super(DataTablesJS, self).__init__(items)
         self.pivot = pivot
         self.max_columns = min(max_columns, HARD_MAX_COLUMNS) \
             if max_columns is not None \
@@ -105,6 +105,7 @@ class DataTablesJS(MetricsWidget):
 
     def transform(self, data_frame, slicer, dimensions):
         """
+        WRITEME
 
         :param data_frame:
         :param slicer:
@@ -118,7 +119,7 @@ class DataTablesJS(MetricsWidget):
                       for reference in getattr(dimension, 'references', ())]
 
         metric_keys = [reference_key(metric, reference)
-                       for metric in self.metrics
+                       for metric in self.items
                        for reference in [None] + references]
         data_frame = data_frame[metric_keys]
 
@@ -153,6 +154,7 @@ class DataTablesJS(MetricsWidget):
     @staticmethod
     def _dimension_columns(dimensions):
         """
+        WRITEME
 
         :param dimensions:
         :return:
@@ -163,7 +165,9 @@ class DataTablesJS(MetricsWidget):
                           data=dimension.key,
                           render=dict(_='value'))
 
-            if not isinstance(dimension, ContinuousDimension):
+            is_cont_dim = isinstance(dimension, ContinuousDimension)
+            is_uni_dim_no_display = (hasattr(dimension, 'display_definition') and dimension.display_definition is None)
+            if not is_cont_dim and not is_uni_dim_no_display:
                 column['render']['display'] = 'display'
 
             columns.append(column)
@@ -172,11 +176,12 @@ class DataTablesJS(MetricsWidget):
 
     def _metric_columns(self, references):
         """
+        WRITEME
 
         :return:
         """
         columns = []
-        for metric in self.metrics:
+        for metric in self.items:
             for reference in [None] + references:
                 title = reference_label(metric, reference)
                 data = reference_key(metric, reference)
@@ -195,7 +200,7 @@ class DataTablesJS(MetricsWidget):
         :return:
         """
         columns = []
-        for metric in self.metrics:
+        for metric in self.items:
             dimension_value_sets = [list(level)
                                     for level in df_columns.levels[1:]]
 
@@ -213,6 +218,7 @@ class DataTablesJS(MetricsWidget):
 
     def _data_row(self, dimensions, dimension_values, dimension_display_values, references, row_data):
         """
+        WRITEME
 
         :param dimensions:
         :param dimension_values:
@@ -225,7 +231,7 @@ class DataTablesJS(MetricsWidget):
         for dimension, dimension_value in zip(dimensions, utils.wrap_list(dimension_values)):
             row[dimension.key] = _render_dimension_cell(dimension_value, dimension_display_values.get(dimension.key))
 
-        for metric in self.metrics:
+        for metric in self.items:
             for reference in [None] + references:
                 key = reference_key(metric, reference)
 

@@ -1,7 +1,7 @@
 import time
+from typing import Iterable
 
 import pandas as pd
-from typing import Iterable
 
 from fireant.database.base import Database
 from .logger import logger
@@ -44,6 +44,9 @@ def clean_and_apply_index(data_frame: pd.DataFrame, dimensions: Iterable[Dimensi
     :param dimensions:
     :return:
     """
+    if not dimensions:
+        return data_frame
+
     dimension_keys = [d.key for d in dimensions]
 
     for i, dimension in enumerate(dimensions):
@@ -59,7 +62,8 @@ def clean_and_apply_index(data_frame: pd.DataFrame, dimensions: Iterable[Dimensi
                     .groupby(dimension_keys[:i])[level]
                     .fillna('Totals', limit=1)
             ) if 0 < i else (
-                data_frame[level].fillna('Totals', limit=1)
+                data_frame[level]
+                    .fillna('Totals', limit=1)
             )
 
         data_frame[level] = data_frame[level] \

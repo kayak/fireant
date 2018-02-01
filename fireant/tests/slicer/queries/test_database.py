@@ -12,6 +12,7 @@ from fireant.tests.slicer.mocks import (
     cat_dim_df,
     cont_dim_df,
     cont_uni_dim_df,
+    single_metric_df,
     slicer,
     uni_dim_df,
 )
@@ -70,6 +71,11 @@ cont_uni_dim_nans_totals_df = cont_uni_dim_nans_df \
 
 
 class FetchDataCleanIndexTests(TestCase):
+    def test_do_nothing_when_no_dimensions(self):
+        result = clean_and_apply_index(single_metric_df, [])
+
+        pd.testing.assert_frame_equal(result, single_metric_df)
+
     def test_set_time_series_index_level(self):
         result = clean_and_apply_index(cont_dim_df.reset_index(),
                                        [slicer.dimensions.timestamp])

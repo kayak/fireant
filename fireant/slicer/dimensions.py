@@ -116,8 +116,12 @@ class UniqueDimension(RollupDimension):
 
     def __init__(self, key, label=None, definition=None, display_definition=None):
         super(UniqueDimension, self).__init__(key=key, label=label, definition=definition)
-        self.display_key = '{}_display'.format(key)
+
         self.display_definition = display_definition
+
+        self.display_key = '{}_display'.format(key) \
+            if display_definition is not None \
+            else None
 
     def isin(self, values, use_display=False):
         """
@@ -170,6 +174,19 @@ class UniqueDimension(RollupDimension):
         if self.display_definition is None:
             raise QueryException('No value set for display_definition.')
         return WildcardFilter(self.display_definition, pattern)
+
+    @property
+    def display(self):
+        return self
+
+
+class DisplayDimension(Dimension):
+    """
+    WRITEME
+    """
+
+    def __init__(self, dimension):
+        super(DisplayDimension, self).__init__(dimension.display_key, dimension.label, dimension.display_definition)
 
 
 class ContinuousDimension(Dimension):
@@ -243,13 +260,3 @@ class DatetimeDimension(ContinuousDimension):
             start and stop.
         """
         return RangeFilter(self.definition, start, stop)
-
-
-class DimensionValue(object):
-    """
-    An option belongs to a categorical dimension which specifies a fixed set of values
-    """
-
-    def __init__(self, key, label=None):
-        self.key = key
-        self.label = label or key

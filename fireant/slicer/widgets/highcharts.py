@@ -4,10 +4,7 @@ import pandas as pd
 
 from fireant import utils
 from fireant.utils import immutable
-from .base import (
-    MetricsWidget,
-    Widget,
-)
+from .base import Widget
 from .formats import (
     dimension_value,
     metric_value,
@@ -55,47 +52,54 @@ MARKER_SYMBOLS = (
 )
 
 
-class ChartWidget(MetricsWidget):
+class ChartWidget(Widget):
     type = None
     needs_marker = False
     stacked = False
 
-    def __init__(self, metrics=(), name=None, stacked=False):
-        super(ChartWidget, self).__init__(metrics=metrics)
+    def __init__(self, items=(), name=None, stacked=False):
+        super(ChartWidget, self).__init__(items)
         self.name = name
         self.stacked = self.stacked or stacked
 
+    def transform(self, data_frame, slicer, dimensions):
+        raise NotImplementedError()
+
+
+class ContinuousAxisChartWidget(ChartWidget):
+    pass
+
 
 class HighCharts(Widget):
-    class PieChart(ChartWidget):
-        type = 'pie'
-
-    class LineChart(ChartWidget):
+    class LineChart(ContinuousAxisChartWidget):
         type = 'line'
         needs_marker = True
 
-    class AreaChart(ChartWidget):
+    class AreaChart(ContinuousAxisChartWidget):
         type = 'area'
         needs_marker = True
-
-    class BarChart(ChartWidget):
-        type = 'bar'
-
-    class ColumnChart(ChartWidget):
-        type = 'column'
-
-    class StackedBarChart(BarChart):
-        stacked = True
-
-    class StackedColumnChart(ColumnChart):
-        stacked = True
 
     class AreaPercentageChart(AreaChart):
         stacked = True
 
-    def __init__(self, title=None, axes=(), colors=None):
+    class PieChart(ChartWidget):
+        type = 'pie'
+
+    class BarChart(ChartWidget):
+        type = 'bar'
+
+    class StackedBarChart(BarChart):
+        stacked = True
+
+    class ColumnChart(ChartWidget):
+        type = 'column'
+
+    class StackedColumnChart(ColumnChart):
+        stacked = True
+
+    def __init__(self, axes=(), title=None, colors=None):
+        super(HighCharts, self).__init__(axes)
         self.title = title
-        self.axes = list(axes)
         self.colors = colors or DEFAULT_COLORS
 
     @immutable
@@ -107,7 +111,7 @@ class HighCharts(Widget):
         :return:
         """
 
-        self.axes.append(axis)
+        self.items.append(axis)
 
     @property
     def metrics(self):
@@ -115,12 +119,12 @@ class HighCharts(Widget):
         :return:
             A set of metrics used in this chart. This collects all metrics across all axes.
         """
-        if 0 == len(self.axes):
+        if 0 == len(self.items):
             raise MetricRequiredException(str(self))
 
         seen = set()
         return [metric
-                for axis in self.axes
+                for axis in self.items
                 for metric in axis.metrics
                 if not (metric.key in seen or seen.add(metric.key))]
 
@@ -155,10 +159,12 @@ class HighCharts(Widget):
                       for dimension in dimensions
                       for reference in getattr(dimension, 'references', ())]
 
+        total_num_items = sum([len(axis.items) for axis in self.items])
+
         y_axes, series = [], []
-        for axis_idx, axis in enumerate(self.axes):
+        for axis_idx, axis in enumerate(self.items):
             colors, series_colors = itertools.tee(colors)
-            axis_color = next(colors) if 1 < len(self.metrics) else None
+            axis_color = next(colors) if 1 < total_num_items else None
 
             # prepend axes, append series, this keeps everything ordered left-to-right
             y_axes[0:0] = self._render_y_axis(axis_idx,
@@ -257,10 +263,10 @@ class HighCharts(Widget):
         :param references:
         :return:
         """
-        has_multi_metric = 1 < len(axis.metrics)
+        has_multi_metric = 1 < len(axis.items)
 
         series = []
-        for metric in axis.metrics:
+        for metric in axis.items:
             visible = True
             symbols = itertools.cycle(MARKER_SYMBOLS)
             series_color = next(colors) if has_multi_metric else None
@@ -307,9 +313,9 @@ class HighCharts(Widget):
 
     def _render_data(self, group_df, metric_key, is_timeseries):
         if is_timeseries:
-            return [[dimension_value(utils.wrap_list(dimension_values)[0],
+            return [(dimension_value(utils.wrap_list(dimension_values)[0],
                                      str_date=False),
-                     metric_value(y)]
+                     metric_value(y))
                     for dimension_values, y in group_df[metric_key].iteritems()]
 
         return [metric_value(y)

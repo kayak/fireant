@@ -258,6 +258,8 @@ cont_uni_dim_df = mock_politics_database[['timestamp', 'state', 'state_display',
     .sum() \
     .reset_index('state_display')
 
+cont_dim_operation_df = cont_dim_df.copy()
+cont_dim_operation_df['cumsum(votes)'] = cont_dim_df['votes'].cumsum()
 
 def ref(data_frame, columns):
     ref_cols = {column: '%s_eoe' % column
