@@ -3,9 +3,6 @@ from fireant.utils import immutable
 
 
 class Widget:
-    def transform(self, data_frame, slicer, dimensions):
-        raise NotImplementedError()
-
     def __init__(self, items=()):
         self.items = list(items)
 
@@ -25,3 +22,8 @@ class Widget:
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__,
                                ','.join(str(m) for m in self.items))
+
+
+class TransformableWidget(Widget):
+    def transform(self, data_frame, slicer, dimensions):
+        raise NotImplementedError()

@@ -1,6 +1,9 @@
-from .base import Widget
+from .base import (
+    Widget,
+    TransformableWidget,
+)
 
 
-class Matplotlib(Widget):
+class Matplotlib(TransformableWidget):
     def transform(self, data_frame, slicer, dimensions):
         raise NotImplementedError()

@@ -1,6 +1,8 @@
 import pandas as pd
 
-from .base import Widget
+from .base import (
+    TransformableWidget,
+)
 from .helpers import (
     reference_key,
     reference_label,
@@ -9,7 +11,7 @@ from .helpers import (
 HARD_MAX_COLUMNS = 24
 
 
-class Pandas(Widget):
+class Pandas(TransformableWidget):
     def __init__(self, items=(), pivot=False, max_columns=None):
         super(Pandas, self).__init__(items)
         self.pivot = pivot

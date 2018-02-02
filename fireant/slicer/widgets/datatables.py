@@ -8,7 +8,9 @@ from fireant import (
     utils,
 )
 from . import formats
-from .base import Widget
+from .base import (
+    TransformableWidget,
+)
 from .helpers import (
     dimensional_metric_label,
     extract_display_values,
@@ -95,7 +97,7 @@ def _format_metric_cell(value, metric):
 HARD_MAX_COLUMNS = 24
 
 
-class DataTablesJS(Widget):
+class DataTablesJS(TransformableWidget):
     def __init__(self, items=(), pivot=False, max_columns=None):
         super(DataTablesJS, self).__init__(items)
         self.pivot = pivot

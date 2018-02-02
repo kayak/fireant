@@ -4,7 +4,10 @@ import pandas as pd
 
 from fireant import utils
 from fireant.utils import immutable
-from .base import Widget
+from .base import (
+    TransformableWidget,
+    Widget,
+)
 from .formats import (
     dimension_value,
     metric_value,
@@ -62,15 +65,12 @@ class ChartWidget(Widget):
         self.name = name
         self.stacked = self.stacked or stacked
 
-    def transform(self, data_frame, slicer, dimensions):
-        raise NotImplementedError()
-
 
 class ContinuousAxisChartWidget(ChartWidget):
     pass
 
 
-class HighCharts(Widget):
+class HighCharts(TransformableWidget):
     class LineChart(ContinuousAxisChartWidget):
         type = 'line'
         needs_marker = True

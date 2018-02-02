@@ -45,10 +45,12 @@ def join_reference(reference: Reference,
                                      and YearOverYear.time_unit == reference.time_unit)
 
     # FIXME this is a bit hacky, need to replace the ref dimension term in all of the filters with the offset
-    if ref_query._wheres:
-        ref_query._wheres = _apply_to_term_in_criterion(ref_dimension.definition,
-                                                        date_add(ref_dimension.definition),
-                                                        ref_query._wheres)
+    query_wheres = getattr(ref_query, '_wheres')
+    if query_wheres:
+        wheres = _apply_to_term_in_criterion(ref_dimension.definition,
+                                             date_add(ref_dimension.definition),
+                                             query_wheres)
+        setattr(ref_query, '_wheres', wheres)
 
     # Join inner query
     join_criterion = _build_reference_join_criterion(ref_dimension,
