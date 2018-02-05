@@ -19,17 +19,30 @@ from ..matchers import (
 from ..mocks import slicer
 
 
-class SlicerShortcutTests(TestCase):
-    maxDiff = None
+class QueryBuilderTests(TestCase):
+    def test_widget_is_immutable(self):
+        query1 = slicer.data
+        query2 = query1.widget(f.DataTablesJS([slicer.metrics.votes]))
 
-    def test_get_attr_from_slicer_dimensions_returns_dimension(self):
-        timestamp_dimension = slicer.dimensions.timestamp
-        self.assertTrue(hasattr(timestamp_dimension, 'definition'))
+        self.assertIsNot(query1, query2)
 
-    def test_get_attr_from_slicer_metrics_returns_metric(self):
-        votes_metric = slicer.metrics.votes
-        self.assertTrue(hasattr(votes_metric, 'definition'))
+    def test_dimension_is_immutable(self):
+        query1 = slicer.data
+        query2 = query1.dimension(slicer.dimensions.timestamp)
 
+        self.assertIsNot(query1, query2)
+
+    def test_filter_is_immutable(self):
+        query1 = slicer.data
+        query2 = query1.filter(slicer.dimensions.timestamp == 'ok')
+
+        self.assertIsNot(query1, query2)
+
+    def test_orderby_is_immutable(self):
+        query1 = slicer.data
+        query2 = query1.orderby(slicer.dimensions.timestamp)
+
+        self.assertIsNot(query1, query2)
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 class QueryBuilderMetricTests(TestCase):

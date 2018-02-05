@@ -127,3 +127,7 @@ class FetchDataCleanIndexTests(TestCase):
                                        [slicer.dimensions.timestamp, slicer.dimensions.state.rollup()])
 
         self.assertListEqual(list(result.index.levels[1]), ['', '1', '2', 'Totals'])
+
+
+class FetchDimensionOptionsTests(TestCase):
+    pass  # TODO

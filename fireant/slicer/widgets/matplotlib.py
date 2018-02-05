@@ -1,7 +1,4 @@
-from .base import (
-    Widget,
-    TransformableWidget,
-)
+from .base import TransformableWidget
 
 
 class Matplotlib(TransformableWidget):

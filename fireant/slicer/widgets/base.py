@@ -7,8 +7,8 @@ class Widget:
         self.items = list(items)
 
     @immutable
-    def metric(self, metric):
-        self.items.append(metric)
+    def item(self, item):
+        self.items.append(item)
 
     @property
     def metrics(self):
