@@ -1,3 +1,5 @@
+import copy
+import json
 from unittest import TestCase
 
 from fireant import CumSum
@@ -50,6 +52,130 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 21294215),
                          (1325376000000, 20572210),
                          (1451606400000, 18310513)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
+                "color": "#DDDF0D",
+                "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
+                "dashStyle": "Solid",
+                "stacking": self.stacking,
+            }]
+        }, result)
+
+    def test_metric_prefix_line_chart(self):
+        votes = copy.copy(slicer.metrics.votes)
+        votes.prefix = '$'
+        result = HighCharts(title="Time Series, Single Metric",
+                            axes=[self.chart_class([votes])]) \
+            .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp])
+
+        print(json.dumps(result))
+
+        self.assertEqual({
+            "title": {"text": "Time Series, Single Metric"},
+            "xAxis": {"type": "datetime"},
+            "yAxis": [{
+                "id": "0",
+                "title": {"text": None},
+                "labels": {"style": {"color": None}}
+            }],
+            "tooltip": {"shared": True, "useHTML": True},
+            "legend": {"useHTML": True},
+            "series": [{
+                "type": self.chart_type,
+                "name": "Votes",
+                "yAxis": "0",
+                "data": [(820454400000, 15220449),
+                         (946684800000, 16662017),
+                         (1072915200000, 19614932),
+                         (1199145600000, 21294215),
+                         (1325376000000, 20572210),
+                         (1451606400000, 18310513)],
+                'tooltip': {
+                    'valuePrefix': '$',
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
+                "color": "#DDDF0D",
+                "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
+                "dashStyle": "Solid",
+                "stacking": self.stacking,
+            }]
+        }, result)
+
+    def test_metric_suffix_line_chart(self):
+        votes = copy.copy(slicer.metrics.votes)
+        votes.suffix = '%'
+        result = HighCharts(title="Time Series, Single Metric",
+                            axes=[self.chart_class([votes])]) \
+            .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp])
+
+        self.assertEqual({
+            "title": {"text": "Time Series, Single Metric"},
+            "xAxis": {"type": "datetime"},
+            "yAxis": [{
+                "id": "0",
+                "title": {"text": None},
+                "labels": {"style": {"color": None}}
+            }],
+            "tooltip": {"shared": True, "useHTML": True},
+            "legend": {"useHTML": True},
+            "series": [{
+                "type": self.chart_type,
+                "name": "Votes",
+                "yAxis": "0",
+                "data": [(820454400000, 15220449),
+                         (946684800000, 16662017),
+                         (1072915200000, 19614932),
+                         (1199145600000, 21294215),
+                         (1325376000000, 20572210),
+                         (1451606400000, 18310513)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': '%',
+                    'valueDecimals': None,
+                },
+                "color": "#DDDF0D",
+                "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
+                "dashStyle": "Solid",
+                "stacking": self.stacking,
+            }]
+        }, result)
+
+    def test_metric_precision_line_chart(self):
+        votes = copy.copy(slicer.metrics.votes)
+        votes.precision = 2
+        result = HighCharts(title="Time Series, Single Metric",
+                            axes=[self.chart_class([votes])]) \
+            .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp])
+
+        self.assertEqual({
+            "title": {"text": "Time Series, Single Metric"},
+            "xAxis": {"type": "datetime"},
+            "yAxis": [{
+                "id": "0",
+                "title": {"text": None},
+                "labels": {"style": {"color": None}}
+            }],
+            "tooltip": {"shared": True, "useHTML": True},
+            "legend": {"useHTML": True},
+            "series": [{
+                "type": self.chart_type,
+                "name": "Votes",
+                "yAxis": "0",
+                "data": [(820454400000, 15220449),
+                         (946684800000, 16662017),
+                         (1072915200000, 19614932),
+                         (1199145600000, 21294215),
+                         (1325376000000, 20572210),
+                         (1451606400000, 18310513)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': 2,
+                },
                 "color": "#DDDF0D",
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
@@ -82,6 +208,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 72791613),
                          (1325376000000, 93363823),
                          (1451606400000, 111674336)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#DDDF0D",
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
@@ -115,6 +246,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 8007961),
                          (1325376000000, 7877967),
                          (1451606400000, 5072915)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#DDDF0D",
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
@@ -129,6 +265,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 13286254),
                          (1325376000000, 12694243),
                          (1451606400000, 13237598)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#55BF3B",
                 "marker": {"symbol": "square", "fillColor": "#55BF3B"},
                 "dashStyle": "Solid",
@@ -163,6 +304,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 8007961),
                          (1325376000000, 7877967),
                          (1451606400000, 5072915)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#DDDF0D",
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
@@ -177,6 +323,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 13286254),
                          (1325376000000, 12694243),
                          (1451606400000, 13237598)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#DDDF0D",
                 "marker": {"symbol": "square", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
@@ -191,6 +342,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 1),
                          (1325376000000, 1),
                          (1451606400000, 1)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#55BF3B",
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
@@ -205,6 +361,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 1),
                          (1325376000000, 1),
                          (1451606400000, 1)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#55BF3B",
                 "marker": {"symbol": "square", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
@@ -243,6 +404,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 8007961),
                          (1325376000000, 7877967),
                          (1451606400000, 5072915)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#DDDF0D",
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
@@ -257,6 +423,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 13286254),
                          (1325376000000, 12694243),
                          (1451606400000, 13237598)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#55BF3B",
                 "marker": {"symbol": "square", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
@@ -271,6 +442,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 1),
                          (1325376000000, 1),
                          (1451606400000, 1)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#55BF3B",
                 "marker": {"symbol": "circle", "fillColor": "#55BF3B"},
                 "dashStyle": "Solid",
@@ -285,6 +461,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 1),
                          (1325376000000, 1),
                          (1451606400000, 1)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#DF5353",
                 "marker": {"symbol": "square", "fillColor": "#55BF3B"},
                 "dashStyle": "Solid",
@@ -322,6 +503,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 8007961),
                          (1325376000000, 7877967),
                          (1451606400000, 5072915)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 'marker': {'fillColor': '#DDDF0D', 'symbol': 'circle'},
                 'name': 'Votes (Texas)',
                 'stacking': self.stacking,
@@ -336,6 +522,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 13286254),
                          (1325376000000, 12694243),
                          (1451606400000, 13237598)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 'marker': {'fillColor': '#DDDF0D', 'symbol': 'square'},
                 'name': 'Votes (California)',
                 'stacking': self.stacking,
@@ -350,6 +541,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 21294215),
                          (1325376000000, 20572210),
                          (1451606400000, 18310513)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 'marker': {'fillColor': '#DDDF0D', 'symbol': 'diamond'},
                 'name': 'Votes (Totals)',
                 'stacking': self.stacking,
@@ -364,6 +560,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 1),
                          (1325376000000, 1),
                          (1451606400000, 1)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 'marker': {'fillColor': '#55BF3B', 'symbol': 'circle'},
                 'name': 'Wins (Texas)',
                 'stacking': self.stacking,
@@ -378,6 +579,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 1),
                          (1325376000000, 1),
                          (1451606400000, 1)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 'marker': {'fillColor': '#55BF3B', 'symbol': 'square'},
                 'name': 'Wins (California)',
                 'stacking': self.stacking,
@@ -392,6 +598,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 2),
                          (1325376000000, 2),
                          (1451606400000, 2)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 'marker': {'fillColor': '#55BF3B', 'symbol': 'diamond'},
                 'name': 'Wins (Totals)',
                 'stacking': self.stacking,
@@ -430,6 +641,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 8007961),
                          (1325376000000, 7877967),
                          (1451606400000, 5072915)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 'marker': {'fillColor': '#DDDF0D', 'symbol': 'circle'},
                 'name': 'Votes (Texas)',
                 'stacking': self.stacking,
@@ -444,6 +660,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 13286254),
                          (1325376000000, 12694243),
                          (1451606400000, 13237598)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 'marker': {'fillColor': '#DDDF0D', 'symbol': 'square'},
                 'name': 'Votes (California)',
                 'stacking': self.stacking,
@@ -458,6 +679,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 21294215),
                          (1325376000000, 20572210),
                          (1451606400000, 18310513)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 'marker': {'fillColor': '#DDDF0D', 'symbol': 'diamond'},
                 'name': 'Votes (Totals)',
                 'stacking': self.stacking,
@@ -472,6 +698,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 1),
                          (1325376000000, 1),
                          (1451606400000, 1)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 'marker': {'fillColor': '#55BF3B', 'symbol': 'circle'},
                 'name': 'Wins (Texas)',
                 'stacking': self.stacking,
@@ -486,6 +717,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 1),
                          (1325376000000, 1),
                          (1451606400000, 1)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 'marker': {'fillColor': '#55BF3B', 'symbol': 'square'},
                 'name': 'Wins (California)',
                 'stacking': self.stacking,
@@ -500,6 +736,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 2),
                          (1325376000000, 2),
                          (1451606400000, 2)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 'marker': {'fillColor': '#55BF3B', 'symbol': 'diamond'},
                 'name': 'Wins (Totals)',
                 'stacking': self.stacking,
@@ -533,6 +774,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 8007961),
                          (1325376000000, 7877967),
                          (1451606400000, 5072915)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#DDDF0D",
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
@@ -546,6 +792,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 7359621),
                          (1325376000000, 8007961),
                          (1451606400000, 7877967)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#DDDF0D",
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "ShortDash",
@@ -559,6 +810,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 13286254),
                          (1325376000000, 12694243),
                          (1451606400000, 13237598)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#55BF3B",
                 "marker": {"symbol": "square", "fillColor": "#55BF3B"},
                 "dashStyle": "Solid",
@@ -572,6 +828,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 12255311),
                          (1325376000000, 13286254),
                          (1451606400000, 12694243)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#55BF3B",
                 "marker": {"symbol": "square", "fillColor": "#55BF3B"},
                 "dashStyle": "ShortDash",
@@ -611,6 +872,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 8007961),
                          (1325376000000, 7877967),
                          (1451606400000, 5072915)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#DDDF0D",
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
@@ -624,6 +890,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, -648340),
                          (1325376000000, 129994),
                          (1451606400000, 2805052)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#DDDF0D",
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "ShortDash",
@@ -637,6 +908,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, 13286254),
                          (1325376000000, 12694243),
                          (1451606400000, 13237598)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#55BF3B",
                 "marker": {"symbol": "square", "fillColor": "#55BF3B"},
                 "dashStyle": "Solid",
@@ -650,6 +926,11 @@ class HighchartsLineChartTransformerTests(TestCase):
                          (1199145600000, -1030943),
                          (1325376000000, 592011),
                          (1451606400000, -543355)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#55BF3B",
                 "marker": {"symbol": "square", "fillColor": "#55BF3B"},
                 "dashStyle": "ShortDash",
@@ -688,6 +969,11 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "name": "Votes",
                 "yAxis": "0",
                 "data": [111674336],
+                'tooltip': {
+                    'valueDecimals': None,
+                    'valuePrefix': None,
+                    'valueSuffix': None
+                },
                 "color": "#DDDF0D",
                 "dashStyle": "Solid",
                 "marker": {},
@@ -720,6 +1006,11 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "name": "Votes",
                 "yAxis": "0",
                 "data": [111674336],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#DDDF0D",
                 "dashStyle": "Solid",
                 "marker": {},
@@ -729,6 +1020,11 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "name": "Wins",
                 "yAxis": "0",
                 "data": [12],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#55BF3B",
                 "dashStyle": "Solid",
                 "marker": {},
@@ -760,6 +1056,11 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "name": "Votes",
                 "yAxis": "0",
                 "data": [54551568, 1076384, 56046384],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#DDDF0D",
                 "dashStyle": "Solid",
                 "marker": {},
@@ -792,6 +1093,11 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "name": "Votes",
                 "yAxis": "0",
                 "data": [54551568, 1076384, 56046384],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#DDDF0D",
                 "dashStyle": "Solid",
                 "marker": {},
@@ -801,6 +1107,11 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "name": "Wins",
                 "yAxis": "0",
                 "data": [6, 0, 6],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#55BF3B",
                 "dashStyle": "Solid",
                 "marker": {},
@@ -834,6 +1145,11 @@ class HighchartsBarChartTransformerTests(TestCase):
                          (1199145600000, 8007961),
                          (1325376000000, 7877967),
                          (1451606400000, 5072915)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#DDDF0D",
                 "dashStyle": "Solid",
                 "marker": {},
@@ -848,6 +1164,11 @@ class HighchartsBarChartTransformerTests(TestCase):
                          (1199145600000, 13286254),
                          (1325376000000, 12694243),
                          (1451606400000, 13237598)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#55BF3B",
                 "dashStyle": "Solid",
                 "marker": {},
@@ -882,6 +1203,11 @@ class HighchartsBarChartTransformerTests(TestCase):
                          (1199145600000, 8007961),
                          (1325376000000, 7877967),
                          (1451606400000, 5072915)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#DDDF0D",
                 "dashStyle": "Solid",
                 "marker": {},
@@ -896,6 +1222,11 @@ class HighchartsBarChartTransformerTests(TestCase):
                          (1199145600000, 13286254),
                          (1325376000000, 12694243),
                          (1451606400000, 13237598)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#DDDF0D",
                 "dashStyle": "Solid",
                 "marker": {},
@@ -910,6 +1241,11 @@ class HighchartsBarChartTransformerTests(TestCase):
                          (1199145600000, 1),
                          (1325376000000, 1),
                          (1451606400000, 1)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#55BF3B",
                 "dashStyle": "Solid",
                 "marker": {},
@@ -924,6 +1260,11 @@ class HighchartsBarChartTransformerTests(TestCase):
                          (1199145600000, 1),
                          (1325376000000, 1),
                          (1451606400000, 1)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#55BF3B",
                 "dashStyle": "Solid",
                 "marker": {},
@@ -962,6 +1303,11 @@ class HighchartsBarChartTransformerTests(TestCase):
                          (1199145600000, 8007961),
                          (1325376000000, 7877967),
                          (1451606400000, 5072915)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#DDDF0D",
                 "dashStyle": "Solid",
                 "marker": {},
@@ -976,6 +1322,11 @@ class HighchartsBarChartTransformerTests(TestCase):
                          (1199145600000, 13286254),
                          (1325376000000, 12694243),
                          (1451606400000, 13237598)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#55BF3B",
                 "dashStyle": "Solid",
                 "marker": {},
@@ -990,6 +1341,11 @@ class HighchartsBarChartTransformerTests(TestCase):
                          (1199145600000, 1),
                          (1325376000000, 1),
                          (1451606400000, 1)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#55BF3B",
                 "dashStyle": "Solid",
                 "marker": {},
@@ -1004,6 +1360,11 @@ class HighchartsBarChartTransformerTests(TestCase):
                          (1199145600000, 1),
                          (1325376000000, 1),
                          (1451606400000, 1)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
                 "color": "#DF5353",
                 "dashStyle": "Solid",
                 "marker": {},

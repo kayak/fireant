@@ -276,8 +276,7 @@ class HighCharts(TransformableWidget):
         :param axis_idx:
         :param axis_color:
         :param colors:
-        :param index_rows:
-        :param data_frame:
+        :param data_frame_groups:
         :param render_series_label:
         :param references:
         :param is_timeseries:
@@ -307,6 +306,8 @@ class HighCharts(TransformableWidget):
                         "name": render_series_label(metric, reference, dimension_values),
 
                         "data": self._render_data(group_df, metric_key, is_timeseries),
+
+                        "tooltip": self._render_tooltip(metric),
 
                         "yAxis": ("{}_{}".format(axis_idx, reference.key)
                                   if reference is not None and reference.is_delta
@@ -338,3 +339,10 @@ class HighCharts(TransformableWidget):
             series.append((date_as_millis(first_dimension_value), metric_value(y)))
 
         return series
+
+    def _render_tooltip(self, metric):
+        return {
+            "valuePrefix": metric.prefix,
+            "valueSuffix": metric.suffix,
+            "valueDecimals": metric.precision,
+        }
