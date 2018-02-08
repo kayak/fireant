@@ -7,9 +7,11 @@ from fireant.tests.slicer.mocks import (
     cat_dim_df,
     cont_dim_df,
     cont_dim_operation_df,
+    cont_uni_dim_all_totals_df,
     cont_uni_dim_df,
     cont_uni_dim_ref_delta_df,
     cont_uni_dim_ref_df,
+    cont_uni_dim_totals_df,
     multi_metric_df,
     single_metric_df,
     slicer,
@@ -52,7 +54,6 @@ class HighchartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-                "visible": True,
             }]
         }, result)
 
@@ -85,7 +86,6 @@ class HighchartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-                "visible": True,
             }]
         }, result)
 
@@ -119,7 +119,6 @@ class HighchartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-                "visible": True,
             }, {
                 "type": self.chart_type,
                 "name": "Votes (California)",
@@ -134,7 +133,6 @@ class HighchartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "square", "fillColor": "#55BF3B"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-                "visible": False,
             }]
         }, result)
 
@@ -169,7 +167,6 @@ class HighchartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-                "visible": True,
             }, {
                 "type": self.chart_type,
                 "name": "Votes (California)",
@@ -184,7 +181,6 @@ class HighchartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "square", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-                "visible": False,
             }, {
                 "type": self.chart_type,
                 "name": "Wins (Texas)",
@@ -199,7 +195,6 @@ class HighchartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-                "visible": True,
             }, {
                 "type": self.chart_type,
                 "name": "Wins (California)",
@@ -214,7 +209,6 @@ class HighchartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "square", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-                "visible": False,
             }]
         }, result)
 
@@ -253,7 +247,6 @@ class HighchartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-                "visible": True,
             }, {
                 "type": self.chart_type,
                 "name": "Votes (California)",
@@ -268,7 +261,6 @@ class HighchartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "square", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-                "visible": False,
             }, {
                 "type": self.chart_type,
                 "name": "Wins (Texas)",
@@ -283,7 +275,6 @@ class HighchartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "circle", "fillColor": "#55BF3B"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-                "visible": True,
             }, {
                 "type": self.chart_type,
                 "name": "Wins (California)",
@@ -298,8 +289,223 @@ class HighchartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "square", "fillColor": "#55BF3B"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-                "visible": False,
             }]
+        }, result)
+
+    def test_multi_dim_with_totals_line_chart(self):
+        result = HighCharts(title="Time Series with Unique Dimension and Multiple Metrics, Multi-Axis",
+                            axes=[self.chart_class([slicer.metrics.votes]),
+                                  self.chart_class([slicer.metrics.wins]), ]) \
+            .transform(cont_uni_dim_totals_df, slicer, [slicer.dimensions.timestamp.rollup(),
+                                                        slicer.dimensions.state.rollup()])
+
+        self.assertEqual({
+            "title": {"text": "Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"},
+            "xAxis": {"type": "datetime"},
+            "yAxis": [{
+                "id": "1",
+                "title": {"text": None},
+                "labels": {"style": {"color": "#55BF3B"}}
+            }, {
+                "id": "0",
+                "title": {"text": None},
+                "labels": {"style": {"color": "#DDDF0D"}}
+            }],
+            "tooltip": {"shared": True, "useHTML": True},
+            "legend": {"useHTML": True},
+            "series": [{
+                'color': '#DDDF0D',
+                'dashStyle': 'Solid',
+                'data': [(820454400000, 5574387),
+                         (946684800000, 6233385),
+                         (1072915200000, 7359621),
+                         (1199145600000, 8007961),
+                         (1325376000000, 7877967),
+                         (1451606400000, 5072915)],
+                'marker': {'fillColor': '#DDDF0D', 'symbol': 'circle'},
+                'name': 'Votes (Texas)',
+                'stacking': self.stacking,
+                'type': self.chart_type,
+                'yAxis': '0'
+            }, {
+                'color': '#55BF3B',
+                'dashStyle': 'Solid',
+                'data': [(820454400000, 9646062),
+                         (946684800000, 10428632),
+                         (1072915200000, 12255311),
+                         (1199145600000, 13286254),
+                         (1325376000000, 12694243),
+                         (1451606400000, 13237598)],
+                'marker': {'fillColor': '#DDDF0D', 'symbol': 'square'},
+                'name': 'Votes (California)',
+                'stacking': self.stacking,
+                'type': self.chart_type,
+                'yAxis': '0'
+            }, {
+                'color': '#DF5353',
+                'dashStyle': 'Solid',
+                'data': [(820454400000, 15220449),
+                         (946684800000, 16662017),
+                         (1072915200000, 19614932),
+                         (1199145600000, 21294215),
+                         (1325376000000, 20572210),
+                         (1451606400000, 18310513)],
+                'marker': {'fillColor': '#DDDF0D', 'symbol': 'diamond'},
+                'name': 'Votes (Totals)',
+                'stacking': self.stacking,
+                'type': self.chart_type,
+                'yAxis': '0'
+            }, {
+                'color': '#55BF3B',
+                'dashStyle': 'Solid',
+                'data': [(820454400000, 1),
+                         (946684800000, 1),
+                         (1072915200000, 1),
+                         (1199145600000, 1),
+                         (1325376000000, 1),
+                         (1451606400000, 1)],
+                'marker': {'fillColor': '#55BF3B', 'symbol': 'circle'},
+                'name': 'Wins (Texas)',
+                'stacking': self.stacking,
+                'type': self.chart_type,
+                'yAxis': '1'
+            }, {
+                'color': '#DF5353',
+                'dashStyle': 'Solid',
+                'data': [(820454400000, 1),
+                         (946684800000, 1),
+                         (1072915200000, 1),
+                         (1199145600000, 1),
+                         (1325376000000, 1),
+                         (1451606400000, 1)],
+                'marker': {'fillColor': '#55BF3B', 'symbol': 'square'},
+                'name': 'Wins (California)',
+                'stacking': self.stacking,
+                'type': self.chart_type,
+                'yAxis': '1'
+            }, {
+                'color': '#7798BF',
+                'dashStyle': 'Solid',
+                'data': [(820454400000, 2),
+                         (946684800000, 2),
+                         (1072915200000, 2),
+                         (1199145600000, 2),
+                         (1325376000000, 2),
+                         (1451606400000, 2)],
+                'marker': {'fillColor': '#55BF3B', 'symbol': 'diamond'},
+                'name': 'Wins (Totals)',
+                'stacking': self.stacking,
+                'type': self.chart_type,
+                'yAxis': '1'
+            }],
+        }, result)
+
+    def test_multi_dim_with_totals_on_first_dim_line_chart(self):
+        result = HighCharts(title="Time Series with Unique Dimension and Multiple Metrics, Multi-Axis",
+                            axes=[self.chart_class([slicer.metrics.votes]),
+                                  self.chart_class([slicer.metrics.wins]), ]) \
+            .transform(cont_uni_dim_all_totals_df, slicer, [slicer.dimensions.timestamp.rollup(),
+                                                            slicer.dimensions.state.rollup()])
+
+        self.assertEqual({
+            "title": {"text": "Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"},
+            "xAxis": {"type": "datetime"},
+            "yAxis": [{
+                "id": "1",
+                "title": {"text": None},
+                "labels": {"style": {"color": "#55BF3B"}}
+            }, {
+                "id": "0",
+                "title": {"text": None},
+                "labels": {"style": {"color": "#DDDF0D"}}
+            }],
+            "tooltip": {"shared": True, "useHTML": True},
+            "legend": {"useHTML": True},
+            "series": [{
+                'color': '#DDDF0D',
+                'dashStyle': 'Solid',
+                'data': [(820454400000, 5574387),
+                         (946684800000, 6233385),
+                         (1072915200000, 7359621),
+                         (1199145600000, 8007961),
+                         (1325376000000, 7877967),
+                         (1451606400000, 5072915)],
+                'marker': {'fillColor': '#DDDF0D', 'symbol': 'circle'},
+                'name': 'Votes (Texas)',
+                'stacking': self.stacking,
+                'type': self.chart_type,
+                'yAxis': '0'
+            }, {
+                'color': '#55BF3B',
+                'dashStyle': 'Solid',
+                'data': [(820454400000, 9646062),
+                         (946684800000, 10428632),
+                         (1072915200000, 12255311),
+                         (1199145600000, 13286254),
+                         (1325376000000, 12694243),
+                         (1451606400000, 13237598)],
+                'marker': {'fillColor': '#DDDF0D', 'symbol': 'square'},
+                'name': 'Votes (California)',
+                'stacking': self.stacking,
+                'type': self.chart_type,
+                'yAxis': '0'
+            }, {
+                'color': '#DF5353',
+                'dashStyle': 'Solid',
+                'data': [(820454400000, 15220449),
+                         (946684800000, 16662017),
+                         (1072915200000, 19614932),
+                         (1199145600000, 21294215),
+                         (1325376000000, 20572210),
+                         (1451606400000, 18310513)],
+                'marker': {'fillColor': '#DDDF0D', 'symbol': 'diamond'},
+                'name': 'Votes (Totals)',
+                'stacking': self.stacking,
+                'type': self.chart_type,
+                'yAxis': '0'
+            }, {
+                'color': '#55BF3B',
+                'dashStyle': 'Solid',
+                'data': [(820454400000, 1),
+                         (946684800000, 1),
+                         (1072915200000, 1),
+                         (1199145600000, 1),
+                         (1325376000000, 1),
+                         (1451606400000, 1)],
+                'marker': {'fillColor': '#55BF3B', 'symbol': 'circle'},
+                'name': 'Wins (Texas)',
+                'stacking': self.stacking,
+                'type': self.chart_type,
+                'yAxis': '1'
+            }, {
+                'color': '#DF5353',
+                'dashStyle': 'Solid',
+                'data': [(820454400000, 1),
+                         (946684800000, 1),
+                         (1072915200000, 1),
+                         (1199145600000, 1),
+                         (1325376000000, 1),
+                         (1451606400000, 1)],
+                'marker': {'fillColor': '#55BF3B', 'symbol': 'square'},
+                'name': 'Wins (California)',
+                'stacking': self.stacking,
+                'type': self.chart_type,
+                'yAxis': '1'
+            }, {
+                'color': '#7798BF',
+                'dashStyle': 'Solid',
+                'data': [(820454400000, 2),
+                         (946684800000, 2),
+                         (1072915200000, 2),
+                         (1199145600000, 2),
+                         (1325376000000, 2),
+                         (1451606400000, 2)],
+                'marker': {'fillColor': '#55BF3B', 'symbol': 'diamond'},
+                'name': 'Wins (Totals)',
+                'stacking': self.stacking,
+                'type': self.chart_type,
+                'yAxis': '1'
+            }],
         }, result)
 
     def test_uni_dim_with_ref_line_chart(self):
@@ -331,7 +537,6 @@ class HighchartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-                "visible": True,
             }, {
                 "type": self.chart_type,
                 "name": "Votes (EoE) (Texas)",
@@ -345,7 +550,6 @@ class HighchartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "ShortDash",
                 "stacking": self.stacking,
-                "visible": True,
             }, {
                 "type": self.chart_type,
                 "name": "Votes (California)",
@@ -359,7 +563,6 @@ class HighchartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "square", "fillColor": "#55BF3B"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-                "visible": False,
             }, {
                 "type": self.chart_type,
                 "name": "Votes (EoE) (California)",
@@ -373,7 +576,6 @@ class HighchartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "square", "fillColor": "#55BF3B"},
                 "dashStyle": "ShortDash",
                 "stacking": self.stacking,
-                "visible": False,
             }]
         }, result)
 
@@ -413,7 +615,6 @@ class HighchartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-                "visible": True,
             }, {
                 "type": self.chart_type,
                 "name": "Votes (EoE Δ) (Texas)",
@@ -427,7 +628,6 @@ class HighchartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "ShortDash",
                 "stacking": self.stacking,
-                "visible": True,
             }, {
                 "type": self.chart_type,
                 "name": "Votes (California)",
@@ -441,7 +641,6 @@ class HighchartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "square", "fillColor": "#55BF3B"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-                "visible": False,
             }, {
                 "type": self.chart_type,
                 "name": "Votes (EoE Δ) (California)",
@@ -455,7 +654,6 @@ class HighchartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "square", "fillColor": "#55BF3B"},
                 "dashStyle": "ShortDash",
                 "stacking": self.stacking,
-                "visible": False,
             }]
         }, result)
 
@@ -494,7 +692,6 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-                "visible": True,
             }]
         }, result)
 
@@ -527,7 +724,6 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-                "visible": True,
             }, {
                 "type": self.chart_type,
                 "name": "Wins",
@@ -537,7 +733,6 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-                "visible": True,
             }]
         }, result)
 
@@ -569,7 +764,6 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-                "visible": True,
             }]
         }, result)
 
@@ -602,7 +796,6 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-                "visible": True,
             }, {
                 "type": self.chart_type,
                 "name": "Wins",
@@ -612,7 +805,6 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-                "visible": True,
             }]
         }, result)
 
@@ -646,7 +838,6 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-                "visible": True,
             }, {
                 "type": self.chart_type,
                 "name": "Votes (California)",
@@ -661,7 +852,6 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-                "visible": False,
             }]
         }, result)
 
@@ -696,7 +886,6 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-                "visible": True,
             }, {
                 "type": self.chart_type,
                 "name": "Votes (California)",
@@ -711,7 +900,6 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-                "visible": False,
             }, {
                 "type": self.chart_type,
                 "name": "Wins (Texas)",
@@ -726,7 +914,6 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-                "visible": True,
             }, {
                 "type": self.chart_type,
                 "name": "Wins (California)",
@@ -741,7 +928,6 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-                "visible": False,
             }]
         }, result)
 
@@ -758,7 +944,6 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "id": "1",
                 "title": {"text": None},
                 "labels": {"style": {"color": "#55BF3B"}}
-
             }, {
                 "id": "0",
                 "title": {"text": None},
@@ -781,7 +966,6 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-                "visible": True,
             }, {
                 "type": self.chart_type,
                 "name": "Votes (California)",
@@ -796,7 +980,6 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-                "visible": False,
             }, {
                 "type": self.chart_type,
                 "name": "Wins (Texas)",
@@ -811,7 +994,6 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-                "visible": True,
             }, {
                 "type": self.chart_type,
                 "name": "Wins (California)",
@@ -826,7 +1008,6 @@ class HighchartsBarChartTransformerTests(TestCase):
                 "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-                "visible": False,
             }]
         }, result)
 

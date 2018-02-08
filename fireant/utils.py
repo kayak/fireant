@@ -86,3 +86,10 @@ def ordered_distinct_list_by_attr(l, attr='key'):
             for x in l
             if not getattr(x, attr) in seen
             and not seen.add(getattr(x, attr))]
+
+
+def groupby_first_level(index):
+    seen = set()
+    return [x[1:]
+            for x in list(index)
+            if x[1:] not in seen and not seen.add(x[1:])]

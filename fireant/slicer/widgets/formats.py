@@ -14,7 +14,13 @@ epoch = np.datetime64(datetime.utcfromtimestamp(0))
 milliseconds = np.timedelta64(1, 'ms')
 
 
-def dimension_value(value, str_date=True):
+def date_as_millis(value):
+    if not isinstance(value, date):
+        value = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+    return int(1000 * value.timestamp())
+
+
+def dimension_value(value):
     """
     Format a dimension value. This will coerce the raw string or date values into a proper primitive value like a
     string, float, or int.
@@ -25,14 +31,14 @@ def dimension_value(value, str_date=True):
         When True, dates and datetimes will be converted to ISO strings. The time is omitted for dates. When False, the
         datetime will be converted to a POSIX timestamp (millis-since-epoch).
     """
-    if isinstance(value, date):
-        if not str_date:
-            return int(1000 * value.timestamp())
+    if pd.isnull(value):
+        return 'Totals'
 
+    if isinstance(value, date):
         if not hasattr(value, 'time') or value.time() == NO_TIME:
             return value.strftime('%Y-%m-%d')
         else:
-            return value.strftime('%Y-%m-%dT%H:%M:%S')
+            return value.strftime('%Y-%m-%d %H:%M:%S')
 
     for type_cast in (int, float):
         try:

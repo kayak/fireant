@@ -1,3 +1,5 @@
+import pandas as pd
+
 from fireant import utils
 
 
@@ -91,12 +93,14 @@ def dimensional_metric_label(dimensions, dimension_display_values):
         dimension_labels = [utils.deep_get(dimension_display_values,
                                            [dimension.key, dimension_value],
                                            dimension_value)
+                            if not pd.isnull(dimension_value)
+                            else 'Totals'
                             for dimension, dimension_value in zip(dimensions[1:], dimension_values)]
 
         if dimension_labels:
             return '{} ({})'.format(reference_label(metric, reference),
                                     ', '.join(dimension_labels))
 
-        return metric.label
+        return reference_label(metric, reference)
 
     return render_series_label

@@ -49,6 +49,9 @@ class _Cumulative(Operation):
     def apply(self, data_frame):
         raise NotImplementedError()
 
+    def __repr__(self):
+        return self.key
+
 
 class CumSum(_Cumulative):
     def apply(self, data_frame):

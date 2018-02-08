@@ -2,20 +2,20 @@ from collections import (
     OrderedDict,
     namedtuple,
 )
-from unittest.mock import Mock
-
-import pandas as pd
 from datetime import (
     datetime,
 )
+from unittest.mock import Mock
 
-from fireant import *
-from fireant import VerticaDatabase
+import pandas as pd
 from pypika import (
     JoinType,
     Table,
     functions as fn,
 )
+
+from fireant import *
+from fireant import VerticaDatabase
 
 
 class TestDatabase(VerticaDatabase):
@@ -295,11 +295,34 @@ def totals(data_frame, dimensions, columns):
     """
     Computes the totals across a dimension and adds the total as an extra row.
     """
-    dfx = data_frame.unstack(level=dimensions)
-    for c in columns:
-        dfx[(c, 'Total')] = dfx[c].sum(axis=1)
 
-    return dfx.stack(level=dimensions)
+    def _totals(df):
+        if isinstance(df, pd.Series):
+            return df.sum()
+
+        return pd.DataFrame(
+              [df.sum()],
+              columns=columns,
+              index=pd.Index([None],
+                             name=df.index.names[-1]))
+
+    totals_df = None
+    for i in range(-1, -1 - len(dimensions), -1):
+        groupby_levels = data_frame.index.names[:i]
+
+        if groupby_levels:
+            level_totals_df = data_frame[columns].groupby(level=groupby_levels).apply(_totals)
+        else:
+            level_totals_df = pd.DataFrame([data_frame[columns].apply(_totals)],
+                                           columns=columns,
+                                           index=pd.MultiIndex.from_tuples([[None] * len(data_frame.index.levels)],
+                                                                           names=data_frame.index.names))
+
+        totals_df = totals_df.append(level_totals_df) \
+            if totals_df is not None \
+            else level_totals_df
+
+    return data_frame.append(totals_df).sort_index()
 
 
 # Convert all index values to string
@@ -318,5 +341,6 @@ for l in list(locals().values()):
 
 cont_cat_dim_totals_df = totals(cont_cat_dim_df, ['political_party'], _columns)
 cont_uni_dim_totals_df = totals(cont_uni_dim_df, ['state'], _columns)
+cont_uni_dim_all_totals_df = totals(cont_uni_dim_df, ['timestamp', 'state'], _columns)
 
 ElectionOverElection = Reference('eoe', 'EoE', 'year', 4)

@@ -26,10 +26,13 @@ class DatetimeInterval(object):
         return isinstance(other, DatetimeInterval) \
                and self.key == other.key
 
+    def __str__(self):
+        return self.key
 
-hourly = DatetimeInterval('hourly')
-daily = DatetimeInterval('daily')
-weekly = DatetimeInterval('weekly')
-monthly = DatetimeInterval('monthly')
-quarterly = DatetimeInterval('quarterly')
-annually = DatetimeInterval('annually')
+
+hourly = DatetimeInterval('hour')
+daily = DatetimeInterval('day')
+weekly = DatetimeInterval('week')
+monthly = DatetimeInterval('month')
+quarterly = DatetimeInterval('quarter')
+annually = DatetimeInterval('year')

@@ -8,13 +8,13 @@ from pypika import (
 from .base import Database
 
 
-class Trunc(terms.Function):
+class DateTrunc(terms.Function):
     """
     Wrapper for the PostgreSQL date_trunc function
     """
 
     def __init__(self, field, date_format, alias=None):
-        super(Trunc, self).__init__('date_trunc', date_format, field, alias=alias)
+        super(DateTrunc, self).__init__('DATE_TRUNC', date_format, field, alias=alias)
         # Setting the fields here means we can access the TRUNC args by name.
         self.field = field
         self.date_format = date_format
@@ -52,10 +52,10 @@ class PostgreSQLDatabase(Database):
         return pd.read_sql(query, self.connect())
 
     def trunc_date(self, field, interval):
-        return Trunc(field, interval)
+        return DateTrunc(field, str(interval))
 
     def date_add(self, field, date_part, interval, align_weekday=False):
-        return fn.DateAdd(date_part, interval, field)
+        return fn.DateAdd(str(date_part), interval, field)
 
     def totals(self, query, terms):
         raise NotImplementedError

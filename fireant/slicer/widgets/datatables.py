@@ -35,7 +35,11 @@ def _render_dimension_cell(dimension_value: str, display_values: dict):
     dimension_cell = {'value': formats.dimension_value(dimension_value)}
 
     if display_values is not None:
-        dimension_cell['display'] = display_values.get(dimension_value, dimension_value)
+        if pd.isnull(dimension_value):
+            dimension_cell['display'] = 'Totals'
+        else:
+            display_value = display_values.get(dimension_value, dimension_value)
+            dimension_cell['display'] = formats.dimension_value(display_value)
 
     return dimension_cell
 

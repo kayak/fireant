@@ -1,15 +1,11 @@
-from fireant.slicer import (
-    annually,
-    daily,
-    hourly,
-    monthly,
-    quarterly,
-    weekly,
-)
 from pypika import (
     VerticaQuery,
     functions as fn,
     terms,
+)
+
+from fireant.slicer import (
+    weekly,
 )
 from .base import Database
 
@@ -31,16 +27,17 @@ class VerticaDatabase(Database):
     """
     Vertica client that uses the vertica_python driver.
     """
+
     # The pypika query class to use for constructing queries
     query_cls = VerticaQuery
 
     DATETIME_INTERVALS = {
-        hourly: 'HH',
-        daily: 'DD',
-        weekly: 'IW',
-        monthly: 'MM',
-        quarterly: 'Q',
-        annually: 'Y'
+        'hour': 'HH',
+        'day': 'DD',
+        'week': 'IW',
+        'month': 'MM',
+        'quarter': 'Q',
+        'year': 'Y'
     }
 
     def __init__(self, host='localhost', port=5433, database='vertica', user='vertica', password=None,
@@ -60,15 +57,15 @@ class VerticaDatabase(Database):
                                       read_timeout=self.read_timeout)
 
     def trunc_date(self, field, interval):
-        trunc_date_interval = self.DATETIME_INTERVALS.get(interval, 'DD')
+        trunc_date_interval = self.DATETIME_INTERVALS.get(str(interval), 'DD')
         return Trunc(field, trunc_date_interval)
 
     def date_add(self, field, date_part, interval, align_weekday=False):
-        shifted_date = fn.TimestampAdd(date_part, interval, field)
+        shifted_date = fn.TimestampAdd(str(date_part), interval, field)
 
         if align_weekday:
             truncated = self.trunc_date(shifted_date, weekly)
-            return fn.TimestampAdd(date_part, -interval, truncated)
+            return fn.TimestampAdd(str(date_part), -interval, truncated)
 
         return shifted_date
 

@@ -1,5 +1,6 @@
 from fireant.slicer.exceptions import MetricRequiredException
 from fireant.utils import immutable
+from ..operations import Operation
 
 
 class Widget:
@@ -18,6 +19,12 @@ class Widget:
         return [metric
                 for group in self.items
                 for metric in getattr(group, 'metrics', [group])]
+
+    @property
+    def operations(self):
+        return [item
+                for item in self.items
+                if isinstance(item, Operation)]
 
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__,

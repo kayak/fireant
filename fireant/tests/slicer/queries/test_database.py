@@ -1,5 +1,9 @@
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import (
+    MagicMock,
+    Mock,
+    patch,
+)
 
 import numpy as np
 import pandas as pd
@@ -22,9 +26,11 @@ class FetchDataTests(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.mock_database = Mock(name='database')
-        cls.mock_data_frame = cls.mock_database.fetch_data.return_value = Mock(name='data_frame')
+        cls.mock_data_frame = cls.mock_database.fetch_data.return_value = MagicMock(name='data_frame')
         cls.mock_query = 'SELECT *'
         cls.mock_dimensions = [Mock(), Mock()]
+        cls.mock_dimensions[0].is_rollup = False
+        cls.mock_dimensions[1].is_rollup = True
 
         cls.result = fetch_data(cls.mock_database, cls.mock_query, cls.mock_dimensions)
 
@@ -71,6 +77,8 @@ cont_uni_dim_nans_totals_df = cont_uni_dim_nans_df \
 
 
 class FetchDataCleanIndexTests(TestCase):
+    maxDiff = None
+
     def test_do_nothing_when_no_dimensions(self):
         result = clean_and_apply_index(single_metric_df, [])
 
@@ -86,19 +94,19 @@ class FetchDataCleanIndexTests(TestCase):
         result = clean_and_apply_index(cat_dim_df.reset_index(),
                                        [slicer.dimensions.political_party])
 
-        self.assertListEqual(list(result.index), ['d', 'i', 'r'])
+        self.assertListEqual(result.index.tolist(), ['d', 'i', 'r'])
 
     def test_set_cat_dim_index_with_nan_converted_to_empty_str(self):
         result = clean_and_apply_index(cat_dim_nans_df.reset_index(),
                                        [slicer.dimensions.political_party])
 
-        self.assertListEqual(list(result.index), ['d', 'i', 'r', ''])
+        self.assertListEqual(result.index.tolist(), ['d', 'i', 'r', 'null'])
 
-    def test_convert_cat_totals(self):
+    def test_convert_cat_totals_converted_to_none(self):
         result = clean_and_apply_index(cat_dim_nans_df.reset_index(),
                                        [slicer.dimensions.political_party.rollup()])
 
-        self.assertListEqual(list(result.index), ['d', 'i', 'r', 'Totals'])
+        self.assertListEqual(result.index.tolist(), ['d', 'i', 'r', None])
 
     def test_convert_numeric_values_to_string(self):
         result = clean_and_apply_index(uni_dim_df.reset_index(), [slicer.dimensions.candidate])
@@ -108,25 +116,25 @@ class FetchDataCleanIndexTests(TestCase):
         result = clean_and_apply_index(uni_dim_df.reset_index(),
                                        [slicer.dimensions.candidate])
 
-        self.assertListEqual(list(result.index), [str(x + 1) for x in range(11)])
+        self.assertListEqual(result.index.tolist(), [str(x + 1) for x in range(11)])
 
     def test_set_uni_dim_index_with_nan_converted_to_empty_str(self):
         result = clean_and_apply_index(uni_dim_nans_df.reset_index(),
                                        [slicer.dimensions.candidate])
 
-        self.assertListEqual(list(result.index), [str(x + 1) for x in range(11)] + [''])
+        self.assertListEqual(result.index.tolist(), [str(x + 1) for x in range(11)] + ['null'])
 
     def test_convert_uni_totals(self):
         result = clean_and_apply_index(uni_dim_nans_df.reset_index(),
                                        [slicer.dimensions.candidate.rollup()])
 
-        self.assertListEqual(list(result.index), [str(x + 1) for x in range(11)] + ['Totals'])
+        self.assertListEqual(result.index.tolist(), [str(x + 1) for x in range(11)] + [None])
 
     def test_set_index_for_multiindex_with_nans_and_totals(self):
         result = clean_and_apply_index(cont_uni_dim_nans_totals_df.reset_index(),
                                        [slicer.dimensions.timestamp, slicer.dimensions.state.rollup()])
 
-        self.assertListEqual(list(result.index.levels[1]), ['', '1', '2', 'Totals'])
+        self.assertListEqual(result.index.get_level_values(1).unique().tolist(), ['2', '1', 'null', np.nan])
 
 
 class FetchDimensionOptionsTests(TestCase):

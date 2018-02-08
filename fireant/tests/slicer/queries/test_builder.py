@@ -355,14 +355,6 @@ class QueryBuilderDimensionRollupTests(TestCase):
                          'GROUP BY ROLLUP("political_party",("candidate_id","candidate_name")) '
                          'ORDER BY "political_party","candidate_display"', str(query))
 
-    def test_raise_exception_when_trying_to_rollup_continuous_dimension(self):
-        with self.assertRaises(RollupException):
-            slicer.data \
-                .widget(f.DataTablesJS([slicer.metrics.votes])) \
-                .dimension(slicer.dimensions.political_party.rollup(),
-                           slicer.dimensions.timestamp) \
-                .query
-
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 class QueryBuilderDimensionFilterTests(TestCase):

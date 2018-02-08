@@ -1,15 +1,20 @@
 import itertools
 
 import pandas as pd
+from datetime import (
+    datetime,
+)
 
-from fireant import utils
-from fireant.utils import immutable
+from fireant import (
+    DatetimeDimension,
+    utils,
+)
 from .base import (
     TransformableWidget,
     Widget,
 )
 from .formats import (
-    dimension_value,
+    date_as_millis,
     metric_value,
 )
 from .helpers import (
@@ -102,7 +107,7 @@ class HighCharts(TransformableWidget):
         self.title = title
         self.colors = colors or DEFAULT_COLORS
 
-    @immutable
+    @utils.immutable
     def axis(self, axis: ChartWidget):
         """
         (Immutable) Adds an axis to the Chart.
@@ -128,6 +133,12 @@ class HighCharts(TransformableWidget):
                 for metric in axis.metrics
                 if not (metric.key in seen or seen.add(metric.key))]
 
+    @property
+    def operations(self):
+        return utils.ordered_distinct_list_by_attr([operation
+                                                    for item in self.items
+                                                    for operation in item.operations])
+
     def transform(self, data_frame, slicer, dimensions):
         """
         - Main entry point -
@@ -147,9 +158,13 @@ class HighCharts(TransformableWidget):
         """
         colors = itertools.cycle(self.colors)
 
-        levels = data_frame.index.names[1:]
-        groups = list(data_frame.groupby(level=levels)) \
-            if levels \
+        def group_series(keys):
+            if isinstance(keys[0], datetime) and pd.isnull(keys[0]):
+                return tuple('Totals' for _ in keys[1:])
+            return tuple(str(key) if not pd.isnull(key) else 'Totals' for key in keys[1:])
+
+        groups = list(data_frame.groupby(group_series)) \
+            if isinstance(data_frame.index, pd.MultiIndex) \
             else [([], data_frame)]
 
         dimension_display_values = extract_display_values(dimensions, data_frame)
@@ -170,15 +185,17 @@ class HighCharts(TransformableWidget):
             y_axes[0:0] = self._render_y_axis(axis_idx,
                                               axis_color,
                                               references)
+            is_timeseries = dimensions and isinstance(dimensions[0], DatetimeDimension)
             series += self._render_series(axis,
                                           axis_idx,
                                           axis_color,
                                           series_colors,
                                           groups,
                                           render_series_label,
-                                          references)
+                                          references,
+                                          is_timeseries)
 
-        x_axis = self._render_x_axis(data_frame, dimension_display_values)
+        x_axis = self._render_x_axis(data_frame, dimensions, dimension_display_values)
 
         return {
             "title": {"text": self.title},
@@ -190,7 +207,7 @@ class HighCharts(TransformableWidget):
         }
 
     @staticmethod
-    def _render_x_axis(data_frame, dimension_display_values):
+    def _render_x_axis(data_frame, dimensions, dimension_display_values):
         """
         Renders the xAxis configuraiton.
 
@@ -204,7 +221,7 @@ class HighCharts(TransformableWidget):
             if isinstance(data_frame.index, pd.MultiIndex) \
             else data_frame.index
 
-        if isinstance(first_level, pd.DatetimeIndex):
+        if dimensions and isinstance(dimensions[0], DatetimeDimension):
             return {"type": "datetime"}
 
         categories = ["All"] \
@@ -238,17 +255,18 @@ class HighCharts(TransformableWidget):
         }]
 
         y_axes += [{
-                       "id": "{}_{}".format(axis_idx, reference.key),
-                       "title": {"text": reference.label},
-                       "opposite": True,
-                       "labels": {"style": {"color": color}}
-                   }
-                   for reference in references
-                   if reference.is_delta]
+            "id": "{}_{}".format(axis_idx, reference.key),
+            "title": {"text": reference.label},
+            "opposite": True,
+            "labels": {"style": {"color": color}}
+        }
+            for reference in references
+            if reference.is_delta]
 
         return y_axes
 
-    def _render_series(self, axis, axis_idx, axis_color, colors, data_frame_groups, render_series_label, references):
+    def _render_series(self, axis, axis_idx, axis_color, colors, data_frame_groups, render_series_label,
+                       references, is_timeseries=False):
         """
         Renders the series configuration.
 
@@ -258,25 +276,22 @@ class HighCharts(TransformableWidget):
         :param axis_idx:
         :param axis_color:
         :param colors:
-        :param data_frame_groups:
+        :param index_rows:
+        :param data_frame:
         :param render_series_label:
         :param references:
+        :param is_timeseries:
         :return:
         """
         has_multi_metric = 1 < len(axis.items)
 
         series = []
         for metric in axis.items:
-            visible = True
             symbols = itertools.cycle(MARKER_SYMBOLS)
             series_color = next(colors) if has_multi_metric else None
 
             for (dimension_values, group_df), symbol in zip(data_frame_groups, symbols):
                 dimension_values = utils.wrap_list(dimension_values)
-
-                is_timeseries = isinstance(group_df.index.levels[0]
-                                           if isinstance(group_df.index, pd.MultiIndex)
-                                           else group_df.index, pd.DatetimeIndex)
 
                 if not has_multi_metric:
                     series_color = next(colors)
@@ -288,7 +303,6 @@ class HighCharts(TransformableWidget):
                         "type": axis.type,
                         "color": series_color,
                         "dashStyle": dash_style,
-                        "visible": visible,
 
                         "name": render_series_label(metric, reference, dimension_values),
 
@@ -307,16 +321,20 @@ class HighCharts(TransformableWidget):
                                      else None),
                     })
 
-                visible = False  # Only display the first in each group
-
         return series
 
     def _render_data(self, group_df, metric_key, is_timeseries):
-        if is_timeseries:
-            return [(dimension_value(utils.wrap_list(dimension_values)[0],
-                                     str_date=False),
-                     metric_value(y))
-                    for dimension_values, y in group_df[metric_key].iteritems()]
+        if not is_timeseries:
+            return [metric_value(y) for y in group_df[metric_key].values]
 
-        return [metric_value(y)
-                for y in group_df[metric_key].values]
+        series = []
+        for dimension_values, y in group_df[metric_key].iteritems():
+            first_dimension_value = utils.wrap_list(dimension_values)[0]
+
+            if pd.isnull(first_dimension_value):
+                # Ignore totals on the x-axis.
+                continue
+
+            series.append((date_as_millis(first_dimension_value), metric_value(y)))
+
+        return series

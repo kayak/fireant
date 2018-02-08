@@ -24,21 +24,18 @@ from fireant.utils import (
 )
 from .database import fetch_data
 from .references import join_reference
-from ..dimensions import RollupDimension
 from ..exceptions import (
     CircularJoinsException,
     MissingTableJoinException,
-    RollupException,
 )
 from ..filters import DimensionFilter
-from ..intervals import DatetimeInterval
 from ..operations import Operation
 
 
 def _build_dimension_definition(dimension, interval_func):
-    if hasattr(dimension, 'interval') and isinstance(dimension.interval, DatetimeInterval):
-        return interval_func(dimension.definition,
-                             dimension.interval).as_(dimension.key)
+    if hasattr(dimension, 'interval'):
+        return interval_func(dimension.definition, dimension.interval) \
+            .as_(dimension.key)
 
     return dimension.definition.as_(dimension.key)
 
@@ -58,11 +55,7 @@ def _select_groups(terms, query, rollup, database):
 
 
 def is_rolling_up(dimension, rolling_up):
-    if rolling_up:
-        if not isinstance(dimension, RollupDimension):
-            raise RollupException('Cannot roll up dimension {}'.format(dimension))
-        return True
-    return getattr(dimension, "is_rollup", False)
+    return rolling_up or getattr(dimension, "is_rollup", False)
 
 
 class QueryBuilder(object):
@@ -94,7 +87,6 @@ class QueryBuilder(object):
         :return:
             A collection of tables required to execute a query,
         """
-
         return ordered_distinct_list([table
                                       for element in self._elements
                                       # Need extra for-loop to incl. the `display_definition` from `UniqueDimension`
@@ -206,7 +198,9 @@ class SlicerQueryBuilder(QueryBuilder):
         :param dimensions:
         :return:
         """
-        self._dimensions += dimensions
+        self._dimensions += [dimension
+                             for dimension in dimensions
+                             if dimension not in self._dimensions]
 
     @immutable
     def orderby(self, element: SlicerElement, orientation=None):
@@ -235,10 +229,9 @@ class SlicerQueryBuilder(QueryBuilder):
         :return:
             an ordered, distinct list of metrics used in all widgets as part of this query.
         """
-        return ordered_distinct_list_by_attr([item
+        return ordered_distinct_list_by_attr([operation
                                               for widget in self._widgets
-                                              for item in widget.items
-                                              if isinstance(item, Operation)])
+                                              for operation in widget.operations])
 
     @property
     def orders(self):

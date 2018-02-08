@@ -13,10 +13,12 @@ from fireant.tests.slicer.mocks import (
     ElectionOverElection,
     cat_dim_df,
     cont_cat_dim_df,
+    cont_uni_dim_all_totals_df,
     cont_dim_df,
     cont_dim_operation_df,
     cont_uni_dim_df,
     cont_uni_dim_ref_df,
+    cont_uni_dim_totals_df,
     multi_metric_df,
     single_metric_df,
     slicer,
@@ -352,6 +354,197 @@ class DataTablesTransformerTests(TestCase):
                 'timestamp': {'value': '2016-01-01'},
                 'state': {'display': 'California', 'value': 2},
                 'wins': {'display': '1', 'value': 1}
+            }],
+        }, result)
+
+    def test_multi_dims_with_one_level_totals(self):
+        result = DataTablesJS(items=[slicer.metrics.wins]) \
+            .transform(cont_uni_dim_totals_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state.rollup()])
+
+        self.assertEqual({
+            'columns': [{
+                'data': 'timestamp',
+                'title': 'Timestamp',
+                'render': {'_': 'value'},
+            }, {
+                'data': 'state',
+                'render': {'_': 'value', 'display': 'display'},
+                'title': 'State'
+            }, {
+                'data': 'wins',
+                'title': 'Wins',
+                'render': {'_': 'value', 'display': 'display'},
+            }],
+            'data': [{
+                'state': {'display': 'Texas', 'value': 1},
+                'timestamp': {'value': '1996-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'California', 'value': 2},
+                'timestamp': {'value': '1996-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'Totals', 'value': 'Totals'},
+                'timestamp': {'value': '1996-01-01'},
+                'wins': {'display': '2', 'value': 2}
+            }, {
+                'state': {'display': 'Texas', 'value': 1},
+                'timestamp': {'value': '2000-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'California', 'value': 2},
+                'timestamp': {'value': '2000-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'Totals', 'value': 'Totals'},
+                'timestamp': {'value': '2000-01-01'},
+                'wins': {'display': '2', 'value': 2}
+            }, {
+                'state': {'display': 'Texas', 'value': 1},
+                'timestamp': {'value': '2004-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'California', 'value': 2},
+                'timestamp': {'value': '2004-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'Totals', 'value': 'Totals'},
+                'timestamp': {'value': '2004-01-01'},
+                'wins': {'display': '2', 'value': 2}
+            }, {
+                'state': {'display': 'Texas', 'value': 1},
+                'timestamp': {'value': '2008-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'California', 'value': 2},
+                'timestamp': {'value': '2008-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'Totals', 'value': 'Totals'},
+                'timestamp': {'value': '2008-01-01'},
+                'wins': {'display': '2', 'value': 2}
+            }, {
+                'state': {'display': 'Texas', 'value': 1},
+                'timestamp': {'value': '2012-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'California', 'value': 2},
+                'timestamp': {'value': '2012-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'Totals', 'value': 'Totals'},
+                'timestamp': {'value': '2012-01-01'},
+                'wins': {'display': '2', 'value': 2}
+            }, {
+                'state': {'display': 'Texas', 'value': 1},
+                'timestamp': {'value': '2016-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'California', 'value': 2},
+                'timestamp': {'value': '2016-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'Totals', 'value': 'Totals'},
+                'timestamp': {'value': '2016-01-01'},
+                'wins': {'display': '2', 'value': 2}
+            }],
+        }, result)
+
+    def test_multi_dims_with_all_levels_totals(self):
+        result = DataTablesJS(items=[slicer.metrics.wins]) \
+            .transform(cont_uni_dim_all_totals_df, slicer, [slicer.dimensions.timestamp.rollup(),
+                                                            slicer.dimensions.state.rollup()])
+
+        self.assertEqual({
+            'columns': [{
+                'data': 'timestamp',
+                'title': 'Timestamp',
+                'render': {'_': 'value'},
+            }, {
+                'data': 'state',
+                'render': {'_': 'value', 'display': 'display'},
+                'title': 'State'
+            }, {
+                'data': 'wins',
+                'title': 'Wins',
+                'render': {'_': 'value', 'display': 'display'},
+            }],
+            'data': [{
+                'state': {'display': 'Texas', 'value': 1},
+                'timestamp': {'value': '1996-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'California', 'value': 2},
+                'timestamp': {'value': '1996-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'Totals', 'value': 'Totals'},
+                'timestamp': {'value': '1996-01-01'},
+                'wins': {'display': '2', 'value': 2}
+            }, {
+                'state': {'display': 'Texas', 'value': 1},
+                'timestamp': {'value': '2000-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'California', 'value': 2},
+                'timestamp': {'value': '2000-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'Totals', 'value': 'Totals'},
+                'timestamp': {'value': '2000-01-01'},
+                'wins': {'display': '2', 'value': 2}
+            }, {
+                'state': {'display': 'Texas', 'value': 1},
+                'timestamp': {'value': '2004-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'California', 'value': 2},
+                'timestamp': {'value': '2004-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'Totals', 'value': 'Totals'},
+                'timestamp': {'value': '2004-01-01'},
+                'wins': {'display': '2', 'value': 2}
+            }, {
+                'state': {'display': 'Texas', 'value': 1},
+                'timestamp': {'value': '2008-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'California', 'value': 2},
+                'timestamp': {'value': '2008-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'Totals', 'value': 'Totals'},
+                'timestamp': {'value': '2008-01-01'},
+                'wins': {'display': '2', 'value': 2}
+            }, {
+                'state': {'display': 'Texas', 'value': 1},
+                'timestamp': {'value': '2012-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'California', 'value': 2},
+                'timestamp': {'value': '2012-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'Totals', 'value': 'Totals'},
+                'timestamp': {'value': '2012-01-01'},
+                'wins': {'display': '2', 'value': 2}
+            }, {
+                'state': {'display': 'Texas', 'value': 1},
+                'timestamp': {'value': '2016-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'California', 'value': 2},
+                'timestamp': {'value': '2016-01-01'},
+                'wins': {'display': '1', 'value': 1}
+            }, {
+                'state': {'display': 'Totals', 'value': 'Totals'},
+                'timestamp': {'value': '2016-01-01'},
+                'wins': {'display': '2', 'value': 2}
+            }, {
+                'state': {'display': 'Totals', 'value': 'Totals'},
+                'timestamp': {'value': 'Totals'},
+                'wins': {'display': '12', 'value': 12}
             }],
         }, result)
 

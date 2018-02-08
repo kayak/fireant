@@ -64,7 +64,7 @@ class MySQLDatabase(Database):
         return pd.read_sql(query, self.connect())
 
     def trunc_date(self, field, interval):
-        return Trunc(field, interval)
+        return Trunc(field, str(interval))
 
     def date_add(self, field, date_part, interval, align_weekday=False):
         # adding an extra 's' as MySQL's interval doesn't work with 'year', 'week' etc, it expects a plural
