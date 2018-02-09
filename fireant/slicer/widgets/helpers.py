@@ -49,7 +49,7 @@ def dimensional_metric_label(dimensions, dimension_display_values):
         a callback function which renders a label for a metric, reference, and list of dimension values.
     """
 
-    def render_series_label(metric, reference, dimension_values):
+    def render_series_label(dimension_values, metric=None, reference=None):
         """
         Returns a string label for a metric, reference, and set of values for zero or more dimensions.
 
@@ -61,12 +61,17 @@ def dimensional_metric_label(dimensions, dimension_display_values):
             a tuple of dimension values. Can be zero-length or longer.
         :return:
         """
+        used_dimensions = dimensions if metric is None else dimensions[1:]
+        dimension_values = utils.wrap_list(dimension_values)
         dimension_labels = [utils.deep_get(dimension_display_values,
                                            [dimension.key, dimension_value],
                                            dimension_value)
                             if not pd.isnull(dimension_value)
                             else 'Totals'
-                            for dimension, dimension_value in zip(dimensions[1:], dimension_values)]
+                            for dimension, dimension_value in zip(used_dimensions, dimension_values)]
+
+        if metric is None:
+            return ", ".join(dimension_labels)
 
         if dimension_labels:
             return '{} ({})'.format(reference_label(metric, reference),

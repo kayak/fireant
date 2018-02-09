@@ -215,7 +215,7 @@ class DataTablesJS(TransformableWidget):
             for dimension_values in itertools.product(*dimension_value_sets):
                 for reference in [None] + references:
                     key = reference_key(metric, reference)
-                    title = render_column_label(metric, reference, dimension_values)
+                    title = render_column_label(dimension_values, metric, reference)
                     data = '.'.join([key] + [str(x) for x in dimension_values])
 
                     columns.append(dict(title=title,

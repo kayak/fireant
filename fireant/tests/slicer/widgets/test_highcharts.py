@@ -1409,7 +1409,6 @@ class HighChartsPieChartTransformerTests(TestCase):
     chart_class = HighCharts.PieChart
     chart_type = 'pie'
 
-    @skip('this test has the correct assertions but is failing currently')
     def test_single_metric_pie_chart(self):
         result = HighCharts(title="All Votes",
                             axes=[self.chart_class([slicer.metrics.votes])]) \
@@ -1417,27 +1416,26 @@ class HighChartsPieChartTransformerTests(TestCase):
 
         self.assertEqual({
             "title": {"text": "All Votes"},
-            "chart": {"type": "pie"},
             "tooltip": {"shared": True, "useHTML": True},
             "legend": {"useHTML": True},
             "series": [{
                 "name": "Votes",
+                "type": "pie",
                 "data": [{
-                    "name": "All",
+                    "name": "Votes",
                     "y": 111674336,
+                    "color": "#DDDF0D",
                 }],
                 'tooltip': {
                     'valueDecimals': None,
                     'valuePrefix': None,
                     'valueSuffix': None
                 },
-                "color": "#DDDF0D",
-                "marker": {},
-                "stacking": None,
-            }]
+            }],
+            'xAxis': {'categories': ['All'], 'type': 'category'},
+            'yAxis': [],
         }, result)
 
-    @skip
     def test_multi_metric_bar_chart(self):
         result = HighCharts(title="Votes and Wins",
                             axes=[self.chart_class([slicer.metrics.votes,
@@ -1446,84 +1444,72 @@ class HighChartsPieChartTransformerTests(TestCase):
 
         self.assertEqual({
             "title": {"text": "Votes and Wins"},
-            "xAxis": {
-                "type": "category",
-                "categories": ["All"]
-            },
-            "yAxis": [{
-                "id": "0",
-                "title": {"text": None},
-                "labels": {"style": {"color": "#DDDF0D"}}
-
-            }],
             "tooltip": {"shared": True, "useHTML": True},
             "legend": {"useHTML": True},
             "series": [{
-                "type": self.chart_type,
                 "name": "Votes",
-                "yAxis": "0",
-                "data": [111674336],
+                "type": "pie",
+                "data": [{
+                    "name": "Votes",
+                    "y": 111674336,
+                    "color": "#DDDF0D",
+                }],
                 'tooltip': {
-                    'valuePrefix': None,
-                    'valueSuffix': None,
                     'valueDecimals': None,
+                    'valuePrefix': None,
+                    'valueSuffix': None
                 },
-                "color": "#DDDF0D",
-                "dashStyle": "Solid",
-                "marker": {},
-                "stacking": self.stacking,
             }, {
-                "type": self.chart_type,
                 "name": "Wins",
-                "yAxis": "0",
-                "data": [12],
+                "type": "pie",
+                "data": [{
+                    "name": "Wins",
+                    "y": 12,
+                    "color": "#DDDF0D",
+                }],
                 'tooltip': {
-                    'valuePrefix': None,
-                    'valueSuffix': None,
                     'valueDecimals': None,
+                    'valuePrefix': None,
+                    'valueSuffix': None
                 },
-                "color": "#55BF3B",
-                "dashStyle": "Solid",
-                "marker": {},
-                "stacking": self.stacking,
-            }]
+            }],
+            'xAxis': {'categories': ['All'], 'type': 'category'},
+            'yAxis': [],
         }, result)
 
-    @skip
     def test_cat_dim_single_metric_bar_chart(self):
         result = HighCharts(title="Votes and Wins",
                             axes=[self.chart_class([slicer.metrics.votes])]) \
             .transform(cat_dim_df, slicer, [slicer.dimensions.political_party])
 
         self.assertEqual({
-            "title": {"text": "Votes and Wins"},
-            "xAxis": {
-                "type": "category",
-                "categories": ["Democrat", "Independent", "Republican"]
-            },
-            "yAxis": [{
-                "id": "0",
-                "title": {"text": None},
-                "labels": {"style": {"color": None}}
-
-            }],
-            "tooltip": {"shared": True, "useHTML": True},
-            "legend": {"useHTML": True},
-            "series": [{
-                "type": self.chart_type,
-                "name": "Votes",
-                "yAxis": "0",
-                "data": [54551568, 1076384, 56046384],
+            'title': {'text': 'Votes and Wins'},
+            'tooltip': {'useHTML': True, 'shared': True},
+            'legend': {'useHTML': True},
+            'series': [{
+                'name': 'Votes',
+                'type': 'pie',
+                'data': [{
+                    'y': 54551568,
+                    'name': 'Democrat',
+                    'color': '#DDDF0D'
+                }, {
+                    'y': 1076384,
+                    'name': 'Independent',
+                    'color': '#55BF3B'
+                }, {
+                    'y': 56046384,
+                    'name': 'Republican',
+                    'color': '#DF5353'
+                }],
                 'tooltip': {
                     'valuePrefix': None,
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#DDDF0D",
-                "dashStyle": "Solid",
-                "marker": {},
-                "stacking": self.stacking,
-            }]
+            }],
+            'yAxis': [],
+            'xAxis': {'categories': ['Democrat', 'Independent', 'Republican'], 'type': 'category'}
         }, result)
 
     @skip

@@ -22,7 +22,10 @@ from .helpers import (
     extract_display_values,
 )
 from ..exceptions import MetricRequiredException
-from ..references import reference_key
+from ..references import (
+    reference_key,
+    reference_label,
+)
 
 DEFAULT_COLORS = (
     "#DDDF0D",
@@ -181,6 +184,13 @@ class HighCharts(TransformableWidget):
             colors, series_colors = itertools.tee(colors)
             axis_color = next(colors) if 1 < total_num_items else None
 
+            if isinstance(axis, self.PieChart):
+                # pie charts suck
+                for metric in axis.metrics:
+                    for reference in [None] + references:
+                        series += [self._render_pie_series(axis, metric, reference, data_frame, render_series_label)]
+                continue
+
             # prepend axes, append series, this keeps everything ordered left-to-right
             y_axes[0:0] = self._render_y_axis(axis_idx,
                                               axis_color,
@@ -303,7 +313,7 @@ class HighCharts(TransformableWidget):
                         "color": series_color,
                         "dashStyle": dash_style,
 
-                        "name": render_series_label(metric, reference, dimension_values),
+                        "name": render_series_label(dimension_values, metric, reference),
 
                         "data": self._render_data(group_df, metric_key, is_timeseries),
 
@@ -323,6 +333,24 @@ class HighCharts(TransformableWidget):
                     })
 
         return series
+
+    def _render_pie_series(self, axis, metric, reference, data_frame, render_series_label):
+        pie_chart_df = data_frame[reference_key(metric, reference)]
+        name = reference_label(metric, reference)
+        return {
+            "name": name,
+            "type": axis.type,
+            "data": [{
+                "name": render_series_label(dimension_values) if dimension_values else name,
+                "y": metric_value(y),
+                "color": color,
+            } for (dimension_values, y), color in zip(pie_chart_df.iteritems(), self.colors)],
+            'tooltip': {
+                'valueDecimals': metric.precision,
+                'valuePrefix': metric.prefix,
+                'valueSuffix': metric.suffix,
+            },
+        }
 
     def _render_data(self, group_df, metric_key, is_timeseries):
         if not is_timeseries:
