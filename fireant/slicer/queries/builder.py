@@ -1,7 +1,6 @@
-from collections import defaultdict
-from typing import (
-    Dict,
-    Iterable,
+from collections import (
+    OrderedDict,
+    defaultdict,
 )
 
 import pandas as pd
@@ -14,22 +13,30 @@ from toposort import (
     CircularDependencyError,
     toposort_flatten,
 )
+from typing import (
+    Dict,
+    Iterable,
+)
 
 from fireant.slicer.base import SlicerElement
 from fireant.utils import (
     flatten,
+    groupby,
     immutable,
     ordered_distinct_list,
     ordered_distinct_list_by_attr,
 )
 from .database import fetch_data
-from .references import join_reference
+from .references import (
+    create_container_query,
+    create_joined_reference_query,
+    select_reference_metrics,
+)
 from ..exceptions import (
     CircularJoinsException,
     MissingTableJoinException,
 )
 from ..filters import DimensionFilter
-from ..operations import Operation
 
 
 def _build_dimension_definition(dimension, interval_func):
@@ -272,11 +279,11 @@ class SlicerQueryBuilder(QueryBuilder):
                                for metric in self.metrics])
 
         # Add references
-        references = [(reference, dimension)
-                      for dimension in self._dimensions
-                      for reference in getattr(dimension, 'references', ())]
-        if references:
-            query = self._join_references(query, references)
+        references_for_dimensions = OrderedDict([(dimension, dimension.references)
+                                                 for dimension in self._dimensions
+                                                 if hasattr(dimension, 'references') and dimension.references])
+        if references_for_dimensions:
+            query = self._join_references(query, references_for_dimensions)
 
         # Add ordering
         for (definition, orientation) in self.orders:
@@ -284,7 +291,7 @@ class SlicerQueryBuilder(QueryBuilder):
 
         return query
 
-    def _join_references(self, query, references):
+    def _join_references(self, query, references_for_dimensions):
         """
         This converts the pypika query built in `self.query()` into a query that includes references. This is achieved
         by wrapping the original query with an outer query using the original query as the FROM clause, then joining
@@ -299,41 +306,41 @@ class SlicerQueryBuilder(QueryBuilder):
 
         :param query:
             The original query built by `self.query`
-        :param references:
-            A list of the references that should be included.
+        :param references_for_dimensions:
+            An ordered dict with the dimension as the key and a list of references to add for that dimension.
         :return:
             A new pypika query with the dimensions and metrics included from the original query plus each of the
             metrics for each of the references.
         """
+        metrics = self.metrics
+
         original_query = query.as_('base')
+        container_query = create_container_query(original_query,
+                                                 self.slicer.database.query_cls,
+                                                 self._dimensions,
+                                                 metrics)
 
-        def original_query_field(key):
-            return original_query.field(key).as_(key)
+        # join reference queries
+        for dimension, references in references_for_dimensions.items():
+            get_unit_and_interval = lambda reference: (reference.time_unit, reference.interval)
+            grouped_references = groupby(references, get_unit_and_interval)
 
-        outer_query = self.slicer.database.query_cls.from_(original_query)
+            for (time_unit, interval), references_by_interval in grouped_references.items():
+                container_query, ref_query = create_joined_reference_query(time_unit,
+                                                                           interval,
+                                                                           self._dimensions,
+                                                                           dimension,
+                                                                           original_query,
+                                                                           container_query,
+                                                                           self.slicer.database)
 
-        # Add dimensions
-        for dimension in self._dimensions:
-            outer_query = outer_query.select(original_query_field(dimension.key))
+                container_query = select_reference_metrics(references_by_interval,
+                                                           container_query,
+                                                           original_query,
+                                                           ref_query,
+                                                           metrics)
 
-            if dimension.has_display_field:
-                outer_query = outer_query.select(original_query_field(dimension.display_key))
-
-        # Add metrics
-        outer_query = outer_query.select(*[original_query_field(metric.key)
-                                           for metric in self.metrics])
-
-        # Build nested reference queries
-        for reference, dimension in references:
-            outer_query = join_reference(reference,
-                                         self.metrics,
-                                         self._dimensions,
-                                         dimension,
-                                         self.slicer.database.date_add,
-                                         original_query,
-                                         outer_query)
-
-        return outer_query
+        return container_query
 
     def fetch(self, limit=None, offset=None) -> Iterable[Dict]:
         """

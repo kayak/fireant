@@ -1,4 +1,3 @@
-from datetime import date
 from unittest import TestCase
 from unittest.mock import (
     ANY,
@@ -6,12 +5,12 @@ from unittest.mock import (
     patch,
 )
 
+from datetime import date
 from pypika import Order
 
 import fireant as f
 from fireant.slicer.exceptions import (
     MetricRequiredException,
-    RollupException,
 )
 from ..matchers import (
     DimensionMatcher,
@@ -1267,14 +1266,13 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
                          'LEFT JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'IW\') "timestamp",'
+                         'TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'IW\')) "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
                          ') "sq1" '  # end-nested
 
-                         'ON "base"."timestamp"='
-                         'TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"sq1"."timestamp"),\'IW\')) '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"sq1"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
     def test_adapt_dow_for_leap_year_for_yoy_delta_reference(self):
@@ -1302,15 +1300,15 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
                          'LEFT JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'IW\') "timestamp",'
+                         'TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'IW\')) "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
                          ') "sq1" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',-1,'
-                         'TRUNC(TIMESTAMPADD(\'year\',1,"sq1"."timestamp"),\'IW\')) '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"sq1"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
+
 
     def test_adapt_dow_for_leap_year_for_yoy_delta_percent_reference(self):
         query = slicer.data \
@@ -1337,14 +1335,173 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
                          'LEFT JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'IW\') "timestamp",'
+                         'TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'IW\')) "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
                          ') "sq1" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',-1,'
-                         'TRUNC(TIMESTAMPADD(\'year\',1,"sq1"."timestamp"),\'IW\')) '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"sq1"."timestamp") '
+                         'ORDER BY "timestamp"', str(query))
+
+    def test_adapt_dow_for_leap_year_for_yoy_reference_with_date_filter(self):
+        query = slicer.data \
+            .widget(f.HighCharts(
+              axes=[f.HighCharts.LineChart(
+                    [slicer.metrics.votes])])) \
+            .dimension(slicer.dimensions.timestamp(f.weekly)
+                       .reference(f.YearOverYear)) \
+            .filter(slicer.dimensions.timestamp.between(date(2018, 1, 1), date(2018, 1, 31))) \
+            .query
+
+        self.assertEqual('SELECT '
+                         '"base"."timestamp" "timestamp",'
+                         '"base"."votes" "votes",'
+                         '"sq1"."votes" "votes_yoy" '
+                         'FROM '
+
+                         '('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'IW\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'WHERE "timestamp" BETWEEN \'2018-01-01\' AND \'2018-01-31\' '
+                         'GROUP BY "timestamp"'
+                         ') "base" '  # end-nested
+
+                         'LEFT JOIN ('  # nested
+                         'SELECT '
+                         'TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'IW\')) "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'WHERE TIMESTAMPADD(\'year\',1,"timestamp") BETWEEN \'2018-01-01\' AND \'2018-01-31\' '
+                         'GROUP BY "timestamp"'
+                         ') "sq1" '  # end-nested
+
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"sq1"."timestamp") '
+                         'ORDER BY "timestamp"', str(query))
+
+    def test_adding_duplicate_reference_does_not_join_more_queries(self):
+        query = slicer.data \
+            .widget(f.HighCharts(
+              axes=[f.HighCharts.LineChart(
+                    [slicer.metrics.votes])])) \
+            .dimension(slicer.dimensions.timestamp
+                       .reference(f.DayOverDay)
+                       .reference(f.DayOverDay)) \
+            .query
+
+        self.assertEqual('SELECT '
+                         '"base"."timestamp" "timestamp",'
+                         '"base"."votes" "votes",'
+                         '"sq1"."votes" "votes_dod" '
+                         'FROM '
+
+                         '('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "base" '  # end-nested
+
+                         'LEFT JOIN ('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "sq1" '  # end-nested
+
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
+                         'ORDER BY "timestamp"', str(query))
+
+    def test_use_same_nested_query_for_joining_references_with_same_period_and_dimension(self):
+        query = slicer.data \
+            .widget(f.HighCharts(
+              axes=[f.HighCharts.LineChart(
+                    [slicer.metrics.votes])])) \
+            .dimension(slicer.dimensions.timestamp
+                       .reference(f.DayOverDay)
+                       .reference(f.DayOverDay.delta())
+                       .reference(f.DayOverDay.delta(percent=True))) \
+            .query
+
+        self.assertEqual('SELECT '
+                         '"base"."timestamp" "timestamp",'
+                         '"base"."votes" "votes",'
+                         '"sq1"."votes" "votes_dod",'
+                         '"base"."votes"-"sq1"."votes" "votes_dod_delta",'
+                         '("base"."votes"-"sq1"."votes")*100/NULLIF("sq1"."votes",0) "votes_dod_delta_percent" '
+                         'FROM '
+
+                         '('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "base" '  # end-nested
+
+                         'LEFT JOIN ('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "sq1" '  # end-nested
+
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
+                         'ORDER BY "timestamp"', str(query))
+
+    def test_use_same_nested_query_for_joining_references_with_same_period_and_dimension_with_different_periods(self):
+        query = slicer.data \
+            .widget(f.HighCharts(
+              axes=[f.HighCharts.LineChart(
+                    [slicer.metrics.votes])])) \
+            .dimension(slicer.dimensions.timestamp
+                       .reference(f.DayOverDay)
+                       .reference(f.DayOverDay.delta())
+                       .reference(f.YearOverYear)
+                       .reference(f.YearOverYear.delta())) \
+            .query
+
+        self.assertEqual('SELECT '
+                         '"base"."timestamp" "timestamp",'
+                         '"base"."votes" "votes",'
+                         '"sq1"."votes" "votes_dod",'
+                         '"base"."votes"-"sq1"."votes" "votes_dod_delta",'
+                         '"sq2"."votes" "votes_yoy",'
+                         '"base"."votes"-"sq2"."votes" "votes_yoy_delta" '
+                         'FROM '
+
+                         '('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "base" '  # end-nested
+
+                         'LEFT JOIN ('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "sq1" '  # end-nested
+
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
+
+                         'LEFT JOIN ('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "sq2" '  # end-nested
+
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"sq2"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
 

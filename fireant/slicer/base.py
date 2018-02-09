@@ -24,3 +24,6 @@ class SlicerElement(object):
     @property
     def has_display_field(self):
         return getattr(self, 'display_definition', None) is not None
+
+    def __hash__(self):
+        return hash(self.__class__.__name__ + self.key)

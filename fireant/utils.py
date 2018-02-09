@@ -1,3 +1,4 @@
+from collections import OrderedDict
 
 
 def wrap_list(value):
@@ -86,6 +87,27 @@ def ordered_distinct_list_by_attr(l, attr='key'):
             for x in l
             if not getattr(x, attr) in seen
             and not seen.add(getattr(x, attr))]
+
+
+def groupby(items, by):
+    """
+    Group items using a function to derive a key.
+    :param items: The items to group
+    :param by: A lambda function to create a key based on the item
+    :return:
+        an Ordered dict
+    """
+
+    result = OrderedDict()
+    for item in items:
+        key = by(item)
+
+        if key in result:
+            result[key].append(item)
+        else:
+            result[key] = [item]
+
+    return result
 
 
 def groupby_first_level(index):

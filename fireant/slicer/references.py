@@ -21,9 +21,42 @@ class Reference(object):
                and self.is_delta == other.is_delta \
                and self.is_percent == other.is_percent
 
+    def __hash__(self):
+        return hash('reference' + self.key)
+
 
 DayOverDay = Reference('dod', 'DoD', 'day', 1)
 WeekOverWeek = Reference('wow', 'WoW', 'week', 1)
 MonthOverMonth = Reference('mom', 'MoM', 'month', 1)
 QuarterOverQuarter = Reference('qoq', 'QoQ', 'quarter', 1)
 YearOverYear = Reference('yoy', 'YoY', 'year', 1)
+
+
+def reference_key(metric, reference):
+    """
+    Format a metric key for a reference.
+
+    :return:
+        A string that is used as the key for a reference metric.
+    """
+    key = metric.key
+
+    if reference is not None:
+        return '{}_{}'.format(key, reference.key)
+
+    return key
+
+
+def reference_label(metric, reference):
+    """
+    Format a metric label for a reference.
+
+    :return:
+        A string that is used as the display value for a reference metric.
+    """
+    label = metric.label or metric.key
+
+    if reference is not None:
+        return '{} ({})'.format(label, reference.label)
+
+    return label

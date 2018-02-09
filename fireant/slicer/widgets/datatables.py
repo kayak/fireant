@@ -14,6 +14,8 @@ from .base import (
 from .helpers import (
     dimensional_metric_label,
     extract_display_values,
+)
+from ..references import (
     reference_key,
     reference_label,
 )

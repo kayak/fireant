@@ -20,9 +20,9 @@ from .formats import (
 from .helpers import (
     dimensional_metric_label,
     extract_display_values,
-    reference_key,
 )
 from ..exceptions import MetricRequiredException
+from ..references import reference_key
 
 DEFAULT_COLORS = (
     "#DDDF0D",
@@ -39,16 +39,16 @@ DEFAULT_COLORS = (
 
 DASH_STYLES = (
     'Solid',
-    'ShortDash',
-    'ShortDot',
-    'ShortDashDot',
-    'ShortDashDotDot',
-    'Dot',
     'Dash',
-    'LongDash',
+    'Dot',
     'DashDot',
+    'LongDash',
     'LongDashDot',
+    'ShortDash',
+    'ShortDashDot',
     'LongDashDotDot',
+    'ShortDashDotDot',
+    'ShortDot',
 )
 
 MARKER_SYMBOLS = (

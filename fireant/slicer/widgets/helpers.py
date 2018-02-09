@@ -1,6 +1,7 @@
 import pandas as pd
 
 from fireant import utils
+from ..references import reference_label
 
 
 def extract_display_values(dimensions, data_frame):
@@ -33,36 +34,6 @@ def extract_display_values(dimensions, data_frame):
                 .first()
 
     return display_values
-
-
-def reference_key(metric, reference):
-    """
-    Format a metric key for a reference.
-
-    :return:
-        A string that is used as the key for a reference metric.
-    """
-    key = metric.key
-
-    if reference is not None:
-        return '{}_{}'.format(key, reference.key)
-
-    return key
-
-
-def reference_label(metric, reference):
-    """
-    Format a metric label for a reference.
-
-    :return:
-        A string that is used as the display value for a reference metric.
-    """
-    label = metric.label or metric.key
-
-    if reference is not None:
-        return '{} ({})'.format(label, reference.label)
-
-    return label
 
 
 def dimensional_metric_label(dimensions, dimension_display_values):
