@@ -8,6 +8,8 @@ from datetime import (
     time,
 )
 
+INFINITY = "Infinity"
+
 NO_TIME = time(0)
 
 epoch = np.datetime64(datetime.utcfromtimestamp(0))
@@ -68,15 +70,17 @@ def metric_value(value):
         else:
             return value.strftime('%Y-%m-%dT%H:%M:%S')
 
-    if value is None or (isinstance(value, float) and np.isnan(value)) or pd.isnull(value):
+    if value is None or pd.isnull(value):
         return None
+
+    if isinstance(value, float):
+        if np.isinf(value):
+            return INFINITY
+        return float(value)
 
     if isinstance(value, np.int64):
         # Cannot transform np.int64 to json
         return int(value)
-
-    if isinstance(value, np.float64):
-        return float(value)
 
     return value
 
@@ -113,6 +117,9 @@ def metric_display(value, prefix=None, suffix=None, precision=None):
     if isinstance(value, int):
         float_format = '%d'
         value = locale.format(float_format, value, grouping=True)
+
+    if value is INFINITY:
+        return "∞"
 
     return '{prefix}{value}{suffix}'.format(
           prefix=prefix or '',
