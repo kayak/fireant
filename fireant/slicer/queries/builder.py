@@ -416,11 +416,13 @@ class DimensionOptionQueryBuilder(QueryBuilder):
 
         display_key = getattr(dimension, 'display_key', None)
         if display_key is not None:
-            data[display_key] = data.index.tolist()
+            return data[display_key]
 
-        display_key = display_key or 'display'
+        display_key = 'display'
         if hasattr(dimension, 'display_values'):
             # Include provided display values
-            data['display'] = pd.Series(dimension.display_values)
+            data[display_key] = pd.Series(dimension.display_values)
+        else:
+            data[display_key] = data.index.tolist()
 
         return data[display_key]
