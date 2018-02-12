@@ -4,9 +4,6 @@ from pypika import (
     terms,
 )
 
-from fireant.slicer import (
-    weekly,
-)
 from .base import Database
 
 
