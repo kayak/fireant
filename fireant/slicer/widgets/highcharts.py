@@ -66,12 +66,12 @@ MARKER_SYMBOLS = (
 class ChartWidget(Widget):
     type = None
     needs_marker = False
-    stacked = False
+    stacking = None
 
-    def __init__(self, items=(), name=None, stacked=False):
+    def __init__(self, items=(), name=None, stacking=None):
         super(ChartWidget, self).__init__(items)
         self.name = name
-        self.stacked = self.stacked or stacked
+        self.stacking = self.stacking or stacking
 
 
 class ContinuousAxisChartWidget(ChartWidget):
@@ -88,7 +88,7 @@ class HighCharts(TransformableWidget):
         needs_marker = True
 
     class AreaPercentageChart(AreaChart):
-        stacked = True
+        stacking = "percent"
 
     class PieChart(ChartWidget):
         type = 'pie'
@@ -97,13 +97,13 @@ class HighCharts(TransformableWidget):
         type = 'bar'
 
     class StackedBarChart(BarChart):
-        stacked = True
+        stacking = "normal"
 
     class ColumnChart(ChartWidget):
         type = 'column'
 
     class StackedColumnChart(ColumnChart):
-        stacked = True
+        stacking = "normal"
 
     def __init__(self, axes=(), title=None, colors=None):
         super(HighCharts, self).__init__(axes)
@@ -327,9 +327,7 @@ class HighCharts(TransformableWidget):
                                    if axis.needs_marker
                                    else {}),
 
-                        "stacking": ("normal"
-                                     if axis.stacked
-                                     else None),
+                        "stacking": axis.stacking,
                     })
 
         return series

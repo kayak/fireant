@@ -1383,13 +1383,13 @@ class HighChartsStackedBarChartTransformerTests(HighChartsBarChartTransformerTes
 
     chart_class = HighCharts.StackedBarChart
     chart_type = 'bar'
-    stacking = "normal"
+    stacking = 'normal'
 
 
 class HighChartsStackedColumnChartTransformerTests(HighChartsBarChartTransformerTests):
     chart_class = HighCharts.StackedColumnChart
     chart_type = 'column'
-    stacking = "normal"
+    stacking = 'normal'
 
 
 class HighChartsAreaChartTransformerTests(HighChartsLineChartTransformerTests):
@@ -1397,10 +1397,9 @@ class HighChartsAreaChartTransformerTests(HighChartsLineChartTransformerTests):
     chart_type = 'area'
 
 
-class HighChartsAreaPercentChartTransformerTests(HighChartsLineChartTransformerTests):
+class HighChartsAreaPercentChartTransformerTests(HighChartsAreaChartTransformerTests):
     chart_class = HighCharts.AreaPercentageChart
-    chart_type = 'area'
-    stacking = "normal"
+    stacking = 'percent'
 
 
 class HighChartsPieChartTransformerTests(TestCase):
