@@ -1,7 +1,7 @@
 import time
+from typing import Iterable
 
 import pandas as pd
-from typing import Iterable
 
 from fireant.database.base import Database
 from .logger import logger
@@ -58,7 +58,8 @@ def clean_and_apply_index(data_frame: pd.DataFrame, dimensions: Iterable[Dimensi
             continue
 
         level = dimension.key
-        data_frame[level] = fill_nans_in_level(data_frame, dimension, dimension_keys[:i])
+        data_frame[level] = fill_nans_in_level(data_frame, dimension, dimension_keys[:i]) \
+            .apply(lambda x: str(x) if not pd.isnull(x) else None)
 
     # Set index on dimension columns
     return data_frame.set_index(dimension_keys)
