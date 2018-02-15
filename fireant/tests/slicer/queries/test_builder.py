@@ -1,3 +1,4 @@
+from datetime import date
 from unittest import TestCase
 from unittest.mock import (
     ANY,
@@ -5,7 +6,6 @@ from unittest.mock import (
     patch,
 )
 
-from datetime import date
 from pypika import Order
 
 import fireant as f
@@ -42,6 +42,7 @@ class QueryBuilderTests(TestCase):
         query2 = query1.orderby(slicer.dimensions.timestamp)
 
         self.assertIsNot(query1, query2)
+
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 class QueryBuilderMetricTests(TestCase):
@@ -1527,6 +1528,28 @@ class QueryBuilderJoinTests(TestCase):
                          'GROUP BY "timestamp","district","district_display" '
                          'ORDER BY "timestamp","district_display"', str(query))
 
+    def test_dimension_with_multiple_joins_includes_joins_ordered__in_query(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS([slicer.metrics.votes,
+                                    slicer.metrics.voters])) \
+            .dimension(slicer.dimensions.timestamp) \
+            .dimension(slicer.dimensions.district) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'TRUNC("politician"."timestamp",\'DD\') "timestamp",'
+                         '"politician"."district_id" "district",'
+                         '"district"."district_name" "district_display",'
+                         'SUM("politician"."votes") "votes",'
+                         'COUNT("voter"."id") "voters" '
+                         'FROM "politics"."politician" '
+                         'JOIN "politics"."voter" '
+                         'ON "politician"."id"="voter"."politician_id" '
+                         'OUTER JOIN "locations"."district" '
+                         'ON "politician"."district_id"="district"."id" '
+                         'GROUP BY "timestamp","district","district_display" '
+                         'ORDER BY "timestamp","district_display"', str(query))
+
     def test_dimension_with_recursive_join_joins_all_join_tables(self):
         query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
@@ -1550,20 +1573,17 @@ class QueryBuilderJoinTests(TestCase):
     def test_metric_with_join_includes_join_in_query(self):
         query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.voters])) \
-            .dimension(slicer.dimensions.district) \
+            .dimension(slicer.dimensions.political_party) \
             .query
 
         self.assertEqual('SELECT '
-                         '"politician"."district_id" "district",'
-                         '"district"."district_name" "district_display",'
+                         '"politician"."political_party" "political_party",'
                          'COUNT("voter"."id") "voters" '
                          'FROM "politics"."politician" '
-                         'OUTER JOIN "locations"."district" '
-                         'ON "politician"."district_id"="district"."id" '
                          'JOIN "politics"."voter" '
-                         'ON "district"."id"="voter"."district_id" '
-                         'GROUP BY "district","district_display" '
-                         'ORDER BY "district_display"', str(query))
+                         'ON "politician"."id"="voter"."politician_id" '
+                         'GROUP BY "political_party" '
+                         'ORDER BY "political_party"', str(query))
 
     def test_dimension_filter_with_join_on_display_definition_does_not_include_join_in_query(self):
         query = slicer.data \
