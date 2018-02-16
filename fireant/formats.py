@@ -1,12 +1,12 @@
 import locale
-
-import numpy as np
-import pandas as pd
 from datetime import (
     date,
     datetime,
     time,
 )
+
+import numpy as np
+import pandas as pd
 
 INFINITY = "Infinity"
 
@@ -20,6 +20,23 @@ def date_as_millis(value):
     if not isinstance(value, date):
         value = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
     return int(1000 * value.timestamp())
+
+
+def coerce_type(value):
+    for type_cast in (int, float):
+        try:
+            return type_cast(value)
+        except:
+            pass
+
+    if 'null' == value:
+        return None
+    if 'True' == value:
+        return True
+    if 'False' == value:
+        return False
+
+    return value
 
 
 def dimension_value(value):
@@ -42,18 +59,7 @@ def dimension_value(value):
         else:
             return value.strftime('%Y-%m-%d %H:%M:%S')
 
-    for type_cast in (int, float):
-        try:
-            return type_cast(value)
-        except:
-            pass
-
-    if 'True' is value:
-        return True
-    if 'False' is value:
-        return False
-
-    return value
+    return coerce_type(value)
 
 
 def metric_value(value):

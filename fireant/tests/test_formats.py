@@ -1,14 +1,15 @@
+from datetime import (
+    date,
+    datetime,
+)
 from unittest import (
     TestCase,
 )
 
 import numpy as np
 import pandas as pd
-from datetime import (
-    date,
-    datetime,
-)
-from fireant.slicer.widgets import formats
+
+from fireant import formats
 
 
 class FormatMetricValueTests(TestCase):

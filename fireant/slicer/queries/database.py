@@ -74,11 +74,9 @@ def fill_nans_in_level(data_frame, dimension, preceding_dimension_keys):
 
     :param data_frame:
         The data_frame we are replacing values in.
-    :param level:
+    :param dimension:
         The level of the data frame to replace nulls in. This function should be called once per non-conitnuous
         dimension, in the order of the dimensions.
-    :param is_rollup:
-
     :param preceding_dimension_keys:
     :return:
         The level in the data_frame with the nulls replaced with empty string
@@ -99,7 +97,6 @@ def fill_nans_in_level(data_frame, dimension, preceding_dimension_keys):
 def _fill_nan_for_nulls(df):
     """
     Fills the first NaN with a literal string "null" if there are two NaN values, otherwise nothing is filled.
-
 
     :param df:
     :return:

@@ -1,21 +1,18 @@
 import itertools
-
-import pandas as pd
 from datetime import (
     datetime,
 )
 
+import pandas as pd
+
 from fireant import (
     DatetimeDimension,
+    formats,
     utils,
 )
 from .base import (
     TransformableWidget,
     Widget,
-)
-from .formats import (
-    date_as_millis,
-    metric_value,
 )
 from .helpers import (
     dimensional_metric_label,
@@ -340,7 +337,7 @@ class HighCharts(TransformableWidget):
             "type": axis.type,
             "data": [{
                 "name": render_series_label(dimension_values) if dimension_values else name,
-                "y": metric_value(y),
+                "y": formats.metric_value(y),
                 "color": color,
             } for (dimension_values, y), color in zip(pie_chart_df.iteritems(), self.colors)],
             'tooltip': {
@@ -352,7 +349,7 @@ class HighCharts(TransformableWidget):
 
     def _render_data(self, group_df, metric_key, is_timeseries):
         if not is_timeseries:
-            return [metric_value(y) for y in group_df[metric_key].values]
+            return [formats.metric_value(y) for y in group_df[metric_key].values]
 
         series = []
         for dimension_values, y in group_df[metric_key].iteritems():
@@ -362,7 +359,8 @@ class HighCharts(TransformableWidget):
                 # Ignore totals on the x-axis.
                 continue
 
-            series.append((date_as_millis(first_dimension_value), metric_value(y)))
+            series.append((formats.date_as_millis(first_dimension_value),
+                           formats.metric_value(y)))
 
         return series
 

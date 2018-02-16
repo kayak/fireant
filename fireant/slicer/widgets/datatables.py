@@ -5,9 +5,9 @@ import pandas as pd
 from fireant import (
     ContinuousDimension,
     Metric,
+    formats,
     utils,
 )
-from . import formats
 from .base import (
     TransformableWidget,
 )
