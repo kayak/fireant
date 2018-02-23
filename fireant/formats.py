@@ -81,7 +81,7 @@ def metric_value(value):
 
     if isinstance(value, float):
         if np.isinf(value):
-            return INFINITY
+            return None
         return float(value)
 
     if isinstance(value, np.int64):

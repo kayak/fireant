@@ -1,48 +1,58 @@
-from datetime import (
-    date,
-    datetime,
-)
 from unittest import (
     TestCase,
 )
 
 import numpy as np
 import pandas as pd
+from datetime import (
+    date,
+    datetime,
+)
 
 from fireant import formats
 
 
 class FormatMetricValueTests(TestCase):
-    def test_nan_data_point(self):
+    def test_that_nan_data_point_is_convered_to_none(self):
         # np.nan is converted to None
         result = formats.metric_value(np.nan)
         self.assertIsNone(result)
 
-    def test_str_data_point(self):
+    def test_that_inf_data_point_is_convered_to_none(self):
+        # np.nan is converted to None
+        result = formats.metric_value(np.inf)
+        self.assertIsNone(result)
+
+    def test_that_neg_inf_data_point_is_convered_to_none(self):
+        # np.nan is converted to None
+        result = formats.metric_value(-np.inf)
+        self.assertIsNone(result)
+
+    def test_str_data_point_is_returned_unchanged(self):
         result = formats.metric_value(u'abc')
         self.assertEqual('abc', result)
 
-    def test_int64_data_point(self):
+    def test_int64_data_point_is_returned_as_py_int(self):
         # Needs to be cast to python int
         result = formats.metric_value(np.int64(1))
         self.assertEqual(int(1), result)
 
-    def test_date_data_point(self):
+    def test_data_data_point_is_returned_as_string_iso_no_time(self):
         # Needs to be converted to milliseconds
         result = formats.metric_value(date(2000, 1, 1))
         self.assertEqual('2000-01-01', result)
 
-    def test_datetime_data_point(self):
+    def test_datatime_data_point_is_returned_as_string_iso_with_time(self):
         # Needs to be converted to milliseconds
         result = formats.metric_value(datetime(2000, 1, 1, 1))
         self.assertEqual('2000-01-01T01:00:00', result)
 
-    def test_ts_date_data_point(self):
+    def test_timestamp_no_time_data_point_is_returned_as_string_iso_no_time(self):
         # Needs to be converted to milliseconds
         result = formats.metric_value(pd.Timestamp(date(2000, 1, 1)))
         self.assertEqual('2000-01-01', result)
 
-    def test_ts_datetime_data_point(self):
+    def test_timestamp_data_point_is_returned_as_string_iso_no_time(self):
         # Needs to be converted to milliseconds
         result = formats.metric_value(pd.Timestamp(datetime(2000, 1, 1, 1)))
         self.assertEqual('2000-01-01T01:00:00', result)
