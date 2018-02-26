@@ -169,3 +169,22 @@ class DataTablesTransformerTests(TestCase):
         expected.columns = ['Votes', 'Votes (EoE)']
 
         pandas.testing.assert_frame_equal(result, expected)
+
+    def test_metric_format(self):
+        import copy
+        votes = copy.copy(slicer.metrics.votes)
+        votes.prefix = '$'
+        votes.suffix = '€'
+        votes.precision = 2
+
+        # divide the data frame by 3 to get a repeating decimal so we can check precision
+        result = Pandas(items=[votes]) \
+            .transform(cont_dim_df / 3, slicer, [slicer.dimensions.timestamp])
+
+        expected = cont_dim_df.copy()[['votes']]
+        expected['votes'] = ['${0:.2f}€'.format(x)
+                             for x in expected['votes'] / 3]
+        expected.index.names = ['Timestamp']
+        expected.columns = ['Votes']
+
+        pandas.testing.assert_frame_equal(result, expected)

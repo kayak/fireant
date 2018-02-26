@@ -2,7 +2,7 @@ from unittest import TestCase
 
 import pandas as pd
 
-from fireant.slicer.widgets.csv import CSV
+from fireant.slicer.widgets import CSV
 from fireant.tests.slicer.mocks import (
     CumSum,
     ElectionOverElection,
@@ -19,7 +19,7 @@ from fireant.tests.slicer.mocks import (
 )
 
 
-class DataTablesTransformerTests(TestCase):
+class CSVWidgetTests(TestCase):
     maxDiff = None
 
     def test_single_metric(self):

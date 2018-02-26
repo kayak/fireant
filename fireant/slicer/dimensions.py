@@ -112,6 +112,11 @@ class UniqueDimension(Dimension):
             if display_definition is not None \
             else None
 
+    def __hash__(self):
+        if self.has_display_field:
+            return hash('{}({},{})'.format(self.__class__.__name__, self.definition, self.display_definition))
+        return super(UniqueDimension, self).__hash__()
+
     def isin(self, values, use_display=False):
         """
         Creates a filter to filter a slicer query.

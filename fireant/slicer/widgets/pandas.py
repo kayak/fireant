@@ -7,6 +7,7 @@ from ..references import (
     reference_key,
     reference_label,
 )
+from ... import formats
 
 HARD_MAX_COLUMNS = 24
 
@@ -30,6 +31,13 @@ class Pandas(TransformableWidget):
         """
         result = data_frame.copy()
         references = []
+
+        for metric in self.items:
+            if any([metric.precision is not None,
+                    metric.prefix is not None,
+                    metric.suffix is not None]):
+                result[metric.key] = result[metric.key] \
+                    .apply(lambda x: formats.metric_display(x, metric.prefix, metric.suffix, metric.precision))
 
         for dimension in dimensions:
             references += getattr(dimension, 'references', [])

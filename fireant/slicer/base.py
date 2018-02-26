@@ -26,4 +26,4 @@ class SlicerElement(object):
         return getattr(self, 'display_definition', None) is not None
 
     def __hash__(self):
-        return hash(self.__class__.__name__ + self.key)
+        return hash('{}({})'.format(self.__class__.__name__, self.definition))
