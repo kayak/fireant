@@ -1,6 +1,10 @@
 from typing import Iterable
 
 from fireant.utils import immutable
+from pypika.terms import (
+    ValueWrapper,
+    NullValue,
+)
 from .base import SlicerElement
 from .exceptions import QueryException
 from .filters import (
@@ -21,8 +25,8 @@ class Dimension(SlicerElement):
     The `Dimension` class represents a dimension in the `Slicer` object.
     """
 
-    def __init__(self, key, label=None, definition=None):
-        super(Dimension, self).__init__(key, label, definition)
+    def __init__(self, key, label=None, definition=None, display_definition=None):
+        super(Dimension, self).__init__(key, label, definition, display_definition)
         self.is_rollup = False
 
     @immutable
@@ -104,13 +108,11 @@ class UniqueDimension(Dimension):
     """
 
     def __init__(self, key, label=None, definition=None, display_definition=None):
-        super(UniqueDimension, self).__init__(key=key, label=label, definition=definition)
+        super(UniqueDimension, self).__init__(key=key,
+                                              label=label,
+                                              definition=definition,
+                                              display_definition=display_definition)
 
-        self.display_definition = display_definition
-
-        self.display_key = '{}_display'.format(key) \
-            if display_definition is not None \
-            else None
 
     def __hash__(self):
         if self.has_display_field:
@@ -254,3 +256,10 @@ class DatetimeDimension(ContinuousDimension):
             start and stop.
         """
         return RangeFilter(self.definition, start, stop)
+
+
+class TotalsDimension(Dimension):
+    def __init__(self, dimension):
+        totals_definition = NullValue()
+        display_definition = totals_definition if dimension.has_display_field else None
+        super(Dimension, self).__init__(dimension.key, dimension.label, totals_definition, display_definition)

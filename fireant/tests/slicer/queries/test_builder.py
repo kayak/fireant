@@ -1,4 +1,3 @@
-from datetime import date
 from unittest import TestCase
 from unittest.mock import (
     ANY,
@@ -6,12 +5,13 @@ from unittest.mock import (
     patch,
 )
 
-from pypika import Order
+from datetime import date
 
 import fireant as f
 from fireant.slicer.exceptions import (
     MetricRequiredException,
 )
+from pypika import Order
 from ..matchers import (
     DimensionMatcher,
 )
@@ -277,83 +277,243 @@ class QueryBuilderDimensionTests(TestCase):
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
-class QueryBuilderDimensionRollupTests(TestCase):
+class QueryBuilderDimensionTotalsTests(TestCase):
     maxDiff = None
 
-    def test_build_query_with_rollup_cat_dimension(self):
+    def test_build_query_with_totals_cat_dimension(self):
         query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.political_party.rollup()) \
             .query
 
-        self.assertEqual('SELECT '
+        self.assertEqual('(SELECT '
                          '"political_party" "political_party",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY ROLLUP("political_party") '
+                         'GROUP BY "political_party") '
+
+                         'UNION ALL '
+
+                         '(SELECT '
+                         'NULL "political_party",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician") '
+
                          'ORDER BY "political_party"', str(query))
 
-    def test_build_query_with_rollup_uni_dimension(self):
+    def test_build_query_with_totals_uni_dimension(self):
         query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.candidate.rollup()) \
             .query
 
-        self.assertEqual('SELECT '
+        self.assertEqual('(SELECT '
                          '"candidate_id" "candidate",'
                          '"candidate_name" "candidate_display",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY ROLLUP(("candidate_id","candidate_name")) '
+                         'GROUP BY "candidate","candidate_display") '
+
+                         'UNION ALL '
+
+                         '(SELECT '
+                         'NULL "candidate",'
+                         'NULL "candidate_display",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician") '
+        
                          'ORDER BY "candidate_display"', str(query))
 
-    def test_rollup_following_non_rolled_up_dimensions(self):
+    def test_build_query_with_totals_on_dimension_and_subsequent_dimensions(self):
         query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
             .dimension(slicer.dimensions.timestamp,
-                       slicer.dimensions.candidate.rollup()) \
+                       slicer.dimensions.candidate.rollup(),
+                       slicer.dimensions.political_party) \
             .query
 
-        self.assertEqual('SELECT '
+        self.assertEqual('(SELECT '
                          'TRUNC("timestamp",\'DD\') "timestamp",'
                          '"candidate_id" "candidate",'
                          '"candidate_name" "candidate_display",'
+                         '"political_party" "political_party",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "timestamp",ROLLUP(("candidate_id","candidate_name")) '
-                         'ORDER BY "timestamp","candidate_display"', str(query))
+                         'GROUP BY "timestamp","candidate","candidate_display","political_party") '
 
-    def test_force_all_dimensions_following_rollup_to_be_rolled_up(self):
+                         'UNION ALL '
+
+                         '(SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         'NULL "candidate",'
+                         'NULL "candidate_display",'
+                         'NULL "political_party",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp") '
+                         'ORDER BY "timestamp","candidate_display","political_party"', str(query))
+
+    def test_build_query_with_totals_on_multiple_dimensions_dimension(self):
         query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
-            .dimension(slicer.dimensions.political_party.rollup(),
-                       slicer.dimensions.candidate) \
+            .dimension(slicer.dimensions.timestamp,
+                       slicer.dimensions.candidate.rollup(),
+                       slicer.dimensions.political_party.rollup()) \
             .query
 
-        self.assertEqual('SELECT '
-                         '"political_party" "political_party",'
+        self.assertEqual('(SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
                          '"candidate_id" "candidate",'
                          '"candidate_name" "candidate_display",'
+                         '"political_party" "political_party",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY ROLLUP("political_party",("candidate_id","candidate_name")) '
-                         'ORDER BY "political_party","candidate_display"', str(query))
+                         'GROUP BY "timestamp","candidate","candidate_display","political_party") '
 
-    def test_force_all_dimensions_following_rollup_to_be_rolled_up_with_split_dimension_calls(self):
+                         'UNION ALL '
+
+                         '(SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         'NULL "candidate",'
+                         'NULL "candidate_display",'
+                         'NULL "political_party",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp") '
+
+                         'UNION ALL '
+
+                         '(SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         '"candidate_id" "candidate",'
+                         '"candidate_name" "candidate_display",'
+                         'NULL "political_party",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp","candidate","candidate_display") '
+
+                         'ORDER BY "timestamp","candidate_display","political_party"', str(query))
+
+    def test_build_query_with_totals_cat_dimension_with_references(self):
         query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
+            .dimension(slicer.dimensions.timestamp.reference(f.DayOverDay)) \
             .dimension(slicer.dimensions.political_party.rollup()) \
-            .dimension(slicer.dimensions.candidate) \
             .query
 
-        self.assertEqual('SELECT '
+        # Important that in reference queries when using totals that the null dimensions are omitted from the nested
+        # queries and selected in the container query
+        self.assertEqual('(SELECT '
+                         '"base"."timestamp" "timestamp",'
+                         '"base"."political_party" "political_party",'
+                         '"base"."votes" "votes",'
+                         '"dod"."votes" "votes_dod" '
+                         'FROM ('
+
+                         'SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
                          '"political_party" "political_party",'
-                         '"candidate_id" "candidate",'
-                         '"candidate_name" "candidate_display",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY ROLLUP("political_party",("candidate_id","candidate_name")) '
-                         'ORDER BY "political_party","candidate_display"', str(query))
+                         'GROUP BY "timestamp","political_party"'
+                         ') "base" '
+
+                         'FULL OUTER JOIN ('
+                         'SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         '"political_party" "political_party",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp","political_party"'
+                         ') "dod" '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"dod"."timestamp") '
+                         'AND "base"."political_party"="dod"."political_party") '
+
+                         'UNION ALL '
+
+                         '(SELECT '
+                         '"base"."timestamp" "timestamp",'
+                         'NULL "political_party",'
+                         '"base"."votes" "votes",'
+                         '"dod"."votes" "votes_dod" '
+                         'FROM ('
+                         'SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "base" '
+
+                         'FULL OUTER JOIN ('
+                         'SELECT TRUNC("timestamp",\'DD\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "dod" '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"dod"."timestamp")) '
+                         'ORDER BY "timestamp","political_party"', str(query))
+
+    def test_build_query_with_totals_cat_dimension_with_references_and_date_filters(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS([slicer.metrics.votes])) \
+            .dimension(slicer.dimensions.timestamp.reference(f.DayOverDay)) \
+            .dimension(slicer.dimensions.political_party.rollup()) \
+            .filter(slicer.dimensions.timestamp.between(date(2018, 1, 1), date(2019, 1, 1))) \
+            .query
+
+        self.assertEqual('(SELECT '
+                         '"base"."timestamp" "timestamp",'
+                         '"base"."political_party" "political_party",'
+                         '"base"."votes" "votes",'
+                         '"dod"."votes" "votes_dod" '
+                         'FROM ('
+
+                         'SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         '"political_party" "political_party",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'WHERE "timestamp" BETWEEN \'2018-01-01\' AND \'2019-01-01\' '
+                         'GROUP BY "timestamp","political_party"'
+                         ') "base" '
+
+                         'FULL OUTER JOIN ('
+                         'SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         '"political_party" "political_party",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'WHERE TIMESTAMPADD(\'day\',1,"timestamp") BETWEEN \'2018-01-01\' AND \'2019-01-01\' '
+                         'GROUP BY "timestamp","political_party"'
+                         ') "dod" '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"dod"."timestamp") '
+                         'AND "base"."political_party"="dod"."political_party") '
+
+                         'UNION ALL '
+
+                         '(SELECT '
+                         '"base"."timestamp" "timestamp",'
+                         'NULL "political_party",'
+                         '"base"."votes" "votes",'
+                         '"dod"."votes" "votes_dod" '
+                         'FROM ('
+                         'SELECT '
+                         'TRUNC("timestamp",\'DD\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'WHERE "timestamp" BETWEEN \'2018-01-01\' AND \'2019-01-01\' '
+                         'GROUP BY "timestamp"'
+                         ') "base" '
+
+                         'FULL OUTER JOIN ('
+                         'SELECT TRUNC("timestamp",\'DD\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'WHERE TIMESTAMPADD(\'day\',1,"timestamp") BETWEEN \'2018-01-01\' AND \'2019-01-01\' '
+                         'GROUP BY "timestamp"'
+                         ') "dod" '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"dod"."timestamp")) '
+                         'ORDER BY "timestamp","political_party"', str(query))
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -673,7 +833,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         self.assertEqual('SELECT '
                          '"base"."timestamp" "timestamp",'
                          '"base"."votes" "votes",'
-                         '"sq1"."votes" "votes_dod" '
+                         '"dod"."votes" "votes_dod" '
                          'FROM '
 
                          '('  # nested
@@ -684,15 +844,15 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
-                         ') "sq1" '  # end-nested
+                         ') "dod" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"dod"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
     def test_dimension_with_single_reference_wow(self):
@@ -707,7 +867,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         self.assertEqual('SELECT '
                          '"base"."timestamp" "timestamp",'
                          '"base"."votes" "votes",'
-                         '"sq1"."votes" "votes_wow" '
+                         '"wow"."votes" "votes_wow" '
                          'FROM '
 
                          '('  # nested
@@ -718,15 +878,15 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
-                         ') "sq1" '  # end-nested
+                         ') "wow" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'week\',1,"sq1"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'week\',1,"wow"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
     def test_dimension_with_single_reference_mom(self):
@@ -741,7 +901,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         self.assertEqual('SELECT '
                          '"base"."timestamp" "timestamp",'
                          '"base"."votes" "votes",'
-                         '"sq1"."votes" "votes_mom" '
+                         '"mom"."votes" "votes_mom" '
                          'FROM '
 
                          '('  # nested
@@ -752,15 +912,15 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
-                         ') "sq1" '  # end-nested
+                         ') "mom" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'month\',1,"sq1"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'month\',1,"mom"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
     def test_dimension_with_single_reference_qoq(self):
@@ -775,7 +935,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         self.assertEqual('SELECT '
                          '"base"."timestamp" "timestamp",'
                          '"base"."votes" "votes",'
-                         '"sq1"."votes" "votes_qoq" '
+                         '"qoq"."votes" "votes_qoq" '
                          'FROM '
 
                          '('  # nested
@@ -786,15 +946,15 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
-                         ') "sq1" '  # end-nested
+                         ') "qoq" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'quarter\',1,"sq1"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'quarter\',1,"qoq"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
     def test_dimension_with_single_reference_yoy(self):
@@ -809,7 +969,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         self.assertEqual('SELECT '
                          '"base"."timestamp" "timestamp",'
                          '"base"."votes" "votes",'
-                         '"sq1"."votes" "votes_yoy" '
+                         '"yoy"."votes" "votes_yoy" '
                          'FROM '
 
                          '('  # nested
@@ -820,15 +980,15 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
-                         ') "sq1" '  # end-nested
+                         ') "yoy" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"sq1"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"yoy"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
     def test_dimension_with_single_reference_as_a_delta(self):
@@ -843,7 +1003,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         self.assertEqual('SELECT '
                          '"base"."timestamp" "timestamp",'
                          '"base"."votes" "votes",'
-                         '"base"."votes"-"sq1"."votes" "votes_dod_delta" '
+                         '"base"."votes"-"dod"."votes" "votes_dod_delta" '
                          'FROM '
 
                          '('  # nested
@@ -854,15 +1014,15 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
-                         ') "sq1" '  # end-nested
+                         ') "dod" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"dod"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
     def test_dimension_with_single_reference_as_a_delta_percentage(self):
@@ -877,7 +1037,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         self.assertEqual('SELECT '
                          '"base"."timestamp" "timestamp",'
                          '"base"."votes" "votes",'
-                         '("base"."votes"-"sq1"."votes")*100/NULLIF("sq1"."votes",0) "votes_dod_delta_percent" '
+                         '("base"."votes"-"dod"."votes")*100/NULLIF("dod"."votes",0) "votes_dod_delta_percent" '
                          'FROM '
 
                          '('  # nested
@@ -888,15 +1048,15 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
-                         ') "sq1" '  # end-nested
+                         ') "dod" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"dod"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
     def test_reference_on_dimension_with_weekly_interval(self):
@@ -911,7 +1071,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         self.assertEqual('SELECT '
                          '"base"."timestamp" "timestamp",'
                          '"base"."votes" "votes",'
-                         '"sq1"."votes" "votes_dod" '
+                         '"dod"."votes" "votes_dod" '
                          'FROM '
 
                          '('  # nested
@@ -922,15 +1082,15 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TRUNC("timestamp",\'IW\') "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
-                         ') "sq1" '  # end-nested
+                         ') "dod" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"dod"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
     def test_reference_on_dimension_with_monthly_interval(self):
@@ -945,7 +1105,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         self.assertEqual('SELECT '
                          '"base"."timestamp" "timestamp",'
                          '"base"."votes" "votes",'
-                         '"sq1"."votes" "votes_dod" '
+                         '"dod"."votes" "votes_dod" '
                          'FROM '
 
                          '('  # nested
@@ -956,15 +1116,15 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TRUNC("timestamp",\'MM\') "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
-                         ') "sq1" '  # end-nested
+                         ') "dod" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"dod"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
     def test_reference_on_dimension_with_quarterly_interval(self):
@@ -979,7 +1139,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         self.assertEqual('SELECT '
                          '"base"."timestamp" "timestamp",'
                          '"base"."votes" "votes",'
-                         '"sq1"."votes" "votes_dod" '
+                         '"dod"."votes" "votes_dod" '
                          'FROM '
 
                          '('  # nested
@@ -990,15 +1150,15 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TRUNC("timestamp",\'Q\') "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
-                         ') "sq1" '  # end-nested
+                         ') "dod" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"dod"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
     def test_reference_on_dimension_with_annual_interval(self):
@@ -1013,7 +1173,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         self.assertEqual('SELECT '
                          '"base"."timestamp" "timestamp",'
                          '"base"."votes" "votes",'
-                         '"sq1"."votes" "votes_dod" '
+                         '"dod"."votes" "votes_dod" '
                          'FROM '
 
                          '('  # nested
@@ -1024,15 +1184,15 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TRUNC("timestamp",\'Y\') "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
-                         ') "sq1" '  # end-nested
+                         ') "dod" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"dod"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
     def test_dimension_with_multiple_references(self):
@@ -1048,8 +1208,8 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         self.assertEqual('SELECT '
                          '"base"."timestamp" "timestamp",'
                          '"base"."votes" "votes",'
-                         '"sq1"."votes" "votes_dod",'
-                         '("base"."votes"-"sq2"."votes")*100/NULLIF("sq2"."votes",0) "votes_yoy_delta_percent" '
+                         '"dod"."votes" "votes_dod",'
+                         '("base"."votes"-"yoy"."votes")*100/NULLIF("yoy"."votes",0) "votes_yoy_delta_percent" '
                          'FROM '
 
                          '('  # nested
@@ -1060,25 +1220,25 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
-                         ') "sq1" '  # end-nested
+                         ') "dod" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"dod"."timestamp") '
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
-                         ') "sq2" '  # end-nested
+                         ') "yoy" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"sq2"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"yoy"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
     def test_reference_joins_nested_query_on_dimensions(self):
@@ -1095,7 +1255,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          '"base"."timestamp" "timestamp",'
                          '"base"."political_party" "political_party",'
                          '"base"."votes" "votes",'
-                         '"sq1"."votes" "votes_yoy" '
+                         '"yoy"."votes" "votes_yoy" '
                          'FROM '
 
                          '('  # nested
@@ -1107,17 +1267,17 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp","political_party"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "timestamp",'
                          '"political_party" "political_party",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp","political_party"'
-                         ') "sq1" '  # end-nested
+                         ') "yoy" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"sq1"."timestamp") '
-                         'AND "base"."political_party"="sq1"."political_party" '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"yoy"."timestamp") '
+                         'AND "base"."political_party"="yoy"."political_party" '
                          'ORDER BY "timestamp","political_party"', str(query))
 
     def test_reference_with_unique_dimension_includes_display_definition(self):
@@ -1135,7 +1295,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          '"base"."candidate" "candidate",'
                          '"base"."candidate_display" "candidate_display",'
                          '"base"."votes" "votes",'
-                         '"sq1"."votes" "votes_yoy" '
+                         '"yoy"."votes" "votes_yoy" '
                          'FROM '
 
                          '('  # nested
@@ -1148,7 +1308,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp","candidate","candidate_display"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "timestamp",'
                          '"candidate_id" "candidate",'
@@ -1156,10 +1316,10 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp","candidate","candidate_display"'
-                         ') "sq1" '  # end-nested
+                         ') "yoy" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"sq1"."timestamp") '
-                         'AND "base"."candidate"="sq1"."candidate" '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"yoy"."timestamp") '
+                         'AND "base"."candidate"="yoy"."candidate" '
                          'ORDER BY "timestamp","candidate_display"', str(query))
 
     def test_adjust_reference_dimension_filters_in_reference_query(self):
@@ -1176,7 +1336,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         self.assertEqual('SELECT '
                          '"base"."timestamp" "timestamp",'
                          '"base"."votes" "votes",'
-                         '"sq1"."votes" "votes_dod" '
+                         '"dod"."votes" "votes_dod" '
                          'FROM '
 
                          '('  # nested
@@ -1188,16 +1348,16 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'WHERE TIMESTAMPADD(\'day\',1,"timestamp") BETWEEN \'2018-01-01\' AND \'2018-01-31\' '
                          'GROUP BY "timestamp"'
-                         ') "sq1" '  # end-nested
+                         ') "dod" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"dod"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
     def test_adjust_reference_dimension_filters_in_reference_query_with_multiple_filters(self):
@@ -1216,7 +1376,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         self.assertEqual('SELECT '
                          '"base"."timestamp" "timestamp",'
                          '"base"."votes" "votes",'
-                         '"sq1"."votes" "votes_dod" '
+                         '"dod"."votes" "votes_dod" '
                          'FROM '
 
                          '('  # nested
@@ -1229,7 +1389,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "timestamp",'
                          'SUM("votes") "votes" '
@@ -1237,9 +1397,9 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'WHERE TIMESTAMPADD(\'day\',1,"timestamp") BETWEEN \'2018-01-01\' AND \'2018-01-31\' '
                          'AND "political_party" IN (\'d\') '
                          'GROUP BY "timestamp"'
-                         ') "sq1" '  # end-nested
+                         ') "dod" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"dod"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
     def test_adapt_dow_for_leap_year_for_yoy_reference(self):
@@ -1254,7 +1414,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         self.assertEqual('SELECT '
                          '"base"."timestamp" "timestamp",'
                          '"base"."votes" "votes",'
-                         '"sq1"."votes" "votes_yoy" '
+                         '"yoy"."votes" "votes_yoy" '
                          'FROM '
 
                          '('  # nested
@@ -1265,15 +1425,15 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'IW\')) "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
-                         ') "sq1" '  # end-nested
+                         ') "yoy" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"sq1"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"yoy"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
     def test_adapt_dow_for_leap_year_for_yoy_delta_reference(self):
@@ -1288,7 +1448,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         self.assertEqual('SELECT '
                          '"base"."timestamp" "timestamp",'
                          '"base"."votes" "votes",'
-                         '"base"."votes"-"sq1"."votes" "votes_yoy_delta" '
+                         '"base"."votes"-"yoy"."votes" "votes_yoy_delta" '
                          'FROM '
 
                          '('  # nested
@@ -1299,15 +1459,15 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'IW\')) "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
-                         ') "sq1" '  # end-nested
+                         ') "yoy" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"sq1"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"yoy"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
 
@@ -1323,7 +1483,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         self.assertEqual('SELECT '
                          '"base"."timestamp" "timestamp",'
                          '"base"."votes" "votes",'
-                         '("base"."votes"-"sq1"."votes")*100/NULLIF("sq1"."votes",0) "votes_yoy_delta_percent" '
+                         '("base"."votes"-"yoy"."votes")*100/NULLIF("yoy"."votes",0) "votes_yoy_delta_percent" '
                          'FROM '
 
                          '('  # nested
@@ -1334,15 +1494,15 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'IW\')) "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
-                         ') "sq1" '  # end-nested
+                         ') "yoy" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"sq1"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"yoy"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
     def test_adapt_dow_for_leap_year_for_yoy_reference_with_date_filter(self):
@@ -1358,7 +1518,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         self.assertEqual('SELECT '
                          '"base"."timestamp" "timestamp",'
                          '"base"."votes" "votes",'
-                         '"sq1"."votes" "votes_yoy" '
+                         '"yoy"."votes" "votes_yoy" '
                          'FROM '
 
                          '('  # nested
@@ -1370,16 +1530,16 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'IW\')) "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'WHERE TIMESTAMPADD(\'year\',1,"timestamp") BETWEEN \'2018-01-01\' AND \'2018-01-31\' '
                          'GROUP BY "timestamp"'
-                         ') "sq1" '  # end-nested
+                         ') "yoy" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"sq1"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"yoy"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
     def test_adding_duplicate_reference_does_not_join_more_queries(self):
@@ -1395,7 +1555,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         self.assertEqual('SELECT '
                          '"base"."timestamp" "timestamp",'
                          '"base"."votes" "votes",'
-                         '"sq1"."votes" "votes_dod" '
+                         '"dod"."votes" "votes_dod" '
                          'FROM '
 
                          '('  # nested
@@ -1406,15 +1566,15 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
-                         ') "sq1" '  # end-nested
+                         ') "dod" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"dod"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
     def test_use_same_nested_query_for_joining_references_with_same_period_and_dimension(self):
@@ -1431,9 +1591,9 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         self.assertEqual('SELECT '
                          '"base"."timestamp" "timestamp",'
                          '"base"."votes" "votes",'
-                         '"sq1"."votes" "votes_dod",'
-                         '"base"."votes"-"sq1"."votes" "votes_dod_delta",'
-                         '("base"."votes"-"sq1"."votes")*100/NULLIF("sq1"."votes",0) "votes_dod_delta_percent" '
+                         '"dod"."votes" "votes_dod",'
+                         '"base"."votes"-"dod"."votes" "votes_dod_delta",'
+                         '("base"."votes"-"dod"."votes")*100/NULLIF("dod"."votes",0) "votes_dod_delta_percent" '
                          'FROM '
 
                          '('  # nested
@@ -1444,15 +1604,15 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
-                         ') "sq1" '  # end-nested
+                         ') "dod" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"dod"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
     def test_use_same_nested_query_for_joining_references_with_same_period_and_dimension_with_different_periods(self):
@@ -1470,10 +1630,10 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         self.assertEqual('SELECT '
                          '"base"."timestamp" "timestamp",'
                          '"base"."votes" "votes",'
-                         '"sq1"."votes" "votes_dod",'
-                         '"base"."votes"-"sq1"."votes" "votes_dod_delta",'
-                         '"sq2"."votes" "votes_yoy",'
-                         '"base"."votes"-"sq2"."votes" "votes_yoy_delta" '
+                         '"dod"."votes" "votes_dod",'
+                         '"base"."votes"-"dod"."votes" "votes_dod_delta",'
+                         '"yoy"."votes" "votes_yoy",'
+                         '"base"."votes"-"yoy"."votes" "votes_yoy_delta" '
                          'FROM '
 
                          '('  # nested
@@ -1484,25 +1644,25 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'GROUP BY "timestamp"'
                          ') "base" '  # end-nested
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
-                         ') "sq1" '  # end-nested
+                         ') "dod" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"sq1"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"dod"."timestamp") '
 
-                         'LEFT JOIN ('  # nested
+                         'FULL OUTER JOIN ('  # nested
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "timestamp",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "timestamp"'
-                         ') "sq2" '  # end-nested
+                         ') "yoy" '  # end-nested
 
-                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"sq2"."timestamp") '
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"yoy"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
 

@@ -1,3 +1,7 @@
+from pypika import functions as fn
+from pypika.queries import QueryBuilder
+
+
 class Reference(object):
     def __init__(self, key, label, time_unit: str, interval: int, delta=False, percent=False):
         self.key = key
@@ -30,6 +34,32 @@ WeekOverWeek = Reference('wow', 'WoW', 'week', 1)
 MonthOverMonth = Reference('mom', 'MoM', 'month', 1)
 QuarterOverQuarter = Reference('qoq', 'QoQ', 'quarter', 1)
 YearOverYear = Reference('yoy', 'YoY', 'year', 1)
+
+
+def reference_term(reference: Reference,
+                   original_query: QueryBuilder,
+                   ref_query: QueryBuilder):
+    """
+    WRITEME
+
+    :param reference:
+    :param original_query:
+    :param ref_query:
+    :return:
+    """
+
+    def ref_field(metric):
+        return ref_query.field(metric.key)
+
+    if reference.is_delta:
+        if reference.is_percent:
+            return lambda metric: (original_query.field(metric.key) - ref_field(metric)) \
+                                  * \
+                                  (100 / fn.NullIf(ref_field(metric), 0))
+
+        return lambda metric: original_query.field(metric.key) - ref_field(metric)
+
+    return ref_field
 
 
 def reference_key(metric, reference):

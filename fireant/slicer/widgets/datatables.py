@@ -7,6 +7,7 @@ from fireant import (
     Metric,
     formats,
     utils,
+    UniqueDimension,
 )
 from .base import (
     TransformableWidget,
@@ -174,7 +175,9 @@ class DataTablesJS(TransformableWidget):
                           render=dict(_='value'))
 
             is_cont_dim = isinstance(dimension, ContinuousDimension)
-            is_uni_dim_no_display = (hasattr(dimension, 'display_definition') and dimension.display_definition is None)
+            is_uni_dim_no_display = isinstance(dimension, UniqueDimension) \
+                                    and not dimension.has_display_field
+
             if not is_cont_dim and not is_uni_dim_no_display:
                 column['render']['display'] = 'display'
 
