@@ -397,15 +397,16 @@ class QueryBuilderDimensionTotalsTests(TestCase):
     def test_build_query_with_totals_cat_dimension_with_references(self):
         query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
-            .dimension(slicer.dimensions.timestamp.reference(f.DayOverDay)) \
-            .dimension(slicer.dimensions.political_party.rollup()) \
+            .dimension(slicer.dimensions.timestamp,
+                       slicer.dimensions.political_party.rollup()) \
+            .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .query
 
         # Important that in reference queries when using totals that the null dimensions are omitted from the nested
         # queries and selected in the container query
         self.assertEqual('(SELECT '
-                         '"base"."timestamp" "timestamp",'
-                         '"base"."political_party" "political_party",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'day\',1,"dod"."timestamp")) "timestamp",'
+                         'COALESCE("base"."political_party","dod"."political_party") "political_party",'
                          '"base"."votes" "votes",'
                          '"dod"."votes" "votes_dod" '
                          'FROM ('
@@ -432,7 +433,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                          'UNION ALL '
 
                          '(SELECT '
-                         '"base"."timestamp" "timestamp",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'day\',1,"dod"."timestamp")) "timestamp",'
                          'NULL "political_party",'
                          '"base"."votes" "votes",'
                          '"dod"."votes" "votes_dod" '
@@ -456,14 +457,15 @@ class QueryBuilderDimensionTotalsTests(TestCase):
     def test_build_query_with_totals_cat_dimension_with_references_and_date_filters(self):
         query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
-            .dimension(slicer.dimensions.timestamp.reference(f.DayOverDay)) \
+            .dimension(slicer.dimensions.timestamp) \
             .dimension(slicer.dimensions.political_party.rollup()) \
+            .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .filter(slicer.dimensions.timestamp.between(date(2018, 1, 1), date(2019, 1, 1))) \
             .query
 
         self.assertEqual('(SELECT '
-                         '"base"."timestamp" "timestamp",'
-                         '"base"."political_party" "political_party",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'day\',1,"dod"."timestamp")) "timestamp",'
+                         'COALESCE("base"."political_party","dod"."political_party") "political_party",'
                          '"base"."votes" "votes",'
                          '"dod"."votes" "votes_dod" '
                          'FROM ('
@@ -492,7 +494,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                          'UNION ALL '
 
                          '(SELECT '
-                         '"base"."timestamp" "timestamp",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'day\',1,"dod"."timestamp")) "timestamp",'
                          'NULL "political_party",'
                          '"base"."votes" "votes",'
                          '"dod"."votes" "votes_dod" '
@@ -821,17 +823,76 @@ class QueryBuilderOperationTests(TestCase):
 class QueryBuilderDatetimeReferenceTests(TestCase):
     maxDiff = None
 
+    def test_single_reference_dod_with_no_dimension_uses_multiple_from_clauses_instead_of_joins(self):
+        query = slicer.data \
+            .widget(f.HighCharts(
+              axes=[f.HighCharts.LineChart(
+                    [slicer.metrics.votes])])) \
+            .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
+            .query
+
+        self.assertEqual('SELECT '
+                         '"base"."votes" "votes",'
+                         '"dod"."votes" "votes_dod" '
+
+                         'FROM ('
+                         'SELECT '
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician"'
+                         ') "base",('
+                         'SELECT '
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician"'
+                         ') "dod"', str(query))
+
+    def test_single_reference_dod_with_dimension_but_not_reference_dimension_in_query_using_filter(self):
+        query = slicer.data \
+            .widget(f.HighCharts(
+              axes=[f.HighCharts.LineChart(
+                    [slicer.metrics.votes])])) \
+            .dimension(slicer.dimensions.political_party) \
+            .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
+            .filter(slicer.dimensions.timestamp.between(date(2000, 1, 1), date(2000, 3, 1))) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'COALESCE("base"."political_party","dod"."political_party") "political_party",'
+                         '"base"."votes" "votes",'
+                         '"dod"."votes" "votes_dod" '
+                         'FROM '
+
+                         '('  # nested
+                         'SELECT '
+                         '"political_party" "political_party",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'WHERE "timestamp" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+                         'GROUP BY "political_party"'
+                         ') "base" '  # end-nested
+
+                         'FULL OUTER JOIN ('  # nested
+                         'SELECT '
+                         '"political_party" "political_party",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'WHERE TIMESTAMPADD(\'day\',1,"timestamp") BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
+                         'GROUP BY "political_party"'
+                         ') "dod" '  # end-nested
+
+                         'ON "base"."political_party"="dod"."political_party" '
+                         'ORDER BY "political_party"', str(query))
+
     def test_dimension_with_single_reference_dod(self):
         query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp
-                       .reference(f.DayOverDay)) \
+            .dimension(slicer.dimensions.timestamp) \
+            .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'day\',1,"dod"."timestamp")) "timestamp",'
                          '"base"."votes" "votes",'
                          '"dod"."votes" "votes_dod" '
                          'FROM '
@@ -860,12 +921,12 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp
-                       .reference(f.WeekOverWeek)) \
+            .dimension(slicer.dimensions.timestamp) \
+            .reference(f.WeekOverWeek(slicer.dimensions.timestamp)) \
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'week\',1,"wow"."timestamp")) "timestamp",'
                          '"base"."votes" "votes",'
                          '"wow"."votes" "votes_wow" '
                          'FROM '
@@ -894,12 +955,12 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp
-                       .reference(f.MonthOverMonth)) \
+            .dimension(slicer.dimensions.timestamp) \
+            .reference(f.MonthOverMonth(slicer.dimensions.timestamp)) \
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'month\',1,"mom"."timestamp")) "timestamp",'
                          '"base"."votes" "votes",'
                          '"mom"."votes" "votes_mom" '
                          'FROM '
@@ -928,12 +989,12 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp
-                       .reference(f.QuarterOverQuarter)) \
+            .dimension(slicer.dimensions.timestamp) \
+            .reference(f.QuarterOverQuarter(slicer.dimensions.timestamp)) \
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'quarter\',1,"qoq"."timestamp")) "timestamp",'
                          '"base"."votes" "votes",'
                          '"qoq"."votes" "votes_qoq" '
                          'FROM '
@@ -962,12 +1023,12 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp
-                       .reference(f.YearOverYear)) \
+            .dimension(slicer.dimensions.timestamp) \
+            .reference(f.YearOverYear(slicer.dimensions.timestamp)) \
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'year\',1,"yoy"."timestamp")) "timestamp",'
                          '"base"."votes" "votes",'
                          '"yoy"."votes" "votes_yoy" '
                          'FROM '
@@ -996,12 +1057,12 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp
-                       .reference(f.DayOverDay.delta())) \
+            .dimension(slicer.dimensions.timestamp) \
+            .reference(f.DayOverDay(slicer.dimensions.timestamp, delta=True)) \
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'day\',1,"dod"."timestamp")) "timestamp",'
                          '"base"."votes" "votes",'
                          '"base"."votes"-"dod"."votes" "votes_dod_delta" '
                          'FROM '
@@ -1030,12 +1091,12 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp
-                       .reference(f.DayOverDay.delta(percent=True))) \
+            .dimension(slicer.dimensions.timestamp) \
+            .reference(f.DayOverDay(slicer.dimensions.timestamp, delta_percent=True)) \
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'day\',1,"dod"."timestamp")) "timestamp",'
                          '"base"."votes" "votes",'
                          '("base"."votes"-"dod"."votes")*100/NULLIF("dod"."votes",0) "votes_dod_delta_percent" '
                          'FROM '
@@ -1060,16 +1121,51 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'ORDER BY "timestamp"', str(query))
 
     def test_reference_on_dimension_with_weekly_interval(self):
+        weekly_timestamp = slicer.dimensions.timestamp(f.weekly)
         query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp(f.weekly)
-                       .reference(f.DayOverDay)) \
+            .dimension(weekly_timestamp) \
+            .reference(f.DayOverDay(weekly_timestamp)) \
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'day\',1,"dod"."timestamp")) "timestamp",'
+                         '"base"."votes" "votes",'
+                         '"dod"."votes" "votes_dod" '
+                         'FROM '
+
+                         '('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'IW\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "base" '  # end-nested
+
+                         'FULL OUTER JOIN ('  # nested
+                         'SELECT '
+                         'TRUNC("timestamp",\'IW\') "timestamp",'
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "timestamp"'
+                         ') "dod" '  # end-nested
+
+                         'ON "base"."timestamp"=TIMESTAMPADD(\'day\',1,"dod"."timestamp") '
+                         'ORDER BY "timestamp"', str(query))
+
+    def test_reference_on_dimension_with_weekly_interval_no_interval_on_reference(self):
+        query = slicer.data \
+            .widget(f.HighCharts(
+              axes=[f.HighCharts.LineChart(
+                    [slicer.metrics.votes])])) \
+            .dimension(slicer.dimensions.timestamp(f.weekly)) \
+            .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'day\',1,"dod"."timestamp")) "timestamp",'
                          '"base"."votes" "votes",'
                          '"dod"."votes" "votes_dod" '
                          'FROM '
@@ -1098,12 +1194,12 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp(f.monthly)
-                       .reference(f.DayOverDay)) \
+            .dimension(slicer.dimensions.timestamp(f.monthly)) \
+            .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'day\',1,"dod"."timestamp")) "timestamp",'
                          '"base"."votes" "votes",'
                          '"dod"."votes" "votes_dod" '
                          'FROM '
@@ -1132,12 +1228,12 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp(f.quarterly)
-                       .reference(f.DayOverDay)) \
+            .dimension(slicer.dimensions.timestamp(f.quarterly)) \
+            .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'day\',1,"dod"."timestamp")) "timestamp",'
                          '"base"."votes" "votes",'
                          '"dod"."votes" "votes_dod" '
                          'FROM '
@@ -1166,12 +1262,12 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp(f.annually)
-                       .reference(f.DayOverDay)) \
+            .dimension(slicer.dimensions.timestamp(f.annually)) \
+            .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'day\',1,"dod"."timestamp")) "timestamp",'
                          '"base"."votes" "votes",'
                          '"dod"."votes" "votes_dod" '
                          'FROM '
@@ -1200,13 +1296,19 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp
-                       .reference(f.DayOverDay)
-                       .reference(f.YearOverYear.delta(percent=True))) \
+            .dimension(slicer.dimensions.timestamp) \
+            .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
+            .reference(f.YearOverYear(slicer.dimensions.timestamp, delta_percent=True)) \
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
+        
+                         'COALESCE('
+                         '"base"."timestamp",'
+                         'TIMESTAMPADD(\'day\',1,"dod"."timestamp"),'
+                         'TIMESTAMPADD(\'year\',1,"yoy"."timestamp")'
+                         ') "timestamp",'
+        
                          '"base"."votes" "votes",'
                          '"dod"."votes" "votes_dod",'
                          '("base"."votes"-"yoy"."votes")*100/NULLIF("yoy"."votes",0) "votes_yoy_delta_percent" '
@@ -1246,14 +1348,14 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp
-                       .reference(f.YearOverYear)) \
+            .dimension(slicer.dimensions.timestamp) \
             .dimension(slicer.dimensions.political_party) \
+            .reference(f.YearOverYear(slicer.dimensions.timestamp)) \
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
-                         '"base"."political_party" "political_party",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'year\',1,"yoy"."timestamp")) "timestamp",'
+                         'COALESCE("base"."political_party","yoy"."political_party") "political_party",'
                          '"base"."votes" "votes",'
                          '"yoy"."votes" "votes_yoy" '
                          'FROM '
@@ -1285,15 +1387,15 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp
-                       .reference(f.YearOverYear)) \
+            .dimension(slicer.dimensions.timestamp) \
             .dimension(slicer.dimensions.candidate) \
+            .reference(f.YearOverYear(slicer.dimensions.timestamp)) \
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
-                         '"base"."candidate" "candidate",'
-                         '"base"."candidate_display" "candidate_display",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'year\',1,"yoy"."timestamp")) "timestamp",'
+                         'COALESCE("base"."candidate","yoy"."candidate") "candidate",'
+                         'COALESCE("base"."candidate_display","yoy"."candidate_display") "candidate_display",'
                          '"base"."votes" "votes",'
                          '"yoy"."votes" "votes_yoy" '
                          'FROM '
@@ -1327,14 +1429,14 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp
-                       .reference(f.DayOverDay)) \
+            .dimension(slicer.dimensions.timestamp) \
+            .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .filter(slicer.dimensions.timestamp
                     .between(date(2018, 1, 1), date(2018, 1, 31))) \
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'day\',1,"dod"."timestamp")) "timestamp",'
                          '"base"."votes" "votes",'
                          '"dod"."votes" "votes_dod" '
                          'FROM '
@@ -1365,8 +1467,8 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp
-                       .reference(f.DayOverDay)) \
+            .dimension(slicer.dimensions.timestamp) \
+            .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .filter(slicer.dimensions.timestamp
                     .between(date(2018, 1, 1), date(2018, 1, 31))) \
             .filter(slicer.dimensions.political_party
@@ -1374,7 +1476,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'day\',1,"dod"."timestamp")) "timestamp",'
                          '"base"."votes" "votes",'
                          '"dod"."votes" "votes_dod" '
                          'FROM '
@@ -1407,12 +1509,12 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp(f.weekly)
-                       .reference(f.YearOverYear)) \
+            .dimension(slicer.dimensions.timestamp(f.weekly)) \
+            .reference(f.YearOverYear(slicer.dimensions.timestamp)) \
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'year\',1,"yoy"."timestamp")) "timestamp",'
                          '"base"."votes" "votes",'
                          '"yoy"."votes" "votes_yoy" '
                          'FROM '
@@ -1441,12 +1543,12 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp(f.weekly)
-                       .reference(f.YearOverYear.delta())) \
+            .dimension(slicer.dimensions.timestamp(f.weekly)) \
+            .reference(f.YearOverYear(slicer.dimensions.timestamp, delta=True)) \
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'year\',1,"yoy"."timestamp")) "timestamp",'
                          '"base"."votes" "votes",'
                          '"base"."votes"-"yoy"."votes" "votes_yoy_delta" '
                          'FROM '
@@ -1470,18 +1572,17 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                          'ON "base"."timestamp"=TIMESTAMPADD(\'year\',1,"yoy"."timestamp") '
                          'ORDER BY "timestamp"', str(query))
 
-
     def test_adapt_dow_for_leap_year_for_yoy_delta_percent_reference(self):
         query = slicer.data \
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp(f.weekly)
-                       .reference(f.YearOverYear.delta(True))) \
+            .dimension(slicer.dimensions.timestamp(f.weekly)) \
+            .reference(f.YearOverYear(slicer.dimensions.timestamp, delta_percent=True)) \
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'year\',1,"yoy"."timestamp")) "timestamp",'
                          '"base"."votes" "votes",'
                          '("base"."votes"-"yoy"."votes")*100/NULLIF("yoy"."votes",0) "votes_yoy_delta_percent" '
                          'FROM '
@@ -1510,13 +1611,13 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp(f.weekly)
-                       .reference(f.YearOverYear)) \
+            .dimension(slicer.dimensions.timestamp(f.weekly)) \
+            .reference(f.YearOverYear(slicer.dimensions.timestamp)) \
             .filter(slicer.dimensions.timestamp.between(date(2018, 1, 1), date(2018, 1, 31))) \
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'year\',1,"yoy"."timestamp")) "timestamp",'
                          '"base"."votes" "votes",'
                          '"yoy"."votes" "votes_yoy" '
                          'FROM '
@@ -1547,13 +1648,13 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp
-                       .reference(f.DayOverDay)
-                       .reference(f.DayOverDay)) \
+            .dimension(slicer.dimensions.timestamp) \
+            .reference(f.DayOverDay(slicer.dimensions.timestamp),
+                       f.DayOverDay(slicer.dimensions.timestamp)) \
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'day\',1,"dod"."timestamp")) "timestamp",'
                          '"base"."votes" "votes",'
                          '"dod"."votes" "votes_dod" '
                          'FROM '
@@ -1582,14 +1683,14 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp
-                       .reference(f.DayOverDay)
-                       .reference(f.DayOverDay.delta())
-                       .reference(f.DayOverDay.delta(percent=True))) \
+            .dimension(slicer.dimensions.timestamp) \
+            .reference(f.DayOverDay(slicer.dimensions.timestamp),
+                       f.DayOverDay(slicer.dimensions.timestamp, delta=True),
+                       f.DayOverDay(slicer.dimensions.timestamp, delta_percent=True)) \
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
+                         'COALESCE("base"."timestamp",TIMESTAMPADD(\'day\',1,"dod"."timestamp")) "timestamp",'
                          '"base"."votes" "votes",'
                          '"dod"."votes" "votes_dod",'
                          '"base"."votes"-"dod"."votes" "votes_dod_delta",'
@@ -1620,15 +1721,19 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .widget(f.HighCharts(
               axes=[f.HighCharts.LineChart(
                     [slicer.metrics.votes])])) \
-            .dimension(slicer.dimensions.timestamp
-                       .reference(f.DayOverDay)
-                       .reference(f.DayOverDay.delta())
-                       .reference(f.YearOverYear)
-                       .reference(f.YearOverYear.delta())) \
+            .dimension(slicer.dimensions.timestamp) \
+            .reference(f.DayOverDay(slicer.dimensions.timestamp),
+                       f.DayOverDay(slicer.dimensions.timestamp, delta=True),
+                       f.YearOverYear(slicer.dimensions.timestamp),
+                       f.YearOverYear(slicer.dimensions.timestamp, delta=True)) \
             .query
 
         self.assertEqual('SELECT '
-                         '"base"."timestamp" "timestamp",'
+                         'COALESCE('
+                         '"base"."timestamp",'
+                         'TIMESTAMPADD(\'day\',1,"dod"."timestamp"),'
+                         'TIMESTAMPADD(\'year\',1,"yoy"."timestamp")'
+                         ') "timestamp",'
                          '"base"."votes" "votes",'
                          '"dod"."votes" "votes_dod",'
                          '"base"."votes"-"dod"."votes" "votes_dod_delta",'
@@ -2119,7 +2224,8 @@ class QueryBuilderRenderTests(TestCase):
 
         mock_widget.transform.assert_called_once_with(mock_fetch_data.return_value,
                                                       slicer,
-                                                      DimensionMatcher(slicer.dimensions.timestamp))
+                                                      DimensionMatcher(slicer.dimensions.timestamp),
+                                                      [])
 
     def test_returns_results_from_widget_transform(self, mock_fetch_data: Mock):
         mock_widget = f.Widget([slicer.metrics.votes])

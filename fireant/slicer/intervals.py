@@ -29,6 +29,9 @@ class DatetimeInterval(object):
     def __str__(self):
         return self.key
 
+    def __repr__(self):
+        return 'DatetimeInterval(\'{}\')'.format(self.key)
+
 
 hourly = DatetimeInterval('hour')
 daily = DatetimeInterval('day')

@@ -2,7 +2,6 @@ from typing import Iterable
 
 from fireant.utils import immutable
 from pypika.terms import (
-    ValueWrapper,
     NullValue,
 )
 from .base import SlicerElement
@@ -46,9 +45,9 @@ class BooleanDimension(Dimension):
     """
 
     def __init__(self, key, label=None, definition=None):
-        super(BooleanDimension, self).__init__(key=key,
-                                               label=label,
-                                               definition=definition)
+        super(BooleanDimension, self).__init__(key,
+                                               label,
+                                               definition)
 
     def is_(self, value: bool):
         """
@@ -69,9 +68,9 @@ class CategoricalDimension(Dimension):
     """
 
     def __init__(self, key, label=None, definition=None, display_values=()):
-        super(CategoricalDimension, self).__init__(key=key,
-                                                   label=label,
-                                                   definition=definition)
+        super(CategoricalDimension, self).__init__(key,
+                                                   label,
+                                                   definition)
         self.display_values = dict(display_values)
 
     def isin(self, values: Iterable):
@@ -108,11 +107,10 @@ class UniqueDimension(Dimension):
     """
 
     def __init__(self, key, label=None, definition=None, display_definition=None):
-        super(UniqueDimension, self).__init__(key=key,
-                                              label=label,
-                                              definition=definition,
-                                              display_definition=display_definition)
-
+        super(UniqueDimension, self).__init__(key,
+                                              label,
+                                              definition,
+                                              display_definition)
 
     def __hash__(self):
         if self.has_display_field:
@@ -182,7 +180,9 @@ class DisplayDimension(Dimension):
     """
 
     def __init__(self, dimension):
-        super(DisplayDimension, self).__init__(dimension.display_key, dimension.label, dimension.display_definition)
+        super(DisplayDimension, self).__init__(dimension.display_key,
+                                               dimension.label,
+                                               dimension.display_definition)
 
 
 class ContinuousDimension(Dimension):
@@ -192,9 +192,9 @@ class ContinuousDimension(Dimension):
     """
 
     def __init__(self, key, label=None, definition=None, default_interval=NumericInterval(1, 0)):
-        super(ContinuousDimension, self).__init__(key=key,
-                                                  label=label,
-                                                  definition=definition)
+        super(ContinuousDimension, self).__init__(key,
+                                                  label,
+                                                  definition)
         self.interval = default_interval
 
 
@@ -206,11 +206,10 @@ class DatetimeDimension(ContinuousDimension):
     """
 
     def __init__(self, key, label=None, definition=None, default_interval=daily):
-        super(DatetimeDimension, self).__init__(key=key,
-                                                label=label,
-                                                definition=definition,
+        super(DatetimeDimension, self).__init__(key,
+                                                label,
+                                                definition,
                                                 default_interval=default_interval)
-        self.references = []
 
     @immutable
     def __call__(self, interval):
@@ -231,18 +230,6 @@ class DatetimeDimension(ContinuousDimension):
         """
         self.interval = interval
 
-    @immutable
-    def reference(self, reference):
-        """
-        Add a reference to this dimension when building a slicer query.
-
-        :param reference:
-            A reference to add to the query
-        :return:
-            A copy of the dimension with the reference added.
-        """
-        self.references.append(reference)
-
     def between(self, start, stop):
         """
         Creates a filter to filter a slicer query.
@@ -261,5 +248,11 @@ class DatetimeDimension(ContinuousDimension):
 class TotalsDimension(Dimension):
     def __init__(self, dimension):
         totals_definition = NullValue()
-        display_definition = totals_definition if dimension.has_display_field else None
-        super(Dimension, self).__init__(dimension.key, dimension.label, totals_definition, display_definition)
+        display_definition = totals_definition \
+            if dimension.has_display_field \
+            else None
+
+        super(Dimension, self).__init__(dimension.key,
+                                        dimension.label,
+                                        totals_definition,
+                                        display_definition)

@@ -1,19 +1,19 @@
+import pandas as pd
 from typing import (
     Dict,
     Iterable,
 )
 
-import pandas as pd
+from fireant.utils import immutable
 from pypika import (
     Order,
     functions as fn,
 )
 from pypika.enums import SqlTypes
-
-from fireant.utils import immutable
 from .database import fetch_data
 from .finders import (
     find_and_group_references_for_dimensions,
+    find_and_replace_reference_dimensions,
     find_dimensions_with_totals,
     find_metrics_for_widgets,
     find_operations_for_widgets,
@@ -21,7 +21,7 @@ from .finders import (
 from .makers import (
     make_orders_for_dimensions,
     make_slicer_query,
-    make_slicer_query_with_totals,
+    make_slicer_query_with_references_and_totals,
 )
 from ..base import SlicerElement
 
@@ -32,6 +32,7 @@ class QueryBuilder(object):
         self.table = table
         self._dimensions = []
         self._filters = []
+        self._references = []
 
     @immutable
     def filter(self, *filters):
@@ -88,6 +89,18 @@ class SlicerQueryBuilder(QueryBuilder):
                              if dimension not in self._dimensions]
 
     @immutable
+    def reference(self, *references):
+        """
+        Add a reference for a dimension when building a slicer query.
+
+        :param references:
+            References to add to the query
+        :return:
+            A copy of the dimension with the reference added.
+        """
+        self._references += references
+
+    @immutable
     def orderby(self, element: SlicerElement, orientation=None):
         """
         :param element:
@@ -106,26 +119,26 @@ class SlicerQueryBuilder(QueryBuilder):
         normally produced is wrapped in an outer query and a query for each reference is joined based on the referenced
         dimension shifted.
         """
-        database = self.slicer.database
-        table = self.table
-        joins = self.slicer.joins
-        dimensions = self._dimensions
-        metrics = find_metrics_for_widgets(self._widgets)
-        filters = self._filters
-
-        # Validate
+        # First run validation for the query on all widgets
         for widget in self._widgets:
             if hasattr(widget, 'validate'):
-                widget.validate(dimensions)
+                widget.validate(self._dimensions)
 
-        reference_groups = find_and_group_references_for_dimensions(dimensions)
-        totals_dimensions = find_dimensions_with_totals(dimensions)
+        self._references = find_and_replace_reference_dimensions(self._references, self._dimensions)
+        reference_groups = find_and_group_references_for_dimensions(self._references)
+        totals_dimensions = find_dimensions_with_totals(self._dimensions)
 
-        query = make_slicer_query_with_totals(database, table, joins, dimensions, metrics, filters,
-                                              reference_groups, totals_dimensions)
+        query = make_slicer_query_with_references_and_totals(self.slicer.database,
+                                                             self.table,
+                                                             self.slicer.joins,
+                                                             self._dimensions,
+                                                             find_metrics_for_widgets(self._widgets),
+                                                             self._filters,
+                                                             reference_groups,
+                                                             totals_dimensions)
 
         # Add ordering
-        orders = (self._orders or make_orders_for_dimensions(dimensions))
+        orders = (self._orders or make_orders_for_dimensions(self._dimensions))
         for (term, orientation) in orders:
             query = query.orderby(term, order=orientation)
 
@@ -154,7 +167,7 @@ class SlicerQueryBuilder(QueryBuilder):
             data_frame[operation.key] = operation.apply(data_frame)
 
         # Apply transformations
-        return [widget.transform(data_frame, self.slicer, self._dimensions)
+        return [widget.transform(data_frame, self.slicer, self._dimensions, self._references)
                 for widget in self._widgets]
 
     def __str__(self):
@@ -183,8 +196,7 @@ class DimensionOptionQueryBuilder(QueryBuilder):
         The slicer query extends this with metrics, references, and totals.
         """
 
-        return make_slicer_query(query_cls=self.slicer.database.query_cls,
-                                 trunc_date=self.slicer.database.trunc_date,
+        return make_slicer_query(database=self.slicer.database,
                                  base_table=self.table,
                                  joins=self.slicer.joins,
                                  dimensions=self._dimensions,

@@ -32,7 +32,7 @@ class HighChartsLineChartTransformerTests(TestCase):
     def test_single_metric_line_chart(self):
         result = HighCharts(title="Time Series, Single Metric",
                             axes=[self.chart_class([slicer.metrics.votes])]) \
-            .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp])
+            .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp], [])
 
         self.assertEqual({
             "title": {"text": "Time Series, Single Metric"},
@@ -71,7 +71,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         votes.prefix = '$'
         result = HighCharts(title="Time Series, Single Metric",
                             axes=[self.chart_class([votes])]) \
-            .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp])
+            .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp], [])
 
         self.assertEqual({
             "title": {"text": "Time Series, Single Metric"},
@@ -110,7 +110,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         votes.suffix = '%'
         result = HighCharts(title="Time Series, Single Metric",
                             axes=[self.chart_class([votes])]) \
-            .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp])
+            .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp], [])
 
         self.assertEqual({
             "title": {"text": "Time Series, Single Metric"},
@@ -149,7 +149,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         votes.precision = 2
         result = HighCharts(title="Time Series, Single Metric",
                             axes=[self.chart_class([votes])]) \
-            .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp])
+            .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp], [])
 
         self.assertEqual({
             "title": {"text": "Time Series, Single Metric"},
@@ -186,7 +186,7 @@ class HighChartsLineChartTransformerTests(TestCase):
     def test_single_operation_line_chart(self):
         result = HighCharts(title="Time Series, Single Metric",
                             axes=[self.chart_class([CumSum(slicer.metrics.votes)])]) \
-            .transform(cont_dim_operation_df, slicer, [slicer.dimensions.timestamp])
+            .transform(cont_dim_operation_df, slicer, [slicer.dimensions.timestamp], [])
 
         self.assertEqual({
             "title": {"text": "Time Series, Single Metric"},
@@ -224,7 +224,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         result = HighCharts(title="Time Series with Unique Dimension and Single Metric",
                             axes=[self.chart_class([slicer.metrics.votes])]) \
             .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp,
-                                                 slicer.dimensions.state])
+                                                 slicer.dimensions.state], [])
 
         self.assertEqual({
             "title": {"text": "Time Series with Unique Dimension and Single Metric"},
@@ -282,7 +282,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                             axes=[self.chart_class([slicer.metrics.votes,
                                                     slicer.metrics.wins])]) \
             .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp,
-                                                 slicer.dimensions.state])
+                                                 slicer.dimensions.state], [])
 
         self.assertEqual({
             "title": {"text": "Time Series with Unique Dimension and Multiple Metrics"},
@@ -378,7 +378,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                             axes=[self.chart_class([slicer.metrics.votes]),
                                   self.chart_class([slicer.metrics.wins]), ]) \
             .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp,
-                                                 slicer.dimensions.state])
+                                                 slicer.dimensions.state], [])
 
         self.assertEqual({
             "title": {"text": "Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"},
@@ -478,7 +478,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                             axes=[self.chart_class([slicer.metrics.votes]),
                                   self.chart_class([slicer.metrics.wins]), ]) \
             .transform(cont_uni_dim_totals_df, slicer, [slicer.dimensions.timestamp.rollup(),
-                                                        slicer.dimensions.state.rollup()])
+                                                        slicer.dimensions.state.rollup()], [])
 
         self.assertEqual({
             "title": {"text": "Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"},
@@ -616,7 +616,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                             axes=[self.chart_class([slicer.metrics.votes]),
                                   self.chart_class([slicer.metrics.wins]), ]) \
             .transform(cont_uni_dim_all_totals_df, slicer, [slicer.dimensions.timestamp.rollup(),
-                                                            slicer.dimensions.state.rollup()])
+                                                            slicer.dimensions.state.rollup()], [])
 
         self.assertEqual({
             "title": {"text": "Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"},
@@ -752,8 +752,14 @@ class HighChartsLineChartTransformerTests(TestCase):
     def test_uni_dim_with_ref_line_chart(self):
         result = HighCharts(title="Time Series with Unique Dimension and Reference",
                             axes=[self.chart_class([slicer.metrics.votes])]) \
-            .transform(cont_uni_dim_ref_df, slicer, [slicer.dimensions.timestamp.reference(ElectionOverElection),
-                                                     slicer.dimensions.state])
+            .transform(cont_uni_dim_ref_df,
+                       slicer,
+                       [
+                           slicer.dimensions.timestamp,
+                           slicer.dimensions.state
+                       ], [
+                           ElectionOverElection(slicer.dimensions.timestamp)
+                       ])
 
         self.assertEqual({
             "title": {"text": "Time Series with Unique Dimension and Reference"},
@@ -845,8 +851,12 @@ class HighChartsLineChartTransformerTests(TestCase):
                             axes=[self.chart_class([slicer.metrics.votes])]) \
             .transform(cont_uni_dim_ref_delta_df,
                        slicer,
-                       [slicer.dimensions.timestamp.reference(ElectionOverElection.delta()),
-                        slicer.dimensions.state])
+                       [
+                           slicer.dimensions.timestamp,
+                           slicer.dimensions.state
+                       ], [
+                           ElectionOverElection(slicer.dimensions.timestamp, delta=True)
+                       ])
 
         self.assertEqual({
             "title": {"text": "Time Series with Unique Dimension and Delta Reference"},
@@ -949,7 +959,7 @@ class HighChartsBarChartTransformerTests(TestCase):
     def test_single_metric_bar_chart(self):
         result = HighCharts(title="All Votes",
                             axes=[self.chart_class([slicer.metrics.votes])]) \
-            .transform(single_metric_df, slicer, [])
+            .transform(single_metric_df, slicer, [], [])
 
         self.assertEqual({
             "title": {"text": "All Votes"},
@@ -985,7 +995,7 @@ class HighChartsBarChartTransformerTests(TestCase):
         result = HighCharts(title="Votes and Wins",
                             axes=[self.chart_class([slicer.metrics.votes,
                                                     slicer.metrics.wins])]) \
-            .transform(multi_metric_df, slicer, [])
+            .transform(multi_metric_df, slicer, [], [])
 
         self.assertEqual({
             "title": {"text": "Votes and Wins"},
@@ -1035,7 +1045,7 @@ class HighChartsBarChartTransformerTests(TestCase):
     def test_cat_dim_single_metric_bar_chart(self):
         result = HighCharts(title="Votes and Wins",
                             axes=[self.chart_class([slicer.metrics.votes])]) \
-            .transform(cat_dim_df, slicer, [slicer.dimensions.political_party])
+            .transform(cat_dim_df, slicer, [slicer.dimensions.political_party], [])
 
         self.assertEqual({
             "title": {"text": "Votes and Wins"},
@@ -1072,7 +1082,7 @@ class HighChartsBarChartTransformerTests(TestCase):
         result = HighCharts(title="Votes and Wins",
                             axes=[self.chart_class([slicer.metrics.votes,
                                                     slicer.metrics.wins])]) \
-            .transform(cat_dim_df, slicer, [slicer.dimensions.political_party])
+            .transform(cat_dim_df, slicer, [slicer.dimensions.political_party], [])
 
         self.assertEqual({
             "title": {"text": "Votes and Wins"},
@@ -1122,7 +1132,7 @@ class HighChartsBarChartTransformerTests(TestCase):
     def test_cont_uni_dims_single_metric_bar_chart(self):
         result = HighCharts(title="Election Votes by State",
                             axes=[self.chart_class([slicer.metrics.votes])]) \
-            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state])
+            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
 
         self.assertEqual({
             "title": {"text": "Election Votes by State"},
@@ -1179,8 +1189,8 @@ class HighChartsBarChartTransformerTests(TestCase):
     def test_cont_uni_dims_multi_metric_single_axis_bar_chart(self):
         result = HighCharts(title="Election Votes by State",
                             axes=[self.chart_class([slicer.metrics.votes,
-                                                    slicer.metrics.wins]), ]) \
-            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state])
+                                                    slicer.metrics.wins])]) \
+            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
 
         self.assertEqual({
             "title": {"text": "Election Votes by State"},
@@ -1275,8 +1285,8 @@ class HighChartsBarChartTransformerTests(TestCase):
     def test_cont_uni_dims_multi_metric_multi_axis_bar_chart(self):
         result = HighCharts(title="Election Votes by State",
                             axes=[self.chart_class([slicer.metrics.votes]),
-                                  self.chart_class([slicer.metrics.wins]), ]) \
-            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state])
+                                  self.chart_class([slicer.metrics.wins])]) \
+            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
 
         self.assertEqual({
             "title": {"text": "Election Votes by State"},
@@ -1411,7 +1421,7 @@ class HighChartsPieChartTransformerTests(TestCase):
     def test_single_metric_pie_chart(self):
         result = HighCharts(title="All Votes",
                             axes=[self.chart_class([slicer.metrics.votes])]) \
-            .transform(single_metric_df, slicer, [])
+            .transform(single_metric_df, slicer, [], [])
 
         self.assertEqual({
             "title": {"text": "All Votes"},
@@ -1439,7 +1449,7 @@ class HighChartsPieChartTransformerTests(TestCase):
         result = HighCharts(title="Votes and Wins",
                             axes=[self.chart_class([slicer.metrics.votes,
                                                     slicer.metrics.wins])]) \
-            .transform(multi_metric_df, slicer, [])
+            .transform(multi_metric_df, slicer, [], [])
 
         self.assertEqual({
             "title": {"text": "Votes and Wins"},
@@ -1479,7 +1489,7 @@ class HighChartsPieChartTransformerTests(TestCase):
     def test_cat_dim_single_metric_bar_chart(self):
         result = HighCharts(title="Votes and Wins",
                             axes=[self.chart_class([slicer.metrics.votes])]) \
-            .transform(cat_dim_df, slicer, [slicer.dimensions.political_party])
+            .transform(cat_dim_df, slicer, [slicer.dimensions.political_party], [])
 
         self.assertEqual({
             'title': {'text': 'Votes and Wins'},
@@ -1516,7 +1526,7 @@ class HighChartsPieChartTransformerTests(TestCase):
         result = HighCharts(title="Votes and Wins",
                             axes=[self.chart_class([slicer.metrics.votes,
                                                     slicer.metrics.wins])]) \
-            .transform(cat_dim_df, slicer, [slicer.dimensions.political_party])
+            .transform(cat_dim_df, slicer, [slicer.dimensions.political_party], [])
 
         self.assertEqual({
             "title": {"text": "Votes and Wins"},
@@ -1567,7 +1577,7 @@ class HighChartsPieChartTransformerTests(TestCase):
     def test_cont_uni_dims_single_metric_bar_chart(self):
         result = HighCharts(title="Election Votes by State",
                             axes=[self.chart_class([slicer.metrics.votes])]) \
-            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state])
+            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
 
         self.assertEqual({
             "title": {"text": "Election Votes by State"},
@@ -1626,7 +1636,7 @@ class HighChartsPieChartTransformerTests(TestCase):
         result = HighCharts(title="Election Votes by State",
                             axes=[self.chart_class([slicer.metrics.votes,
                                                     slicer.metrics.wins]), ]) \
-            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state])
+            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
 
         self.assertEqual({
             "title": {"text": "Election Votes by State"},
@@ -1723,7 +1733,7 @@ class HighChartsPieChartTransformerTests(TestCase):
         result = HighCharts(title="Election Votes by State",
                             axes=[self.chart_class([slicer.metrics.votes]),
                                   self.chart_class([slicer.metrics.wins]), ]) \
-            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state])
+            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
 
         self.assertEqual({
             "title": {"text": "Election Votes by State"},

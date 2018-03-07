@@ -32,5 +32,5 @@ class Widget:
 
 
 class TransformableWidget(Widget):
-    def transform(self, data_frame, slicer, dimensions):
+    def transform(self, data_frame, slicer, dimensions, references):
         raise NotImplementedError()

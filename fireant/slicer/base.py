@@ -35,5 +35,10 @@ class SlicerElement(object):
     def has_display_field(self):
         return getattr(self, 'display_definition', None) is not None
 
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) \
+               and self.key == other.key \
+               and str(self.definition) == str(other.definition)
+
     def __hash__(self):
-        return hash('{}({})'.format(self.__class__.__name__, self.definition))
+        return hash('{}({})'.format(self.__class__.__name__, self.key, self.definition))

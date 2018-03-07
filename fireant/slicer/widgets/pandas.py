@@ -20,17 +20,17 @@ class Pandas(TransformableWidget):
             if max_columns is not None \
             else HARD_MAX_COLUMNS
 
-    def transform(self, data_frame, slicer, dimensions):
+    def transform(self, data_frame, slicer, dimensions, references):
         """
         WRITEME
 
         :param data_frame:
         :param slicer:
         :param dimensions:
+        :param references:
         :return:
         """
         result = data_frame.copy()
-        references = []
 
         for metric in self.items:
             if any([metric.precision is not None,
@@ -40,8 +40,6 @@ class Pandas(TransformableWidget):
                     .apply(lambda x: formats.metric_display(x, metric.prefix, metric.suffix, metric.precision))
 
         for dimension in dimensions:
-            references += getattr(dimension, 'references', [])
-
             if dimension.has_display_field:
                 result = result.set_index(dimension.display_key, append=True)
                 result = result.reset_index(dimension.key, drop=True)

@@ -2,20 +2,20 @@ from collections import (
     OrderedDict,
     namedtuple,
 )
-from datetime import (
-    datetime,
-)
 from unittest.mock import Mock
 
 import pandas as pd
+from datetime import (
+    datetime,
+)
+
+from fireant import *
+from fireant.slicer.references import ReferenceType
 from pypika import (
     JoinType,
     Table,
     functions as fn,
 )
-
-from fireant import *
-from fireant import VerticaDatabase
 
 
 class TestDatabase(VerticaDatabase):
@@ -346,4 +346,4 @@ cont_cat_dim_totals_df = totals(cont_cat_dim_df, ['political_party'], _columns)
 cont_uni_dim_totals_df = totals(cont_uni_dim_df, ['state'], _columns)
 cont_uni_dim_all_totals_df = totals(cont_uni_dim_df, ['timestamp', 'state'], _columns)
 
-ElectionOverElection = Reference('eoe', 'EoE', 'year', 4)
+ElectionOverElection = ReferenceType('eoe', 'EoE', 'year', 4)

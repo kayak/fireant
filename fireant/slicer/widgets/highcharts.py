@@ -139,7 +139,7 @@ class HighCharts(TransformableWidget):
                                                     for item in self.items
                                                     for operation in item.operations])
 
-    def transform(self, data_frame, slicer, dimensions):
+    def transform(self, data_frame, slicer, dimensions, references):
         """
         - Main entry point -
 
@@ -153,6 +153,8 @@ class HighCharts(TransformableWidget):
             The slicer that is in use.
         :param dimensions:
             A list of dimensions that are being rendered.
+        :param references:
+            A list of references that are being rendered.
         :return:
             A dict meant to be dumped as JSON.
         """
@@ -169,10 +171,6 @@ class HighCharts(TransformableWidget):
 
         dimension_display_values = extract_display_values(dimensions, data_frame)
         render_series_label = dimensional_metric_label(dimensions, dimension_display_values)
-
-        references = [reference
-                      for dimension in dimensions
-                      for reference in getattr(dimension, 'references', ())]
 
         total_num_items = sum([len(axis.items) for axis in self.items])
 
@@ -268,7 +266,7 @@ class HighCharts(TransformableWidget):
             "labels": {"style": {"color": color}}
         }
             for reference in references
-            if reference.is_delta]
+            if reference.delta]
 
         return y_axes
 
@@ -317,7 +315,7 @@ class HighCharts(TransformableWidget):
                         "tooltip": self._render_tooltip(metric),
 
                         "yAxis": ("{}_{}".format(axis_idx, reference.key)
-                                  if reference is not None and reference.is_delta
+                                  if reference is not None and reference.delta
                                   else str(axis_idx)),
 
                         "marker": ({"symbol": symbol, "fillColor": axis_color or series_color}

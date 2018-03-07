@@ -1,3 +1,4 @@
+import copy
 from collections import (
     OrderedDict,
     defaultdict,
@@ -111,14 +112,35 @@ def find_dimensions_with_totals(dimensions):
             if dimension.is_rollup]
 
 
-def find_and_group_references_for_dimensions(dimensions):
+def find_and_replace_reference_dimensions(references, dimensions):
+    """
+    Finds the dimension for a reference in the query if there is one and replaces it. This is to force the reference to
+    use the same modifiers with a dimension if it is selected in the query.
+
+    :param references:
+    :param dimensions:
+    :return:
+    """
+    dimensions_by_key = {dimension.key: dimension
+                         for dimension in dimensions}
+
+    reference_copies = []
+    for reference in map(copy.deepcopy, references):
+        dimension = dimensions_by_key.get(reference.dimension.key)
+        if dimension is not None:
+            reference.dimension = dimension
+        reference_copies.append(reference)
+    return reference_copies
+
+
+def find_and_group_references_for_dimensions(references):
     """
     Finds all of the references for dimensions and groups them by dimension, interval unit, number of intervals.
 
     This structure reflects how the references need to be joined to the slicer query. References of the same
     type (WoW, WoW.delta, WoW.delta_percent) can share a join query.
 
-    :param dimensions:
+    :param references:
     :return:
         An `OrderedDict` where the keys are 3-item tuples consisting of "Dimension, interval unit, # of intervals.
 
@@ -131,17 +153,8 @@ def find_and_group_references_for_dimensions(dimensions):
         }
     """
 
-    def get_unit_and_interval(reference):
-        return reference.time_unit, reference.interval
+    def get_dimension_time_unit_and_interval(reference):
+        return reference.dimension, reference.time_unit, reference.interval
 
-    return OrderedDict([(ReferenceGroup(dimension, time_unit, intervals), ordered_distinct_list(group))
-
-                        # group by dimension
-                        for dimension in dimensions
-
-                        # filter dimensions with no references
-                        if getattr(dimension, 'references', None)
-
-                        # group by time_unit and intervals
-                        for (time_unit, intervals), group in
-                        groupby(dimension.references, get_unit_and_interval).items()])
+    distinct_references = ordered_distinct_list(references)
+    return groupby(distinct_references, get_dimension_time_unit_and_interval)

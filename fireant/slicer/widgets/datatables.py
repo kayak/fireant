@@ -112,7 +112,7 @@ class DataTablesJS(TransformableWidget):
             if max_columns is not None \
             else HARD_MAX_COLUMNS
 
-    def transform(self, data_frame, slicer, dimensions):
+    def transform(self, data_frame, slicer, dimensions, references):
         """
         WRITEME
 
@@ -122,10 +122,6 @@ class DataTablesJS(TransformableWidget):
         :return:
         """
         dimension_display_values = extract_display_values(dimensions, data_frame)
-
-        references = [reference
-                      for dimension in dimensions
-                      for reference in getattr(dimension, 'references', ())]
 
         metric_keys = [reference_key(metric, reference)
                        for metric in self.items
