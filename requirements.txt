@@ -1,10 +1,12 @@
 six
 pandas==0.22.0
-pypika==0.10.6
+pypika==0.10.7
 pymysql==0.8.0
+toposort==1.5
+typing==3.6.2
+
 vertica-python==0.7.3
 psycopg2==2.7.3.2
-toposort==1.5
 matplotlib
+
 mock
-typing==3.6.2

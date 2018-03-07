@@ -710,8 +710,6 @@ class DataTablesTransformerTests(TestCase):
                            ElectionOverElection(slicer.dimensions.timestamp)
                        ])
 
-        print(result)
-
         self.assertEqual({
             'columns': [{
                 'data': 'timestamp',
