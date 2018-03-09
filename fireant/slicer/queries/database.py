@@ -5,7 +5,6 @@ from typing import Iterable
 
 from fireant.database.base import Database
 from .logger import (
-    SLOW_QUERY_LOG_MIN_DURATION,
     query_logger,
     slow_query_logger,
 )
@@ -38,7 +37,7 @@ def fetch_data(database: Database, query: str, dimensions: Iterable[Dimension]):
     query_log_msg = '[{duration} seconds]: {query}'.format(duration=duration, query=query)
     query_logger.info(query_log_msg)
 
-    if duration >= SLOW_QUERY_LOG_MIN_DURATION:
+    if duration >= database.SLOW_QUERY_LOG_MIN_DURATION:
         slow_query_logger.warning(query_log_msg)
 
     return clean_and_apply_index(data_frame, dimensions)
