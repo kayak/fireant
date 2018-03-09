@@ -588,16 +588,27 @@ class QueryBuilderDimensionFilterTests(TestCase):
                          'FROM "politics"."politician" '
                          'WHERE "candidate_name" NOT IN (\'Donald Trump\')', str(query))
 
-    def test_build_query_with_filter_wildcard_unique_dim(self):
+    def test_build_query_with_filter_like_unique_dim(self):
         query = slicer.data \
             .widget(f.DataTablesJS([slicer.metrics.votes])) \
-            .filter(slicer.dimensions.candidate.wildcard('%Trump')) \
+            .filter(slicer.dimensions.candidate.like('%Trump')) \
             .query
 
         self.assertEqual('SELECT '
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
                          'WHERE "candidate_name" LIKE \'%Trump\'', str(query))
+
+    def test_build_query_with_filter_not_like_unique_dim(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS([slicer.metrics.votes])) \
+            .filter(slicer.dimensions.candidate.not_like('%Trump')) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'WHERE "candidate_name" NOT LIKE \'%Trump\'', str(query))
 
     def test_build_query_with_filter_isin_raise_exception_when_display_definition_undefined(self):
         with self.assertRaises(f.QueryException):
@@ -611,11 +622,17 @@ class QueryBuilderDimensionFilterTests(TestCase):
                 .widget(f.DataTablesJS([slicer.metrics.votes])) \
                 .filter(slicer.dimensions.deepjoin.notin([1], use_display=True))
 
-    def test_build_query_with_filter_wildcard_raise_exception_when_display_definition_undefined(self):
+    def test_build_query_with_filter_like_raise_exception_when_display_definition_undefined(self):
         with self.assertRaises(f.QueryException):
             slicer.data \
                 .widget(f.DataTablesJS([slicer.metrics.votes])) \
-                .filter(slicer.dimensions.deepjoin.wildcard('test'))
+                .filter(slicer.dimensions.deepjoin.like('test'))
+
+    def test_build_query_with_filter_not_like_raise_exception_when_display_definition_undefined(self):
+        with self.assertRaises(f.QueryException):
+            slicer.data \
+                .widget(f.DataTablesJS([slicer.metrics.votes])) \
+                .filter(slicer.dimensions.deepjoin.not_like('test'))
 
     def test_build_query_with_filter_range_datetime_dimension(self):
         query = slicer.data \

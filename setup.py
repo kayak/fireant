@@ -74,7 +74,7 @@ setup(
     install_requires=[
         'six',
         'pandas==0.22.0',
-        'pypika==0.10.7',
+        'pypika==0.10.8',
         'toposort==1.5',
         'typing==3.6.2',
     ],

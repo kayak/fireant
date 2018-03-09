@@ -1,17 +1,18 @@
-from typing import Iterable
-
-from fireant.utils import immutable
 from pypika.terms import (
     NullValue,
 )
+from typing import Iterable
+
+from fireant.utils import immutable
 from .base import SlicerElement
 from .exceptions import QueryException
 from .filters import (
     BooleanFilter,
     ContainsFilter,
     ExcludesFilter,
+    LikeFilter,
+    NotLikeFilter,
     RangeFilter,
-    WildcardFilter,
 )
 from .intervals import (
     NumericInterval,
@@ -153,21 +154,35 @@ class UniqueDimension(Dimension):
         filter_field = self.display_definition if use_display else self.definition
         return ExcludesFilter(filter_field, values)
 
-    def wildcard(self, pattern):
+    def like(self, pattern):
         """
         Creates a filter to filter a slicer query.
 
         :param pattern:
             A pattern to match against the dimension's display definition.  This pattern is used in the SQL query as
-            the
-            `LIKE` expression.
+            the `LIKE` expression.
         :return:
             A slicer query filter used to filter a slicer query to results where this dimension's display definition
             matches the pattern.
         """
         if self.display_definition is None:
             raise QueryException('No value set for display_definition.')
-        return WildcardFilter(self.display_definition, pattern)
+        return LikeFilter(self.display_definition, pattern)
+
+    def not_like(self, pattern):
+        """
+        Creates a filter to filter a slicer query.
+
+        :param pattern:
+            A pattern to match against the dimension's display definition.  This pattern is used in the SQL query as
+            the `NOT LIKE` expression.
+        :return:
+            A slicer query filter used to filter a slicer query to results where this dimension's display definition
+            matches the pattern.
+        """
+        if self.display_definition is None:
+            raise QueryException('No value set for display_definition.')
+        return NotLikeFilter(self.display_definition, pattern)
 
     @property
     def display(self):
