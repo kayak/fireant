@@ -59,7 +59,13 @@ class RangeFilter(DimensionFilter):
         super(RangeFilter, self).__init__(definition)
 
 
-class WildcardFilter(DimensionFilter):
+class LikeFilter(DimensionFilter):
     def __init__(self, dimension_definition, pattern):
         definition = dimension_definition.like(pattern)
-        super(WildcardFilter, self).__init__(definition)
+        super(LikeFilter, self).__init__(definition)
+
+
+class NotLikeFilter(DimensionFilter):
+    def __init__(self, dimension_definition, pattern):
+        definition = dimension_definition.not_like(pattern)
+        super(NotLikeFilter, self).__init__(definition)
