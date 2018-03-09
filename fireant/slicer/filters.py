@@ -63,3 +63,9 @@ class WildcardFilter(DimensionFilter):
     def __init__(self, dimension_definition, pattern):
         definition = dimension_definition.like(pattern)
         super(WildcardFilter, self).__init__(definition)
+
+
+class NegatedWildcardFilter(DimensionFilter):
+    def __init__(self, dimension_definition, pattern):
+        definition = dimension_definition.not_like(pattern)
+        super(NegatedWildcardFilter, self).__init__(definition)
