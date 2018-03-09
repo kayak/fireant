@@ -1,3 +1,4 @@
+import time
 from unittest import TestCase
 from unittest.mock import (
     MagicMock,
@@ -23,34 +24,70 @@ from fireant.tests.slicer.mocks import (
 
 
 class FetchDataTests(TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.mock_database = Mock(name='database')
-        cls.mock_data_frame = cls.mock_database.fetch_data.return_value = MagicMock(name='data_frame')
-        cls.mock_query = 'SELECT *'
-        cls.mock_dimensions = [Mock(), Mock()]
-        cls.mock_dimensions[0].is_rollup = False
-        cls.mock_dimensions[1].is_rollup = True
 
-        cls.result = fetch_data(cls.mock_database, cls.mock_query, cls.mock_dimensions)
+    def setUp(self):
+        self.mock_database = Mock(name='database')
+        self.mock_database.slow_query_log_min_seconds = 15
+        self.mock_data_frame = self.mock_database.fetch_data.return_value = MagicMock(name='data_frame')
+        self.mock_query = 'SELECT *'
+        self.mock_dimensions = [Mock(), Mock()]
+        self.mock_dimensions[0].is_rollup = False
+        self.mock_dimensions[1].is_rollup = True
 
     def test_fetch_data_called_on_database(self):
+        fetch_data(self.mock_database, self.mock_query, self.mock_dimensions)
+
         self.mock_database.fetch_data.assert_called_once_with(self.mock_query)
 
     def test_index_set_on_data_frame_result(self):
+        fetch_data(self.mock_database, self.mock_query, self.mock_dimensions)
+
         self.mock_data_frame.set_index.assert_called_once_with([d.key for d in self.mock_dimensions])
+
+    @patch('fireant.slicer.queries.database.query_logger.debug')
+    def test_debug_query_log_called_with_query(self, mock_logger):
+        fetch_data(self.mock_database, self.mock_query, self.mock_dimensions)
+
+        mock_logger.assert_called_once_with('SELECT *')
+
+    @patch.object(time, 'time', return_value=1520520255.0)
+    @patch('fireant.slicer.queries.database.query_logger.info')
+    def test_info_query_log_called_with_query_and_duration(self, mock_logger, mock_time):
+        fetch_data(self.mock_database, self.mock_query, self.mock_dimensions)
+
+        mock_logger.assert_called_once_with('[0.0 seconds]: SELECT *')
+
+    @patch.object(time, 'time')
+    @patch('fireant.slicer.queries.database.slow_query_logger.warning')
+    def test_warning_slow_query_logger_called_with_duration_and_query_if_over_slow_query_limit(self,
+                                                                                               mock_logger,
+                                                                                               mock_time):
+        mock_time.side_effect = [1520520255.0, 1520520277.0]
+        fetch_data(self.mock_database, self.mock_query, self.mock_dimensions)
+
+        mock_logger.assert_called_once_with('[22.0 seconds]: SELECT *')
+
+    @patch.object(time, 'time')
+    @patch('fireant.slicer.queries.database.slow_query_logger.warning')
+    def test_warning_slow_query_logger_not_called_with_duration_and_query_if_not_over_slow_query_limit(self,
+                                                                                                       mock_logger,
+                                                                                                       mock_time):
+        mock_time.side_effect = [1520520763.0, 1520520764.0]
+        fetch_data(self.mock_database, self.mock_query, self.mock_dimensions)
+
+        mock_logger.assert_not_called()
 
 
 cat_dim_nans_df = cat_dim_df.append(
-      pd.DataFrame([[300, 2]],
-                   columns=cat_dim_df.columns,
-                   index=pd.Index([None],
-                                  name=cat_dim_df.index.name)))
+    pd.DataFrame([[300, 2]],
+                 columns=cat_dim_df.columns,
+                 index=pd.Index([None],
+                                name=cat_dim_df.index.name)))
 uni_dim_nans_df = uni_dim_df.append(
-      pd.DataFrame([[None, 300, 2]],
-                   columns=uni_dim_df.columns,
-                   index=pd.Index([None],
-                                  name=uni_dim_df.index.name)))
+    pd.DataFrame([[None, 300, 2]],
+                 columns=uni_dim_df.columns,
+                 index=pd.Index([None],
+                                name=uni_dim_df.index.name)))
 
 
 def add_nans(df):
@@ -71,7 +108,7 @@ def totals(df):
 
 
 cont_uni_dim_nans_totals_df = cont_uni_dim_nans_df \
-    .append(cont_uni_dim_nans_df.groupby(level='timestamp').apply(totals))\
+    .append(cont_uni_dim_nans_df.groupby(level='timestamp').apply(totals)) \
     .sort_index() \
     .sort_index(level=[0, 1], ascending=False)  # This sorts the DF so that the first instance of NaN is the totals
 

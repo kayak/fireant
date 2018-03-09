@@ -13,6 +13,8 @@ class Database(object):
     # The pypika query class to use for constructing queries
     query_cls = Query
 
+    slow_query_log_min_seconds = 15
+
     def connect(self):
         raise NotImplementedError
 

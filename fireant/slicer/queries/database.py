@@ -1,10 +1,13 @@
 import time
-from typing import Iterable
 
 import pandas as pd
+from typing import Iterable
 
 from fireant.database.base import Database
-from .logger import logger
+from .logger import (
+    query_logger,
+    slow_query_logger,
+)
 from ..dimensions import (
     ContinuousDimension,
     Dimension,
@@ -26,13 +29,16 @@ def fetch_data(database: Database, query: str, dimensions: Iterable[Dimension]):
     :return: `pd.DataFrame` constructed from the result of the query
     """
     start_time = time.time()
-    logger.debug(query)
+    query_logger.debug(query)
 
     data_frame = database.fetch_data(str(query))
 
-    logger.info('[{duration} seconds]: {query}'
-                .format(duration=round(time.time() - start_time, 4),
-                        query=query))
+    duration = round(time.time() - start_time, 4)
+    query_log_msg = '[{duration} seconds]: {query}'.format(duration=duration, query=query)
+    query_logger.info(query_log_msg)
+
+    if duration >= database.slow_query_log_min_seconds:
+        slow_query_logger.warning(query_log_msg)
 
     return clean_and_apply_index(data_frame, dimensions)
 
