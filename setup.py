@@ -1,11 +1,28 @@
-# coding: utf8
+import codecs
+import os
+import re
 
-from fireant import __version__
 from setuptools import setup
+
+here = os.path.abspath(os.path.dirname(__file__))
+
+
+def read(*parts):
+    with codecs.open(os.path.join(here, *parts), 'r') as fp:
+        return fp.read()
+
+
+def find_version(*file_paths):
+    version_file = read(*file_paths)
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
+                              version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
 
 setup(
     name='fireant',
-    version=__version__,
+      version=find_version("fireant", "__init__.py"),
 
     author='KAYAK, GmbH',
     author_email='bandit@kayak.com',
@@ -15,9 +32,9 @@ setup(
 
     packages=['fireant',
               'fireant.database',
-              'fireant.dashboards',
               'fireant.slicer',
-              'fireant.slicer.transformers'],
+              'fireant.slicer.queries',
+              'fireant.slicer.widgets'],
 
     # Include additional files into the package
     include_package_data=True,
@@ -56,19 +73,19 @@ setup(
 
     install_requires=[
         'six',
-        'pandas<0.20',
-        'pypika>=0.8.0',
-        'vertica-python>=0.6',
-        'pymysql>=0.7.11'
+        'pandas==0.22.0',
+        'pypika==0.10.8',
+        'toposort==1.5',
+        'typing==3.6.2',
     ],
     tests_require=[
         'mock'
     ],
     extras_require={
-        'vertica': ['vertica-python>=0.6'],
-        'mysql': ['pymysql>=0.7.11'],
-        'redshift': ['psycopg2>=2.7.3.1'],
-        'postgresql': ['psycopg2>=2.7.3.1'],
+        'vertica': ['vertica-python==0.7.3'],
+        'mysql': ['pymysql==0.8.0'],
+        'redshift': ['psycopg2==2.7.3.2'],
+        'postgresql': ['psycopg2==2.7.3.2'],
         'matplotlib': ['matplotlib'],
     },
 

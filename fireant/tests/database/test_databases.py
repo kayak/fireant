@@ -1,7 +1,6 @@
-# coding: utf-8
 from unittest import TestCase
 
-from mock import patch, MagicMock
+from unittest.mock import patch, MagicMock
 
 from fireant.database import Database
 from pypika import Field
@@ -27,11 +26,11 @@ class DatabaseTests(TestCase):
         query = 'SELECT 1'
         mock_read_sql.return_value = 'OK'
 
-        result = Database().fetch_dataframe(query)
+        result = Database().fetch_data(query)
 
         self.assertEqual(mock_read_sql.return_value, result)
 
-        mock_read_sql.assert_called_once_with(query, mock_connect().__enter__())
+        mock_read_sql.assert_called_once_with(query, mock_connect().__enter__(), coerce_float=True, parse_dates=True)
 
     def test_database_api(self):
         db = Database()
@@ -40,4 +39,4 @@ class DatabaseTests(TestCase):
             db.connect()
 
         with self.assertRaises(NotImplementedError):
-            db.trunc_date(Field('abc'), 'DAY')
+            db.trunc_date(Field('abc'), 'day')

@@ -1,6 +1,5 @@
-# coding: utf-8
 
-from mock import (
+from unittest.mock import (
     Mock,
     patch,
 )
@@ -13,7 +12,6 @@ class TestRedshift(TestPostgreSQL):
     """ Inherits from TestPostgreSQL as Redshift is almost identical to PostgreSQL so the tests are similar """
     @classmethod
     def setUpClass(cls):
-        super(TestRedshift, cls).setUpClass()
         cls.database = RedshiftDatabase()
 
     def test_defaults(self):

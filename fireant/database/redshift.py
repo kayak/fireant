@@ -1,7 +1,4 @@
-# coding: utf-8
-from pypika import (
-    RedshiftQuery,
-)
+from pypika import RedshiftQuery
 
 from .postgresql import PostgreSQLDatabase
 
