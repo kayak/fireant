@@ -27,7 +27,7 @@ class FetchDataTests(TestCase):
 
     def setUp(self):
         self.mock_database = Mock(name='database')
-        self.mock_database.SLOW_QUERY_LOG_MIN_DURATION = 15
+        self.mock_database.slow_query_log_min_seconds = 15
         self.mock_data_frame = self.mock_database.fetch_data.return_value = MagicMock(name='data_frame')
         self.mock_query = 'SELECT *'
         self.mock_dimensions = [Mock(), Mock()]
