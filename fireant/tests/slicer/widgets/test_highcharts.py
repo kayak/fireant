@@ -1407,6 +1407,11 @@ class HighChartsAreaChartTransformerTests(HighChartsLineChartTransformerTests):
     chart_type = 'area'
 
 
+class HighChartsAreaStackedChartTransformerTests(HighChartsAreaChartTransformerTests):
+    chart_class = HighCharts.AreaStackedChart
+    stacking = 'normal'
+
+
 class HighChartsAreaPercentChartTransformerTests(HighChartsAreaChartTransformerTests):
     chart_class = HighCharts.AreaPercentageChart
     stacking = 'percent'
