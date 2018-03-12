@@ -1,9 +1,9 @@
 import itertools
+
+import pandas as pd
 from datetime import (
     datetime,
 )
-
-import pandas as pd
 
 from fireant import (
     DatetimeDimension,
@@ -83,6 +83,9 @@ class HighCharts(TransformableWidget):
     class AreaChart(ContinuousAxisChartWidget):
         type = 'area'
         needs_marker = True
+
+    class AreaStackedChart(AreaChart):
+        stacking = "normal"
 
     class AreaPercentageChart(AreaChart):
         stacking = "percent"
