@@ -36,13 +36,17 @@ class HighChartsLineChartTransformerTests(TestCase):
 
         self.assertEqual({
             "title": {"text": "Time Series, Single Metric"},
-            "xAxis": {"type": "datetime"},
+            "xAxis": {
+                "type": "datetime",
+                "visible": True,
+            },
             "yAxis": [{
                 "id": "0",
                 "title": {"text": None},
-                "labels": {"style": {"color": None}}
+                "labels": {"style": {"color": None}},
+                "visible": True,
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "type": self.chart_type,
@@ -75,13 +79,17 @@ class HighChartsLineChartTransformerTests(TestCase):
 
         self.assertEqual({
             "title": {"text": "Time Series, Single Metric"},
-            "xAxis": {"type": "datetime"},
+            "xAxis": {
+                "type": "datetime",
+                "visible": True,
+            },
             "yAxis": [{
                 "id": "0",
                 "title": {"text": None},
-                "labels": {"style": {"color": None}}
+                "labels": {"style": {"color": None}},
+                "visible": True,
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "type": self.chart_type,
@@ -114,13 +122,17 @@ class HighChartsLineChartTransformerTests(TestCase):
 
         self.assertEqual({
             "title": {"text": "Time Series, Single Metric"},
-            "xAxis": {"type": "datetime"},
+            "xAxis": {
+                "type": "datetime",
+                "visible": True,
+            },
             "yAxis": [{
                 "id": "0",
                 "title": {"text": None},
-                "labels": {"style": {"color": None}}
+                "labels": {"style": {"color": None}},
+                "visible": True,
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "type": self.chart_type,
@@ -153,13 +165,17 @@ class HighChartsLineChartTransformerTests(TestCase):
 
         self.assertEqual({
             "title": {"text": "Time Series, Single Metric"},
-            "xAxis": {"type": "datetime"},
+            "xAxis": {
+                "type": "datetime",
+                "visible": True,
+            },
             "yAxis": [{
                 "id": "0",
                 "title": {"text": None},
-                "labels": {"style": {"color": None}}
+                "labels": {"style": {"color": None}},
+                "visible": True,
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "type": self.chart_type,
@@ -190,13 +206,17 @@ class HighChartsLineChartTransformerTests(TestCase):
 
         self.assertEqual({
             "title": {"text": "Time Series, Single Metric"},
-            "xAxis": {"type": "datetime"},
+            "xAxis": {
+                "type": "datetime",
+                "visible": True,
+            },
             "yAxis": [{
                 "id": "0",
                 "title": {"text": None},
-                "labels": {"style": {"color": None}}
+                "labels": {"style": {"color": None}},
+                "visible": True,
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "type": self.chart_type,
@@ -228,13 +248,17 @@ class HighChartsLineChartTransformerTests(TestCase):
 
         self.assertEqual({
             "title": {"text": "Time Series with Unique Dimension and Single Metric"},
-            "xAxis": {"type": "datetime"},
+            "xAxis": {
+                "type": "datetime",
+                "visible": True,
+            },
             "yAxis": [{
                 "id": "0",
                 "title": {"text": None},
-                "labels": {"style": {"color": None}}
+                "labels": {"style": {"color": None}},
+                "visible": True,
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "type": self.chart_type,
@@ -286,13 +310,17 @@ class HighChartsLineChartTransformerTests(TestCase):
 
         self.assertEqual({
             "title": {"text": "Time Series with Unique Dimension and Multiple Metrics"},
-            "xAxis": {"type": "datetime"},
+            "xAxis": {
+                "type": "datetime",
+                "visible": True,
+            },
             "yAxis": [{
                 "id": "0",
                 "title": {"text": None},
-                "labels": {"style": {"color": "#DDDF0D"}}
+                "labels": {"style": {"color": "#DDDF0D"}},
+                "visible": True,
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "type": self.chart_type,
@@ -382,17 +410,22 @@ class HighChartsLineChartTransformerTests(TestCase):
 
         self.assertEqual({
             "title": {"text": "Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"},
-            "xAxis": {"type": "datetime"},
+            "xAxis": {
+                "type": "datetime",
+                "visible": True,
+            },
             "yAxis": [{
                 "id": "1",
                 "title": {"text": None},
-                "labels": {"style": {"color": "#55BF3B"}}
+                "labels": {"style": {"color": "#55BF3B"}},
+                "visible": True,
             }, {
                 "id": "0",
                 "title": {"text": None},
-                "labels": {"style": {"color": "#DDDF0D"}}
+                "labels": {"style": {"color": "#DDDF0D"}},
+                "visible": True,
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "type": self.chart_type,
@@ -482,17 +515,22 @@ class HighChartsLineChartTransformerTests(TestCase):
 
         self.assertEqual({
             "title": {"text": "Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"},
-            "xAxis": {"type": "datetime"},
+            "xAxis": {
+                "type": "datetime",
+                "visible": True,
+            },
             "yAxis": [{
                 "id": "1",
                 "title": {"text": None},
-                "labels": {"style": {"color": "#55BF3B"}}
+                "labels": {"style": {"color": "#55BF3B"}},
+                "visible": True,
             }, {
                 "id": "0",
                 "title": {"text": None},
-                "labels": {"style": {"color": "#DDDF0D"}}
+                "labels": {"style": {"color": "#DDDF0D"}},
+                "visible": True,
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 'color': '#DDDF0D',
@@ -620,17 +658,22 @@ class HighChartsLineChartTransformerTests(TestCase):
 
         self.assertEqual({
             "title": {"text": "Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"},
-            "xAxis": {"type": "datetime"},
+            "xAxis": {
+                "type": "datetime",
+                "visible": True,
+            },
             "yAxis": [{
                 "id": "1",
                 "title": {"text": None},
-                "labels": {"style": {"color": "#55BF3B"}}
+                "labels": {"style": {"color": "#55BF3B"}},
+                "visible": True,
             }, {
                 "id": "0",
                 "title": {"text": None},
-                "labels": {"style": {"color": "#DDDF0D"}}
+                "labels": {"style": {"color": "#DDDF0D"}},
+                "visible": True,
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 'color': '#DDDF0D',
@@ -763,13 +806,17 @@ class HighChartsLineChartTransformerTests(TestCase):
 
         self.assertEqual({
             "title": {"text": "Time Series with Unique Dimension and Reference"},
-            "xAxis": {"type": "datetime"},
+            "xAxis": {
+                "type": "datetime",
+                "visible": True,
+            },
             "yAxis": [{
                 "id": "0",
                 "title": {"text": None},
-                "labels": {"style": {"color": None}}
+                "labels": {"style": {"color": None}},
+                "visible": True,
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "type": self.chart_type,
@@ -860,18 +907,173 @@ class HighChartsLineChartTransformerTests(TestCase):
 
         self.assertEqual({
             "title": {"text": "Time Series with Unique Dimension and Delta Reference"},
-            "xAxis": {"type": "datetime"},
+            "xAxis": {
+                "type": "datetime",
+                "visible": True,
+            },
             "yAxis": [{
                 "id": "0",
                 "title": {"text": None},
-                "labels": {"style": {"color": None}}
+                "labels": {"style": {"color": None}},
+                "visible": True,
             }, {
                 "id": "0_eoe_delta",
                 "title": {"text": "EoE Δ"},
                 "opposite": True,
-                "labels": {"style": {"color": None}}
+                "labels": {"style": {"color": None}},
+                "visible": True,
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+            "legend": {"useHTML": True},
+            "series": [{
+                "type": self.chart_type,
+                "name": "Votes (Texas)",
+                "yAxis": "0",
+                "data": [(946684800000, 6233385),
+                         (1072915200000, 7359621),
+                         (1199145600000, 8007961),
+                         (1325376000000, 7877967),
+                         (1451606400000, 5072915)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
+                "color": "#DDDF0D",
+                "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
+                "dashStyle": "Solid",
+                "stacking": self.stacking,
+            }, {
+                "type": self.chart_type,
+                "name": "Votes (EoE Δ) (Texas)",
+                "yAxis": "0_eoe_delta",
+                "data": [(946684800000, -658998),
+                         (1072915200000, -1126236),
+                         (1199145600000, -648340),
+                         (1325376000000, 129994),
+                         (1451606400000, 2805052)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
+                "color": "#DDDF0D",
+                "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
+                "dashStyle": "Dash",
+                "stacking": self.stacking,
+            }, {
+                "type": self.chart_type,
+                "name": "Votes (California)",
+                "yAxis": "0",
+                "data": [(946684800000, 10428632),
+                         (1072915200000, 12255311),
+                         (1199145600000, 13286254),
+                         (1325376000000, 12694243),
+                         (1451606400000, 13237598)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
+                "color": "#55BF3B",
+                "marker": {"symbol": "square", "fillColor": "#55BF3B"},
+                "dashStyle": "Solid",
+                "stacking": self.stacking,
+            }, {
+                "type": self.chart_type,
+                "name": "Votes (EoE Δ) (California)",
+                "yAxis": "0_eoe_delta",
+                "data": [(946684800000, -782570),
+                         (1072915200000, -1826679),
+                         (1199145600000, -1030943),
+                         (1325376000000, 592011),
+                         (1451606400000, -543355)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
+                "color": "#55BF3B",
+                "marker": {"symbol": "square", "fillColor": "#55BF3B"},
+                "dashStyle": "Dash",
+                "stacking": self.stacking,
+            }]
+        }, result)
+
+    def test_invisible_y_axis(self):
+        result = HighCharts(title="Time Series, Single Metric",
+                            axes=[self.chart_class([slicer.metrics.votes],
+                                                   y_axis_visible=False)]) \
+            .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp], [])
+
+        self.assertEqual({
+            "title": {"text": "Time Series, Single Metric"},
+            "xAxis": {
+                "type": "datetime",
+                "visible": True,
+            },
+            "yAxis": [{
+                "id": "0",
+                "title": {"text": None},
+                "labels": {"style": {"color": None}},
+                "visible": False,
+            }],
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+            "legend": {"useHTML": True},
+            "series": [{
+                "type": self.chart_type,
+                "name": "Votes",
+                "yAxis": "0",
+                "data": [(820454400000, 15220449),
+                         (946684800000, 16662017),
+                         (1072915200000, 19614932),
+                         (1199145600000, 21294215),
+                         (1325376000000, 20572210),
+                         (1451606400000, 18310513)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
+                "color": "#DDDF0D",
+                "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
+                "dashStyle": "Solid",
+                "stacking": self.stacking,
+            }]
+        }, result)
+
+    def test_ref_axes_set_to_same_visibility_as_parent_axis(self):
+        result = HighCharts(title="Time Series with Unique Dimension and Delta Reference",
+                            axes=[self.chart_class([slicer.metrics.votes],
+                                                   y_axis_visible=False)]) \
+            .transform(cont_uni_dim_ref_delta_df,
+                       slicer,
+                       [
+                           slicer.dimensions.timestamp,
+                           slicer.dimensions.state
+                       ], [
+                           ElectionOverElection(slicer.dimensions.timestamp, delta=True)
+                       ])
+
+        self.assertEqual({
+            "title": {"text": "Time Series with Unique Dimension and Delta Reference"},
+            "xAxis": {
+                "type": "datetime",
+                "visible": True,
+            },
+            "yAxis": [{
+                "id": "0",
+                "title": {"text": None},
+                "labels": {"style": {"color": None}},
+                "visible": False,
+            }, {
+                "id": "0_eoe_delta",
+                "title": {"text": "EoE Δ"},
+                "opposite": True,
+                "labels": {"style": {"color": None}},
+                "visible": False,
+            }],
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "type": self.chart_type,
@@ -965,14 +1167,16 @@ class HighChartsBarChartTransformerTests(TestCase):
             "title": {"text": "All Votes"},
             "xAxis": {
                 "type": "category",
-                "categories": ["All"]
+                "categories": ["All"],
+                'visible': True,
             },
             "yAxis": [{
                 "id": "0",
                 "title": {"text": None},
-                "labels": {"style": {"color": None}}
+                "labels": {"style": {"color": None}},
+                "visible": True,
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "type": self.chart_type,
@@ -1001,15 +1205,16 @@ class HighChartsBarChartTransformerTests(TestCase):
             "title": {"text": "Votes and Wins"},
             "xAxis": {
                 "type": "category",
-                "categories": ["All"]
+                "categories": ["All"],
+                'visible': True,
             },
             "yAxis": [{
                 "id": "0",
                 "title": {"text": None},
-                "labels": {"style": {"color": "#DDDF0D"}}
-
+                "labels": {"style": {"color": "#DDDF0D"}},
+                "visible": True,
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "type": self.chart_type,
@@ -1051,15 +1256,16 @@ class HighChartsBarChartTransformerTests(TestCase):
             "title": {"text": "Votes and Wins"},
             "xAxis": {
                 "type": "category",
-                "categories": ["Democrat", "Independent", "Republican"]
+                "categories": ["Democrat", "Independent", "Republican"],
+                'visible': True,
             },
             "yAxis": [{
                 "id": "0",
                 "title": {"text": None},
-                "labels": {"style": {"color": None}}
-
+                "labels": {"style": {"color": None}},
+                "visible": True,
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "type": self.chart_type,
@@ -1088,15 +1294,16 @@ class HighChartsBarChartTransformerTests(TestCase):
             "title": {"text": "Votes and Wins"},
             "xAxis": {
                 "type": "category",
-                "categories": ["Democrat", "Independent", "Republican"]
+                "categories": ["Democrat", "Independent", "Republican"],
+                'visible': True,
             },
             "yAxis": [{
                 "id": "0",
                 "title": {"text": None},
-                "labels": {"style": {"color": "#DDDF0D"}}
-
+                "labels": {"style": {"color": "#DDDF0D"}},
+                "visible": True,
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "type": self.chart_type,
@@ -1136,14 +1343,18 @@ class HighChartsBarChartTransformerTests(TestCase):
 
         self.assertEqual({
             "title": {"text": "Election Votes by State"},
-            "xAxis": {"type": "datetime"},
+            "xAxis": {
+                "type": "datetime",
+                "visible": True,
+            },
             "yAxis": [{
                 "id": "0",
                 "title": {"text": None},
-                "labels": {"style": {"color": None}}
+                "labels": {"style": {"color": None}},
+                "visible": True,
 
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "type": self.chart_type,
@@ -1194,14 +1405,17 @@ class HighChartsBarChartTransformerTests(TestCase):
 
         self.assertEqual({
             "title": {"text": "Election Votes by State"},
-            "xAxis": {"type": "datetime"},
+            "xAxis": {
+                "type": "datetime",
+                "visible": True,
+            },
             "yAxis": [{
                 "id": "0",
                 "title": {"text": None},
-                "labels": {"style": {"color": "#DDDF0D"}}
-
+                "labels": {"style": {"color": "#DDDF0D"}},
+                "visible": True,
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "type": self.chart_type,
@@ -1290,18 +1504,22 @@ class HighChartsBarChartTransformerTests(TestCase):
 
         self.assertEqual({
             "title": {"text": "Election Votes by State"},
-            "xAxis": {"type": "datetime"},
+            "xAxis": {
+                "type": "datetime",
+                "visible": True,
+            },
             "yAxis": [{
                 "id": "1",
                 "title": {"text": None},
-                "labels": {"style": {"color": "#55BF3B"}}
+                "labels": {"style": {"color": "#55BF3B"}},
+                "visible": True,
             }, {
                 "id": "0",
                 "title": {"text": None},
-                "labels": {"style": {"color": "#DDDF0D"}}
-
+                "labels": {"style": {"color": "#DDDF0D"}},
+                "visible": True,
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "type": self.chart_type,
@@ -1382,6 +1600,44 @@ class HighChartsBarChartTransformerTests(TestCase):
             }]
         }, result)
 
+    def test_invisible_y_axis(self):
+        result = HighCharts(title="All Votes",
+                            axes=[self.chart_class([slicer.metrics.votes],
+                                                   y_axis_visible=False)]) \
+            .transform(single_metric_df, slicer, [], [])
+
+        self.assertEqual({
+            "title": {"text": "All Votes"},
+            "xAxis": {
+                "type": "category",
+                "categories": ["All"],
+                'visible': True,
+            },
+            "yAxis": [{
+                "id": "0",
+                "title": {"text": None},
+                "labels": {"style": {"color": None}},
+                "visible": False,
+            }],
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+            "legend": {"useHTML": True},
+            "series": [{
+                "type": self.chart_type,
+                "name": "Votes",
+                "yAxis": "0",
+                "data": [111674336],
+                'tooltip': {
+                    'valueDecimals': None,
+                    'valuePrefix': None,
+                    'valueSuffix': None
+                },
+                "color": "#DDDF0D",
+                "dashStyle": "Solid",
+                "marker": {},
+                "stacking": self.stacking,
+            }]
+        }, result)
+
 
 class HighChartsColumnChartTransformerTests(HighChartsBarChartTransformerTests):
     chart_class = HighCharts.ColumnChart
@@ -1430,7 +1686,7 @@ class HighChartsPieChartTransformerTests(TestCase):
 
         self.assertEqual({
             "title": {"text": "All Votes"},
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "name": "Votes",
@@ -1446,7 +1702,11 @@ class HighChartsPieChartTransformerTests(TestCase):
                     'valueSuffix': None
                 },
             }],
-            'xAxis': {'categories': ['All'], 'type': 'category'},
+            'xAxis': {
+                'type': 'category',
+                'categories': ['All'],
+                'visible': True,
+            },
             'yAxis': [],
         }, result)
 
@@ -1458,7 +1718,7 @@ class HighChartsPieChartTransformerTests(TestCase):
 
         self.assertEqual({
             "title": {"text": "Votes and Wins"},
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "name": "Votes",
@@ -1487,7 +1747,11 @@ class HighChartsPieChartTransformerTests(TestCase):
                     'valueSuffix': None
                 },
             }],
-            'xAxis': {'categories': ['All'], 'type': 'category'},
+            'xAxis': {
+                'type': 'category',
+                'categories': ['All'],
+                'visible': True,
+            },
             'yAxis': [],
         }, result)
 
@@ -1498,7 +1762,7 @@ class HighChartsPieChartTransformerTests(TestCase):
 
         self.assertEqual({
             'title': {'text': 'Votes and Wins'},
-            'tooltip': {'useHTML': True, 'shared': True},
+            'tooltip': {'useHTML': True, 'shared': True, 'enabled': True},
             'legend': {'useHTML': True},
             'series': [{
                 'name': 'Votes',
@@ -1523,7 +1787,11 @@ class HighChartsPieChartTransformerTests(TestCase):
                 },
             }],
             'yAxis': [],
-            'xAxis': {'categories': ['Democrat', 'Independent', 'Republican'], 'type': 'category'}
+            'xAxis': {
+                'type': 'category',
+                'categories': ['Democrat', 'Independent', 'Republican'],
+                'visible': True,
+            }
         }, result)
 
     @skip
@@ -1545,7 +1813,7 @@ class HighChartsPieChartTransformerTests(TestCase):
                 "labels": {"style": {"color": "#DDDF0D"}}
 
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "type": self.chart_type,
@@ -1586,14 +1854,17 @@ class HighChartsPieChartTransformerTests(TestCase):
 
         self.assertEqual({
             "title": {"text": "Election Votes by State"},
-            "xAxis": {"type": "datetime"},
+            "xAxis": {
+                "type": "datetime",
+                "visible": True,
+            },
             "yAxis": [{
                 "id": "0",
                 "title": {"text": None},
                 "labels": {"style": {"color": None}}
 
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "type": self.chart_type,
@@ -1645,14 +1916,17 @@ class HighChartsPieChartTransformerTests(TestCase):
 
         self.assertEqual({
             "title": {"text": "Election Votes by State"},
-            "xAxis": {"type": "datetime"},
+            "xAxis": {
+                "type": "datetime",
+                "visible": True,
+            },
             "yAxis": [{
                 "id": "0",
                 "title": {"text": None},
                 "labels": {"style": {"color": "#DDDF0D"}}
 
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "type": self.chart_type,
@@ -1742,7 +2016,10 @@ class HighChartsPieChartTransformerTests(TestCase):
 
         self.assertEqual({
             "title": {"text": "Election Votes by State"},
-            "xAxis": {"type": "datetime"},
+            "xAxis": {
+                "type": "datetime",
+                "visible": True,
+            },
             "yAxis": [{
                 "id": "1",
                 "title": {"text": None},
@@ -1753,7 +2030,7 @@ class HighChartsPieChartTransformerTests(TestCase):
                 "labels": {"style": {"color": "#DDDF0D"}}
 
             }],
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
                 "type": self.chart_type,

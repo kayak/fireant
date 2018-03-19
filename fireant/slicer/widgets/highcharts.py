@@ -1,9 +1,9 @@
 import itertools
-
-import pandas as pd
 from datetime import (
     datetime,
 )
+
+import pandas as pd
 
 from fireant import (
     DatetimeDimension,
@@ -65,10 +65,11 @@ class ChartWidget(Widget):
     needs_marker = False
     stacking = None
 
-    def __init__(self, items=(), name=None, stacking=None):
+    def __init__(self, items=(), name=None, stacking=None, y_axis_visible=True):
         super(ChartWidget, self).__init__(items)
         self.name = name
         self.stacking = self.stacking or stacking
+        self.y_axis_visible = y_axis_visible
 
 
 class ContinuousAxisChartWidget(ChartWidget):
@@ -105,10 +106,12 @@ class HighCharts(TransformableWidget):
     class StackedColumnChart(ColumnChart):
         stacking = "normal"
 
-    def __init__(self, axes=(), title=None, colors=None):
+    def __init__(self, axes=(), title=None, colors=None, x_axis_visible=True, tooltip_visible=True):
         super(HighCharts, self).__init__(axes)
         self.title = title
         self.colors = colors or DEFAULT_COLORS
+        self.x_axis_visible = x_axis_visible
+        self.tooltip_visible = tooltip_visible
 
     @utils.immutable
     def axis(self, axis: ChartWidget):
@@ -210,16 +213,15 @@ class HighCharts(TransformableWidget):
             "xAxis": x_axis,
             "yAxis": y_axes,
             "series": series,
-            "tooltip": {"shared": True, "useHTML": True},
+            "tooltip": {"shared": True, "useHTML": True, "enabled": self.tooltip_visible},
             "legend": {"useHTML": True},
         }
 
-    @staticmethod
-    def _render_x_axis(data_frame, dimensions, dimension_display_values):
+    def _render_x_axis(self, data_frame, dimensions, dimension_display_values):
         """
-        Renders the xAxis configuraiton.
+        Renders the xAxis configuration.
 
-        https://api.highcharts.com/highcharts/yAxis
+        https://api.highcharts.com/highcharts/xAxis
 
         :param data_frame:
         :param dimension_display_values:
@@ -230,7 +232,10 @@ class HighCharts(TransformableWidget):
             else data_frame.index
 
         if dimensions and isinstance(dimensions[0], DatetimeDimension):
-            return {"type": "datetime"}
+            return {
+                "type": "datetime",
+                "visible": self.x_axis_visible,
+            }
 
         categories = ["All"] \
             if isinstance(first_level, pd.RangeIndex) \
@@ -242,10 +247,10 @@ class HighCharts(TransformableWidget):
         return {
             "type": "category",
             "categories": categories,
+            "visible": self.x_axis_visible,
         }
 
-    @staticmethod
-    def _render_y_axis(axis_idx, color, references):
+    def _render_y_axis(self, axis_idx, color, references):
         """
         Renders the yAxis configuration.
 
@@ -256,17 +261,21 @@ class HighCharts(TransformableWidget):
         :param references:
         :return:
         """
+        axis = self.items[axis_idx]
+
         y_axes = [{
             "id": str(axis_idx),
             "title": {"text": None},
-            "labels": {"style": {"color": color}}
+            "labels": {"style": {"color": color}},
+            "visible": axis.y_axis_visible,
         }]
 
         y_axes += [{
             "id": "{}_{}".format(axis_idx, reference.key),
             "title": {"text": reference.label},
             "opposite": True,
-            "labels": {"style": {"color": color}}
+            "labels": {"style": {"color": color}},
+            "visible": axis.y_axis_visible,
         }
             for reference in references
             if reference.delta]
