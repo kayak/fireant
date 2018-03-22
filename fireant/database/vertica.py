@@ -53,6 +53,9 @@ class VerticaDatabase(Database):
                                       user=self.user, password=self.password,
                                       read_timeout=self.read_timeout)
 
+    def fetch(self, query):
+        return super(VerticaDatabase, self).fetch(query)
+
     def trunc_date(self, field, interval):
         trunc_date_interval = self.DATETIME_INTERVALS.get(str(interval), 'DD')
         return Trunc(field, trunc_date_interval)
