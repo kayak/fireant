@@ -40,3 +40,9 @@ class DatabaseTests(TestCase):
 
         with self.assertRaises(NotImplementedError):
             db.trunc_date(Field('abc'), 'day')
+
+    def test_to_char(self):
+        db = Database()
+
+        to_char = db.to_char(Field('field'))
+        self.assertEqual(str(to_char), 'CAST("field" AS VARCHAR)')

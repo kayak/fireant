@@ -1,10 +1,12 @@
 import pandas as pd
-
 from pypika import (
     Dialects,
     MySQLQuery,
+    enums,
+    functions as fn,
     terms,
 )
+
 from .base import Database
 
 
@@ -65,6 +67,9 @@ class MySQLDatabase(Database):
 
     def trunc_date(self, field, interval):
         return Trunc(field, str(interval))
+
+    def to_char(self, definition):
+        return fn.Cast(definition, enums.SqlTypes.CHAR)
 
     def date_add(self, field, date_part, interval):
         # adding an extra 's' as MySQL's interval doesn't work with 'year', 'week' etc, it expects a plural

@@ -5,8 +5,6 @@ from unittest.mock import (
     patch,
 )
 
-from pypika import Field
-
 from fireant import (
     annually,
     daily,
@@ -16,6 +14,7 @@ from fireant import (
     weekly,
 )
 from fireant.database import MySQLDatabase
+from pypika import Field
 
 
 class TestMySQLDatabase(TestCase):
@@ -104,3 +103,9 @@ class TestMySQLDatabase(TestCase):
         result = self.mysql.date_add(Field('date'), 'year', 1)
 
         self.assertEqual('DATE_ADD("date",INTERVAL 1 YEAR)', str(result))
+
+    def test_to_char(self):
+        db = MySQLDatabase()
+
+        to_char = db.to_char(Field('field'))
+        self.assertEqual(str(to_char), 'CAST("field" AS CHAR)')

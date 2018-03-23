@@ -159,7 +159,7 @@ class SlicerQueryBuilder(QueryBuilder):
             A list of dict (JSON) objects containing the widget configurations.
         """
         query = self.query.limit(limit).offset(offset)
-        if hint and hasattr(query, 'hint'):
+        if hint and hasattr(query, 'hint') and callable(query.hint):
             query = query.hint(hint)
 
         data_frame = fetch_data(self.slicer.database,
@@ -222,7 +222,7 @@ class DimensionOptionQueryBuilder(QueryBuilder):
             A list of dict (JSON) objects containing the widget configurations.
         """
         query = self.query
-        if hint and hasattr(query, 'hint'):
+        if hint and hasattr(query, 'hint') and callable(query.hint):
             query = query.hint(hint)
 
         dimension = self._dimensions[0]
@@ -231,7 +231,7 @@ class DimensionOptionQueryBuilder(QueryBuilder):
             else dimension.definition.as_(dimension.key)
 
         if force_include:
-            include = fn.Cast(dimension.definition, SqlTypes.VARCHAR) \
+            include = self.slicer.database.to_char(dimension.definition) \
                 .isin([str(x) for x in force_include])
 
             # Ensure that these values are included

@@ -1,7 +1,8 @@
 import pandas as pd
-
 from pypika import (
     Query,
+    enums,
+    functions as fn,
     terms,
 )
 
@@ -30,6 +31,9 @@ class Database(object):
             cursor = connection.cursor()
             cursor.execute(query)
             return cursor.fetchall()
+
+    def to_char(self, definition):
+        return fn.Cast(definition, enums.SqlTypes.VARCHAR)
 
     def fetch_data(self, query):
         with self.connect() as connection:
