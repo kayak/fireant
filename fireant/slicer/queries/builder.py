@@ -1,15 +1,16 @@
-import pandas as pd
 from typing import (
     Dict,
     Iterable,
 )
 
+import pandas as pd
 from fireant.utils import immutable
 from pypika import (
     Order,
     functions as fn,
 )
 from pypika.enums import SqlTypes
+
 from .database import fetch_data
 from .finders import (
     find_and_group_references_for_dimensions,
@@ -144,7 +145,7 @@ class SlicerQueryBuilder(QueryBuilder):
 
         return query
 
-    def fetch(self, limit=None, offset=None) -> Iterable[Dict]:
+    def fetch(self, limit=None, offset=None, hint=None) -> Iterable[Dict]:
         """
         Fetch the data for this query and transform it into the widgets.
 
@@ -152,10 +153,14 @@ class SlicerQueryBuilder(QueryBuilder):
             A limit on the number of database rows returned.
         :param offset:
             A offset on the number of database rows returned.
+        :param hint:
+            A query hint label used with database vendors which support it. Adds a label comment to the query.
         :return:
             A list of dict (JSON) objects containing the widget configurations.
         """
         query = self.query.limit(limit).offset(offset)
+        if hint and hasattr(query, 'hint'):
+            query = query.hint(hint)
 
         data_frame = fetch_data(self.slicer.database,
                                 str(query),
@@ -202,7 +207,7 @@ class DimensionOptionQueryBuilder(QueryBuilder):
                                  dimensions=self._dimensions,
                                  filters=self._filters)
 
-    def fetch(self, limit=None, offset=None, force_include=()) -> pd.Series:
+    def fetch(self, limit=None, offset=None, hint=None, force_include=()) -> pd.Series:
         """
         Fetch the data for this query and transform it into the widgets.
 
@@ -217,6 +222,8 @@ class DimensionOptionQueryBuilder(QueryBuilder):
             A list of dict (JSON) objects containing the widget configurations.
         """
         query = self.query
+        if hint and hasattr(query, 'hint'):
+            query = query.hint(hint)
 
         dimension = self._dimensions[0]
         definition = dimension.display_definition.as_(dimension.display_key) \
