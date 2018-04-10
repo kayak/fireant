@@ -6,7 +6,7 @@ from .dimensions import (
     UniqueDimension,
 )
 from .queries import (
-    DimensionOptionQueryBuilder,
+    DimensionChoicesQueryBuilder,
     SlicerQueryBuilder,
 )
 
@@ -39,6 +39,9 @@ class _Container(object):
 
     def __getitem__(self, item):
         return getattr(self, item)
+
+    def __contains__(self, item):
+        return hasattr(self, item)
 
     def __eq__(self, other):
         """
@@ -102,7 +105,7 @@ class Slicer(object):
         for dimension in dimensions:
             if not isinstance(dimension, (UniqueDimension, CategoricalDimension)):
                 continue
-            dimension.options = DimensionOptionQueryBuilder(self, dimension)
+            dimension.choices = DimensionChoicesQueryBuilder(self, dimension)
 
     def __eq__(self, other):
         return isinstance(other, Slicer) \

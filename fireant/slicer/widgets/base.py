@@ -1,10 +1,11 @@
+from fireant import Metric
 from fireant.slicer.exceptions import MetricRequiredException
 from fireant.utils import immutable
 from ..operations import Operation
 
 
 class Widget:
-    def __init__(self, items=()):
+    def __init__(self, *items: Metric):
         self.items = list(items)
 
     @immutable

@@ -30,3 +30,6 @@ class Metric(SlicerElement):
 
     def __le__(self, other):
         return ComparatorFilter(self.definition, ComparatorFilter.Operator.lte, other)
+
+    def __repr__(self):
+        return "slicer.metrics.{}".format(self.key)

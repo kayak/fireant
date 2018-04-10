@@ -23,7 +23,7 @@ class CSVWidgetTests(TestCase):
     maxDiff = None
 
     def test_single_metric(self):
-        result = CSV(items=[slicer.metrics.votes]) \
+        result = CSV(slicer.metrics.votes) \
             .transform(single_metric_df, slicer, [], [])
 
         expected = single_metric_df.copy()[['votes']]
@@ -32,7 +32,7 @@ class CSVWidgetTests(TestCase):
         self.assertEqual(result, expected.to_csv())
 
     def test_multiple_metrics(self):
-        result = CSV(items=[slicer.metrics.votes, slicer.metrics.wins]) \
+        result = CSV(slicer.metrics.votes, slicer.metrics.wins) \
             .transform(multi_metric_df, slicer, [], [])
 
         expected = multi_metric_df.copy()[['votes', 'wins']]
@@ -41,7 +41,7 @@ class CSVWidgetTests(TestCase):
         self.assertEqual(result, expected.to_csv())
 
     def test_multiple_metrics_reversed(self):
-        result = CSV(items=[slicer.metrics.wins, slicer.metrics.votes]) \
+        result = CSV(slicer.metrics.wins, slicer.metrics.votes) \
             .transform(multi_metric_df, slicer, [], [])
 
         expected = multi_metric_df.copy()[['wins', 'votes']]
@@ -50,7 +50,7 @@ class CSVWidgetTests(TestCase):
         self.assertEqual(result, expected.to_csv())
 
     def test_time_series_dim(self):
-        result = CSV(items=[slicer.metrics.wins]) \
+        result = CSV(slicer.metrics.wins) \
             .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp], [])
 
         expected = cont_dim_df.copy()[['wins']]
@@ -60,7 +60,7 @@ class CSVWidgetTests(TestCase):
         self.assertEqual(result, expected.to_csv())
 
     def test_time_series_dim_with_operation(self):
-        result = CSV(items=[CumSum(slicer.metrics.votes)]) \
+        result = CSV(CumSum(slicer.metrics.votes)) \
             .transform(cont_dim_operation_df, slicer, [slicer.dimensions.timestamp], [])
 
         expected = cont_dim_operation_df.copy()[['cumsum(votes)']]
@@ -70,7 +70,7 @@ class CSVWidgetTests(TestCase):
         self.assertEqual(result, expected.to_csv())
 
     def test_cat_dim(self):
-        result = CSV(items=[slicer.metrics.wins]) \
+        result = CSV(slicer.metrics.wins) \
             .transform(cat_dim_df, slicer, [slicer.dimensions.political_party], [])
 
         expected = cat_dim_df.copy()[['wins']]
@@ -80,7 +80,7 @@ class CSVWidgetTests(TestCase):
         self.assertEqual(result, expected.to_csv())
 
     def test_uni_dim(self):
-        result = CSV(items=[slicer.metrics.wins]) \
+        result = CSV(slicer.metrics.wins) \
             .transform(uni_dim_df, slicer, [slicer.dimensions.candidate], [])
 
         expected = uni_dim_df.copy() \
@@ -101,7 +101,7 @@ class CSVWidgetTests(TestCase):
         uni_dim_df_copy = uni_dim_df.copy()
         del uni_dim_df_copy[slicer.dimensions.candidate.display_key]
 
-        result = CSV(items=[slicer.metrics.wins]) \
+        result = CSV(slicer.metrics.wins) \
             .transform(uni_dim_df_copy, slicer, [candidate], [])
 
         expected = uni_dim_df_copy.copy()[['wins']]
@@ -111,7 +111,7 @@ class CSVWidgetTests(TestCase):
         self.assertEqual(result, expected.to_csv())
 
     def test_multi_dims_time_series_and_uni(self):
-        result = CSV(items=[slicer.metrics.wins]) \
+        result = CSV(slicer.metrics.wins) \
             .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
 
         expected = cont_uni_dim_df.copy() \
@@ -123,7 +123,7 @@ class CSVWidgetTests(TestCase):
         self.assertEqual(result, expected.to_csv())
 
     def test_pivoted_single_dimension_no_effect(self):
-        result = CSV(items=[slicer.metrics.wins], pivot=True) \
+        result = CSV(slicer.metrics.wins, pivot=True) \
             .transform(cat_dim_df, slicer, [slicer.dimensions.political_party], [])
 
         expected = cat_dim_df.copy()[['wins']]
@@ -133,7 +133,7 @@ class CSVWidgetTests(TestCase):
         self.assertEqual(result, expected.to_csv())
 
     def test_pivoted_multi_dims_time_series_and_cat(self):
-        result = CSV(items=[slicer.metrics.wins], pivot=True) \
+        result = CSV(slicer.metrics.wins, pivot=True) \
             .transform(cont_cat_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.political_party], [])
 
         expected = cont_cat_dim_df.copy()[['wins']]
@@ -144,7 +144,7 @@ class CSVWidgetTests(TestCase):
         self.assertEqual(result, expected.to_csv())
 
     def test_pivoted_multi_dims_time_series_and_uni(self):
-        result = CSV(items=[slicer.metrics.votes], pivot=True) \
+        result = CSV(slicer.metrics.votes, pivot=True) \
             .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
 
         expected = cont_uni_dim_df.copy() \
@@ -157,7 +157,7 @@ class CSVWidgetTests(TestCase):
         self.assertEqual(result, expected.to_csv())
 
     def test_time_series_ref(self):
-        result = CSV(items=[slicer.metrics.votes]) \
+        result = CSV(slicer.metrics.votes) \
             .transform(cont_uni_dim_ref_df,
                        slicer,
                        [

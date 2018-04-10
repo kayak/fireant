@@ -24,7 +24,7 @@ class DataTablesTransformerTests(TestCase):
     maxDiff = None
 
     def test_single_metric(self):
-        result = Pandas(items=[slicer.metrics.votes]) \
+        result = Pandas(slicer.metrics.votes) \
             .transform(single_metric_df, slicer, [], [])
 
         expected = single_metric_df.copy()[['votes']]
@@ -33,7 +33,7 @@ class DataTablesTransformerTests(TestCase):
         pandas.testing.assert_frame_equal(result, expected)
 
     def test_multiple_metrics(self):
-        result = Pandas(items=[slicer.metrics.votes, slicer.metrics.wins]) \
+        result = Pandas(slicer.metrics.votes, slicer.metrics.wins) \
             .transform(multi_metric_df, slicer, [], [])
 
         expected = multi_metric_df.copy()[['votes', 'wins']]
@@ -42,7 +42,7 @@ class DataTablesTransformerTests(TestCase):
         pandas.testing.assert_frame_equal(result, expected)
 
     def test_multiple_metrics_reversed(self):
-        result = Pandas(items=[slicer.metrics.wins, slicer.metrics.votes]) \
+        result = Pandas(slicer.metrics.wins, slicer.metrics.votes) \
             .transform(multi_metric_df, slicer, [], [])
 
         expected = multi_metric_df.copy()[['wins', 'votes']]
@@ -51,7 +51,7 @@ class DataTablesTransformerTests(TestCase):
         pandas.testing.assert_frame_equal(result, expected)
 
     def test_time_series_dim(self):
-        result = Pandas(items=[slicer.metrics.wins]) \
+        result = Pandas(slicer.metrics.wins) \
             .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp], [])
 
         expected = cont_dim_df.copy()[['wins']]
@@ -61,7 +61,7 @@ class DataTablesTransformerTests(TestCase):
         pandas.testing.assert_frame_equal(result, expected)
 
     def test_time_series_dim_with_operation(self):
-        result = Pandas(items=[CumSum(slicer.metrics.votes)]) \
+        result = Pandas(CumSum(slicer.metrics.votes)) \
             .transform(cont_dim_operation_df, slicer, [slicer.dimensions.timestamp], [])
 
         expected = cont_dim_operation_df.copy()[['cumsum(votes)']]
@@ -71,7 +71,7 @@ class DataTablesTransformerTests(TestCase):
         pandas.testing.assert_frame_equal(result, expected)
 
     def test_cat_dim(self):
-        result = Pandas(items=[slicer.metrics.wins]) \
+        result = Pandas(slicer.metrics.wins) \
             .transform(cat_dim_df, slicer, [slicer.dimensions.political_party], [])
 
         expected = cat_dim_df.copy()[['wins']]
@@ -81,7 +81,7 @@ class DataTablesTransformerTests(TestCase):
         pandas.testing.assert_frame_equal(result, expected)
 
     def test_uni_dim(self):
-        result = Pandas(items=[slicer.metrics.wins]) \
+        result = Pandas(slicer.metrics.wins) \
             .transform(uni_dim_df, slicer, [slicer.dimensions.candidate], [])
 
         expected = uni_dim_df.copy() \
@@ -102,7 +102,7 @@ class DataTablesTransformerTests(TestCase):
         uni_dim_df_copy = uni_dim_df.copy()
         del uni_dim_df_copy[slicer.dimensions.candidate.display_key]
 
-        result = Pandas(items=[slicer.metrics.wins]) \
+        result = Pandas(slicer.metrics.wins) \
             .transform(uni_dim_df_copy, slicer, [candidate], [])
 
         expected = uni_dim_df_copy.copy()[['wins']]
@@ -112,7 +112,7 @@ class DataTablesTransformerTests(TestCase):
         pandas.testing.assert_frame_equal(result, expected)
 
     def test_multi_dims_time_series_and_uni(self):
-        result = Pandas(items=[slicer.metrics.wins]) \
+        result = Pandas(slicer.metrics.wins) \
             .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
 
         expected = cont_uni_dim_df.copy() \
@@ -124,7 +124,7 @@ class DataTablesTransformerTests(TestCase):
         pandas.testing.assert_frame_equal(result, expected)
 
     def test_pivoted_single_dimension_no_effect(self):
-        result = Pandas(items=[slicer.metrics.wins], pivot=True) \
+        result = Pandas(slicer.metrics.wins, pivot=True) \
             .transform(cat_dim_df, slicer, [slicer.dimensions.political_party], [])
 
         expected = cat_dim_df.copy()[['wins']]
@@ -134,7 +134,7 @@ class DataTablesTransformerTests(TestCase):
         pandas.testing.assert_frame_equal(result, expected)
 
     def test_pivoted_multi_dims_time_series_and_cat(self):
-        result = Pandas(items=[slicer.metrics.wins], pivot=True) \
+        result = Pandas(slicer.metrics.wins, pivot=True) \
             .transform(cont_cat_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.political_party], [])
 
         expected = cont_cat_dim_df.copy()[['wins']]
@@ -145,7 +145,7 @@ class DataTablesTransformerTests(TestCase):
         pandas.testing.assert_frame_equal(result, expected)
 
     def test_pivoted_multi_dims_time_series_and_uni(self):
-        result = Pandas(items=[slicer.metrics.votes], pivot=True) \
+        result = Pandas(slicer.metrics.votes, pivot=True) \
             .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
 
         expected = cont_uni_dim_df.copy() \
@@ -158,7 +158,7 @@ class DataTablesTransformerTests(TestCase):
         pandas.testing.assert_frame_equal(result, expected)
 
     def test_time_series_ref(self):
-        result = Pandas(items=[slicer.metrics.votes]) \
+        result = Pandas(slicer.metrics.votes) \
             .transform(cont_uni_dim_ref_df, slicer,
                        [
                            slicer.dimensions.timestamp,
@@ -183,7 +183,7 @@ class DataTablesTransformerTests(TestCase):
         votes.precision = 2
 
         # divide the data frame by 3 to get a repeating decimal so we can check precision
-        result = Pandas(items=[votes]) \
+        result = Pandas(votes) \
             .transform(cont_dim_df / 3, slicer, [slicer.dimensions.timestamp], [])
 
         expected = cont_dim_df.copy()[['votes']]

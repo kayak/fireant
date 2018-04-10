@@ -38,6 +38,9 @@ class Dimension(SlicerElement):
         """
         self.is_rollup = True
 
+    def __repr__(self):
+        return "slicer.dimensions.{}".format(self.key)
+
 
 class BooleanDimension(Dimension):
     """
@@ -101,23 +104,7 @@ class CategoricalDimension(Dimension):
         return ExcludesFilter(self.definition, values)
 
 
-class UniqueDimension(Dimension):
-    """
-    This is a dimension that represents a field in a database which is a unique identifier, such as a primary/foreign
-    key. It provides support for a display value field which is selected and used in the results.
-    """
-
-    def __init__(self, key, label=None, definition=None, display_definition=None):
-        super(UniqueDimension, self).__init__(key,
-                                              label,
-                                              definition,
-                                              display_definition)
-
-    def __hash__(self):
-        if self.has_display_field:
-            return hash('{}({},{})'.format(self.__class__.__name__, self.definition, self.display_definition))
-        return super(UniqueDimension, self).__hash__()
-
+class _UniqueDimensionBase(Dimension):
     def isin(self, values, use_display=False):
         """
         Creates a filter to filter a slicer query.
@@ -184,12 +171,30 @@ class UniqueDimension(Dimension):
             raise QueryException('No value set for display_definition.')
         return NotLikeFilter(self.display_definition, pattern)
 
+
+class UniqueDimension(_UniqueDimensionBase):
+    """
+    This is a dimension that represents a field in a database which is a unique identifier, such as a primary/foreign
+    key. It provides support for a display value field which is selected and used in the results.
+    """
+
+    def __init__(self, key, label=None, definition=None, display_definition=None):
+        super(UniqueDimension, self).__init__(key,
+                                              label,
+                                              definition,
+                                              display_definition)
+
+    def __hash__(self):
+        if self.has_display_field:
+            return hash('{}({},{})'.format(self.__class__.__name__, self.definition, self.display_definition))
+        return super(UniqueDimension, self).__hash__()
+
     @property
     def display(self):
         return self
 
 
-class DisplayDimension(Dimension):
+class DisplayDimension(_UniqueDimensionBase):
     """
     WRITEME
     """

@@ -4,12 +4,12 @@ from ..mocks import slicer
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
-class DimensionsOptionsQueryBuilderTests(TestCase):
+class DimensionsChoicesQueryBuilderTests(TestCase):
     maxDiff = None
 
-    def test_query_options_for_cat_dimension(self):
+    def test_query_choices_for_cat_dimension(self):
         query = slicer.dimensions.political_party \
-            .options \
+            .choices \
             .query
 
         self.assertEqual('SELECT '
@@ -17,9 +17,9 @@ class DimensionsOptionsQueryBuilderTests(TestCase):
                          'FROM "politics"."politician" '
                          'GROUP BY "political_party"', str(query))
 
-    def test_query_options_for_uni_dimension(self):
+    def test_query_choices_for_uni_dimension(self):
         query = slicer.dimensions.candidate \
-            .options \
+            .choices \
             .query
 
         self.assertEqual('SELECT '
@@ -28,9 +28,9 @@ class DimensionsOptionsQueryBuilderTests(TestCase):
                          'FROM "politics"."politician" '
                          'GROUP BY "candidate","candidate_display"', str(query))
 
-    def test_query_options_for_uni_dimension_with_join(self):
+    def test_query_choices_for_uni_dimension_with_join(self):
         query = slicer.dimensions.district \
-            .options \
+            .choices \
             .query
 
         self.assertEqual('SELECT '
@@ -41,17 +41,17 @@ class DimensionsOptionsQueryBuilderTests(TestCase):
                          'ON "politician"."district_id"="district"."id" '
                          'GROUP BY "district","district_display"', str(query))
 
-    def test_no_options_attr_for_datetime_dimension(self):
+    def test_no_choices_attr_for_datetime_dimension(self):
         with self.assertRaises(AttributeError):
-            slicer.dimensions.timestamp.options
+            slicer.dimensions.timestamp.choices
 
-    def test_no_options_attr_for_boolean_dimension(self):
+    def test_no_choices_attr_for_boolean_dimension(self):
         with self.assertRaises(AttributeError):
-            slicer.dimensions.winner.options
+            slicer.dimensions.winner.choices
 
-    def test_filter_options(self):
+    def test_filter_choices(self):
         query = slicer.dimensions.candidate \
-            .options \
+            .choices \
             .filter(slicer.dimensions.political_party.isin(['d', 'r'])) \
             .query
 

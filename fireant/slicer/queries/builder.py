@@ -7,9 +7,7 @@ import pandas as pd
 from fireant.utils import immutable
 from pypika import (
     Order,
-    functions as fn,
 )
-from pypika.enums import SqlTypes
 
 from .database import fetch_data
 from .finders import (
@@ -176,15 +174,26 @@ class SlicerQueryBuilder(QueryBuilder):
                 for widget in self._widgets]
 
     def __str__(self):
-        return self.query
+        return str(self.query)
+
+    def __repr__(self):
+        return ".".join(["slicer", "data"]
+                        + ["widget({})".format(repr(widget))
+                           for widget in self._widgets]
+                        + ["dimension({})".format(repr(dimension))
+                           for dimension in self._dimensions]
+                        + ["filter({})".format(repr(filter))
+                           for filter in self._filters]
+                        + ["reference({})".format(repr(reference))
+                           for reference in self._references])
 
 
-class DimensionOptionQueryBuilder(QueryBuilder):
+class DimensionChoicesQueryBuilder(QueryBuilder):
     """
     WRITEME
     """
     def __init__(self, slicer, dimension):
-        super(DimensionOptionQueryBuilder, self).__init__(slicer, slicer.hint_table or slicer.table)
+        super(DimensionChoicesQueryBuilder, self).__init__(slicer, slicer.hint_table or slicer.table)
         self._dimensions.append(dimension)
 
     @property

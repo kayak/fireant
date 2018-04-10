@@ -1,18 +1,23 @@
 import itertools
+
+import pandas as pd
 from datetime import (
     datetime,
 )
-
-import pandas as pd
+from typing import (
+    Iterable,
+    Union,
+)
 
 from fireant import (
     DatetimeDimension,
+    Metric,
+    Operation,
     formats,
     utils,
 )
 from .base import (
     TransformableWidget,
-    Widget,
 )
 from .helpers import (
     dimensional_metric_label,
@@ -60,16 +65,19 @@ MARKER_SYMBOLS = (
 )
 
 
-class ChartWidget(Widget):
+class ChartWidget:
     type = None
     needs_marker = False
     stacking = None
 
-    def __init__(self, items=(), name=None, stacking=None, y_axis_visible=True):
-        super(ChartWidget, self).__init__(items)
+    def __init__(self, metric: Union[Metric, Operation], name=None, stacking=None):
+        self.metric = metric
         self.name = name
         self.stacking = self.stacking or stacking
-        self.y_axis_visible = y_axis_visible
+
+    def __repr__(self):
+        return "{}({})".format(self.__class__.__name__,
+                               repr(self.metric))
 
 
 class ContinuousAxisChartWidget(ChartWidget):
@@ -77,6 +85,20 @@ class ContinuousAxisChartWidget(ChartWidget):
 
 
 class HighCharts(TransformableWidget):
+    class Axis:
+        def __init__(self, series: Iterable[ChartWidget], y_axis_visible=True):
+            self._series = series or []
+            self.y_axis_visible = y_axis_visible
+
+        def __iter__(self):
+            return iter(self._series)
+
+        def __len__(self):
+            return len(self._series)
+
+        def __repr__(self):
+            return "axis({})".format(", ".join(map(repr, self)))
+
     class LineChart(ContinuousAxisChartWidget):
         type = 'line'
         needs_marker = True
@@ -106,15 +128,18 @@ class HighCharts(TransformableWidget):
     class StackedColumnChart(ColumnChart):
         stacking = "normal"
 
-    def __init__(self, axes=(), title=None, colors=None, x_axis_visible=True, tooltip_visible=True):
-        super(HighCharts, self).__init__(axes)
+    def __init__(self, title=None, colors=None, x_axis_visible=True, tooltip_visible=True):
+        super(HighCharts, self).__init__()
         self.title = title
         self.colors = colors or DEFAULT_COLORS
         self.x_axis_visible = x_axis_visible
         self.tooltip_visible = tooltip_visible
 
+    def __repr__(self):
+        return ".".join(["HighCharts()"] + [repr(axis) for axis in self.items])
+
     @utils.immutable
-    def axis(self, axis: ChartWidget):
+    def axis(self, *series: ChartWidget, **kwargs):
         """
         (Immutable) Adds an axis to the Chart.
 
@@ -122,7 +147,7 @@ class HighCharts(TransformableWidget):
         :return:
         """
 
-        self.items.append(axis)
+        self.items.append(self.Axis(series, **kwargs))
 
     @property
     def metrics(self):
@@ -134,10 +159,10 @@ class HighCharts(TransformableWidget):
             raise MetricRequiredException(str(self))
 
         seen = set()
-        return [metric
+        return [series.metric
                 for axis in self.items
-                for metric in axis.metrics
-                if not (metric.key in seen or seen.add(metric.key))]
+                for series in axis
+                if not (series.metric.key in seen or seen.add(series.metric.key))]
 
     @property
     def operations(self):
@@ -178,19 +203,13 @@ class HighCharts(TransformableWidget):
         dimension_display_values = extract_display_values(dimensions, data_frame)
         render_series_label = dimensional_metric_label(dimensions, dimension_display_values)
 
-        total_num_items = sum([len(axis.items) for axis in self.items])
+        total_num_series = sum([len(axis)
+                                for axis in self.items])
 
         y_axes, series = [], []
         for axis_idx, axis in enumerate(self.items):
             colors, series_colors = itertools.tee(colors)
-            axis_color = next(colors) if 1 < total_num_items else None
-
-            if isinstance(axis, self.PieChart):
-                # pie charts suck
-                for metric in axis.metrics:
-                    for reference in [None] + references:
-                        series += [self._render_pie_series(axis, metric, reference, data_frame, render_series_label)]
-                continue
+            axis_color = next(colors) if 1 < total_num_series else None
 
             # prepend axes, append series, this keeps everything ordered left-to-right
             y_axes[0:0] = self._render_y_axis(axis_idx,
@@ -299,57 +318,67 @@ class HighCharts(TransformableWidget):
         :param is_timeseries:
         :return:
         """
-        has_multi_metric = 1 < len(axis.items)
+        has_multi_axis = 1 < len(axis)
 
-        series = []
-        for metric in axis.items:
+        hc_series = []
+        for series in axis:
             symbols = itertools.cycle(MARKER_SYMBOLS)
-            series_color = next(colors) if has_multi_metric else None
+            series_color = next(colors) if has_multi_axis else None
 
             for (dimension_values, group_df), symbol in zip(data_frame_groups, symbols):
                 dimension_values = utils.wrap_list(dimension_values)
 
-                if not has_multi_metric:
+                if isinstance(series, self.PieChart):
+                    # pie charts suck
+                    for reference in [None] + references:
+                        hc_series += [self._render_pie_series(series,
+                                                              reference,
+                                                              dimension_values,
+                                                              group_df,
+                                                              render_series_label)]
+                    continue
+
+                if not has_multi_axis:
                     series_color = next(colors)
 
                 for reference, dash_style in zip([None] + references, itertools.cycle(DASH_STYLES)):
-                    metric_key = reference_key(metric, reference)
+                    metric_key = reference_key(series.metric, reference)
 
-                    series.append({
-                        "type": axis.type,
+                    hc_series.append({
+                        "type": series.type,
                         "color": series_color,
                         "dashStyle": dash_style,
 
-                        "name": render_series_label(dimension_values, metric, reference),
+                        "name": render_series_label(dimension_values, series.metric, reference),
 
                         "data": self._render_data(group_df, metric_key, is_timeseries),
 
-                        "tooltip": self._render_tooltip(metric),
+                        "tooltip": self._render_tooltip(series.metric),
 
                         "yAxis": ("{}_{}".format(axis_idx, reference.key)
                                   if reference is not None and reference.delta
                                   else str(axis_idx)),
 
                         "marker": ({"symbol": symbol, "fillColor": axis_color or series_color}
-                                   if axis.needs_marker
+                                   if series.needs_marker
                                    else {}),
 
-                        "stacking": axis.stacking,
+                        "stacking": series.stacking,
                     })
 
-        return series
+        return hc_series
 
-    def _render_pie_series(self, axis, metric, reference, data_frame, render_series_label):
-        pie_chart_df = data_frame[reference_key(metric, reference)]
+    def _render_pie_series(self, series, reference, dimension_values, data_frame, render_series_label):
+        metric = series.metric
         name = reference_label(metric, reference)
         return {
             "name": name,
-            "type": axis.type,
+            "type": series.type,
+            "colors": list(self.colors),
             "data": [{
                 "name": render_series_label(dimension_values) if dimension_values else name,
                 "y": formats.metric_value(y),
-                "color": color,
-            } for (dimension_values, y), color in zip(pie_chart_df.iteritems(), self.colors)],
+            } for dimension_values, y in data_frame[series.metric.key].iteritems()],
             'tooltip': {
                 'valueDecimals': metric.precision,
                 'valuePrefix': metric.prefix,

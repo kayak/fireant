@@ -30,7 +30,7 @@ class DataTablesTransformerTests(TestCase):
     maxDiff = None
 
     def test_single_metric(self):
-        result = DataTablesJS(items=[slicer.metrics.votes]) \
+        result = DataTablesJS(slicer.metrics.votes) \
             .transform(single_metric_df, slicer, [], [])
 
         self.assertEqual({
@@ -45,7 +45,7 @@ class DataTablesTransformerTests(TestCase):
         }, result)
 
     def test_multiple_metrics(self):
-        result = DataTablesJS(items=[slicer.metrics.votes, slicer.metrics.wins]) \
+        result = DataTablesJS(slicer.metrics.votes, slicer.metrics.wins) \
             .transform(multi_metric_df, slicer, [], [])
 
         self.assertEqual({
@@ -65,7 +65,7 @@ class DataTablesTransformerTests(TestCase):
         }, result)
 
     def test_multiple_metrics_reversed(self):
-        result = DataTablesJS(items=[slicer.metrics.wins, slicer.metrics.votes]) \
+        result = DataTablesJS(slicer.metrics.wins, slicer.metrics.votes) \
             .transform(multi_metric_df, slicer, [], [])
 
         self.assertEqual({
@@ -85,7 +85,7 @@ class DataTablesTransformerTests(TestCase):
         }, result)
 
     def test_time_series_dim(self):
-        result = DataTablesJS(items=[slicer.metrics.wins]) \
+        result = DataTablesJS(slicer.metrics.wins) \
             .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp], [])
 
         self.assertEqual({
@@ -120,7 +120,7 @@ class DataTablesTransformerTests(TestCase):
         }, result)
 
     def test_time_series_dim_with_operation(self):
-        result = DataTablesJS(items=[CumSum(slicer.metrics.votes)]) \
+        result = DataTablesJS(CumSum(slicer.metrics.votes)) \
             .transform(cont_dim_operation_df, slicer, [slicer.dimensions.timestamp], [])
 
         self.assertEqual({
@@ -155,7 +155,7 @@ class DataTablesTransformerTests(TestCase):
         }, result)
 
     def test_cat_dim(self):
-        result = DataTablesJS(items=[slicer.metrics.wins]) \
+        result = DataTablesJS(slicer.metrics.wins) \
             .transform(cat_dim_df, slicer, [slicer.dimensions.political_party], [])
 
         self.assertEqual({
@@ -181,7 +181,7 @@ class DataTablesTransformerTests(TestCase):
         }, result)
 
     def test_uni_dim(self):
-        result = DataTablesJS(items=[slicer.metrics.wins]) \
+        result = DataTablesJS(slicer.metrics.wins) \
             .transform(uni_dim_df, slicer, [slicer.dimensions.candidate], [])
 
         self.assertEqual({
@@ -239,7 +239,7 @@ class DataTablesTransformerTests(TestCase):
         uni_dim_df_copy = uni_dim_df.copy()
         del uni_dim_df_copy[slicer.dimensions.candidate.display_key]
 
-        result = DataTablesJS(items=[slicer.metrics.wins]) \
+        result = DataTablesJS(slicer.metrics.wins) \
             .transform(uni_dim_df_copy, slicer, [candidate], [])
 
         self.assertEqual({
@@ -289,7 +289,7 @@ class DataTablesTransformerTests(TestCase):
         }, result)
 
     def test_multi_dims_time_series_and_uni(self):
-        result = DataTablesJS(items=[slicer.metrics.wins]) \
+        result = DataTablesJS(slicer.metrics.wins) \
             .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
 
         self.assertEqual({
@@ -358,7 +358,7 @@ class DataTablesTransformerTests(TestCase):
         }, result)
 
     def test_multi_dims_with_one_level_totals(self):
-        result = DataTablesJS(items=[slicer.metrics.wins]) \
+        result = DataTablesJS(slicer.metrics.wins) \
             .transform(cont_uni_dim_totals_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state.rollup()],
                        [])
 
@@ -452,7 +452,7 @@ class DataTablesTransformerTests(TestCase):
         }, result)
 
     def test_multi_dims_with_all_levels_totals(self):
-        result = DataTablesJS(items=[slicer.metrics.wins]) \
+        result = DataTablesJS(slicer.metrics.wins) \
             .transform(cont_uni_dim_all_totals_df, slicer, [slicer.dimensions.timestamp.rollup(),
                                                             slicer.dimensions.state.rollup()], [])
 
@@ -550,7 +550,7 @@ class DataTablesTransformerTests(TestCase):
         }, result)
 
     def test_pivoted_single_dimension_no_effect(self):
-        result = DataTablesJS(items=[slicer.metrics.wins], pivot=True) \
+        result = DataTablesJS(slicer.metrics.wins, pivot=True) \
             .transform(cat_dim_df, slicer, [slicer.dimensions.political_party], [])
 
         self.assertEqual({
@@ -576,7 +576,7 @@ class DataTablesTransformerTests(TestCase):
         }, result)
 
     def test_pivoted_multi_dims_time_series_and_cat(self):
-        result = DataTablesJS(items=[slicer.metrics.wins], pivot=True) \
+        result = DataTablesJS(slicer.metrics.wins, pivot=True) \
             .transform(cont_cat_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.political_party], [])
 
         self.assertEqual({
@@ -643,7 +643,7 @@ class DataTablesTransformerTests(TestCase):
         }, result)
 
     def test_pivoted_multi_dims_time_series_and_uni(self):
-        result = DataTablesJS(items=[slicer.metrics.votes], pivot=True) \
+        result = DataTablesJS(slicer.metrics.votes, pivot=True) \
             .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
 
         self.assertEqual({
@@ -700,7 +700,7 @@ class DataTablesTransformerTests(TestCase):
         }, result)
 
     def test_time_series_ref(self):
-        result = DataTablesJS(items=[slicer.metrics.votes]) \
+        result = DataTablesJS(slicer.metrics.votes) \
             .transform(cont_uni_dim_ref_df,
                        slicer,
                        [

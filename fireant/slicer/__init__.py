@@ -4,6 +4,7 @@ from .dimensions import (
     ContinuousDimension,
     DatetimeDimension,
     Dimension,
+    DisplayDimension,
     UniqueDimension,
 )
 from .exceptions import (

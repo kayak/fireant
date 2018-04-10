@@ -33,6 +33,9 @@ class Reference(object):
     def __hash__(self):
         return hash('reference{}{}'.format(self.key, self.dimension))
 
+    def __repr__(self):
+        return '{}({})'.format(self.key, self.dimension.key)
+
 
 class ReferenceType(object):
     def __init__(self, key, label, time_unit: str, interval: int):

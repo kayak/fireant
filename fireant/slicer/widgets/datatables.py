@@ -5,9 +5,9 @@ import pandas as pd
 from fireant import (
     ContinuousDimension,
     Metric,
+    UniqueDimension,
     formats,
     utils,
-    UniqueDimension,
 )
 from .base import (
     TransformableWidget,
@@ -105,12 +105,17 @@ HARD_MAX_COLUMNS = 24
 
 
 class DataTablesJS(TransformableWidget):
-    def __init__(self, items=(), pivot=False, max_columns=None):
-        super(DataTablesJS, self).__init__(items)
+    def __init__(self, metric, *metrics: Metric, pivot=False, max_columns=None):
+        super(DataTablesJS, self).__init__(metric, *metrics)
         self.pivot = pivot
         self.max_columns = min(max_columns, HARD_MAX_COLUMNS) \
             if max_columns is not None \
             else HARD_MAX_COLUMNS
+
+    def __repr__(self):
+        return '{}({},pivot={})'.format(self.__class__.__name__,
+                                        ','.join(str(m) for m in self.items),
+                                        self.pivot)
 
     def transform(self, data_frame, slicer, dimensions, references):
         """
