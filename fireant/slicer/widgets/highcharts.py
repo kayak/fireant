@@ -1,6 +1,4 @@
 import itertools
-
-import pandas as pd
 from datetime import (
     datetime,
 )
@@ -8,6 +6,8 @@ from typing import (
     Iterable,
     Union,
 )
+
+import pandas as pd
 
 from fireant import (
     DatetimeDimension,
@@ -168,6 +168,7 @@ class HighCharts(TransformableWidget):
     def operations(self):
         return utils.ordered_distinct_list_by_attr([operation
                                                     for item in self.items
+                                                    if hasattr(item, 'operations')
                                                     for operation in item.operations])
 
     def transform(self, data_frame, slicer, dimensions, references):
