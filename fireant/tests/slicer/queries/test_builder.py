@@ -595,6 +595,17 @@ class QueryBuilderDimensionFilterTests(TestCase):
                          'FROM "politics"."politician" '
                          'WHERE "candidate_name" LIKE \'%Trump\'', str(query))
 
+    def test_build_query_with_filter_like_display_dim(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS(slicer.metrics.votes)) \
+            .filter(slicer.dimensions.candidate_display.like('%Trump')) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'WHERE "candidate_name" LIKE \'%Trump\'', str(query))
+
     def test_build_query_with_filter_not_like_unique_dim(self):
         query = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \

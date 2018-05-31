@@ -204,6 +204,32 @@ class DisplayDimension(_UniqueDimensionBase):
                                                dimension.label,
                                                dimension.display_definition)
 
+    def like(self, pattern):
+        """
+        Creates a filter to filter a slicer query.
+
+        :param pattern:
+            A pattern to match against the dimension's display definition.  This pattern is used in the SQL query as
+            the `LIKE` expression.
+        :return:
+            A slicer query filter used to filter a slicer query to results where this dimension's display definition
+            matches the pattern.
+        """
+        return LikeFilter(self.definition, pattern)
+
+    def not_like(self, pattern):
+        """
+        Creates a filter to filter a slicer query.
+
+        :param pattern:
+            A pattern to match against the dimension's display definition.  This pattern is used in the SQL query as
+            the `NOT LIKE` expression.
+        :return:
+            A slicer query filter used to filter a slicer query to results where this dimension's display definition
+            matches the pattern.
+        """
+        return NotLikeFilter(self.definition, pattern)
+
 
 class ContinuousDimension(Dimension):
     """
