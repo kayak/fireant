@@ -159,17 +159,19 @@ class HighCharts(TransformableWidget):
             raise MetricRequiredException(str(self))
 
         seen = set()
-        return [series.metric
+        return [metric
                 for axis in self.items
                 for series in axis
-                if not (series.metric.key in seen or seen.add(series.metric.key))]
+                for metric in getattr(series.metric, 'metrics', [series.metric])
+                if not (metric.key in seen or seen.add(metric.key))]
 
     @property
     def operations(self):
         return utils.ordered_distinct_list_by_attr([operation
-                                                    for item in self.items
-                                                    if hasattr(item, 'operations')
-                                                    for operation in item.operations])
+                                                    for axis in self.items
+                                                    for series in axis
+                                                    if isinstance(series.metric, Operation)
+                                                    for operation in [series.metric] + series.metric.operations])
 
     def transform(self, data_frame, slicer, dimensions, references):
         """

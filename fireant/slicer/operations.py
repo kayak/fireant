@@ -18,6 +18,10 @@ class Operation(object):
     def apply(self, data_frame):
         raise NotImplementedError()
 
+    @property
+    def operations(self):
+        return []
+
 
 class _Cumulative(Operation):
     def __init__(self, arg):
@@ -45,6 +49,13 @@ class _Cumulative(Operation):
         return [metric
                 for metric in [self.arg]
                 if isinstance(metric, Metric)]
+
+    @property
+    def operations(self):
+        return [op_and_children
+                for operation in [self.arg]
+                if isinstance(operation, Operation)
+                for op_and_children in [operation] + operation.operations]
 
     def apply(self, data_frame):
         raise NotImplementedError()
