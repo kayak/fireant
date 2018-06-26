@@ -5,6 +5,7 @@ from .dimensions import (
     DatetimeDimension,
     Dimension,
     DisplayDimension,
+    PatternDimension,
     UniqueDimension,
 )
 from .exceptions import (
@@ -28,6 +29,7 @@ from .operations import (
     CumProd,
     CumSum,
     Operation,
+    RollingMean,
 )
 from .references import (
     DayOverDay,

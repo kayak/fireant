@@ -1,5 +1,7 @@
 from pypika.terms import (
     NullValue,
+    Case,
+    ValueWrapper,
 )
 from typing import Iterable
 
@@ -289,6 +291,42 @@ class DatetimeDimension(ContinuousDimension):
             start and stop.
         """
         return RangeFilter(self.definition, start, stop)
+
+
+class PatternDimension(Dimension):
+    """
+    This is a dimension that represents a boolean true/false value.  The expression should always result in a boolean
+    value.
+    """
+
+    def __init__(self, key, label=None, definition=None):
+        super(PatternDimension, self).__init__(key,
+                                               label,
+                                               ValueWrapper('No Group'))
+        self.field = definition
+
+    @immutable
+    def __call__(self, groups):
+        """
+        When calling a datetime dimension an interval can be supplied:
+
+        ```
+        from fireant import weekly
+
+        my_slicer.dimensions.date # Daily interval used as default
+        my_slicer.dimensions.date(weekly) # Daily interval used as default
+        ```
+
+        :param interval:
+            An interval to use with the dimension.  See `fireant.intervals`.
+        :return:
+            A copy of the dimension with the interval set.
+        """
+        cases = Case()
+        for group in groups:
+            cases = cases.when(self.field.like(group), group)
+
+        self.definition = cases
 
 
 class TotalsDimension(Dimension):

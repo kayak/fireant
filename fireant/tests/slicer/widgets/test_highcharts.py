@@ -1682,8 +1682,6 @@ class HighChartsPieChartTransformerTests(TestCase):
             .axis(self.chart_class(slicer.metrics.votes)) \
             .transform(single_metric_df, slicer, [], [])
 
-        import json
-        print(json.dumps(result))
 
         self.assertEqual({
             "title": {"text": "All Votes"},
@@ -1722,9 +1720,6 @@ class HighChartsPieChartTransformerTests(TestCase):
             .axis(self.chart_class(slicer.metrics.votes),
                   self.chart_class(slicer.metrics.wins)) \
             .transform(multi_metric_df, slicer, [], [])
-
-        import json
-        print(json.dumps(result))
 
         self.assertEqual({
             "title": {"text": "Votes and Wins"},
