@@ -1,11 +1,14 @@
 from unittest import TestCase
 
+import numpy as np
 import pandas as pd
 import pandas.testing
+
 from fireant import (
     CumMean,
     CumProd,
     CumSum,
+    RollingMean,
 )
 from fireant.tests.slicer.mocks import (
     cont_dim_df,
@@ -100,5 +103,34 @@ class CumMeanTests(TestCase):
         expected = pd.Series([6233385.0, 10428632.0, 6796503.0, 11341971.5, 7200322.3,
                               11990065.6, 7369733.5, 12166110.0, 6910369.8, 12380407.6],
                              name='votes',
+                             index=cont_uni_dim_ref_df.index)
+        pandas.testing.assert_series_equal(result, expected)
+
+
+class RollingMeanTests(TestCase):
+    def test_apply_to_timeseries(self):
+        rolling_mean = RollingMean(slicer.metrics.wins, 3)
+        result = rolling_mean.apply(cont_dim_df)
+
+        expected = pd.Series([np.nan, np.nan, 2.0, 2.0, 2.0, 2.0],
+                             name='wins',
+                             index=cont_dim_df.index)
+        pandas.testing.assert_series_equal(result, expected)
+
+    def test_apply_to_timeseries_with_uni_dim(self):
+        rolling_mean = RollingMean(slicer.metrics.wins, 3)
+        result = rolling_mean.apply(cont_uni_dim_df)
+
+        expected = pd.Series([np.nan, np.nan, np.nan, np.nan, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+                             name='wins',
+                             index=cont_uni_dim_df.index)
+        pandas.testing.assert_series_equal(result, expected)
+
+    def test_apply_to_timeseries_with_uni_dim_and_ref(self):
+        rolling_mean = RollingMean(slicer.metrics.wins, 3)
+        result = rolling_mean.apply(cont_uni_dim_ref_df)
+
+        expected = pd.Series([np.nan, np.nan, np.nan, np.nan, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+                             name='wins',
                              index=cont_uni_dim_ref_df.index)
         pandas.testing.assert_series_equal(result, expected)

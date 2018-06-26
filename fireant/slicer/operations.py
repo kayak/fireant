@@ -23,16 +23,13 @@ class Operation(object):
         return []
 
 
-class _Cumulative(Operation):
-    def __init__(self, arg):
-        self.arg = arg
-        self.key = '{}({})'.format(self.__class__.__name__.lower(),
-                                   getattr(arg, 'key', arg))
-        self.label = '{}({})'.format(self.__class__.__name__,
-                                     getattr(arg, 'label', arg))
-        self.prefix = getattr(arg, 'prefix')
-        self.suffix = getattr(arg, 'suffix')
-        self.precision = getattr(arg, 'precision')
+class _BaseOperation(Operation):
+    def __init__(self, key, label, prefix=None, suffix=None, precision=None):
+        self.key = key
+        self.label = label
+        self.prefix = prefix
+        self.suffix = suffix
+        self.precision = precision
 
     def _group_levels(self, index):
         """
@@ -43,6 +40,21 @@ class _Cumulative(Operation):
         :return:
         """
         return index.names[1:]
+
+
+class _Cumulative(_BaseOperation):
+    def __init__(self, arg):
+        super(_Cumulative, self).__init__(
+              key='{}({})'.format(self.__class__.__name__.lower(),
+                                  getattr(arg, 'key', arg)),
+              label='{}({})'.format(self.__class__.__name__,
+                                    getattr(arg, 'label', arg)),
+              prefix=getattr(arg, 'prefix'),
+              suffix=getattr(arg, 'suffix'),
+              precision=getattr(arg, 'precision'),
+        )
+
+        self.arg = arg
 
     @property
     def metrics(self):
@@ -56,9 +68,6 @@ class _Cumulative(Operation):
                 for operation in [self.arg]
                 if isinstance(operation, Operation)
                 for op_and_children in [operation] + operation.operations]
-
-    def apply(self, data_frame):
-        raise NotImplementedError()
 
     def __repr__(self):
         return self.key
@@ -102,3 +111,38 @@ class CumMean(_Cumulative):
                 .apply(self.cummean)
 
         return self.cummean(data_frame[self.arg.key])
+
+
+class _Rolling(_BaseOperation):
+    def apply(self, data_frame):
+        raise NotImplementedError()
+
+    def __init__(self, arg, window, min_periods=None):
+        super(_Rolling, self).__init__(
+              key='{}({})'.format(self.__class__.__name__.lower(),
+                                  getattr(arg, 'key', arg)),
+              label='{}({})'.format(self.__class__.__name__,
+                                    getattr(arg, 'label', arg)),
+              prefix=getattr(arg, 'prefix'),
+              suffix=getattr(arg, 'suffix'),
+              precision=getattr(arg, 'precision'),
+        )
+
+        self.arg = arg
+        self.window = window
+        self.min_periods = min_periods
+
+
+class RollingMean(_Rolling):
+    def rolling_mean(self, x):
+        return x.rolling(self.window, self.min_periods).mean()
+
+    def apply(self, data_frame):
+        if isinstance(data_frame.index, pd.MultiIndex):
+            levels = self._group_levels(data_frame.index)
+
+            return data_frame[self.arg.key] \
+                .groupby(level=levels) \
+                .apply(self.rolling_mean)
+
+        return self.rolling_mean(data_frame[self.arg.key])
