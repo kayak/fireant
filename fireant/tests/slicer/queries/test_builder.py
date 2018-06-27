@@ -569,6 +569,28 @@ class QueryBuilderDimensionFilterTests(TestCase):
                          'FROM "politics"."politician" '
                          'WHERE "political_party" NOT IN (\'d\')', str(query))
 
+    def test_build_query_with_filter_like_categorical_dim(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS(slicer.metrics.votes)) \
+            .filter(slicer.dimensions.political_party.like('Rep%')) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'WHERE "political_party" LIKE \'Rep%\'', str(query))
+
+    def test_build_query_with_filter_not_like_categorical_dim(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS(slicer.metrics.votes)) \
+            .filter(slicer.dimensions.political_party.not_like('Rep%')) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'WHERE "political_party" NOT LIKE \'Rep%\'', str(query))
+
     def test_build_query_with_filter_isin_unique_dim(self):
         query = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
