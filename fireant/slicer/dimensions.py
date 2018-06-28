@@ -364,7 +364,7 @@ class TotalsDimension(Dimension):
             if dimension.has_display_field \
             else None
 
-        super(Dimension, self).__init__(dimension.key,
-                                        dimension.label,
-                                        totals_definition,
-                                        display_definition)
+        super(TotalsDimension, self).__init__(dimension.key,
+                                              dimension.label,
+                                              totals_definition,
+                                              display_definition)

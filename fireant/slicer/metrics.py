@@ -33,3 +33,4 @@ class Metric(SlicerElement):
 
     def __repr__(self):
         return "slicer.metrics.{}".format(self.key)
+    

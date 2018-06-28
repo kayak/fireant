@@ -62,6 +62,3 @@ class VerticaDatabase(Database):
 
     def date_add(self, field, date_part, interval):
         return fn.TimestampAdd(str(date_part), interval, field)
-
-    def totals(self, query, terms):
-        return query.rollup(*terms)

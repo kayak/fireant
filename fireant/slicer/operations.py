@@ -69,6 +69,9 @@ class _Cumulative(_BaseOperation):
                 if isinstance(operation, Operation)
                 for op_and_children in [operation] + operation.operations]
 
+    def apply(self, data_frame):
+        raise NotImplementedError()
+
     def __repr__(self):
         return self.key
 
@@ -114,9 +117,6 @@ class CumMean(_Cumulative):
 
 
 class _Rolling(_BaseOperation):
-    def apply(self, data_frame):
-        raise NotImplementedError()
-
     def __init__(self, arg, window, min_periods=None):
         super(_Rolling, self).__init__(
               key='{}({})'.format(self.__class__.__name__.lower(),
@@ -131,6 +131,9 @@ class _Rolling(_BaseOperation):
         self.arg = arg
         self.window = window
         self.min_periods = min_periods
+
+    def apply(self, data_frame):
+        raise NotImplementedError()
 
 
 class RollingMean(_Rolling):

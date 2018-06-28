@@ -1,4 +1,3 @@
-from datetime import date
 from unittest import TestCase
 from unittest.mock import (
     ANY,
@@ -6,6 +5,7 @@ from unittest.mock import (
     patch,
 )
 
+from datetime import date
 from pypika import Order
 
 import fireant as f
@@ -246,6 +246,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'CASE '
                          'WHEN "pattern" LIKE \'groupA%\' THEN \'groupA%\' '
                          'WHEN "pattern" LIKE \'groupB%\' THEN \'groupB%\' '
+                         'ELSE \'No Group\' '
                          'END "pattern",'
                          'SUM("votes") "votes" '
                          'FROM "politics"."politician" '
@@ -1845,7 +1846,7 @@ class QueryBuilderJoinTests(TestCase):
     def test_dimension_with_multiple_joins_includes_joins_ordered__in_query(self):
         query = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes,
-                                    slicer.metrics.voters)) \
+                                   slicer.metrics.voters)) \
             .dimension(slicer.dimensions.timestamp) \
             .dimension(slicer.dimensions.district) \
             .query

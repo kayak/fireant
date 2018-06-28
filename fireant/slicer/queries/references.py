@@ -1,5 +1,13 @@
 import copy
 
+from pypika import functions as fn
+from pypika.queries import QueryBuilder
+from pypika.terms import (
+    ComplexCriterion,
+    Criterion,
+    NullValue,
+    Term,
+)
 from typing import (
     Callable,
     Iterable,
@@ -8,14 +16,6 @@ from typing import (
 from fireant.slicer.references import (
     reference_key,
     reference_term,
-)
-from pypika import functions as fn
-from pypika.queries import QueryBuilder
-from pypika.terms import (
-    ComplexCriterion,
-    Criterion,
-    NullValue,
-    Term,
 )
 from ..dimensions import Dimension
 from ..intervals import weekly
@@ -171,7 +171,7 @@ def make_reference_join_criterion(ref_dimension: Dimension,
 
             Examples:
                 original.date == DATE_ADD(reference.date) AND original.dim1 == reference.dim1
-            
+
         None
             if there are no dimensions. In that case there's nothing to join on and the reference queries should be
             added to the FROM clause of the container query.

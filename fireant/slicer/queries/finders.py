@@ -1,6 +1,5 @@
 import copy
 from collections import (
-    OrderedDict,
     defaultdict,
     namedtuple,
 )
