@@ -325,10 +325,12 @@ class PatternDimension(Dimension):
     value.
     """
 
+    _DEFAULT = ValueWrapper('No Group')
+
     def __init__(self, key, label=None, definition=None):
         super(PatternDimension, self).__init__(key,
                                                label,
-                                               ValueWrapper('No Group'))
+                                               self._DEFAULT)
         self.field = definition
 
     @immutable
@@ -352,7 +354,7 @@ class PatternDimension(Dimension):
         for group in groups:
             cases = cases.when(self.field.like(group), group)
 
-        self.definition = cases
+        self.definition = cases.else_(self._DEFAULT)
 
 
 class TotalsDimension(Dimension):
