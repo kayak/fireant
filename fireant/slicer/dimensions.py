@@ -12,8 +12,8 @@ from .filters import (
     BooleanFilter,
     ContainsFilter,
     ExcludesFilter,
-    LikeFilter,
     NotLikeFilter,
+    PatternFilter,
     RangeFilter,
 )
 from .intervals import (
@@ -67,7 +67,44 @@ class BooleanDimension(Dimension):
         return BooleanFilter(self.definition, value)
 
 
-class CategoricalDimension(Dimension):
+class PatternFilterableMixin:
+    definition = None
+    pattern_definition_attribute = 'definition'
+
+    def like(self, pattern, *patterns):
+        """
+        Creates a filter to filter a slicer query.
+
+        :param pattern:
+            A pattern to match against the dimension's display definition.  This pattern is used in the SQL query as
+            the `LIKE` expression.
+        :param patterns:
+            Additional patterns. This is the same as the pattern argument. The function signature is intended to
+            syntactically require at least one pattern.
+        :return:
+            A slicer query filter used to filter a slicer query to results where this dimension's display definition
+            matches the pattern.
+        """
+        return PatternFilter(getattr(self, self.pattern_definition_attribute), pattern, *patterns)
+
+    def not_like(self, pattern, *patterns):
+        """
+        Creates a filter to filter a slicer query.
+
+        :param pattern:
+            A pattern to match against the dimension's display definition.  This pattern is used in the SQL query as
+            the `NOT LIKE` expression.
+        :param patterns:
+            Additional patterns. This is the same as the pattern argument. The function signature is intended to
+            syntactically require at least one pattern.
+        :return:
+            A slicer query filter used to filter a slicer query to results where this dimension's display definition
+            matches the pattern.
+        """
+        return NotLikeFilter(getattr(self, self.pattern_definition_attribute), pattern, *patterns)
+
+
+class CategoricalDimension(PatternFilterableMixin, Dimension):
     """
     This is a dimension that represents an enum-like database field, with a finite list of options to chose from. It
     provides support for configuring a display value for each of the possible values.
@@ -105,34 +142,8 @@ class CategoricalDimension(Dimension):
         """
         return ExcludesFilter(self.definition, values)
 
-    def like(self, pattern):
-        """
-        Creates a filter to filter a slicer query.
 
-        :param pattern:
-            A pattern to match against the dimension's display definition.  This pattern is used in the SQL query as
-            the `LIKE` expression.
-        :return:
-            A slicer query filter used to filter a slicer query to results where this dimension's display definition
-            matches the pattern.
-        """
-        return LikeFilter(self.definition, pattern)
-
-    def not_like(self, pattern):
-        """
-        Creates a filter to filter a slicer query.
-
-        :param pattern:
-            A pattern to match against the dimension's display definition.  This pattern is used in the SQL query as
-            the `NOT LIKE` expression.
-        :return:
-            A slicer query filter used to filter a slicer query to results where this dimension's display definition
-            matches the pattern.
-        """
-        return NotLikeFilter(self.definition, pattern)
-
-
-class _UniqueDimensionBase(Dimension):
+class _UniqueDimensionBase(PatternFilterableMixin, Dimension):
     def isin(self, values, use_display=False):
         """
         Creates a filter to filter a slicer query.
@@ -169,42 +180,13 @@ class _UniqueDimensionBase(Dimension):
         filter_field = self.display_definition if use_display else self.definition
         return ExcludesFilter(filter_field, values)
 
-    def like(self, pattern):
-        """
-        Creates a filter to filter a slicer query.
-
-        :param pattern:
-            A pattern to match against the dimension's display definition.  This pattern is used in the SQL query as
-            the `LIKE` expression.
-        :return:
-            A slicer query filter used to filter a slicer query to results where this dimension's display definition
-            matches the pattern.
-        """
-        if self.display_definition is None:
-            raise QueryException('No value set for display_definition.')
-        return LikeFilter(self.display_definition, pattern)
-
-    def not_like(self, pattern):
-        """
-        Creates a filter to filter a slicer query.
-
-        :param pattern:
-            A pattern to match against the dimension's display definition.  This pattern is used in the SQL query as
-            the `NOT LIKE` expression.
-        :return:
-            A slicer query filter used to filter a slicer query to results where this dimension's display definition
-            matches the pattern.
-        """
-        if self.display_definition is None:
-            raise QueryException('No value set for display_definition.')
-        return NotLikeFilter(self.display_definition, pattern)
-
 
 class UniqueDimension(_UniqueDimensionBase):
     """
     This is a dimension that represents a field in a database which is a unique identifier, such as a primary/foreign
     key. It provides support for a display value field which is selected and used in the results.
     """
+    pattern_definition_attribute = 'display_definition'
 
     def __init__(self, key, label=None, definition=None, display_definition=None):
         super(UniqueDimension, self).__init__(key,
@@ -221,6 +203,16 @@ class UniqueDimension(_UniqueDimensionBase):
     def display(self):
         return self
 
+    def like(self, pattern, *patterns):
+        if self.display_definition is None:
+            raise QueryException('No value set for display_definition.')
+        return super(UniqueDimension, self).like(pattern, *patterns)
+
+    def not_like(self, pattern, *patterns):
+        if self.display_definition is None:
+            raise QueryException('No value set for display_definition.')
+        return super(UniqueDimension, self).not_like(pattern, *patterns)
+
 
 class DisplayDimension(_UniqueDimensionBase):
     """
@@ -231,32 +223,6 @@ class DisplayDimension(_UniqueDimensionBase):
         super(DisplayDimension, self).__init__(dimension.display_key,
                                                dimension.label,
                                                dimension.display_definition)
-
-    def like(self, pattern):
-        """
-        Creates a filter to filter a slicer query.
-
-        :param pattern:
-            A pattern to match against the dimension's display definition.  This pattern is used in the SQL query as
-            the `LIKE` expression.
-        :return:
-            A slicer query filter used to filter a slicer query to results where this dimension's display definition
-            matches the pattern.
-        """
-        return LikeFilter(self.definition, pattern)
-
-    def not_like(self, pattern):
-        """
-        Creates a filter to filter a slicer query.
-
-        :param pattern:
-            A pattern to match against the dimension's display definition.  This pattern is used in the SQL query as
-            the `NOT LIKE` expression.
-        :return:
-            A slicer query filter used to filter a slicer query to results where this dimension's display definition
-            matches the pattern.
-        """
-        return NotLikeFilter(self.definition, pattern)
 
 
 class ContinuousDimension(Dimension):
@@ -319,12 +285,12 @@ class DatetimeDimension(ContinuousDimension):
         return RangeFilter(self.definition, start, stop)
 
 
-class PatternDimension(Dimension):
+class PatternDimension(PatternFilterableMixin, Dimension):
     """
     This is a dimension that represents a boolean true/false value.  The expression should always result in a boolean
     value.
     """
-
+    pattern_definition_attribute = 'field'
     _DEFAULT = ValueWrapper('No Group')
 
     def __init__(self, key, label=None, definition=None):

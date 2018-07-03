@@ -17,4 +17,4 @@ class Join(object):
                                                            criterion=self.criterion)
 
     def __gt__(self, other):
-        return self.table.table_name < other.table.table_name
+        return self.table._table_name < other.table._table_name
