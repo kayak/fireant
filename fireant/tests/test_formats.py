@@ -86,3 +86,20 @@ class DisplayValueTests(TestCase):
     def test_suffix(self):
         result = formats.metric_display(0.12, suffix='€')
         self.assertEqual('0.12€', result)
+
+
+class CoerceTypeTests(TestCase):
+    def allow_literal_nan(self):
+        result = formats.coerce_type('nan')
+        self.assertEqual('nan', result)
+
+    def allow_literal_nan_upper(self):
+        result = formats.coerce_type('NAN')
+        self.assertEqual('NAN', result)
+    def allow_literal_inf(self):
+        result = formats.coerce_type('inf')
+        self.assertEqual('inf', result)
+
+    def allow_literal_inf_upper(self):
+        result = formats.coerce_type('INF')
+        self.assertEqual('INF', result)
