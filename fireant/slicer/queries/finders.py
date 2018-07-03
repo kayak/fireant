@@ -1,7 +1,8 @@
 import copy
 from collections import (
-    defaultdict,
+    OrderedDict,
     namedtuple,
+    defaultdict,
 )
 
 from toposort import (
@@ -80,7 +81,7 @@ def find_joins_for_tables(joins, base_table, required_tables):
         required_tables += tables_required_for_join - {d.table for d in dependencies}
 
     try:
-        return toposort_flatten(dependencies)
+        return toposort_flatten(dependencies, sort=True)
     except CircularDependencyError as e:
         raise CircularJoinsException(str(e))
 

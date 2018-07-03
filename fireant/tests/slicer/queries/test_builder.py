@@ -669,6 +669,113 @@ class QueryBuilderDimensionFilterTests(TestCase):
                          'FROM "politics"."politician" '
                          'WHERE "candidate_name" NOT LIKE \'%Trump\'', str(query))
 
+    def test_build_query_with_filter_not_like_display_dim(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS(slicer.metrics.votes)) \
+            .filter(slicer.dimensions.candidate_display.not_like('%Trump')) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'WHERE "candidate_name" NOT LIKE \'%Trump\'', str(query))
+
+    def test_build_query_with_filter_like_categorical_dim_multiple_patterns(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS(slicer.metrics.votes)) \
+            .filter(slicer.dimensions.political_party.like('Rep%', 'Dem%')) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'WHERE "political_party" LIKE \'Rep%\' '
+                         'OR "political_party" LIKE \'Dem%\'', str(query))
+
+    def test_build_query_with_filter_not_like_categorical_dim_multiple_patterns(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS(slicer.metrics.votes)) \
+            .filter(slicer.dimensions.political_party.not_like('Rep%', 'Dem%')) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'WHERE "political_party" NOT LIKE \'Rep%\' '
+                         'OR "political_party" NOT LIKE \'Dem%\'', str(query))
+
+    def test_build_query_with_filter_like_pattern_dim_multiple_patterns(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS(slicer.metrics.votes)) \
+            .filter(slicer.dimensions.pattern.like('a%', 'b%')) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'WHERE "pattern" LIKE \'a%\' '
+                         'OR "pattern" LIKE \'b%\'', str(query))
+
+    def test_build_query_with_filter_not_like_pattern_dim_multiple_patterns(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS(slicer.metrics.votes)) \
+            .filter(slicer.dimensions.pattern.not_like('a%', 'b%')) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'WHERE "pattern" NOT LIKE \'a%\' '
+                         'OR "pattern" NOT LIKE \'b%\'', str(query))
+
+    def test_build_query_with_filter_like_unique_dim_multiple_patterns(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS(slicer.metrics.votes)) \
+            .filter(slicer.dimensions.candidate.like('%Trump', '%Clinton')) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'WHERE "candidate_name" LIKE \'%Trump\' '
+                         'OR "candidate_name" LIKE \'%Clinton\'', str(query))
+
+    def test_build_query_with_filter_like_display_dim_multiple_patterns(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS(slicer.metrics.votes)) \
+            .filter(slicer.dimensions.candidate_display.like('%Trump', '%Clinton')) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'WHERE "candidate_name" LIKE \'%Trump\' '
+                         'OR "candidate_name" LIKE \'%Clinton\'', str(query))
+
+    def test_build_query_with_filter_not_like_unique_dim_multiple_patterns(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS(slicer.metrics.votes)) \
+            .filter(slicer.dimensions.candidate.not_like('%Trump', '%Clinton')) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'WHERE "candidate_name" NOT LIKE \'%Trump\' '
+                         'OR "candidate_name" NOT LIKE \'%Clinton\'', str(query))
+
+    def test_build_query_with_filter_not_like_display_dim_multiple_patterns(self):
+        query = slicer.data \
+            .widget(f.DataTablesJS(slicer.metrics.votes)) \
+            .filter(slicer.dimensions.candidate_display.not_like('%Trump', '%Clinton')) \
+            .query
+
+        self.assertEqual('SELECT '
+                         'SUM("votes") "votes" '
+                         'FROM "politics"."politician" '
+                         'WHERE "candidate_name" NOT LIKE \'%Trump\' '
+                         'OR "candidate_name" NOT LIKE \'%Clinton\'', str(query))
+
     def test_build_query_with_filter_isin_raise_exception_when_display_definition_undefined(self):
         with self.assertRaises(f.QueryException):
             slicer.data \
