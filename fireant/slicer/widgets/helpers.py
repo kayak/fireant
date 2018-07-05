@@ -23,13 +23,13 @@ def extract_display_values(dimensions, data_frame):
     display_values = {}
 
     for dimension in dimensions:
-        key = dimension.key
+        key = utils.format_key(dimension.key)
 
         if hasattr(dimension, 'display_values'):
             display_values[key] = dimension.display_values
 
         elif getattr(dimension, 'display_key', None):
-            display_values[key] = data_frame[dimension.display_key] \
+            display_values[key] = data_frame[utils.format_key(dimension.display_key)] \
                 .groupby(level=key) \
                 .first()
 
@@ -64,7 +64,7 @@ def dimensional_metric_label(dimensions, dimension_display_values):
         used_dimensions = dimensions if metric is None else dimensions[1:]
         dimension_values = utils.wrap_list(dimension_values)
         dimension_labels = [utils.deep_get(dimension_display_values,
-                                           [dimension.key, dimension_value],
+                                           [utils.format_key(dimension.key), dimension_value],
                                            dimension_value)
                             if not pd.isnull(dimension_value)
                             else 'Totals'

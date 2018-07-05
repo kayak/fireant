@@ -1,4 +1,3 @@
-import time
 from unittest import TestCase
 from unittest.mock import (
     MagicMock,
@@ -8,6 +7,7 @@ from unittest.mock import (
 
 import numpy as np
 import pandas as pd
+import time
 
 from fireant.slicer.queries.database import (
     clean_and_apply_index,
@@ -20,6 +20,10 @@ from fireant.tests.slicer.mocks import (
     single_metric_df,
     slicer,
     uni_dim_df,
+)
+from fireant.utils import (
+    format_key,
+    format_key as f,
 )
 
 
@@ -42,7 +46,8 @@ class FetchDataTests(TestCase):
     def test_index_set_on_data_frame_result(self):
         fetch_data(self.mock_database, self.mock_query, self.mock_dimensions)
 
-        self.mock_data_frame.set_index.assert_called_once_with([d.key for d in self.mock_dimensions])
+        self.mock_data_frame.set_index.assert_called_once_with([f(d.key)
+                                                                for d in self.mock_dimensions])
 
     @patch('fireant.slicer.queries.database.query_logger.debug')
     def test_debug_query_log_called_with_query(self, mock_logger):
@@ -97,7 +102,7 @@ def add_nans(df):
 
 
 cont_uni_dim_nans_df = cont_uni_dim_df \
-    .append(cont_uni_dim_df.groupby(level='timestamp').apply(add_nans)) \
+    .append(cont_uni_dim_df.groupby(level=format_key('timestamp')).apply(add_nans)) \
     .sort_index()
 
 
@@ -108,7 +113,7 @@ def totals(df):
 
 
 cont_uni_dim_nans_totals_df = cont_uni_dim_nans_df \
-    .append(cont_uni_dim_nans_df.groupby(level='timestamp').apply(totals)) \
+    .append(cont_uni_dim_nans_df.groupby(level=format_key('timestamp')).apply(totals)) \
     .sort_index() \
     .sort_index(level=[0, 1], ascending=False)  # This sorts the DF so that the first instance of NaN is the totals
 

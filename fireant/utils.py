@@ -115,3 +115,9 @@ def groupby_first_level(index):
     return [x[1:]
             for x in list(index)
             if x[1:] not in seen and not seen.add(x[1:])]
+
+
+def format_key(key):
+    if key is None:
+        return key
+    return '${}'.format(key)

@@ -1,5 +1,6 @@
 from pypika import functions as fn
 from pypika.queries import QueryBuilder
+from fireant import utils
 
 
 class Reference(object):
@@ -107,15 +108,18 @@ def reference_term(reference: Reference,
     :return:
     """
 
+    def original_field(metric):
+        return original_query.field(utils.format_key(metric.key))
+
     def ref_field(metric):
-        return ref_query.field(metric.key)
+        return ref_query.field(utils.format_key(metric.key))
 
     if reference.delta:
         if reference.delta_percent:
-            return lambda metric: (original_query.field(metric.key) - ref_field(metric)) \
+            return lambda metric: (original_field(metric) - ref_field(metric)) \
                                   * \
                                   (100 / fn.NullIf(ref_field(metric), 0))
 
-        return lambda metric: original_query.field(metric.key) - ref_field(metric)
+        return lambda metric: original_field(metric) - ref_field(metric)
 
     return ref_field

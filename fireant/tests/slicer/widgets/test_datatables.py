@@ -24,6 +24,7 @@ from fireant.tests.slicer.mocks import (
     slicer,
     uni_dim_df,
 )
+from fireant.utils import format_key as f
 
 
 class DataTablesTransformerTests(TestCase):
@@ -237,7 +238,7 @@ class DataTablesTransformerTests(TestCase):
         candidate.display_definition = None
 
         uni_dim_df_copy = uni_dim_df.copy()
-        del uni_dim_df_copy[slicer.dimensions.candidate.display_key]
+        del uni_dim_df_copy[f(slicer.dimensions.candidate.display_key)]
 
         result = DataTablesJS(slicer.metrics.wins) \
             .transform(uni_dim_df_copy, slicer, [candidate], [])

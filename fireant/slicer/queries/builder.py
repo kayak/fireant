@@ -1,14 +1,16 @@
+import pandas as pd
+from pypika import (
+    Order,
+)
 from typing import (
     Dict,
     Iterable,
 )
 
-import pandas as pd
-from fireant.utils import immutable
-from pypika import (
-    Order,
+from fireant.utils import (
+    format_key,
+    immutable,
 )
-
 from .database import fetch_data
 from .finders import (
     find_and_group_references_for_dimensions,
@@ -108,7 +110,7 @@ class SlicerQueryBuilder(QueryBuilder):
             The directionality to order by, either ascending or descending.
         :return:
         """
-        self._orders += [(element.definition.as_(element.key), orientation)]
+        self._orders += [(element.definition.as_(format_key(element.key)), orientation)]
 
     @property
     def query(self):
@@ -235,9 +237,9 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
             query = query.hint(hint)
 
         dimension = self._dimensions[0]
-        definition = dimension.display_definition.as_(dimension.display_key) \
+        definition = dimension.display_definition.as_(format_key(dimension.display_key)) \
             if dimension.has_display_field \
-            else dimension.definition.as_(dimension.key)
+            else dimension.definition.as_(format_key(dimension.key))
 
         if force_include:
             include = self.slicer.database.to_char(dimension.definition) \
