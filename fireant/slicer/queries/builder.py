@@ -255,9 +255,9 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
                           str(query),
                           dimensions=self._dimensions)
 
-        display_key = getattr(dimension, 'display_key', None)
-        if display_key is not None:
-            return data[display_key]
+        df_key = format_key(getattr(dimension, 'display_key', None))
+        if df_key is not None:
+            return data[df_key]
 
         display_key = 'display'
         if hasattr(dimension, 'display_values'):

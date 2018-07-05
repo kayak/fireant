@@ -1,5 +1,11 @@
 from unittest import TestCase
+from unittest.mock import (
+    ANY,
+    Mock,
+    patch,
+)
 
+from ..matchers import DimensionMatcher
 from ..mocks import slicer
 
 
@@ -61,3 +67,34 @@ class DimensionsChoicesQueryBuilderTests(TestCase):
                          'FROM "politics"."politician" '
                          'WHERE "political_party" IN (\'d\',\'r\') '
                          'GROUP BY "$candidate","$candidate_display"', str(query))
+
+
+# noinspection SqlDialectInspection,SqlNoDataSourceInspection
+@patch('fireant.slicer.queries.builder.fetch_data')
+class DimensionsChoicesFetchTests(TestCase):
+    def test_query_choices_for_cat_dimension(self, mock_fetch_data: Mock):
+        slicer.dimensions.political_party \
+            .choices \
+            .fetch()
+
+        mock_fetch_data.assert_called_once_with(ANY,
+                                                'SELECT '
+                                                '"political_party" "$political_party" '
+                                                'FROM "politics"."politician" '
+                                                'GROUP BY "$political_party" '
+                                                'ORDER BY "$political_party"',
+                                                dimensions=DimensionMatcher(slicer.dimensions.political_party))
+
+    def test_query_choices_for_uni_dimension(self, mock_fetch_data: Mock):
+        slicer.dimensions.candidate \
+            .choices \
+            .fetch()
+
+        mock_fetch_data.assert_called_once_with(ANY,
+                                                'SELECT '
+                                                '"candidate_id" "$candidate",'
+                                                '"candidate_name" "$candidate_display" '
+                                                'FROM "politics"."politician" '
+                                                'GROUP BY "$candidate","$candidate_display" '
+                                                'ORDER BY "$candidate_display"',
+                                                dimensions=DimensionMatcher(slicer.dimensions.candidate))
