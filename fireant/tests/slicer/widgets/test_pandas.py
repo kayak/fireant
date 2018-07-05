@@ -18,6 +18,7 @@ from fireant.tests.slicer.mocks import (
     slicer,
     uni_dim_df,
 )
+from fireant.utils import format_key as f
 
 
 class DataTablesTransformerTests(TestCase):
@@ -27,7 +28,7 @@ class DataTablesTransformerTests(TestCase):
         result = Pandas(slicer.metrics.votes) \
             .transform(single_metric_df, slicer, [], [])
 
-        expected = single_metric_df.copy()[['votes']]
+        expected = single_metric_df.copy()[[f('votes')]]
         expected.columns = ['Votes']
 
         pandas.testing.assert_frame_equal(result, expected)
@@ -36,7 +37,7 @@ class DataTablesTransformerTests(TestCase):
         result = Pandas(slicer.metrics.votes, slicer.metrics.wins) \
             .transform(multi_metric_df, slicer, [], [])
 
-        expected = multi_metric_df.copy()[['votes', 'wins']]
+        expected = multi_metric_df.copy()[[f('votes'), f('wins')]]
         expected.columns = ['Votes', 'Wins']
 
         pandas.testing.assert_frame_equal(result, expected)
@@ -45,7 +46,7 @@ class DataTablesTransformerTests(TestCase):
         result = Pandas(slicer.metrics.wins, slicer.metrics.votes) \
             .transform(multi_metric_df, slicer, [], [])
 
-        expected = multi_metric_df.copy()[['wins', 'votes']]
+        expected = multi_metric_df.copy()[[f('wins'), f('votes')]]
         expected.columns = ['Wins', 'Votes']
 
         pandas.testing.assert_frame_equal(result, expected)
@@ -54,7 +55,7 @@ class DataTablesTransformerTests(TestCase):
         result = Pandas(slicer.metrics.wins) \
             .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp], [])
 
-        expected = cont_dim_df.copy()[['wins']]
+        expected = cont_dim_df.copy()[[f('wins')]]
         expected.index.names = ['Timestamp']
         expected.columns = ['Wins']
 
@@ -64,7 +65,7 @@ class DataTablesTransformerTests(TestCase):
         result = Pandas(CumSum(slicer.metrics.votes)) \
             .transform(cont_dim_operation_df, slicer, [slicer.dimensions.timestamp], [])
 
-        expected = cont_dim_operation_df.copy()[['cumsum(votes)']]
+        expected = cont_dim_operation_df.copy()[[f('cumsum(votes)')]]
         expected.index.names = ['Timestamp']
         expected.columns = ['CumSum(Votes)']
 
@@ -74,7 +75,7 @@ class DataTablesTransformerTests(TestCase):
         result = Pandas(slicer.metrics.wins) \
             .transform(cat_dim_df, slicer, [slicer.dimensions.political_party], [])
 
-        expected = cat_dim_df.copy()[['wins']]
+        expected = cat_dim_df.copy()[[f('wins')]]
         expected.index = pd.Index(['Democrat', 'Independent', 'Republican'], name='Party')
         expected.columns = ['Wins']
 
@@ -85,9 +86,9 @@ class DataTablesTransformerTests(TestCase):
             .transform(uni_dim_df, slicer, [slicer.dimensions.candidate], [])
 
         expected = uni_dim_df.copy() \
-            .set_index('candidate_display', append=True) \
-            .reset_index('candidate', drop=True) \
-            [['wins']]
+            .set_index(f('candidate_display'), append=True) \
+            .reset_index(f('candidate'), drop=True) \
+            [[f('wins')]]
         expected.index.names = ['Candidate']
         expected.columns = ['Wins']
 
@@ -100,12 +101,12 @@ class DataTablesTransformerTests(TestCase):
         candidate.display_definition = None
 
         uni_dim_df_copy = uni_dim_df.copy()
-        del uni_dim_df_copy[slicer.dimensions.candidate.display_key]
+        del uni_dim_df_copy[f(slicer.dimensions.candidate.display_key)]
 
         result = Pandas(slicer.metrics.wins) \
             .transform(uni_dim_df_copy, slicer, [candidate], [])
 
-        expected = uni_dim_df_copy.copy()[['wins']]
+        expected = uni_dim_df_copy.copy()[[f('wins')]]
         expected.index.names = ['Candidate']
         expected.columns = ['Wins']
 
@@ -116,8 +117,8 @@ class DataTablesTransformerTests(TestCase):
             .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
 
         expected = cont_uni_dim_df.copy() \
-            .set_index('state_display', append=True) \
-            .reset_index('state', drop=False)[['wins']]
+            .set_index(f('state_display'), append=True) \
+            .reset_index(f('state'), drop=False)[[f('wins')]]
         expected.index.names = ['Timestamp', 'State']
         expected.columns = ['Wins']
 
@@ -127,7 +128,7 @@ class DataTablesTransformerTests(TestCase):
         result = Pandas(slicer.metrics.wins, pivot=True) \
             .transform(cat_dim_df, slicer, [slicer.dimensions.political_party], [])
 
-        expected = cat_dim_df.copy()[['wins']]
+        expected = cat_dim_df.copy()[[f('wins')]]
         expected.index = pd.Index(['Democrat', 'Independent', 'Republican'], name='Party')
         expected.columns = ['Wins']
 
@@ -137,7 +138,7 @@ class DataTablesTransformerTests(TestCase):
         result = Pandas(slicer.metrics.wins, pivot=True) \
             .transform(cont_cat_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.political_party], [])
 
-        expected = cont_cat_dim_df.copy()[['wins']]
+        expected = cont_cat_dim_df.copy()[[f('wins')]]
         expected.index.names = ['Timestamp', 'Party']
         expected.columns = ['Wins']
         expected = expected.unstack(level=[1])
@@ -149,8 +150,8 @@ class DataTablesTransformerTests(TestCase):
             .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
 
         expected = cont_uni_dim_df.copy() \
-            .set_index('state_display', append=True) \
-            .reset_index('state', drop=True)[['votes']]
+            .set_index(f('state_display'), append=True) \
+            .reset_index(f('state'), drop=True)[[f('votes')]]
         expected.index.names = ['Timestamp', 'State']
         expected.columns = ['Votes']
         expected = expected.unstack(level=[1])
@@ -168,8 +169,8 @@ class DataTablesTransformerTests(TestCase):
                        ])
 
         expected = cont_uni_dim_ref_df.copy() \
-            .set_index('state_display', append=True) \
-            .reset_index('state', drop=True)[['votes', 'votes_eoe']]
+            .set_index(f('state_display'), append=True) \
+            .reset_index(f('state'), drop=True)[[f('votes'), f('votes_eoe')]]
         expected.index.names = ['Timestamp', 'State']
         expected.columns = ['Votes', 'Votes (EoE)']
 
@@ -186,9 +187,9 @@ class DataTablesTransformerTests(TestCase):
         result = Pandas(votes) \
             .transform(cont_dim_df / 3, slicer, [slicer.dimensions.timestamp], [])
 
-        expected = cont_dim_df.copy()[['votes']]
-        expected['votes'] = ['${0:.2f}€'.format(x)
-                             for x in expected['votes'] / 3]
+        expected = cont_dim_df.copy()[[f('votes')]]
+        expected[f('votes')] = ['${0:.2f}€'.format(x)
+                             for x in expected[f('votes')] / 3]
         expected.index.names = ['Timestamp']
         expected.columns = ['Votes']
 

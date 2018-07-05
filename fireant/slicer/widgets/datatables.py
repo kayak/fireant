@@ -9,6 +9,7 @@ from fireant import (
     formats,
     utils,
 )
+from fireant.utils import format_key
 from .base import (
     TransformableWidget,
 )
@@ -70,9 +71,10 @@ def _render_dimensional_metric_cell(row_data: pd.Series, metric: Metric):
     for key, next_row in row_data.groupby(level=-1):
         next_row.reset_index(level=-1, drop=True, inplace=True)
 
+        df_key = format_key(metric.key)
         level[key] = _render_dimensional_metric_cell(next_row, metric) \
             if isinstance(next_row.index, pd.MultiIndex) \
-            else _format_metric_cell(next_row[metric.key], metric)
+            else _format_metric_cell(next_row[df_key], metric)
 
     return level
 
@@ -128,7 +130,7 @@ class DataTablesJS(TransformableWidget):
         """
         dimension_display_values = extract_display_values(dimensions, data_frame)
 
-        metric_keys = [reference_key(metric, reference)
+        metric_keys = [format_key(reference_key(metric, reference))
                        for metric in self.items
                        for reference in [None] + references]
         data_frame = data_frame[metric_keys]
@@ -241,14 +243,16 @@ class DataTablesJS(TransformableWidget):
         row = {}
 
         for dimension, dimension_value in zip(dimensions, utils.wrap_list(dimension_values)):
-            row[dimension.key] = _render_dimension_cell(dimension_value, dimension_display_values.get(dimension.key))
+            df_key = format_key(dimension.key)
+            row[dimension.key] = _render_dimension_cell(dimension_value, dimension_display_values.get(df_key))
 
         for metric in self.items:
             for reference in [None] + references:
                 key = reference_key(metric, reference)
+                df_key = format_key(key)
 
                 row[key] = _render_dimensional_metric_cell(row_data, metric) \
                     if isinstance(row_data.index, pd.MultiIndex) \
-                    else _format_metric_cell(row_data[key], metric)
+                    else _format_metric_cell(row_data[df_key], metric)
 
         return row

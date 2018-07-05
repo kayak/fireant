@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 
 INFINITY = "Infinity"
+NULL_VALUE = 'null'
 
 NO_TIME = time(0)
 
@@ -33,7 +34,7 @@ def coerce_type(value):
         except:
             pass
 
-    if 'null' == value:
+    if NULL_VALUE == value:
         return None
     if 'True' == value:
         return True

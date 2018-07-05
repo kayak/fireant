@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+from fireant.utils import format_key
 from .metrics import Metric
 
 
@@ -78,26 +79,30 @@ class _Cumulative(_BaseOperation):
 
 class CumSum(_Cumulative):
     def apply(self, data_frame):
+        df_key = format_key(self.arg.key)
+
         if isinstance(data_frame.index, pd.MultiIndex):
             levels = self._group_levels(data_frame.index)
 
-            return data_frame[self.arg.key] \
+            return data_frame[df_key] \
                 .groupby(level=levels) \
                 .cumsum()
 
-        return data_frame[self.arg.key].cumsum()
+        return data_frame[df_key].cumsum()
 
 
 class CumProd(_Cumulative):
     def apply(self, data_frame):
+        df_key = format_key(self.arg.key)
+
         if isinstance(data_frame.index, pd.MultiIndex):
             levels = self._group_levels(data_frame.index)
 
-            return data_frame[self.arg.key] \
+            return data_frame[df_key] \
                 .groupby(level=levels) \
                 .cumprod()
 
-        return data_frame[self.arg.key].cumprod()
+        return data_frame[df_key].cumprod()
 
 
 class CumMean(_Cumulative):
@@ -106,14 +111,16 @@ class CumMean(_Cumulative):
         return x.cumsum() / np.arange(1, len(x) + 1)
 
     def apply(self, data_frame):
+        df_key = format_key(self.arg.key)
+
         if isinstance(data_frame.index, pd.MultiIndex):
             levels = self._group_levels(data_frame.index)
 
-            return data_frame[self.arg.key] \
+            return data_frame[df_key] \
                 .groupby(level=levels) \
                 .apply(self.cummean)
 
-        return self.cummean(data_frame[self.arg.key])
+        return self.cummean(data_frame[df_key])
 
 
 class _Rolling(_BaseOperation):
@@ -141,11 +148,13 @@ class RollingMean(_Rolling):
         return x.rolling(self.window, self.min_periods).mean()
 
     def apply(self, data_frame):
+        df_key = format_key(self.arg.key)
+
         if isinstance(data_frame.index, pd.MultiIndex):
             levels = self._group_levels(data_frame.index)
 
-            return data_frame[self.arg.key] \
+            return data_frame[df_key] \
                 .groupby(level=levels) \
                 .apply(self.rolling_mean)
 
-        return self.rolling_mean(data_frame[self.arg.key])
+        return self.rolling_mean(data_frame[df_key])

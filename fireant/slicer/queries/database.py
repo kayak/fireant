@@ -1,9 +1,10 @@
-import time
-
 import pandas as pd
+import time
 from typing import Iterable
 
 from fireant.database.base import Database
+from fireant.formats import NULL_VALUE
+from fireant.utils import format_key
 from .logger import (
     query_logger,
     slow_query_logger,
@@ -12,8 +13,6 @@ from ..dimensions import (
     ContinuousDimension,
     Dimension,
 )
-
-NULL_VALUE = 'null'
 
 
 def fetch_data(database: Database, query: str, dimensions: Iterable[Dimension]):
@@ -55,7 +54,8 @@ def clean_and_apply_index(data_frame: pd.DataFrame, dimensions: Iterable[Dimensi
     if not dimensions:
         return data_frame
 
-    dimension_keys = [d.key for d in dimensions]
+    dimension_keys = [format_key(d.key)
+                      for d in dimensions]
 
     for i, dimension in enumerate(dimensions):
         if isinstance(dimension, ContinuousDimension):
@@ -63,7 +63,7 @@ def clean_and_apply_index(data_frame: pd.DataFrame, dimensions: Iterable[Dimensi
             # With that in mind, we leave the NaNs in them to represent Totals.
             continue
 
-        level = dimension.key
+        level = format_key(dimension.key)
         data_frame[level] = fill_nans_in_level(data_frame, dimension, dimension_keys[:i]) \
             .apply(lambda x: str(x) if not pd.isnull(x) else None)
 
@@ -87,7 +87,7 @@ def fill_nans_in_level(data_frame, dimension, preceding_dimension_keys):
     :return:
         The level in the data_frame with the nulls replaced with empty string
     """
-    level = dimension.key
+    level = format_key(dimension.key)
 
     if dimension.is_rollup:
         if preceding_dimension_keys:
