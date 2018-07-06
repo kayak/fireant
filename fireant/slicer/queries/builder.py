@@ -183,7 +183,8 @@ class SlicerQueryBuilder(QueryBuilder):
         # Apply operations
         operations = find_operations_for_widgets(self._widgets)
         for operation in operations:
-            data_frame[operation.key] = operation.apply(data_frame)
+            df_key = format_key(operation.key)
+            data_frame[df_key] = operation.apply(data_frame)
 
         # Apply transformations
         return [widget.transform(data_frame, self.slicer, self._dimensions, self._references)

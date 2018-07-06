@@ -9,6 +9,7 @@ from datetime import date
 from pypika import Order
 
 import fireant as f
+from fireant.utils import format_key
 from fireant.slicer.exceptions import (
     MetricRequiredException,
 )
@@ -2426,5 +2427,6 @@ class QueryBuilderRenderTests(TestCase):
             .widget(mock_widget) \
             .fetch()
 
-        self.assertIn(mock_operation.key, mock_df)
-        self.assertEqual(mock_df[mock_operation.key], mock_operation.apply.return_value)
+        f_op_key = format_key(mock_operation.key)
+        self.assertIn(f_op_key, mock_df)
+        self.assertEqual(mock_df[f_op_key], mock_operation.apply.return_value)
