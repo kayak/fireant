@@ -34,6 +34,8 @@ class QueryBuilder(object):
         self._dimensions = []
         self._filters = []
         self._references = []
+        self._limit = None
+        self._offset = None
 
     @immutable
     def filter(self, *filters):
@@ -42,6 +44,22 @@ class QueryBuilder(object):
         :return:
         """
         self._filters += filters
+
+    @immutable
+    def limit(self, limit):
+        """
+        :param limit:
+            A limit on the number of database rows returned.
+        """
+        self._limit = limit
+
+    @immutable
+    def offset(self, offset):
+        """
+        :param offset:
+            A offset on the number of database rows returned.
+        """
+        self._offset = offset
 
     @property
     def query(self):
@@ -143,22 +161,18 @@ class SlicerQueryBuilder(QueryBuilder):
         for (term, orientation) in orders:
             query = query.orderby(term, order=orientation)
 
-        return query
+        return query.limit(self._limit).offset(self._offset)
 
-    def fetch(self, limit=None, offset=None, hint=None) -> Iterable[Dict]:
+    def fetch(self, hint=None) -> Iterable[Dict]:
         """
         Fetch the data for this query and transform it into the widgets.
 
-        :param limit:
-            A limit on the number of database rows returned.
-        :param offset:
-            A offset on the number of database rows returned.
         :param hint:
             A query hint label used with database vendors which support it. Adds a label comment to the query.
         :return:
             A list of dict (JSON) objects containing the widget configurations.
         """
-        query = self.query.limit(limit).offset(offset)
+        query = self.query
         if hint and hasattr(query, 'hint') and callable(query.hint):
             query = query.hint(hint)
 
@@ -216,16 +230,14 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
                                  base_table=self.table,
                                  joins=self.slicer.joins,
                                  dimensions=self._dimensions,
-                                 filters=self._filters)
+                                 filters=self._filters) \
+            .limit(self._limit) \
+            .offset(self._offset)
 
-    def fetch(self, limit=None, offset=None, hint=None, force_include=()) -> pd.Series:
+    def fetch(self, hint=None, force_include=()) -> pd.Series:
         """
         Fetch the data for this query and transform it into the widgets.
 
-        :param limit:
-            A limit on the number of database rows returned.
-        :param offset:
-            A offset on the number of database rows returned.
         :param force_include:
             A list of dimension values to include in the result set. This can be used to avoid having necessary results
             cut off due to the pagination.  These results will be returned at the head of the results.
@@ -248,8 +260,8 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
             # Ensure that these values are included
             query = query.orderby(include, order=Order.desc)
 
-        # Add ordering and pagination
-        query = query.orderby(definition).limit(limit).offset(offset)
+        # Order by the dimension definition that the choices are for
+        query = query.orderby(definition)
 
         data = fetch_data(self.slicer.database,
                           str(query),

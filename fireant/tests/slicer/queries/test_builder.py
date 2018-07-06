@@ -2235,7 +2235,8 @@ class QueryBuildPaginationTests(TestCase):
         slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.timestamp) \
-            .fetch(limit=20)
+            .limit(20) \
+            .fetch()
 
         mock_fetch_data.assert_called_once_with(ANY,
                                                 'SELECT '
@@ -2250,7 +2251,8 @@ class QueryBuildPaginationTests(TestCase):
         slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.timestamp) \
-            .fetch(offset=20)
+            .offset(20) \
+            .fetch()
 
         mock_fetch_data.assert_called_once_with(ANY,
                                                 'SELECT '
@@ -2266,7 +2268,9 @@ class QueryBuildPaginationTests(TestCase):
         slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.timestamp) \
-            .fetch(limit=20, offset=20)
+            .limit(20) \
+            .offset(30) \
+            .fetch()
 
         mock_fetch_data.assert_called_once_with(ANY,
                                                 'SELECT '
@@ -2276,7 +2280,7 @@ class QueryBuildPaginationTests(TestCase):
                                                 'GROUP BY "$timestamp" '
                                                 'ORDER BY "$timestamp" '
                                                 'LIMIT 20 '
-                                                'OFFSET 20',
+                                                'OFFSET 30',
                                                 dimensions=DimensionMatcher(slicer.dimensions.timestamp))
 
 
