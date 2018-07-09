@@ -1,5 +1,3 @@
-import itertools
-
 import pandas as pd
 
 from fireant import (
@@ -68,8 +66,8 @@ def _render_dimensional_metric_cell(row_data: pd.Series, metric: Metric):
 
     # Group by the last dimension, drop it, and fill the dict with either the raw metric values or the next level of
     # dicts.
-    for key, next_row in row_data.groupby(level=-1):
-        next_row.reset_index(level=-1, drop=True, inplace=True)
+    for key, next_row in row_data.groupby(level=1):
+        next_row.reset_index(level=1, drop=True, inplace=True)
 
         df_key = format_key(metric.key)
         level[key] = _render_dimensional_metric_cell(next_row, metric) \
@@ -214,14 +212,15 @@ class DataTablesJS(TransformableWidget):
         :return:
         """
         columns = []
+        single_metric = 1 == len(self.items)
         for metric in self.items:
-            dimension_value_sets = [list(level)
-                                    for level in df_columns.levels[1:]]
+            dimension_value_sets = [row[1:]
+                                    for row in list(df_columns)]
 
-            for dimension_values in itertools.product(*dimension_value_sets):
+            for dimension_values in dimension_value_sets:
                 for reference in [None] + references:
                     key = reference_key(metric, reference)
-                    title = render_column_label(dimension_values, metric, reference)
+                    title = render_column_label(dimension_values, None if single_metric else metric, reference)
                     data = '.'.join([key] + [str(x) for x in dimension_values])
 
                     columns.append(dict(title=title,

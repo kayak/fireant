@@ -61,7 +61,9 @@ def dimensional_metric_label(dimensions, dimension_display_values):
             a tuple of dimension values. Can be zero-length or longer.
         :return:
         """
-        used_dimensions = dimensions if metric is None else dimensions[1:]
+        num_used_dimensions = len(dimensions) - len(dimension_values)
+        used_dimensions = dimensions[num_used_dimensions:]
+
         dimension_values = utils.wrap_list(dimension_values)
         dimension_labels = [utils.deep_get(dimension_display_values,
                                            [utils.format_key(dimension.key), dimension_value],
@@ -70,12 +72,16 @@ def dimensional_metric_label(dimensions, dimension_display_values):
                             else 'Totals'
                             for dimension, dimension_value in zip(used_dimensions, dimension_values)]
 
+        label = ", ".join(dimension_labels)
+
         if metric is None:
-            return ", ".join(dimension_labels)
+            if reference is not None:
+                return '{} ({})'.format(label, reference.label)
+            return label
 
         if dimension_labels:
             return '{} ({})'.format(reference_label(metric, reference),
-                                    ', '.join(dimension_labels))
+                                    label)
 
         return reference_label(metric, reference)
 
