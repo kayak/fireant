@@ -587,15 +587,15 @@ class DataTablesTransformerTests(TestCase):
                 'render': {'_': 'value'},
             }, {
                 'data': 'wins.d',
-                'title': 'Wins (Democrat)',
+                'title': 'Democrat',
                 'render': {'_': 'value', 'display': 'display'},
             }, {
                 'data': 'wins.i',
-                'title': 'Wins (Independent)',
+                'title': 'Independent',
                 'render': {'_': 'value', 'display': 'display'},
             }, {
                 'data': 'wins.r',
-                'title': 'Wins (Republican)',
+                'title': 'Republican',
                 'render': {'_': 'value', 'display': 'display'},
             }],
             'data': [{
@@ -654,11 +654,11 @@ class DataTablesTransformerTests(TestCase):
                 'render': {'_': 'value'},
             }, {
                 'data': 'votes.1',
-                'title': 'Votes (Texas)',
+                'title': 'Texas',
                 'render': {'_': 'value', 'display': 'display'},
             }, {
                 'data': 'votes.2',
-                'title': 'Votes (California)',
+                'title': 'California',
                 'render': {'_': 'value', 'display': 'display'},
             }],
             'data': [{
