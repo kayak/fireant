@@ -20,6 +20,10 @@ class Operation(object):
         raise NotImplementedError()
 
     @property
+    def metrics(self):
+        raise NotImplementedError()
+
+    @property
     def operations(self):
         return []
 
@@ -31,6 +35,17 @@ class _BaseOperation(Operation):
         self.prefix = prefix
         self.suffix = suffix
         self.precision = precision
+
+    def apply(self, data_frame):
+        raise NotImplementedError()
+
+    @property
+    def metrics(self):
+        raise NotImplementedError()
+
+    @property
+    def operations(self):
+        raise NotImplementedError()
 
     def _group_levels(self, index):
         """
@@ -57,6 +72,9 @@ class _Cumulative(_BaseOperation):
 
         self.arg = arg
 
+    def apply(self, data_frame):
+        raise NotImplementedError()
+
     @property
     def metrics(self):
         return [metric
@@ -69,9 +87,6 @@ class _Cumulative(_BaseOperation):
                 for operation in [self.arg]
                 if isinstance(operation, Operation)
                 for op_and_children in [operation] + operation.operations]
-
-    def apply(self, data_frame):
-        raise NotImplementedError()
 
     def __repr__(self):
         return self.key
@@ -123,9 +138,9 @@ class CumMean(_Cumulative):
         return self.cummean(data_frame[df_key])
 
 
-class _Rolling(_BaseOperation):
+class RollingOperation(_BaseOperation):
     def __init__(self, arg, window, min_periods=None):
-        super(_Rolling, self).__init__(
+        super(RollingOperation, self).__init__(
               key='{}({})'.format(self.__class__.__name__.lower(),
                                   getattr(arg, 'key', arg)),
               label='{}({})'.format(self.__class__.__name__,
@@ -139,11 +154,31 @@ class _Rolling(_BaseOperation):
         self.window = window
         self.min_periods = min_periods
 
+    def _should_adjust(self, other_operations):
+        # Need to figure out if this rolling operation is has the largest window, and if it's the first of multiple
+        # rolling operations if there are more than one operation sharing the largest window.
+        first_max_rolling = list(sorted(other_operations, key=lambda operation: operation.window))[0]
+
+        return first_max_rolling is self
+
     def apply(self, data_frame):
         raise NotImplementedError()
 
+    @property
+    def metrics(self):
+        return [metric
+                for metric in [self.arg]
+                if isinstance(metric, Metric)]
 
-class RollingMean(_Rolling):
+    @property
+    def operations(self):
+        return [op_and_children
+                for operation in [self.arg]
+                if isinstance(operation, Operation)
+                for op_and_children in [operation] + operation.operations]
+
+
+class RollingMean(RollingOperation):
     def rolling_mean(self, x):
         return x.rolling(self.window, self.min_periods).mean()
 

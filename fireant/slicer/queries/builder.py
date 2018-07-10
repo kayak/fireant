@@ -13,6 +13,7 @@ from fireant.utils import (
     format_metric_key,
     immutable,
 )
+from . import special_cases
 from .database import fetch_data
 from .finders import (
     find_and_group_references_for_dimensions,
@@ -154,14 +155,18 @@ class SlicerQueryBuilder(QueryBuilder):
         reference_groups = find_and_group_references_for_dimensions(self._references)
         totals_dimensions = find_dimensions_with_totals(self._dimensions)
 
-        query = make_slicer_query_with_references_and_totals(self.slicer.database,
-                                                             self.table,
-                                                             self.slicer.joins,
-                                                             self._dimensions,
-                                                             find_metrics_for_widgets(self._widgets),
-                                                             self._filters,
-                                                             reference_groups,
-                                                             totals_dimensions)
+        operations = find_operations_for_widgets(self._widgets)
+        args = special_cases.apply_to_query_args(self.slicer.database,
+                                                 self.table,
+                                                 self.slicer.joins,
+                                                 self._dimensions,
+                                                 find_metrics_for_widgets(self._widgets),
+                                                 self._filters,
+                                                 reference_groups,
+                                                 totals_dimensions,
+                                                 operations)
+
+        query = make_slicer_query_with_references_and_totals(*args)
 
         # Add ordering
         orders = (self._orders or make_orders_for_dimensions(self._dimensions))
@@ -192,6 +197,8 @@ class SlicerQueryBuilder(QueryBuilder):
         for operation in operations:
             df_key = format_metric_key(operation.key)
             data_frame[df_key] = operation.apply(data_frame)
+
+        data_frame = special_cases.apply_operations_to_data_frame(operations, data_frame)
 
         # Apply transformations
         return [widget.transform(data_frame, self.slicer, self._dimensions, self._references)
