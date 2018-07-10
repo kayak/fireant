@@ -109,10 +109,10 @@ def reference_term(reference: Reference,
     """
 
     def original_field(metric):
-        return original_query.field(utils.format_key(metric.key))
+        return original_query.field(utils.format_metric_key(metric.key))
 
     def ref_field(metric):
-        return ref_query.field(utils.format_key(metric.key))
+        return ref_query.field(utils.format_metric_key(metric.key))
 
     if reference.delta:
         if reference.delta_percent:

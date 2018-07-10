@@ -345,7 +345,7 @@ class HighCharts(TransformableWidget):
                     series_color = next(colors)
 
                 for reference, dash_style in zip([None] + references, itertools.cycle(DASH_STYLES)):
-                    metric_key = utils.format_key(reference_key(series.metric, reference))
+                    metric_key = utils.format_metric_key(reference_key(series.metric, reference))
 
                     hc_series.append({
                         "type": series.type,
@@ -374,6 +374,8 @@ class HighCharts(TransformableWidget):
     def _render_pie_series(self, series, reference, dimension_values, data_frame, render_series_label):
         metric = series.metric
         name = reference_label(metric, reference)
+        df_key = utils.format_metric_key(series.metric.key)
+
         return {
             "name": name,
             "type": series.type,
@@ -381,7 +383,7 @@ class HighCharts(TransformableWidget):
             "data": [{
                 "name": render_series_label(dimension_values) if dimension_values else name,
                 "y": formats.metric_value(y),
-            } for dimension_values, y in data_frame[utils.format_key(series.metric.key)].iteritems()],
+            } for dimension_values, y in data_frame[df_key].iteritems()],
             'tooltip': {
                 'valueDecimals': metric.precision,
                 'valuePrefix': metric.prefix,

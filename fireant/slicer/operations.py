@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from fireant.utils import format_key
+from fireant.utils import format_metric_key
 from .metrics import Metric
 
 
@@ -79,7 +79,7 @@ class _Cumulative(_BaseOperation):
 
 class CumSum(_Cumulative):
     def apply(self, data_frame):
-        df_key = format_key(self.arg.key)
+        df_key = format_metric_key(self.arg.key)
 
         if isinstance(data_frame.index, pd.MultiIndex):
             levels = self._group_levels(data_frame.index)
@@ -93,7 +93,7 @@ class CumSum(_Cumulative):
 
 class CumProd(_Cumulative):
     def apply(self, data_frame):
-        df_key = format_key(self.arg.key)
+        df_key = format_metric_key(self.arg.key)
 
         if isinstance(data_frame.index, pd.MultiIndex):
             levels = self._group_levels(data_frame.index)
@@ -111,7 +111,7 @@ class CumMean(_Cumulative):
         return x.cumsum() / np.arange(1, len(x) + 1)
 
     def apply(self, data_frame):
-        df_key = format_key(self.arg.key)
+        df_key = format_metric_key(self.arg.key)
 
         if isinstance(data_frame.index, pd.MultiIndex):
             levels = self._group_levels(data_frame.index)
@@ -148,7 +148,7 @@ class RollingMean(_Rolling):
         return x.rolling(self.window, self.min_periods).mean()
 
     def apply(self, data_frame):
-        df_key = format_key(self.arg.key)
+        df_key = format_metric_key(self.arg.key)
 
         if isinstance(data_frame.index, pd.MultiIndex):
             levels = self._group_levels(data_frame.index)

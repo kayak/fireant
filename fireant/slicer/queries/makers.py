@@ -4,6 +4,8 @@ from pypika import JoinType
 from fireant.utils import (
     flatten,
     format_key,
+    format_dimension_key,
+    format_metric_key,
 )
 from .finders import (
     find_joins_for_tables,
@@ -199,9 +201,9 @@ def make_slicer_query_with_references(database, base_table, joins, dimensions, m
         else:
             container_query = container_query.from_(ref_query)
 
-        ref_dimension_definitions.append([offset_func(ref_query.field(format_key(dimension.key)))
+        ref_dimension_definitions.append([offset_func(ref_query.field(format_dimension_key(dimension.key)))
                                           if ref_dimension == dimension
-                                          else ref_query.field(format_key(dimension.key))
+                                          else ref_query.field(format_dimension_key(dimension.key))
                                           for dimension in dimensions])
 
         ref_terms += make_terms_for_references(references,
@@ -220,7 +222,7 @@ def make_slicer_query_with_references(database, base_table, joins, dimensions, m
 
 
 def make_terms_for_metrics(metrics):
-    return [metric.definition.as_(format_key(metric.key))
+    return [metric.definition.as_(format_metric_key(metric.key))
             for metric in metrics]
 
 
@@ -243,12 +245,12 @@ def make_terms_for_dimension(dimension, window=None):
         window(dimension.definition, dimension.interval)
         if window and hasattr(dimension, 'interval')
         else dimension.definition
-    ).as_(format_key(dimension.key))
+    ).as_(format_dimension_key(dimension.key))
 
     # Include the display definition if there is one
     return [
         dimension_definition,
-        dimension.display_definition.as_(format_key(dimension.display_key))
+        dimension.display_definition.as_(format_dimension_key(dimension.display_key))
     ] if dimension.has_display_field else [
         dimension_definition
     ]

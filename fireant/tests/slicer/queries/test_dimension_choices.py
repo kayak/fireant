@@ -19,9 +19,9 @@ class DimensionsChoicesQueryBuilderTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         '"political_party" "$political_party" '
+                         '"political_party" "$d$political_party" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$political_party"', str(query))
+                         'GROUP BY "$d$political_party"', str(query))
 
     def test_query_choices_for_uni_dimension(self):
         query = slicer.dimensions.candidate \
@@ -29,10 +29,10 @@ class DimensionsChoicesQueryBuilderTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         '"candidate_id" "$candidate",'
-                         '"candidate_name" "$candidate_display" '
+                         '"candidate_id" "$d$candidate",'
+                         '"candidate_name" "$d$candidate_display" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$candidate","$candidate_display"', str(query))
+                         'GROUP BY "$d$candidate","$d$candidate_display"', str(query))
 
     def test_query_choices_for_uni_dimension_with_join(self):
         query = slicer.dimensions.district \
@@ -40,12 +40,12 @@ class DimensionsChoicesQueryBuilderTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         '"politician"."district_id" "$district",'
-                         '"district"."district_name" "$district_display" '
+                         '"politician"."district_id" "$d$district",'
+                         '"district"."district_name" "$d$district_display" '
                          'FROM "politics"."politician" '
                          'OUTER JOIN "locations"."district" '
                          'ON "politician"."district_id"="district"."id" '
-                         'GROUP BY "$district","$district_display"', str(query))
+                         'GROUP BY "$d$district","$d$district_display"', str(query))
 
     def test_no_choices_attr_for_datetime_dimension(self):
         with self.assertRaises(AttributeError):
@@ -62,11 +62,11 @@ class DimensionsChoicesQueryBuilderTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         '"candidate_id" "$candidate",'
-                         '"candidate_name" "$candidate_display" '
+                         '"candidate_id" "$d$candidate",'
+                         '"candidate_name" "$d$candidate_display" '
                          'FROM "politics"."politician" '
                          'WHERE "political_party" IN (\'d\',\'r\') '
-                         'GROUP BY "$candidate","$candidate_display"', str(query))
+                         'GROUP BY "$d$candidate","$d$candidate_display"', str(query))
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -79,10 +79,10 @@ class DimensionsChoicesFetchTests(TestCase):
 
         mock_fetch_data.assert_called_once_with(ANY,
                                                 'SELECT '
-                                                '"political_party" "$political_party" '
+                                                '"political_party" "$d$political_party" '
                                                 'FROM "politics"."politician" '
-                                                'GROUP BY "$political_party" '
-                                                'ORDER BY "$political_party"',
+                                                'GROUP BY "$d$political_party" '
+                                                'ORDER BY "$d$political_party"',
                                                 dimensions=DimensionMatcher(slicer.dimensions.political_party))
 
     def test_query_choices_for_uni_dimension(self, mock_fetch_data: Mock):
@@ -92,9 +92,9 @@ class DimensionsChoicesFetchTests(TestCase):
 
         mock_fetch_data.assert_called_once_with(ANY,
                                                 'SELECT '
-                                                '"candidate_id" "$candidate",'
-                                                '"candidate_name" "$candidate_display" '
+                                                '"candidate_id" "$d$candidate",'
+                                                '"candidate_name" "$d$candidate_display" '
                                                 'FROM "politics"."politician" '
-                                                'GROUP BY "$candidate","$candidate_display" '
-                                                'ORDER BY "$candidate_display"',
+                                                'GROUP BY "$d$candidate","$d$candidate_display" '
+                                                'ORDER BY "$d$candidate_display"',
                                                 dimensions=DimensionMatcher(slicer.dimensions.candidate))

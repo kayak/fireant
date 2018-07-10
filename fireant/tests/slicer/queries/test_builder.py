@@ -1,3 +1,4 @@
+from datetime import date
 from unittest import TestCase
 from unittest.mock import (
     ANY,
@@ -5,17 +6,12 @@ from unittest.mock import (
     patch,
 )
 
-from datetime import date
 from pypika import Order
 
 import fireant as f
-from fireant.utils import format_key
-from fireant.slicer.exceptions import (
-    MetricRequiredException,
-)
-from ..matchers import (
-    DimensionMatcher,
-)
+from fireant.slicer.exceptions import MetricRequiredException
+from fireant.utils import format_metric_key
+from ..matchers import DimensionMatcher
 from ..mocks import slicer
 
 
@@ -55,7 +51,7 @@ class QueryBuilderMetricTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician"', str(query))
 
     def test_build_query_with_multiple_metrics(self):
@@ -64,8 +60,8 @@ class QueryBuilderMetricTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes",'
-                         'SUM("is_winner") "$wins" '
+                         'SUM("votes") "$m$votes",'
+                         'SUM("is_winner") "$m$wins" '
                          'FROM "politics"."politician"', str(query))
 
     def test_build_query_with_multiple_visualizations(self):
@@ -75,8 +71,8 @@ class QueryBuilderMetricTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes",'
-                         'SUM("is_winner") "$wins" '
+                         'SUM("votes") "$m$votes",'
+                         'SUM("is_winner") "$m$wins" '
                          'FROM "politics"."politician"', str(query))
 
     def test_build_query_for_chart_visualization_with_single_axis(self):
@@ -86,7 +82,7 @@ class QueryBuilderMetricTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician"', str(query))
 
     def test_build_query_for_chart_visualization_with_multiple_axes(self):
@@ -97,8 +93,8 @@ class QueryBuilderMetricTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes",'
-                         'SUM("is_winner") "$wins" '
+                         'SUM("votes") "$m$votes",'
+                         'SUM("is_winner") "$m$wins" '
                          'FROM "politics"."politician"', str(query))
 
 
@@ -113,11 +109,11 @@ class QueryBuilderDimensionTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp"', str(query))
+                         'GROUP BY "$d$timestamp" '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_build_query_with_datetime_dimension_hourly(self):
         query = slicer.data \
@@ -126,11 +122,11 @@ class QueryBuilderDimensionTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("timestamp",\'HH\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'HH\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp"', str(query))
+                         'GROUP BY "$d$timestamp" '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_build_query_with_datetime_dimension_daily(self):
         query = slicer.data \
@@ -139,11 +135,11 @@ class QueryBuilderDimensionTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp"', str(query))
+                         'GROUP BY "$d$timestamp" '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_build_query_with_datetime_dimension_weekly(self):
         query = slicer.data \
@@ -152,11 +148,11 @@ class QueryBuilderDimensionTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("timestamp",\'IW\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'IW\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp"', str(query))
+                         'GROUP BY "$d$timestamp" '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_build_query_with_datetime_dimension_monthly(self):
         query = slicer.data \
@@ -165,11 +161,11 @@ class QueryBuilderDimensionTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("timestamp",\'MM\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'MM\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp"', str(query))
+                         'GROUP BY "$d$timestamp" '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_build_query_with_datetime_dimension_quarterly(self):
         query = slicer.data \
@@ -178,11 +174,11 @@ class QueryBuilderDimensionTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("timestamp",\'Q\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'Q\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp"', str(query))
+                         'GROUP BY "$d$timestamp" '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_build_query_with_datetime_dimension_annually(self):
         query = slicer.data \
@@ -191,11 +187,11 @@ class QueryBuilderDimensionTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("timestamp",\'Y\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'Y\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp"', str(query))
+                         'GROUP BY "$d$timestamp" '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_build_query_with_boolean_dimension(self):
         query = slicer.data \
@@ -204,11 +200,11 @@ class QueryBuilderDimensionTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         '"is_winner" "$winner",'
-                         'SUM("votes") "$votes" '
+                         '"is_winner" "$d$winner",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$winner" '
-                         'ORDER BY "$winner"', str(query))
+                         'GROUP BY "$d$winner" '
+                         'ORDER BY "$d$winner"', str(query))
 
     def test_build_query_with_categorical_dimension(self):
         query = slicer.data \
@@ -217,11 +213,11 @@ class QueryBuilderDimensionTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         '"political_party" "$political_party",'
-                         'SUM("votes") "$votes" '
+                         '"political_party" "$d$political_party",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$political_party" '
-                         'ORDER BY "$political_party"', str(query))
+                         'GROUP BY "$d$political_party" '
+                         'ORDER BY "$d$political_party"', str(query))
 
     def test_build_query_with_unique_dimension(self):
         query = slicer.data \
@@ -230,12 +226,12 @@ class QueryBuilderDimensionTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         '"election_id" "$election",'
-                         '"election_year" "$election_display",'
-                         'SUM("votes") "$votes" '
+                         '"election_id" "$d$election",'
+                         '"election_year" "$d$election_display",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$election","$election_display" '
-                         'ORDER BY "$election_display"', str(query))
+                         'GROUP BY "$d$election","$d$election_display" '
+                         'ORDER BY "$d$election_display"', str(query))
 
     def test_build_query_with_pattern_dimension(self):
         query = slicer.data \
@@ -248,11 +244,11 @@ class QueryBuilderDimensionTests(TestCase):
                          'WHEN "pattern" LIKE \'groupA%\' THEN \'groupA%\' '
                          'WHEN "pattern" LIKE \'groupB%\' THEN \'groupB%\' '
                          'ELSE \'No Group\' '
-                         'END "$pattern",'
-                         'SUM("votes") "$votes" '
+                         'END "$d$pattern",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$pattern" '
-                         'ORDER BY "$pattern"', str(query))
+                         'GROUP BY "$d$pattern" '
+                         'ORDER BY "$d$pattern"', str(query))
 
     def test_build_query_with_pattern_no_values(self):
         query = slicer.data \
@@ -261,11 +257,11 @@ class QueryBuilderDimensionTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         '\'No Group\' "$pattern",'
-                         'SUM("votes") "$votes" '
+                         '\'No Group\' "$d$pattern",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$pattern" '
-                         'ORDER BY "$pattern"', str(query))
+                         'GROUP BY "$d$pattern" '
+                         'ORDER BY "$d$pattern"', str(query))
 
     def test_build_query_with_multiple_dimensions(self):
         query = slicer.data \
@@ -275,13 +271,13 @@ class QueryBuilderDimensionTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         '"candidate_id" "$candidate",'
-                         '"candidate_name" "$candidate_display",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         '"candidate_id" "$d$candidate",'
+                         '"candidate_name" "$d$candidate_display",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp","$candidate","$candidate_display" '
-                         'ORDER BY "$timestamp","$candidate_display"', str(query))
+                         'GROUP BY "$d$timestamp","$d$candidate","$d$candidate_display" '
+                         'ORDER BY "$d$timestamp","$d$candidate_display"', str(query))
 
     def test_build_query_with_multiple_dimensions_and_visualizations(self):
         query = slicer.data \
@@ -294,13 +290,13 @@ class QueryBuilderDimensionTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         '"political_party" "$political_party",'
-                         'SUM("votes") "$votes",'
-                         'SUM("is_winner") "$wins" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         '"political_party" "$d$political_party",'
+                         'SUM("votes") "$m$votes",'
+                         'SUM("is_winner") "$m$wins" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp","$political_party" '
-                         'ORDER BY "$timestamp","$political_party"', str(query))
+                         'GROUP BY "$d$timestamp","$d$political_party" '
+                         'ORDER BY "$d$timestamp","$d$political_party"', str(query))
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -314,19 +310,19 @@ class QueryBuilderDimensionTotalsTests(TestCase):
             .query
 
         self.assertEqual('(SELECT '
-                         '"political_party" "$political_party",'
-                         'SUM("votes") "$votes" '
+                         '"political_party" "$d$political_party",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$political_party") '
+                         'GROUP BY "$d$political_party") '
 
                          'UNION ALL '
 
                          '(SELECT '
-                         'NULL "$political_party",'
-                         'SUM("votes") "$votes" '
+                         'NULL "$d$political_party",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician") '
 
-                         'ORDER BY "$political_party"', str(query))
+                         'ORDER BY "$d$political_party"', str(query))
 
     def test_build_query_with_totals_uni_dimension(self):
         query = slicer.data \
@@ -335,21 +331,21 @@ class QueryBuilderDimensionTotalsTests(TestCase):
             .query
 
         self.assertEqual('(SELECT '
-                         '"candidate_id" "$candidate",'
-                         '"candidate_name" "$candidate_display",'
-                         'SUM("votes") "$votes" '
+                         '"candidate_id" "$d$candidate",'
+                         '"candidate_name" "$d$candidate_display",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$candidate","$candidate_display") '
+                         'GROUP BY "$d$candidate","$d$candidate_display") '
 
                          'UNION ALL '
 
                          '(SELECT '
-                         'NULL "$candidate",'
-                         'NULL "$candidate_display",'
-                         'SUM("votes") "$votes" '
+                         'NULL "$d$candidate",'
+                         'NULL "$d$candidate_display",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician") '
         
-                         'ORDER BY "$candidate_display"', str(query))
+                         'ORDER BY "$d$candidate_display"', str(query))
 
     def test_build_query_with_totals_on_dimension_and_subsequent_dimensions(self):
         query = slicer.data \
@@ -360,25 +356,25 @@ class QueryBuilderDimensionTotalsTests(TestCase):
             .query
 
         self.assertEqual('(SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         '"candidate_id" "$candidate",'
-                         '"candidate_name" "$candidate_display",'
-                         '"political_party" "$political_party",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         '"candidate_id" "$d$candidate",'
+                         '"candidate_name" "$d$candidate_display",'
+                         '"political_party" "$d$political_party",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp","$candidate","$candidate_display","$political_party") '
+                         'GROUP BY "$d$timestamp","$d$candidate","$d$candidate_display","$d$political_party") '
 
                          'UNION ALL '
 
                          '(SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'NULL "$candidate",'
-                         'NULL "$candidate_display",'
-                         'NULL "$political_party",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'NULL "$d$candidate",'
+                         'NULL "$d$candidate_display",'
+                         'NULL "$d$political_party",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp") '
-                         'ORDER BY "$timestamp","$candidate_display","$political_party"', str(query))
+                         'GROUP BY "$d$timestamp") '
+                         'ORDER BY "$d$timestamp","$d$candidate_display","$d$political_party"', str(query))
 
     def test_build_query_with_totals_on_multiple_dimensions_dimension(self):
         query = slicer.data \
@@ -389,37 +385,37 @@ class QueryBuilderDimensionTotalsTests(TestCase):
             .query
 
         self.assertEqual('(SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         '"candidate_id" "$candidate",'
-                         '"candidate_name" "$candidate_display",'
-                         '"political_party" "$political_party",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         '"candidate_id" "$d$candidate",'
+                         '"candidate_name" "$d$candidate_display",'
+                         '"political_party" "$d$political_party",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp","$candidate","$candidate_display","$political_party") '
+                         'GROUP BY "$d$timestamp","$d$candidate","$d$candidate_display","$d$political_party") '
 
                          'UNION ALL '
 
                          '(SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'NULL "$candidate",'
-                         'NULL "$candidate_display",'
-                         'NULL "$political_party",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'NULL "$d$candidate",'
+                         'NULL "$d$candidate_display",'
+                         'NULL "$d$political_party",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp") '
+                         'GROUP BY "$d$timestamp") '
 
                          'UNION ALL '
 
                          '(SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         '"candidate_id" "$candidate",'
-                         '"candidate_name" "$candidate_display",'
-                         'NULL "$political_party",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         '"candidate_id" "$d$candidate",'
+                         '"candidate_name" "$d$candidate_display",'
+                         'NULL "$d$political_party",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp","$candidate","$candidate_display") '
+                         'GROUP BY "$d$timestamp","$d$candidate","$d$candidate_display") '
 
-                         'ORDER BY "$timestamp","$candidate_display","$political_party"', str(query))
+                         'ORDER BY "$d$timestamp","$d$candidate_display","$d$political_party"', str(query))
 
     def test_build_query_with_totals_cat_dimension_with_references(self):
         query = slicer.data \
@@ -432,54 +428,54 @@ class QueryBuilderDimensionTotalsTests(TestCase):
         # Important that in reference queries when using totals that the null dimensions are omitted from the nested
         # queries and selected in the container query
         self.assertEqual('(SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$timestamp")) "$timestamp",'
-                         'COALESCE("$base"."$political_party","$dod"."$political_party") "$political_party",'
-                         '"$base"."$votes" "$votes",'
-                         '"$dod"."$votes" "$votes_dod" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) "$d$timestamp",'
+                         'COALESCE("$base"."$d$political_party","$dod"."$d$political_party") "$d$political_party",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$dod"."$m$votes" "$m$votes_dod" '
                          'FROM ('
 
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         '"political_party" "$political_party",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         '"political_party" "$d$political_party",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp","$political_party"'
+                         'GROUP BY "$d$timestamp","$d$political_party"'
                          ') "$base" '
 
                          'FULL OUTER JOIN ('
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         '"political_party" "$political_party",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         '"political_party" "$d$political_party",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp","$political_party"'
+                         'GROUP BY "$d$timestamp","$d$political_party"'
                          ') "$dod" '
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$timestamp") '
-                         'AND "$base"."$political_party"="$dod"."$political_party") '
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp") '
+                         'AND "$base"."$d$political_party"="$dod"."$d$political_party") '
 
                          'UNION ALL '
 
                          '(SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$timestamp")) "$timestamp",'
-                         'NULL "$political_party",'
-                         '"$base"."$votes" "$votes",'
-                         '"$dod"."$votes" "$votes_dod" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) "$d$timestamp",'
+                         'NULL "$d$political_party",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$dod"."$m$votes" "$m$votes_dod" '
                          'FROM ('
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '
 
                          'FULL OUTER JOIN ('
-                         'SELECT TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'SELECT TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$dod" '
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$timestamp")) '
-                         'ORDER BY "$timestamp","$political_party"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) '
+                         'ORDER BY "$d$timestamp","$d$political_party"', str(query))
 
     def test_build_query_with_totals_cat_dimension_with_references_and_date_filters(self):
         query = slicer.data \
@@ -491,58 +487,58 @@ class QueryBuilderDimensionTotalsTests(TestCase):
             .query
 
         self.assertEqual('(SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$timestamp")) "$timestamp",'
-                         'COALESCE("$base"."$political_party","$dod"."$political_party") "$political_party",'
-                         '"$base"."$votes" "$votes",'
-                         '"$dod"."$votes" "$votes_dod" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) "$d$timestamp",'
+                         'COALESCE("$base"."$d$political_party","$dod"."$d$political_party") "$d$political_party",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$dod"."$m$votes" "$m$votes_dod" '
                          'FROM ('
 
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         '"political_party" "$political_party",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         '"political_party" "$d$political_party",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "timestamp" BETWEEN \'2018-01-01\' AND \'2019-01-01\' '
-                         'GROUP BY "$timestamp","$political_party"'
+                         'GROUP BY "$d$timestamp","$d$political_party"'
                          ') "$base" '
 
                          'FULL OUTER JOIN ('
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         '"political_party" "$political_party",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         '"political_party" "$d$political_party",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE TIMESTAMPADD(\'day\',1,"timestamp") BETWEEN \'2018-01-01\' AND \'2019-01-01\' '
-                         'GROUP BY "$timestamp","$political_party"'
+                         'GROUP BY "$d$timestamp","$d$political_party"'
                          ') "$dod" '
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$timestamp") '
-                         'AND "$base"."$political_party"="$dod"."$political_party") '
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp") '
+                         'AND "$base"."$d$political_party"="$dod"."$d$political_party") '
 
                          'UNION ALL '
 
                          '(SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$timestamp")) "$timestamp",'
-                         'NULL "$political_party",'
-                         '"$base"."$votes" "$votes",'
-                         '"$dod"."$votes" "$votes_dod" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) "$d$timestamp",'
+                         'NULL "$d$political_party",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$dod"."$m$votes" "$m$votes_dod" '
                          'FROM ('
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "timestamp" BETWEEN \'2018-01-01\' AND \'2019-01-01\' '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '
 
                          'FULL OUTER JOIN ('
-                         'SELECT TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'SELECT TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE TIMESTAMPADD(\'day\',1,"timestamp") BETWEEN \'2018-01-01\' AND \'2019-01-01\' '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$dod" '
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$timestamp")) '
-                         'ORDER BY "$timestamp","$political_party"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) '
+                         'ORDER BY "$d$timestamp","$d$political_party"', str(query))
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -556,7 +552,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "political_party" IN (\'d\')', str(query))
 
@@ -567,7 +563,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "political_party" NOT IN (\'d\')', str(query))
 
@@ -578,7 +574,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "political_party" LIKE \'Rep%\'', str(query))
 
@@ -589,7 +585,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "political_party" NOT LIKE \'Rep%\'', str(query))
 
@@ -600,7 +596,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "candidate_id" IN (1)', str(query))
 
@@ -611,7 +607,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "candidate_id" NOT IN (1)', str(query))
 
@@ -622,7 +618,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "candidate_name" IN (\'Donald Trump\')', str(query))
 
@@ -633,7 +629,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "candidate_name" NOT IN (\'Donald Trump\')', str(query))
 
@@ -644,7 +640,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "candidate_name" LIKE \'%Trump\'', str(query))
 
@@ -655,7 +651,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "candidate_name" LIKE \'%Trump\'', str(query))
 
@@ -666,7 +662,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "candidate_name" NOT LIKE \'%Trump\'', str(query))
 
@@ -677,7 +673,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "candidate_name" NOT LIKE \'%Trump\'', str(query))
 
@@ -688,7 +684,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "political_party" LIKE \'Rep%\' '
                          'OR "political_party" LIKE \'Dem%\'', str(query))
@@ -700,7 +696,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "political_party" NOT LIKE \'Rep%\' '
                          'OR "political_party" NOT LIKE \'Dem%\'', str(query))
@@ -712,7 +708,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "pattern" LIKE \'a%\' '
                          'OR "pattern" LIKE \'b%\'', str(query))
@@ -724,7 +720,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "pattern" NOT LIKE \'a%\' '
                          'OR "pattern" NOT LIKE \'b%\'', str(query))
@@ -736,7 +732,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "candidate_name" LIKE \'%Trump\' '
                          'OR "candidate_name" LIKE \'%Clinton\'', str(query))
@@ -748,7 +744,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "candidate_name" LIKE \'%Trump\' '
                          'OR "candidate_name" LIKE \'%Clinton\'', str(query))
@@ -760,7 +756,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "candidate_name" NOT LIKE \'%Trump\' '
                          'OR "candidate_name" NOT LIKE \'%Clinton\'', str(query))
@@ -772,7 +768,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "candidate_name" NOT LIKE \'%Trump\' '
                          'OR "candidate_name" NOT LIKE \'%Clinton\'', str(query))
@@ -808,7 +804,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "timestamp" BETWEEN \'2009-01-20\' AND \'2017-01-20\'', str(query))
 
@@ -819,7 +815,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "is_winner"', str(query))
 
@@ -830,7 +826,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE NOT "is_winner"', str(query))
 
@@ -846,7 +842,7 @@ class QueryBuilderMetricFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")=5', str(query))
 
@@ -857,7 +853,7 @@ class QueryBuilderMetricFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")=5', str(query))
 
@@ -868,7 +864,7 @@ class QueryBuilderMetricFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")<>5', str(query))
 
@@ -879,7 +875,7 @@ class QueryBuilderMetricFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")<>5', str(query))
 
@@ -890,7 +886,7 @@ class QueryBuilderMetricFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")>5', str(query))
 
@@ -901,7 +897,7 @@ class QueryBuilderMetricFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")>5', str(query))
 
@@ -912,7 +908,7 @@ class QueryBuilderMetricFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")>=5', str(query))
 
@@ -923,7 +919,7 @@ class QueryBuilderMetricFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")>=5', str(query))
 
@@ -934,7 +930,7 @@ class QueryBuilderMetricFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")<5', str(query))
 
@@ -945,7 +941,7 @@ class QueryBuilderMetricFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")<5', str(query))
 
@@ -956,7 +952,7 @@ class QueryBuilderMetricFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")<=5', str(query))
 
@@ -967,7 +963,7 @@ class QueryBuilderMetricFilterTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")<=5', str(query))
 
@@ -983,11 +979,11 @@ class QueryBuilderOperationTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp"', str(query))
+                         'GROUP BY "$d$timestamp" '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_build_query_with_cummean_operation(self):
         query = slicer.data \
@@ -996,11 +992,11 @@ class QueryBuilderOperationTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp"', str(query))
+                         'GROUP BY "$d$timestamp" '
+                         'ORDER BY "$d$timestamp"', str(query))
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -1015,16 +1011,16 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         '"$base"."$votes" "$votes",'
-                         '"$dod"."$votes" "$votes_dod" '
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$dod"."$m$votes" "$m$votes_dod" '
 
                          'FROM ('
                          'SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician"'
                          ') "$base",('
                          'SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician"'
                          ') "$dod"', str(query))
 
@@ -1038,31 +1034,31 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$political_party","$dod"."$political_party") "$political_party",'
-                         '"$base"."$votes" "$votes",'
-                         '"$dod"."$votes" "$votes_dod" '
+                         'COALESCE("$base"."$d$political_party","$dod"."$d$political_party") "$d$political_party",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$dod"."$m$votes" "$m$votes_dod" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         '"political_party" "$political_party",'
-                         'SUM("votes") "$votes" '
+                         '"political_party" "$d$political_party",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "timestamp" BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-                         'GROUP BY "$political_party"'
+                         'GROUP BY "$d$political_party"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         '"political_party" "$political_party",'
-                         'SUM("votes") "$votes" '
+                         '"political_party" "$d$political_party",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE TIMESTAMPADD(\'day\',1,"timestamp") BETWEEN \'2000-01-01\' AND \'2000-03-01\' '
-                         'GROUP BY "$political_party"'
+                         'GROUP BY "$d$political_party"'
                          ') "$dod" '  # end-nested
 
-                         'ON "$base"."$political_party"="$dod"."$political_party" '
-                         'ORDER BY "$political_party"', str(query))
+                         'ON "$base"."$d$political_party"="$dod"."$d$political_party" '
+                         'ORDER BY "$d$political_party"', str(query))
 
     def test_dimension_with_single_reference_dod(self):
         query = slicer.data \
@@ -1073,29 +1069,29 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$timestamp")) "$timestamp",'
-                         '"$base"."$votes" "$votes",'
-                         '"$dod"."$votes" "$votes_dod" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) "$d$timestamp",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$dod"."$m$votes" "$m$votes_dod" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$dod" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$timestamp") '
-                         'ORDER BY "$timestamp"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp") '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_dimension_with_single_reference_wow(self):
         query = slicer.data \
@@ -1106,29 +1102,29 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'week\',1,"$wow"."$timestamp")) "$timestamp",'
-                         '"$base"."$votes" "$votes",'
-                         '"$wow"."$votes" "$votes_wow" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'week\',1,"$wow"."$d$timestamp")) "$d$timestamp",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$wow"."$m$votes" "$m$votes_wow" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$wow" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'week\',1,"$wow"."$timestamp") '
-                         'ORDER BY "$timestamp"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'week\',1,"$wow"."$d$timestamp") '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_dimension_with_single_reference_mom(self):
         query = slicer.data \
@@ -1139,29 +1135,29 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'month\',1,"$mom"."$timestamp")) "$timestamp",'
-                         '"$base"."$votes" "$votes",'
-                         '"$mom"."$votes" "$votes_mom" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'month\',1,"$mom"."$d$timestamp")) "$d$timestamp",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$mom"."$m$votes" "$m$votes_mom" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$mom" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'month\',1,"$mom"."$timestamp") '
-                         'ORDER BY "$timestamp"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'month\',1,"$mom"."$d$timestamp") '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_dimension_with_single_reference_qoq(self):
         query = slicer.data \
@@ -1172,29 +1168,29 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'quarter\',1,"$qoq"."$timestamp")) "$timestamp",'
-                         '"$base"."$votes" "$votes",'
-                         '"$qoq"."$votes" "$votes_qoq" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'quarter\',1,"$qoq"."$d$timestamp")) "$d$timestamp",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$qoq"."$m$votes" "$m$votes_qoq" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$qoq" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'quarter\',1,"$qoq"."$timestamp") '
-                         'ORDER BY "$timestamp"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'quarter\',1,"$qoq"."$d$timestamp") '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_dimension_with_single_reference_yoy(self):
         query = slicer.data \
@@ -1205,29 +1201,29 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'year\',1,"$yoy"."$timestamp")) "$timestamp",'
-                         '"$base"."$votes" "$votes",'
-                         '"$yoy"."$votes" "$votes_yoy" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'year\',1,"$yoy"."$d$timestamp")) "$d$timestamp",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$yoy"."$m$votes" "$m$votes_yoy" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$yoy" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'year\',1,"$yoy"."$timestamp") '
-                         'ORDER BY "$timestamp"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'year\',1,"$yoy"."$d$timestamp") '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_dimension_with_single_reference_as_a_delta(self):
         query = slicer.data \
@@ -1238,29 +1234,29 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$timestamp")) "$timestamp",'
-                         '"$base"."$votes" "$votes",'
-                         '"$base"."$votes"-"$dod"."$votes" "$votes_dod_delta" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) "$d$timestamp",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$base"."$m$votes"-"$dod"."$m$votes" "$m$votes_dod_delta" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$dod" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$timestamp") '
-                         'ORDER BY "$timestamp"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp") '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_dimension_with_single_reference_as_a_delta_percentage(self):
         query = slicer.data \
@@ -1271,29 +1267,29 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$timestamp")) "$timestamp",'
-                         '"$base"."$votes" "$votes",'
-                         '("$base"."$votes"-"$dod"."$votes")*100/NULLIF("$dod"."$votes",0) "$votes_dod_delta_percent" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) "$d$timestamp",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '("$base"."$m$votes"-"$dod"."$m$votes")*100/NULLIF("$dod"."$m$votes",0) "$m$votes_dod_delta_percent" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$dod" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$timestamp") '
-                         'ORDER BY "$timestamp"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp") '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_reference_on_dimension_with_weekly_interval(self):
         weekly_timestamp = slicer.dimensions.timestamp(f.weekly)
@@ -1305,29 +1301,29 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$timestamp")) "$timestamp",'
-                         '"$base"."$votes" "$votes",'
-                         '"$dod"."$votes" "$votes_dod" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) "$d$timestamp",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$dod"."$m$votes" "$m$votes_dod" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'IW\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'IW\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'IW\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'IW\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$dod" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$timestamp") '
-                         'ORDER BY "$timestamp"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp") '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_reference_on_dimension_with_weekly_interval_no_interval_on_reference(self):
         query = slicer.data \
@@ -1338,29 +1334,29 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$timestamp")) "$timestamp",'
-                         '"$base"."$votes" "$votes",'
-                         '"$dod"."$votes" "$votes_dod" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) "$d$timestamp",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$dod"."$m$votes" "$m$votes_dod" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'IW\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'IW\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'IW\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'IW\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$dod" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$timestamp") '
-                         'ORDER BY "$timestamp"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp") '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_reference_on_dimension_with_monthly_interval(self):
         query = slicer.data \
@@ -1371,29 +1367,29 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$timestamp")) "$timestamp",'
-                         '"$base"."$votes" "$votes",'
-                         '"$dod"."$votes" "$votes_dod" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) "$d$timestamp",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$dod"."$m$votes" "$m$votes_dod" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'MM\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'MM\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'MM\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'MM\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$dod" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$timestamp") '
-                         'ORDER BY "$timestamp"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp") '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_reference_on_dimension_with_quarterly_interval(self):
         query = slicer.data \
@@ -1404,29 +1400,29 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$timestamp")) "$timestamp",'
-                         '"$base"."$votes" "$votes",'
-                         '"$dod"."$votes" "$votes_dod" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) "$d$timestamp",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$dod"."$m$votes" "$m$votes_dod" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'Q\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'Q\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'Q\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'Q\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$dod" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$timestamp") '
-                         'ORDER BY "$timestamp"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp") '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_reference_on_dimension_with_annual_interval(self):
         query = slicer.data \
@@ -1437,29 +1433,29 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$timestamp")) "$timestamp",'
-                         '"$base"."$votes" "$votes",'
-                         '"$dod"."$votes" "$votes_dod" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) "$d$timestamp",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$dod"."$m$votes" "$m$votes_dod" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'Y\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'Y\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'Y\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'Y\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$dod" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$timestamp") '
-                         'ORDER BY "$timestamp"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp") '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_dimension_with_multiple_references(self):
         query = slicer.data \
@@ -1473,44 +1469,44 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         self.assertEqual('SELECT '
         
                          'COALESCE('
-                         '"$base"."$timestamp",'
-                         'TIMESTAMPADD(\'day\',1,"$dod"."$timestamp"),'
-                         'TIMESTAMPADD(\'year\',1,"$yoy"."$timestamp")'
-                         ') "$timestamp",'
+                         '"$base"."$d$timestamp",'
+                         'TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp"),'
+                         'TIMESTAMPADD(\'year\',1,"$yoy"."$d$timestamp")'
+                         ') "$d$timestamp",'
         
-                         '"$base"."$votes" "$votes",'
-                         '"$dod"."$votes" "$votes_dod",'
-                         '("$base"."$votes"-"$yoy"."$votes")*100/NULLIF("$yoy"."$votes",0) "$votes_yoy_delta_percent" '
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$dod"."$m$votes" "$m$votes_dod",'
+                         '("$base"."$m$votes"-"$yoy"."$m$votes")*100/NULLIF("$yoy"."$m$votes",0) "$m$votes_yoy_delta_percent" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$dod" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$timestamp") '
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp") '
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$yoy" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'year\',1,"$yoy"."$timestamp") '
-                         'ORDER BY "$timestamp"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'year\',1,"$yoy"."$d$timestamp") '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_reference_joins_nested_query_on_dimensions(self):
         query = slicer.data \
@@ -1522,33 +1518,33 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'year\',1,"$yoy"."$timestamp")) "$timestamp",'
-                         'COALESCE("$base"."$political_party","$yoy"."$political_party") "$political_party",'
-                         '"$base"."$votes" "$votes",'
-                         '"$yoy"."$votes" "$votes_yoy" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'year\',1,"$yoy"."$d$timestamp")) "$d$timestamp",'
+                         'COALESCE("$base"."$d$political_party","$yoy"."$d$political_party") "$d$political_party",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$yoy"."$m$votes" "$m$votes_yoy" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         '"political_party" "$political_party",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         '"political_party" "$d$political_party",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp","$political_party"'
+                         'GROUP BY "$d$timestamp","$d$political_party"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         '"political_party" "$political_party",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         '"political_party" "$d$political_party",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp","$political_party"'
+                         'GROUP BY "$d$timestamp","$d$political_party"'
                          ') "$yoy" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'year\',1,"$yoy"."$timestamp") '
-                         'AND "$base"."$political_party"="$yoy"."$political_party" '
-                         'ORDER BY "$timestamp","$political_party"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'year\',1,"$yoy"."$d$timestamp") '
+                         'AND "$base"."$d$political_party"="$yoy"."$d$political_party" '
+                         'ORDER BY "$d$timestamp","$d$political_party"', str(query))
 
     def test_reference_with_unique_dimension_includes_display_definition(self):
         query = slicer.data \
@@ -1560,36 +1556,36 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'year\',1,"$yoy"."$timestamp")) "$timestamp",'
-                         'COALESCE("$base"."$candidate","$yoy"."$candidate") "$candidate",'
-                         'COALESCE("$base"."$candidate_display","$yoy"."$candidate_display") "$candidate_display",'
-                         '"$base"."$votes" "$votes",'
-                         '"$yoy"."$votes" "$votes_yoy" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'year\',1,"$yoy"."$d$timestamp")) "$d$timestamp",'
+                         'COALESCE("$base"."$d$candidate","$yoy"."$d$candidate") "$d$candidate",'
+                         'COALESCE("$base"."$d$candidate_display","$yoy"."$d$candidate_display") "$d$candidate_display",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$yoy"."$m$votes" "$m$votes_yoy" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         '"candidate_id" "$candidate",'
-                         '"candidate_name" "$candidate_display",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         '"candidate_id" "$d$candidate",'
+                         '"candidate_name" "$d$candidate_display",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp","$candidate","$candidate_display"'
+                         'GROUP BY "$d$timestamp","$d$candidate","$d$candidate_display"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         '"candidate_id" "$candidate",'
-                         '"candidate_name" "$candidate_display",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         '"candidate_id" "$d$candidate",'
+                         '"candidate_name" "$d$candidate_display",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp","$candidate","$candidate_display"'
+                         'GROUP BY "$d$timestamp","$d$candidate","$d$candidate_display"'
                          ') "$yoy" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'year\',1,"$yoy"."$timestamp") '
-                         'AND "$base"."$candidate"="$yoy"."$candidate" '
-                         'ORDER BY "$timestamp","$candidate_display"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'year\',1,"$yoy"."$d$timestamp") '
+                         'AND "$base"."$d$candidate"="$yoy"."$d$candidate" '
+                         'ORDER BY "$d$timestamp","$d$candidate_display"', str(query))
 
     def test_adjust_reference_dimension_filters_in_reference_query(self):
         query = slicer.data \
@@ -1602,31 +1598,31 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$timestamp")) "$timestamp",'
-                         '"$base"."$votes" "$votes",'
-                         '"$dod"."$votes" "$votes_dod" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) "$d$timestamp",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$dod"."$m$votes" "$m$votes_dod" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "timestamp" BETWEEN \'2018-01-01\' AND \'2018-01-31\' '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE TIMESTAMPADD(\'day\',1,"timestamp") BETWEEN \'2018-01-01\' AND \'2018-01-31\' '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$dod" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$timestamp") '
-                         'ORDER BY "$timestamp"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp") '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_adjust_reference_dimension_filters_in_reference_query_with_multiple_filters(self):
         query = slicer.data \
@@ -1641,33 +1637,33 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$timestamp")) "$timestamp",'
-                         '"$base"."$votes" "$votes",'
-                         '"$dod"."$votes" "$votes_dod" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) "$d$timestamp",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$dod"."$m$votes" "$m$votes_dod" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "timestamp" BETWEEN \'2018-01-01\' AND \'2018-01-31\' '
                          'AND "political_party" IN (\'d\') '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE TIMESTAMPADD(\'day\',1,"timestamp") BETWEEN \'2018-01-01\' AND \'2018-01-31\' '
                          'AND "political_party" IN (\'d\') '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$dod" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$timestamp") '
-                         'ORDER BY "$timestamp"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp") '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_adapt_dow_for_leap_year_for_yoy_reference(self):
         query = slicer.data \
@@ -1678,29 +1674,29 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'year\',1,"$yoy"."$timestamp")) "$timestamp",'
-                         '"$base"."$votes" "$votes",'
-                         '"$yoy"."$votes" "$votes_yoy" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'year\',1,"$yoy"."$d$timestamp")) "$d$timestamp",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$yoy"."$m$votes" "$m$votes_yoy" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'IW\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'IW\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'IW\')) "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'IW\')) "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$yoy" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'year\',1,"$yoy"."$timestamp") '
-                         'ORDER BY "$timestamp"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'year\',1,"$yoy"."$d$timestamp") '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_adapt_dow_for_leap_year_for_yoy_delta_reference(self):
         query = slicer.data \
@@ -1711,29 +1707,29 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'year\',1,"$yoy"."$timestamp")) "$timestamp",'
-                         '"$base"."$votes" "$votes",'
-                         '"$base"."$votes"-"$yoy"."$votes" "$votes_yoy_delta" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'year\',1,"$yoy"."$d$timestamp")) "$d$timestamp",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$base"."$m$votes"-"$yoy"."$m$votes" "$m$votes_yoy_delta" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'IW\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'IW\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'IW\')) "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'IW\')) "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$yoy" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'year\',1,"$yoy"."$timestamp") '
-                         'ORDER BY "$timestamp"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'year\',1,"$yoy"."$d$timestamp") '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_adapt_dow_for_leap_year_for_yoy_delta_percent_reference(self):
         query = slicer.data \
@@ -1744,29 +1740,29 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'year\',1,"$yoy"."$timestamp")) "$timestamp",'
-                         '"$base"."$votes" "$votes",'
-                         '("$base"."$votes"-"$yoy"."$votes")*100/NULLIF("$yoy"."$votes",0) "$votes_yoy_delta_percent" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'year\',1,"$yoy"."$d$timestamp")) "$d$timestamp",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '("$base"."$m$votes"-"$yoy"."$m$votes")*100/NULLIF("$yoy"."$m$votes",0) "$m$votes_yoy_delta_percent" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'IW\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'IW\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'IW\')) "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'IW\')) "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$yoy" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'year\',1,"$yoy"."$timestamp") '
-                         'ORDER BY "$timestamp"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'year\',1,"$yoy"."$d$timestamp") '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_adapt_dow_for_leap_year_for_yoy_reference_with_date_filter(self):
         query = slicer.data \
@@ -1778,31 +1774,31 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'year\',1,"$yoy"."$timestamp")) "$timestamp",'
-                         '"$base"."$votes" "$votes",'
-                         '"$yoy"."$votes" "$votes_yoy" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'year\',1,"$yoy"."$d$timestamp")) "$d$timestamp",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$yoy"."$m$votes" "$m$votes_yoy" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'IW\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'IW\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "timestamp" BETWEEN \'2018-01-01\' AND \'2018-01-31\' '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'IW\')) "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'IW\')) "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE TIMESTAMPADD(\'year\',1,"timestamp") BETWEEN \'2018-01-01\' AND \'2018-01-31\' '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$yoy" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'year\',1,"$yoy"."$timestamp") '
-                         'ORDER BY "$timestamp"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'year\',1,"$yoy"."$d$timestamp") '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_adding_duplicate_reference_does_not_join_more_queries(self):
         query = slicer.data \
@@ -1814,29 +1810,29 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$timestamp")) "$timestamp",'
-                         '"$base"."$votes" "$votes",'
-                         '"$dod"."$votes" "$votes_dod" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) "$d$timestamp",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$dod"."$m$votes" "$m$votes_dod" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$dod" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$timestamp") '
-                         'ORDER BY "$timestamp"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp") '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_use_same_nested_query_for_joining_references_with_same_period_and_dimension(self):
         query = slicer.data \
@@ -1849,31 +1845,31 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'COALESCE("$base"."$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$timestamp")) "$timestamp",'
-                         '"$base"."$votes" "$votes",'
-                         '"$dod"."$votes" "$votes_dod",'
-                         '"$base"."$votes"-"$dod"."$votes" "$votes_dod_delta",'
-                         '("$base"."$votes"-"$dod"."$votes")*100/NULLIF("$dod"."$votes",0) "$votes_dod_delta_percent" '
+                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) "$d$timestamp",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$dod"."$m$votes" "$m$votes_dod",'
+                         '"$base"."$m$votes"-"$dod"."$m$votes" "$m$votes_dod_delta",'
+                         '("$base"."$m$votes"-"$dod"."$m$votes")*100/NULLIF("$dod"."$m$votes",0) "$m$votes_dod_delta_percent" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$dod" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$timestamp") '
-                         'ORDER BY "$timestamp"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp") '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_use_same_nested_query_for_joining_references_with_same_period_and_dimension_with_different_periods(self):
         query = slicer.data \
@@ -1888,45 +1884,45 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
         self.assertEqual('SELECT '
                          'COALESCE('
-                         '"$base"."$timestamp",'
-                         'TIMESTAMPADD(\'day\',1,"$dod"."$timestamp"),'
-                         'TIMESTAMPADD(\'year\',1,"$yoy"."$timestamp")'
-                         ') "$timestamp",'
-                         '"$base"."$votes" "$votes",'
-                         '"$dod"."$votes" "$votes_dod",'
-                         '"$base"."$votes"-"$dod"."$votes" "$votes_dod_delta",'
-                         '"$yoy"."$votes" "$votes_yoy",'
-                         '"$base"."$votes"-"$yoy"."$votes" "$votes_yoy_delta" '
+                         '"$base"."$d$timestamp",'
+                         'TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp"),'
+                         'TIMESTAMPADD(\'year\',1,"$yoy"."$d$timestamp")'
+                         ') "$d$timestamp",'
+                         '"$base"."$m$votes" "$m$votes",'
+                         '"$dod"."$m$votes" "$m$votes_dod",'
+                         '"$base"."$m$votes"-"$dod"."$m$votes" "$m$votes_dod_delta",'
+                         '"$yoy"."$m$votes" "$m$votes_yoy",'
+                         '"$base"."$m$votes"-"$yoy"."$m$votes" "$m$votes_yoy_delta" '
                          'FROM '
 
                          '('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$base" '  # end-nested
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$dod" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$timestamp") '
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp") '
 
                          'FULL OUTER JOIN ('  # nested
                          'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
+                         'GROUP BY "$d$timestamp"'
                          ') "$yoy" '  # end-nested
 
-                         'ON "$base"."$timestamp"=TIMESTAMPADD(\'year\',1,"$yoy"."$timestamp") '
-                         'ORDER BY "$timestamp"', str(query))
+                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'year\',1,"$yoy"."$d$timestamp") '
+                         'ORDER BY "$d$timestamp"', str(query))
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -1941,15 +1937,15 @@ class QueryBuilderJoinTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("politician"."timestamp",\'DD\') "$timestamp",'
-                         '"politician"."district_id" "$district",'
-                         '"district"."district_name" "$district_display",'
-                         'SUM("politician"."votes") "$votes" '
+                         'TRUNC("politician"."timestamp",\'DD\') "$d$timestamp",'
+                         '"politician"."district_id" "$d$district",'
+                         '"district"."district_name" "$d$district_display",'
+                         'SUM("politician"."votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'OUTER JOIN "locations"."district" '
                          'ON "politician"."district_id"="district"."id" '
-                         'GROUP BY "$timestamp","$district","$district_display" '
-                         'ORDER BY "$timestamp","$district_display"', str(query))
+                         'GROUP BY "$d$timestamp","$d$district","$d$district_display" '
+                         'ORDER BY "$d$timestamp","$d$district_display"', str(query))
 
     def test_dimension_with_multiple_joins_includes_joins_ordered__in_query(self):
         query = slicer.data \
@@ -1960,18 +1956,18 @@ class QueryBuilderJoinTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("politician"."timestamp",\'DD\') "$timestamp",'
-                         '"politician"."district_id" "$district",'
-                         '"district"."district_name" "$district_display",'
-                         'SUM("politician"."votes") "$votes",'
-                         'COUNT("voter"."id") "$voters" '
+                         'TRUNC("politician"."timestamp",\'DD\') "$d$timestamp",'
+                         '"politician"."district_id" "$d$district",'
+                         '"district"."district_name" "$d$district_display",'
+                         'SUM("politician"."votes") "$m$votes",'
+                         'COUNT("voter"."id") "$m$voters" '
                          'FROM "politics"."politician" '
                          'JOIN "politics"."voter" '
                          'ON "politician"."id"="voter"."politician_id" '
                          'OUTER JOIN "locations"."district" '
                          'ON "politician"."district_id"="district"."id" '
-                         'GROUP BY "$timestamp","$district","$district_display" '
-                         'ORDER BY "$timestamp","$district_display"', str(query))
+                         'GROUP BY "$d$timestamp","$d$district","$d$district_display" '
+                         'ORDER BY "$d$timestamp","$d$district_display"', str(query))
 
     def test_dimension_with_recursive_join_joins_all_join_tables(self):
         query = slicer.data \
@@ -1981,17 +1977,17 @@ class QueryBuilderJoinTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("politician"."timestamp",\'DD\') "$timestamp",'
-                         '"district"."state_id" "$state",'
-                         '"state"."state_name" "$state_display",'
-                         'SUM("politician"."votes") "$votes" '
+                         'TRUNC("politician"."timestamp",\'DD\') "$d$timestamp",'
+                         '"district"."state_id" "$d$state",'
+                         '"state"."state_name" "$d$state_display",'
+                         'SUM("politician"."votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'OUTER JOIN "locations"."district" '
                          'ON "politician"."district_id"="district"."id" '
                          'JOIN "locations"."state" '
                          'ON "district"."state_id"="state"."id" '
-                         'GROUP BY "$timestamp","$state","$state_display" '
-                         'ORDER BY "$timestamp","$state_display"', str(query))
+                         'GROUP BY "$d$timestamp","$d$state","$d$state_display" '
+                         'ORDER BY "$d$timestamp","$d$state_display"', str(query))
 
     def test_metric_with_join_includes_join_in_query(self):
         query = slicer.data \
@@ -2000,13 +1996,13 @@ class QueryBuilderJoinTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         '"politician"."political_party" "$political_party",'
-                         'COUNT("voter"."id") "$voters" '
+                         '"politician"."political_party" "$d$political_party",'
+                         'COUNT("voter"."id") "$m$voters" '
                          'FROM "politics"."politician" '
                          'JOIN "politics"."voter" '
                          'ON "politician"."id"="voter"."politician_id" '
-                         'GROUP BY "$political_party" '
-                         'ORDER BY "$political_party"', str(query))
+                         'GROUP BY "$d$political_party" '
+                         'ORDER BY "$d$political_party"', str(query))
 
     def test_dimension_filter_with_join_on_display_definition_does_not_include_join_in_query(self):
         query = slicer.data \
@@ -2015,7 +2011,7 @@ class QueryBuilderJoinTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("votes") "$votes" '
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "district_id" IN (1)', str(query))
 
@@ -2026,7 +2022,7 @@ class QueryBuilderJoinTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("politician"."votes") "$votes" '
+                         'SUM("politician"."votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'OUTER JOIN "locations"."district" '
                          'ON "politician"."district_id"="district"."id" '
@@ -2039,7 +2035,7 @@ class QueryBuilderJoinTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("politician"."votes") "$votes" '
+                         'SUM("politician"."votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'OUTER JOIN "locations"."district" '
                          'ON "politician"."district_id"="district"."id" '
@@ -2052,7 +2048,7 @@ class QueryBuilderJoinTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'SUM("politician"."votes") "$votes" '
+                         'SUM("politician"."votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'OUTER JOIN "locations"."district" '
                          'ON "politician"."district_id"="district"."id" '
@@ -2074,11 +2070,11 @@ class QueryBuilderOrderTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp"', str(query))
+                         'GROUP BY "$d$timestamp" '
+                         'ORDER BY "$d$timestamp"', str(query))
 
     def test_build_query_order_by_dimension_display(self):
         query = slicer.data \
@@ -2088,12 +2084,12 @@ class QueryBuilderOrderTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         '"candidate_id" "$candidate",'
-                         '"candidate_name" "$candidate_display",'
-                         'SUM("votes") "$votes" '
+                         '"candidate_id" "$d$candidate",'
+                         '"candidate_name" "$d$candidate_display",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$candidate","$candidate_display" '
-                         'ORDER BY "$candidate_display"', str(query))
+                         'GROUP BY "$d$candidate","$d$candidate_display" '
+                         'ORDER BY "$d$candidate_display"', str(query))
 
     def test_build_query_order_by_dimension_asc(self):
         query = slicer.data \
@@ -2103,11 +2099,11 @@ class QueryBuilderOrderTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp" ASC', str(query))
+                         'GROUP BY "$d$timestamp" '
+                         'ORDER BY "$d$timestamp" ASC', str(query))
 
     def test_build_query_order_by_dimension_desc(self):
         query = slicer.data \
@@ -2117,11 +2113,11 @@ class QueryBuilderOrderTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp" DESC', str(query))
+                         'GROUP BY "$d$timestamp" '
+                         'ORDER BY "$d$timestamp" DESC', str(query))
 
     def test_build_query_order_by_metric(self):
         query = slicer.data \
@@ -2131,11 +2127,11 @@ class QueryBuilderOrderTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp" '
-                         'ORDER BY "$votes"', str(query))
+                         'GROUP BY "$d$timestamp" '
+                         'ORDER BY "$m$votes"', str(query))
 
     def test_build_query_order_by_metric_asc(self):
         query = slicer.data \
@@ -2145,11 +2141,11 @@ class QueryBuilderOrderTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp" '
-                         'ORDER BY "$votes" ASC', str(query))
+                         'GROUP BY "$d$timestamp" '
+                         'ORDER BY "$m$votes" ASC', str(query))
 
     def test_build_query_order_by_metric_desc(self):
         query = slicer.data \
@@ -2159,11 +2155,11 @@ class QueryBuilderOrderTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp" '
-                         'ORDER BY "$votes" DESC', str(query))
+                         'GROUP BY "$d$timestamp" '
+                         'ORDER BY "$m$votes" DESC', str(query))
 
     def test_build_query_order_by_multiple_dimensions(self):
         query = slicer.data \
@@ -2174,13 +2170,13 @@ class QueryBuilderOrderTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         '"candidate_id" "$candidate",'
-                         '"candidate_name" "$candidate_display",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         '"candidate_id" "$d$candidate",'
+                         '"candidate_name" "$d$candidate_display",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp","$candidate","$candidate_display" '
-                         'ORDER BY "$timestamp","$candidate"', str(query))
+                         'GROUP BY "$d$timestamp","$d$candidate","$d$candidate_display" '
+                         'ORDER BY "$d$timestamp","$d$candidate"', str(query))
 
     def test_build_query_order_by_multiple_dimensions_with_different_orientations(self):
         query = slicer.data \
@@ -2191,13 +2187,13 @@ class QueryBuilderOrderTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         '"candidate_id" "$candidate",'
-                         '"candidate_name" "$candidate_display",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         '"candidate_id" "$d$candidate",'
+                         '"candidate_name" "$d$candidate_display",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp","$candidate","$candidate_display" '
-                         'ORDER BY "$timestamp" DESC,"$candidate" ASC', str(query))
+                         'GROUP BY "$d$timestamp","$d$candidate","$d$candidate_display" '
+                         'ORDER BY "$d$timestamp" DESC,"$d$candidate" ASC', str(query))
 
     def test_build_query_order_by_metrics_and_dimensions(self):
         query = slicer.data \
@@ -2208,11 +2204,11 @@ class QueryBuilderOrderTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp","$votes"', str(query))
+                         'GROUP BY "$d$timestamp" '
+                         'ORDER BY "$d$timestamp","$m$votes"', str(query))
 
     def test_build_query_order_by_metrics_and_dimensions_with_different_orientations(self):
         query = slicer.data \
@@ -2223,11 +2219,11 @@ class QueryBuilderOrderTests(TestCase):
             .query
 
         self.assertEqual('SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("votes") "$votes" '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp" ASC,"$votes" DESC', str(query))
+                         'GROUP BY "$d$timestamp" '
+                         'ORDER BY "$d$timestamp" ASC,"$m$votes" DESC', str(query))
 
 
 @patch('fireant.slicer.queries.builder.fetch_data')
@@ -2241,11 +2237,11 @@ class QueryBuildPaginationTests(TestCase):
 
         mock_fetch_data.assert_called_once_with(ANY,
                                                 'SELECT '
-                                                'TRUNC("timestamp",\'DD\') "$timestamp",'
-                                                'SUM("votes") "$votes" '
+                                                'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                                                'SUM("votes") "$m$votes" '
                                                 'FROM "politics"."politician" '
-                                                'GROUP BY "$timestamp" '
-                                                'ORDER BY "$timestamp" LIMIT 20',
+                                                'GROUP BY "$d$timestamp" '
+                                                'ORDER BY "$d$timestamp" LIMIT 20',
                                                 dimensions=DimensionMatcher(slicer.dimensions.timestamp))
 
     def test_set_offset(self, mock_fetch_data: Mock):
@@ -2257,11 +2253,11 @@ class QueryBuildPaginationTests(TestCase):
 
         mock_fetch_data.assert_called_once_with(ANY,
                                                 'SELECT '
-                                                'TRUNC("timestamp",\'DD\') "$timestamp",'
-                                                'SUM("votes") "$votes" '
+                                                'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                                                'SUM("votes") "$m$votes" '
                                                 'FROM "politics"."politician" '
-                                                'GROUP BY "$timestamp" '
-                                                'ORDER BY "$timestamp" '
+                                                'GROUP BY "$d$timestamp" '
+                                                'ORDER BY "$d$timestamp" '
                                                 'OFFSET 20',
                                                 dimensions=DimensionMatcher(slicer.dimensions.timestamp))
 
@@ -2275,11 +2271,11 @@ class QueryBuildPaginationTests(TestCase):
 
         mock_fetch_data.assert_called_once_with(ANY,
                                                 'SELECT '
-                                                'TRUNC("timestamp",\'DD\') "$timestamp",'
-                                                'SUM("votes") "$votes" '
+                                                'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                                                'SUM("votes") "$m$votes" '
                                                 'FROM "politics"."politician" '
-                                                'GROUP BY "$timestamp" '
-                                                'ORDER BY "$timestamp" '
+                                                'GROUP BY "$d$timestamp" '
+                                                'ORDER BY "$d$timestamp" '
                                                 'LIMIT 20 '
                                                 'OFFSET 30',
                                                 dimensions=DimensionMatcher(slicer.dimensions.timestamp))
@@ -2326,7 +2322,7 @@ class QueryBuilderRenderTests(TestCase):
             .fetch()
 
         mock_fetch_data.assert_called_once_with(ANY,
-                                                'SELECT SUM("votes") "$votes" '
+                                                'SELECT SUM("votes") "$m$votes" '
                                                 'FROM "politics"."politician"',
                                                 dimensions=ANY)
 
@@ -2427,6 +2423,6 @@ class QueryBuilderRenderTests(TestCase):
             .widget(mock_widget) \
             .fetch()
 
-        f_op_key = format_key(mock_operation.key)
+        f_op_key = format_metric_key(mock_operation.key)
         self.assertIn(f_op_key, mock_df)
         self.assertEqual(mock_df[f_op_key], mock_operation.apply.return_value)

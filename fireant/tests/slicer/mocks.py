@@ -1,12 +1,12 @@
 from collections import (
     OrderedDict,
 )
-from unittest.mock import Mock
-
-import pandas as pd
 from datetime import (
     datetime,
 )
+from unittest.mock import Mock
+
+import pandas as pd
 from pypika import (
     JoinType,
     Table,
@@ -15,7 +15,10 @@ from pypika import (
 
 from fireant import *
 from fireant.slicer.references import ReferenceType
-from fireant.utils import format_key as f
+from fireant.utils import (
+    format_dimension_key as fd,
+    format_metric_key as fm,
+)
 
 
 class TestDatabase(VerticaDatabase):
@@ -209,14 +212,14 @@ election_candidate_wins = {
     (6, 11): False,
 }
 
-df_columns = [f('timestamp'),
-              f('candidate'), f('candidate_display'),
-              f('political_party'),
-              f('election'), f('election_display'),
-              f('state'), f('state_display'),
-              f('winner'),
-              f('votes'),
-              f('wins')]
+df_columns = [fd('timestamp'),
+              fd('candidate'), fd('candidate_display'),
+              fd('political_party'),
+              fd('election'), fd('election_display'),
+              fd('state'), fd('state_display'),
+              fd('winner'),
+              fm('votes'),
+              fm('wins')]
 
 
 def PoliticsRow(timestamp, candidate, candidate_display, political_party, election, election_display, state,
@@ -226,10 +229,12 @@ def PoliticsRow(timestamp, candidate, candidate_display, political_party, electi
         winner, votes, wins
     )
 
+
 records = []
 for (election_id, candidate_id, state_id), votes in election_candidate_state_votes.items():
     election_year = elections[election_id]
     winner = election_candidate_wins[(election_id, candidate_id)]
+
     records.append(PoliticsRow(
           timestamp=datetime(int(election_year), 1, 1),
           candidate=candidate_id, candidate_display=candidates[candidate_id],
@@ -243,38 +248,38 @@ for (election_id, candidate_id, state_id), votes in election_candidate_state_vot
 
 mock_politics_database = pd.DataFrame.from_records(records, columns=df_columns)
 
-single_metric_df = pd.DataFrame(mock_politics_database[[f('votes')]]
+single_metric_df = pd.DataFrame(mock_politics_database[[fm('votes')]]
                                 .sum()).T
 
-multi_metric_df = pd.DataFrame(mock_politics_database[[f('votes'), f('wins')]]
+multi_metric_df = pd.DataFrame(mock_politics_database[[fm('votes'), fm('wins')]]
                                .sum()).T
 
-cont_dim_df = mock_politics_database[[f('timestamp'), f('votes'), f('wins')]] \
-    .groupby(f('timestamp')) \
+cont_dim_df = mock_politics_database[[fd('timestamp'), fm('votes'), fm('wins')]] \
+    .groupby(fd('timestamp')) \
     .sum()
 
-cat_dim_df = mock_politics_database[[f('political_party'), f('votes'), f('wins')]] \
-    .groupby(f('political_party')) \
+cat_dim_df = mock_politics_database[[fd('political_party'), fm('votes'), fm('wins')]] \
+    .groupby(fd('political_party')) \
     .sum()
 
-uni_dim_df = mock_politics_database[[f('candidate'), f('candidate_display'), f('votes'), f('wins')]] \
-    .groupby([f('candidate'), f('candidate_display')]) \
+uni_dim_df = mock_politics_database[[fd('candidate'), fd('candidate_display'), fm('votes'), fm('wins')]] \
+    .groupby([fd('candidate'), fd('candidate_display')]) \
     .sum() \
-    .reset_index(f('candidate_display'))
+    .reset_index(fd('candidate_display'))
 
-cont_cat_dim_df = mock_politics_database[[f('timestamp'), f('political_party'), f('votes'), f('wins')]] \
-    .groupby([f('timestamp'), f('political_party')]) \
+cont_cat_dim_df = mock_politics_database[[fd('timestamp'), fd('political_party'), fm('votes'), fm('wins')]] \
+    .groupby([fd('timestamp'), fd('political_party')]) \
     .sum()
 
-cont_uni_dim_df = mock_politics_database[[f('timestamp'), f('state'), f('state_display'), f('votes'), f('wins')]] \
-    .groupby([f('timestamp'), f('state'), f('state_display')]) \
+cont_uni_dim_df = mock_politics_database[[fd('timestamp'), fd('state'), fd('state_display'), fm('votes'), fm('wins')]] \
+    .groupby([fd('timestamp'), fd('state'), fd('state_display')]) \
     .sum() \
-    .reset_index(f('state_display'))
+    .reset_index(fd('state_display'))
 
 cont_dim_operation_df = cont_dim_df.copy()
 
-operation_key = f('cumsum(votes)')
-cont_dim_operation_df[operation_key] = cont_dim_df[f('votes')].cumsum()
+operation_key = fm('cumsum(votes)')
+cont_dim_operation_df[operation_key] = cont_dim_df[fm('votes')].cumsum()
 
 
 def ref(data_frame, columns):
@@ -302,7 +307,7 @@ def ref_delta(ref_data_frame, columns):
     return ref_data_frame.join(delta_data_frame)
 
 
-_columns = [f('votes'), f('wins')]
+_columns = [fm('votes'), fm('wins')]
 cont_uni_dim_ref_df = ref(cont_uni_dim_df, _columns)
 cont_uni_dim_ref_delta_df = ref_delta(cont_uni_dim_ref_df, _columns)
 
@@ -355,8 +360,8 @@ for l in list(locals().values()):
     elif not isinstance(l.index, (pd.DatetimeIndex, pd.RangeIndex)):
         l.index = l.index.astype('str')
 
-cont_cat_dim_totals_df = totals(cont_cat_dim_df, [f('political_party')], _columns)
-cont_uni_dim_totals_df = totals(cont_uni_dim_df, [f('state')], _columns)
-cont_uni_dim_all_totals_df = totals(cont_uni_dim_df, [f('timestamp'), f('state')], _columns)
+cont_cat_dim_totals_df = totals(cont_cat_dim_df, [fd('political_party')], _columns)
+cont_uni_dim_totals_df = totals(cont_uni_dim_df, [fd('state')], _columns)
+cont_uni_dim_all_totals_df = totals(cont_uni_dim_df, [fd('timestamp'), fd('state')], _columns)
 
 ElectionOverElection = ReferenceType('eoe', 'EoE', 'year', 4)
