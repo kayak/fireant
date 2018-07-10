@@ -17,7 +17,10 @@ from fireant.tests.slicer.mocks import (
     slicer,
     uni_dim_df,
 )
-from fireant.utils import format_key as f
+from fireant.utils import (
+    format_dimension_key as fd,
+    format_metric_key as fm,
+)
 
 
 class CSVWidgetTests(TestCase):
@@ -27,7 +30,7 @@ class CSVWidgetTests(TestCase):
         result = CSV(slicer.metrics.votes) \
             .transform(single_metric_df, slicer, [], [])
 
-        expected = single_metric_df.copy()[[f('votes')]]
+        expected = single_metric_df.copy()[[fm('votes')]]
         expected.columns = ['Votes']
 
         self.assertEqual(result, expected.to_csv())
@@ -36,7 +39,7 @@ class CSVWidgetTests(TestCase):
         result = CSV(slicer.metrics.votes, slicer.metrics.wins) \
             .transform(multi_metric_df, slicer, [], [])
 
-        expected = multi_metric_df.copy()[[f('votes'), f('wins')]]
+        expected = multi_metric_df.copy()[[fm('votes'), fm('wins')]]
         expected.columns = ['Votes', 'Wins']
 
         self.assertEqual(result, expected.to_csv())
@@ -45,7 +48,7 @@ class CSVWidgetTests(TestCase):
         result = CSV(slicer.metrics.wins, slicer.metrics.votes) \
             .transform(multi_metric_df, slicer, [], [])
 
-        expected = multi_metric_df.copy()[[f('wins'), f('votes')]]
+        expected = multi_metric_df.copy()[[fm('wins'), fm('votes')]]
         expected.columns = ['Wins', 'Votes']
 
         self.assertEqual(result, expected.to_csv())
@@ -54,7 +57,7 @@ class CSVWidgetTests(TestCase):
         result = CSV(slicer.metrics.wins) \
             .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp], [])
 
-        expected = cont_dim_df.copy()[[f('wins')]]
+        expected = cont_dim_df.copy()[[fm('wins')]]
         expected.index.names = ['Timestamp']
         expected.columns = ['Wins']
 
@@ -64,7 +67,7 @@ class CSVWidgetTests(TestCase):
         result = CSV(CumSum(slicer.metrics.votes)) \
             .transform(cont_dim_operation_df, slicer, [slicer.dimensions.timestamp], [])
 
-        expected = cont_dim_operation_df.copy()[[f('cumsum(votes)')]]
+        expected = cont_dim_operation_df.copy()[[fm('cumsum(votes)')]]
         expected.index.names = ['Timestamp']
         expected.columns = ['CumSum(Votes)']
 
@@ -74,7 +77,7 @@ class CSVWidgetTests(TestCase):
         result = CSV(slicer.metrics.wins) \
             .transform(cat_dim_df, slicer, [slicer.dimensions.political_party], [])
 
-        expected = cat_dim_df.copy()[[f('wins')]]
+        expected = cat_dim_df.copy()[[fm('wins')]]
         expected.index = pd.Index(['Democrat', 'Independent', 'Republican'], name='Party')
         expected.columns = ['Wins']
 
@@ -85,8 +88,8 @@ class CSVWidgetTests(TestCase):
             .transform(uni_dim_df, slicer, [slicer.dimensions.candidate], [])
 
         expected = uni_dim_df.copy() \
-            .set_index(f('candidate_display'), append=True) \
-            .reset_index(f('candidate'), drop=True)[[f('wins')]]
+            .set_index(fd('candidate_display'), append=True) \
+            .reset_index(fd('candidate'), drop=True)[[fm('wins')]]
         expected.index.names = ['Candidate']
         expected.columns = ['Wins']
 
@@ -99,12 +102,12 @@ class CSVWidgetTests(TestCase):
         candidate.display_definition = None
 
         uni_dim_df_copy = uni_dim_df.copy()
-        del uni_dim_df_copy[f(slicer.dimensions.candidate.display_key)]
+        del uni_dim_df_copy[fd(slicer.dimensions.candidate.display_key)]
 
         result = CSV(slicer.metrics.wins) \
             .transform(uni_dim_df_copy, slicer, [candidate], [])
 
-        expected = uni_dim_df_copy.copy()[[f('wins')]]
+        expected = uni_dim_df_copy.copy()[[fm('wins')]]
         expected.index.names = ['Candidate']
         expected.columns = ['Wins']
 
@@ -115,8 +118,8 @@ class CSVWidgetTests(TestCase):
             .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
 
         expected = cont_uni_dim_df.copy() \
-            .set_index(f('state_display'), append=True) \
-            .reset_index(f('state'), drop=False)[[f('wins')]]
+            .set_index(fd('state_display'), append=True) \
+            .reset_index(fd('state'), drop=False)[[fm('wins')]]
         expected.index.names = ['Timestamp', 'State']
         expected.columns = ['Wins']
 
@@ -126,7 +129,7 @@ class CSVWidgetTests(TestCase):
         result = CSV(slicer.metrics.wins, pivot=True) \
             .transform(cat_dim_df, slicer, [slicer.dimensions.political_party], [])
 
-        expected = cat_dim_df.copy()[[f('wins')]]
+        expected = cat_dim_df.copy()[[fm('wins')]]
         expected.index = pd.Index(['Democrat', 'Independent', 'Republican'], name='Party')
         expected.columns = ['Wins']
 
@@ -136,7 +139,7 @@ class CSVWidgetTests(TestCase):
         result = CSV(slicer.metrics.wins, pivot=True) \
             .transform(cont_cat_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.political_party], [])
 
-        expected = cont_cat_dim_df.copy()[[f('wins')]]
+        expected = cont_cat_dim_df.copy()[[fm('wins')]]
         expected.index.names = ['Timestamp', 'Party']
         expected.columns = ['Wins']
         expected = expected.unstack(level=[1])
@@ -148,8 +151,8 @@ class CSVWidgetTests(TestCase):
             .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
 
         expected = cont_uni_dim_df.copy() \
-            .set_index(f('state_display'), append=True) \
-            .reset_index(f('state'), drop=True)[[f('votes')]]
+            .set_index(fd('state_display'), append=True) \
+            .reset_index(fd('state'), drop=True)[[fm('votes')]]
         expected.index.names = ['Timestamp', 'State']
         expected.columns = ['Votes']
         expected = expected.unstack(level=[1])
@@ -168,8 +171,8 @@ class CSVWidgetTests(TestCase):
                        ])
 
         expected = cont_uni_dim_ref_df.copy() \
-            .set_index(f('state_display'), append=True) \
-            .reset_index(f('state'), drop=True)[[f('votes'), f('votes_eoe')]]
+            .set_index(fd('state_display'), append=True) \
+            .reset_index(fd('state'), drop=True)[[fm('votes'), fm('votes_eoe')]]
         expected.index.names = ['Timestamp', 'State']
         expected.columns = ['Votes', 'Votes (EoE)']
 

@@ -117,7 +117,19 @@ def groupby_first_level(index):
             if x[1:] not in seen and not seen.add(x[1:])]
 
 
-def format_key(key):
+def format_key(key, prefix=None):
     if key is None:
         return key
+
+    if prefix is not None:
+        return '${}${}'.format(prefix, key)
+
     return '${}'.format(key)
+
+
+def format_dimension_key(key):
+    return format_key(key, 'd')
+
+
+def format_metric_key(key):
+    return format_key(key, 'm')

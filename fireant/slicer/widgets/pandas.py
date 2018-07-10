@@ -1,7 +1,10 @@
 import pandas as pd
 
 from fireant import Metric
-from fireant.utils import format_key
+from fireant.utils import (
+    format_dimension_key,
+    format_metric_key,
+)
 from .base import (
     TransformableWidget,
 )
@@ -38,28 +41,29 @@ class Pandas(TransformableWidget):
             if any([metric.precision is not None,
                     metric.prefix is not None,
                     metric.suffix is not None]):
-                df_key = format_key(metric.key)
+                df_key = format_metric_key(metric.key)
 
                 result[df_key] = result[df_key] \
                     .apply(lambda x: formats.metric_display(x, metric.prefix, metric.suffix, metric.precision))
 
         for dimension in dimensions:
             if dimension.has_display_field:
-                result = result.set_index(format_key(dimension.display_key), append=True)
-                result = result.reset_index(format_key(dimension.key), drop=True)
+                result = result.set_index(format_dimension_key(dimension.display_key), append=True)
+                result = result.reset_index(format_dimension_key(dimension.key), drop=True)
 
             if hasattr(dimension, 'display_values'):
                 self._replace_display_values_in_index(dimension, result)
 
         if isinstance(data_frame.index, pd.MultiIndex):
-            index_levels = [format_key(dimension.display_key)
+            index_levels = [dimension.display_key
                             if dimension.has_display_field
-                            else format_key(dimension.key)
+                            else dimension.key
                             for dimension in dimensions]
 
-            result = result.reorder_levels(index_levels)
+            result = result.reorder_levels([format_dimension_key(level)
+                                            for level in index_levels])
 
-        result = result[[format_key(reference_key(item, reference))
+        result = result[[format_metric_key(reference_key(item, reference))
                          for reference in [None] + references
                          for item in self.items]]
 
@@ -82,7 +86,7 @@ class Pandas(TransformableWidget):
         Replaces the raw values of a (categorical) dimension in the index with their corresponding display values.
         """
         if isinstance(result.index, pd.MultiIndex):
-            df_key = format_key(dimension.key)
+            df_key = format_dimension_key(dimension.key)
             values = [dimension.display_values.get(x, x)
                       for x in result.index.get_level_values(df_key)]
             result.index.set_levels(level=df_key, levels=values)

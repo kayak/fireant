@@ -1,4 +1,8 @@
 import copy
+from typing import (
+    Callable,
+    Iterable,
+)
 
 from pypika import functions as fn
 from pypika.queries import QueryBuilder
@@ -8,16 +12,15 @@ from pypika.terms import (
     NullValue,
     Term,
 )
-from typing import (
-    Callable,
-    Iterable,
-)
 
 from fireant.slicer.references import (
     reference_key,
     reference_term,
 )
-from fireant.utils import format_key
+from fireant.utils import (
+    format_dimension_key,
+    format_metric_key,
+)
 from ..dimensions import Dimension
 from ..intervals import weekly
 
@@ -45,7 +48,7 @@ def make_terms_for_references(references, original_query, ref_query, metrics):
                                     original_query,
                                     ref_query)
 
-        terms += [ref_metric(metric).as_(format_key(reference_key(metric, reference)))
+        terms += [ref_metric(metric).as_(format_metric_key(reference_key(metric, reference)))
                   for metric in metrics]
 
     return terms
@@ -74,7 +77,10 @@ def make_dimension_terms_for_reference_container_query(original_query,
 
     terms = []
     for dimension, ref_dimension_definition in zip(dimensions, ref_dimension_definitions):
-        term = _select_for_reference_container_query(format_key(dimension.key),
+        f_key = format_dimension_key(dimension.key)
+        f_display_key = format_dimension_key(dimension.display_key)
+
+        term = _select_for_reference_container_query(f_key,
                                                      dimension.definition,
                                                      original_query,
                                                      ref_dimension_definition)
@@ -84,9 +90,9 @@ def make_dimension_terms_for_reference_container_query(original_query,
             continue
 
         # Select the display definitions as a field from the ref query
-        ref_display_definition = [definition.table.field(format_key(dimension.display_key))
+        ref_display_definition = [definition.table.field(f_display_key)
                                   for definition in ref_dimension_definition]
-        display_term = _select_for_reference_container_query(format_key(dimension.display_key),
+        display_term = _select_for_reference_container_query(f_display_key,
                                                              dimension.display_definition,
                                                              original_query,
                                                              ref_display_definition)
@@ -96,7 +102,9 @@ def make_dimension_terms_for_reference_container_query(original_query,
 
 
 def make_metric_terms_for_reference_container_query(original_query, metrics):
-    return [_select_for_reference_container_query(format_key(metric.key), metric.definition, original_query)
+    return [_select_for_reference_container_query(format_metric_key(metric.key),
+                                                  metric.definition,
+                                                  original_query)
             for metric in metrics]
 
 
@@ -181,13 +189,15 @@ def make_reference_join_criterion(ref_dimension: Dimension,
     join_criterion = None
 
     for dimension in all_dimensions:
-        ref_query_field = ref_query.field(format_key(dimension.key))
+        f_key = format_dimension_key(dimension.key)
+
+        ref_query_field = ref_query.field(f_key)
 
         # If this is the reference dimension, it needs to be offset by the reference interval
         if ref_dimension == dimension:
             ref_query_field = offset_func(ref_query_field)
 
-        next_criterion = original_query.field(format_key(dimension.key)) == ref_query_field
+        next_criterion = original_query.field(f_key) == ref_query_field
 
         join_criterion = next_criterion \
             if join_criterion is None \

@@ -1,14 +1,16 @@
-import pandas as pd
-from pypika import (
-    Order,
-)
 from typing import (
     Dict,
     Iterable,
 )
 
+import pandas as pd
+from pypika import (
+    Order,
+)
+
 from fireant.utils import (
-    format_key,
+    format_dimension_key,
+    format_metric_key,
     immutable,
 )
 from .database import fetch_data
@@ -25,6 +27,7 @@ from .makers import (
     make_slicer_query_with_references_and_totals,
 )
 from ..base import SlicerElement
+from ..dimensions import Dimension
 
 
 class QueryBuilder(object):
@@ -128,6 +131,10 @@ class SlicerQueryBuilder(QueryBuilder):
             The directionality to order by, either ascending or descending.
         :return:
         """
+        format_key = format_dimension_key \
+            if isinstance(element, Dimension) \
+            else format_metric_key
+
         self._orders += [(element.definition.as_(format_key(element.key)), orientation)]
 
     @property
@@ -183,7 +190,7 @@ class SlicerQueryBuilder(QueryBuilder):
         # Apply operations
         operations = find_operations_for_widgets(self._widgets)
         for operation in operations:
-            df_key = format_key(operation.key)
+            df_key = format_metric_key(operation.key)
             data_frame[df_key] = operation.apply(data_frame)
 
         # Apply transformations
@@ -250,9 +257,9 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
             query = query.hint(hint)
 
         dimension = self._dimensions[0]
-        definition = dimension.display_definition.as_(format_key(dimension.display_key)) \
+        definition = dimension.display_definition.as_(format_dimension_key(dimension.display_key)) \
             if dimension.has_display_field \
-            else dimension.definition.as_(format_key(dimension.key))
+            else dimension.definition.as_(format_dimension_key(dimension.key))
 
         if force_include:
             include = self.slicer.database.to_char(dimension.definition) \
@@ -268,7 +275,7 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
                           str(query),
                           dimensions=self._dimensions)
 
-        df_key = format_key(getattr(dimension, 'display_key', None))
+        df_key = format_dimension_key(getattr(dimension, 'display_key', None))
         if df_key is not None:
             return data[df_key]
 
