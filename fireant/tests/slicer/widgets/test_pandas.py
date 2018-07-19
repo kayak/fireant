@@ -1,5 +1,7 @@
+import copy
 from unittest import TestCase
 
+import numpy as np
 import pandas as pd
 import pandas.testing
 
@@ -195,5 +197,65 @@ class DataTablesTransformerTests(TestCase):
                                  for x in expected[fm('votes')] / 3]
         expected.index.names = ['Timestamp']
         expected.columns = ['Votes']
+
+        pandas.testing.assert_frame_equal(result, expected)
+
+    def test_nan_in_metrics(self):
+        cat_dim_df_with_nan = cat_dim_df.copy()
+        cat_dim_df_with_nan['$m$wins'] = cat_dim_df_with_nan['$m$wins'].apply(float)
+        cat_dim_df_with_nan.iloc[2, 1] = np.nan
+
+        result = Pandas(slicer.metrics.wins) \
+            .transform(cat_dim_df_with_nan, slicer, [slicer.dimensions.political_party], [])
+
+        expected = cat_dim_df_with_nan.copy()[[fm('wins')]]
+        expected.index = pd.Index(['Democrat', 'Independent', 'Republican'], name='Party')
+        expected.columns = ['Wins']
+
+        pandas.testing.assert_frame_equal(result, expected)
+
+    def test_inf_in_metrics(self):
+        cat_dim_df_with_nan = cat_dim_df.copy()
+        cat_dim_df_with_nan['$m$wins'] = cat_dim_df_with_nan['$m$wins'].apply(float)
+        cat_dim_df_with_nan.iloc[2, 1] = np.inf
+
+        result = Pandas(slicer.metrics.wins) \
+            .transform(cat_dim_df_with_nan, slicer, [slicer.dimensions.political_party], [])
+
+        expected = cat_dim_df_with_nan.copy()[[fm('wins')]]
+        expected.index = pd.Index(['Democrat', 'Independent', 'Republican'], name='Party')
+        expected.columns = ['Wins']
+
+        pandas.testing.assert_frame_equal(result, expected)
+
+    def test_neginf_in_metrics(self):
+        cat_dim_df_with_nan = cat_dim_df.copy()
+        cat_dim_df_with_nan['$m$wins'] = cat_dim_df_with_nan['$m$wins'].apply(float)
+        cat_dim_df_with_nan.iloc[2, 1] = np.inf
+
+        result = Pandas(slicer.metrics.wins) \
+            .transform(cat_dim_df_with_nan, slicer, [slicer.dimensions.political_party], [])
+
+        expected = cat_dim_df_with_nan.copy()[[fm('wins')]]
+        expected.index = pd.Index(['Democrat', 'Independent', 'Republican'], name='Party')
+        expected.columns = ['Wins']
+
+        pandas.testing.assert_frame_equal(result, expected)
+
+    def test_inf_in_metrics_with_precision_zero(self):
+        cat_dim_df_with_nan = cat_dim_df.copy()
+        cat_dim_df_with_nan['$m$wins'] = cat_dim_df_with_nan['$m$wins'].apply(float)
+        cat_dim_df_with_nan.iloc[2, 1] = np.inf
+
+        slicer_modified = copy.deepcopy(slicer)
+        slicer_modified.metrics.wins.precision = 0
+
+        result = Pandas(slicer_modified.metrics.wins) \
+            .transform(cat_dim_df_with_nan, slicer_modified, [slicer_modified.dimensions.political_party], [])
+
+        expected = cat_dim_df_with_nan.copy()[[fm('wins')]]
+        expected.index = pd.Index(['Democrat', 'Independent', 'Republican'], name='Party')
+        expected['$m$wins'] = ['6', '0', '']
+        expected.columns = ['Wins']
 
         pandas.testing.assert_frame_equal(result, expected)

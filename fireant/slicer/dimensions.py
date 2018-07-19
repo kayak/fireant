@@ -316,11 +316,21 @@ class PatternDimension(PatternFilterableMixin, Dimension):
         :return:
             A copy of the dimension with the interval set.
         """
+        self.groups = groups
+
         cases = Case()
         for group in groups:
             cases = cases.when(self.field.like(group), group)
 
         self.definition = cases.else_(self._DEFAULT)
+
+    def __repr__(self):
+        dimension = super().__repr__()
+
+        if self.groups is not None:
+            return '{}({})'.format(dimension, self.groups)
+
+        return dimension
 
 
 class TotalsDimension(Dimension):
