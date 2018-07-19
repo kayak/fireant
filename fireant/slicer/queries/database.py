@@ -66,6 +66,10 @@ def clean_and_apply_index(data_frame: pd.DataFrame, dimensions: Iterable[Dimensi
 
         level = format_dimension_key(dimension.key)
         data_frame[level] = fill_nans_in_level(data_frame, dimension, dimension_keys[:i]) \
+            .apply(
+              # Handles an annoying case of pandas in which the ENTIRE data frame gets converted from int to float if
+              # the are NaNs, even if there are no NaNs in the column :/
+              lambda x: int(x) if isinstance(x, float) and float.is_integer(x) else x) \
             .apply(lambda x: str(x) if not pd.isnull(x) else None)
 
     # Set index on dimension columns
