@@ -111,6 +111,9 @@ def metric_display(value, prefix=None, suffix=None, precision=None):
     :return:
         A formatted string containing the display value for the metric.
     """
+    if pd.isnull(value) or value in {np.inf, -np.inf}:
+        return ''
+
     if isinstance(value, float):
         if precision is not None:
             float_format = '%d' if precision == 0 else '%.{}f'.format(precision)
@@ -128,9 +131,6 @@ def metric_display(value, prefix=None, suffix=None, precision=None):
     if isinstance(value, int):
         float_format = '%d'
         value = locale.format(float_format, value, grouping=True)
-
-    if value is INFINITY:
-        return "∞"
 
     return '{prefix}{value}{suffix}'.format(
           prefix=prefix or '',
