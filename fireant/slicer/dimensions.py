@@ -12,7 +12,7 @@ from .filters import (
     BooleanFilter,
     ContainsFilter,
     ExcludesFilter,
-    NotLikeFilter,
+    AntiPatternFilter,
     PatternFilter,
     RangeFilter,
 )
@@ -101,7 +101,7 @@ class PatternFilterableMixin:
             A slicer query filter used to filter a slicer query to results where this dimension's display definition
             matches the pattern.
         """
-        return NotLikeFilter(getattr(self, self.pattern_definition_attribute), pattern, *patterns)
+        return AntiPatternFilter(getattr(self, self.pattern_definition_attribute), pattern, *patterns)
 
 
 class CategoricalDimension(PatternFilterableMixin, Dimension):

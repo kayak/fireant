@@ -60,16 +60,19 @@ class RangeFilter(DimensionFilter):
 
 
 class PatternFilter(DimensionFilter):
-    def _apply(self, dimension_definition, pattern):
-        return dimension_definition.like(pattern)
+    def _apply(self, dimension_definition, patterns):
+        definition = dimension_definition.like(patterns[0])
+
+        for pattern in patterns[1:]:
+            definition |= dimension_definition.like(pattern)
+
+        return definition
 
     def __init__(self, dimension_definition, pattern, *patterns):
-        definition = self._apply(dimension_definition, pattern)
-        for extra_pattern in patterns:
-            definition |= self._apply(dimension_definition, extra_pattern)
+        definition = self._apply(dimension_definition, [pattern, *patterns])
         super(PatternFilter, self).__init__(definition)
 
 
-class NotLikeFilter(PatternFilter):
+class AntiPatternFilter(PatternFilter):
     def _apply(self, dimension_definition, pattern):
-        return dimension_definition.not_like(pattern)
+        return super(AntiPatternFilter, self)._apply(dimension_definition, pattern).negate()
