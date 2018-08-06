@@ -1,12 +1,12 @@
 from collections import (
     OrderedDict,
 )
-from datetime import (
-    datetime,
-)
 from unittest.mock import Mock
 
 import pandas as pd
+from datetime import (
+    datetime,
+)
 from pypika import (
     JoinType,
     Table,
@@ -108,7 +108,9 @@ slicer = Slicer(
                  definition=fn.Count(voters_table.id)),
           Metric('turnout',
                  label='Turnout',
-                 definition=fn.Sum(politicians_table.votes) / fn.Count(voters_table.id)),
+                 definition=fn.Sum(politicians_table.votes) / fn.Count(voters_table.id),
+                 suffix='%',
+                 precision=2),
       ),
 )
 
@@ -282,6 +284,10 @@ operation_key = fm('cumsum(votes)')
 cont_dim_operation_df[operation_key] = cont_dim_df[fm('votes')].cumsum()
 
 
+def split(list, i):
+    return list[:i], list[i:]
+
+
 def ref(data_frame, columns):
     ref_cols = {column: '%s_eoe' % column
                 for column in columns}
@@ -291,9 +297,9 @@ def ref(data_frame, columns):
         .rename(columns=ref_cols)[list(ref_cols.values())]
 
     return (cont_uni_dim_df
-            .copy()
-            .join(ref_df)
-            .iloc[2:])
+                .copy()
+                .join(ref_df)
+                .iloc[2:])
 
 
 def ref_delta(ref_data_frame, columns):

@@ -1,10 +1,14 @@
 import time
+from functools import partial
 from typing import Iterable
 
 import pandas as pd
 
 from fireant.database.base import Database
-from fireant.formats import NULL_VALUE
+from fireant.formats import (
+    NULL_VALUE,
+    TOTALS_VALUE,
+)
 from fireant.utils import format_dimension_key
 from .logger import (
     query_logger,
@@ -65,7 +69,7 @@ def clean_and_apply_index(data_frame: pd.DataFrame, dimensions: Iterable[Dimensi
             continue
 
         level = format_dimension_key(dimension.key)
-        data_frame[level] = fill_nans_in_level(data_frame, dimension, dimension_keys[:i]) \
+        data_frame[level] = fill_nans_in_level(data_frame, dimensions[:i + 1]) \
             .apply(
               # Handles an annoying case of pandas in which the ENTIRE data frame gets converted from int to float if
               # the are NaNs, even if there are no NaNs in the column :/
@@ -76,7 +80,7 @@ def clean_and_apply_index(data_frame: pd.DataFrame, dimensions: Iterable[Dimensi
     return data_frame.set_index(dimension_keys)
 
 
-def fill_nans_in_level(data_frame, dimension, preceding_dimension_keys):
+def fill_nans_in_level(data_frame, dimensions):
     """
     In case there are NaN values representing both totals (from ROLLUP) and database nulls, we need to replace the real
     nulls with an empty string in order to distinguish between them.  We choose to replace the actual database nulls
@@ -85,33 +89,39 @@ def fill_nans_in_level(data_frame, dimension, preceding_dimension_keys):
 
     :param data_frame:
         The data_frame we are replacing values in.
-    :param dimension:
-        The level of the data frame to replace nulls in. This function should be called once per non-conitnuous
-        dimension, in the order of the dimensions.
-    :param preceding_dimension_keys:
+    :param dimensions:
+        A list of dimensions with the last item in the list being the dimension to fill nans for. This function requires
+        the dimension being processed as well as the preceding dimensions since a roll up in a higher level dimension
+        results in nulls for lower level dimension.
     :return:
         The level in the data_frame with the nulls replaced with empty string
     """
-    level = format_dimension_key(dimension.key)
+    level = format_dimension_key(dimensions[-1].key)
 
-    if dimension.is_rollup:
-        if preceding_dimension_keys:
+    number_rollup_dimensions = sum(dimension.is_rollup for dimension in dimensions)
+    if 0 < number_rollup_dimensions:
+        fill_nan_for_nulls = partial(_fill_nan_for_nulls, offset=number_rollup_dimensions)
+
+        if 1 < len(dimensions):
+            preceding_dimension_keys = [format_dimension_key(d.key)
+                                        for d in dimensions[:-1]]
+
             return (data_frame
                     .groupby(preceding_dimension_keys)[level]
-                    .apply(_fill_nan_for_nulls))
+                    .apply(fill_nan_for_nulls))
 
-        return _fill_nan_for_nulls(data_frame[level])
+        return fill_nan_for_nulls(data_frame[level])
 
     return data_frame[level].fillna(NULL_VALUE)
 
 
-def _fill_nan_for_nulls(df):
+def _fill_nan_for_nulls(df, offset=1):
     """
     Fills the first NaN with a literal string "null" if there are two NaN values, otherwise nothing is filled.
 
     :param df:
     :return:
     """
-    if 1 < pd.isnull(df).sum():
-        return df.fillna(NULL_VALUE, limit=1)
-    return df
+    if offset < pd.isnull(df).sum():
+        return df.fillna(NULL_VALUE, limit=1).fillna(TOTALS_VALUE)
+    return df.fillna(TOTALS_VALUE)

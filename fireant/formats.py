@@ -10,6 +10,8 @@ import pandas as pd
 
 INFINITY = "Infinity"
 NULL_VALUE = 'null'
+TOTALS_VALUE = 'totals'
+RAW_VALUE = 'raw'
 
 NO_TIME = time(0)
 

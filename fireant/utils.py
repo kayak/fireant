@@ -13,6 +13,34 @@ def deep_get(d, keys, default=None):
         d_level = d_level[key]
     return d_level
 
+
+def setdeepattr(d, key, value):
+    if not isinstance(key, (list, tuple)):
+        key = (key,)
+
+    top, *rest = key
+
+    if rest:
+        if top not in d:
+            d[top] = {}
+
+        setdeepattr(d[top], rest, value)
+
+    else:
+        d[top] = value
+
+
+def getdeepattr(d, keys, default_value=None):
+    d_level = d
+
+    for key in keys:
+        if key not in d_level:
+            return default_value
+
+        d_level = d_level[key]
+
+    return d_level
+
 def flatten(items):
     return [item for level in items for item in wrap_list(level)]
 
@@ -21,6 +49,12 @@ def slice_first(item):
     if isinstance(item, (tuple, list)):
         return item[0]
     return item
+
+
+a = 'a' \
+    if True \
+    else 'b' if True \
+    else 'c'
 
 
 def filter_duplicates(iterable):
