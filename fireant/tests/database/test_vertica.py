@@ -1,16 +1,19 @@
 from unittest import TestCase
+from unittest.mock import (
+    Mock,
+    patch,
+)
 
-from unittest.mock import patch, Mock
+from pypika import Field
 
 from fireant import (
-    hourly,
-    daily,
-    weekly,
-    quarterly,
     annually,
+    daily,
+    hourly,
+    quarterly,
+    weekly,
 )
 from fireant.database import VerticaDatabase
-from pypika import Field
 
 
 class TestVertica(TestCase):
@@ -36,8 +39,9 @@ class TestVertica(TestCase):
 
         self.assertEqual('OK', result)
         mock_vertica.connect.assert_called_once_with(
-            host='test_host', port=1234, database='test_database',
-            user='test_user', password='password', read_timeout=None,
+              host='test_host', port=1234, database='test_database',
+              user='test_user', password='password',
+              read_timeout=None, unicode_error='replace'
         )
 
     def test_trunc_hour(self):

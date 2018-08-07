@@ -51,7 +51,8 @@ class VerticaDatabase(Database):
 
         return vertica_python.connect(host=self.host, port=self.port, database=self.database,
                                       user=self.user, password=self.password,
-                                      read_timeout=self.read_timeout)
+                                      read_timeout=self.read_timeout,
+                                      unicode_error='replace')
 
     def fetch(self, query):
         return super(VerticaDatabase, self).fetch(query)
