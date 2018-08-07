@@ -69,7 +69,7 @@ class PatternFilter(DimensionFilter):
         return definition
 
     def __init__(self, dimension_definition, pattern, *patterns):
-        definition = self._apply(dimension_definition, [pattern, *patterns])
+        definition = self._apply(dimension_definition, (pattern,) + patterns)
         super(PatternFilter, self).__init__(definition)
 
 

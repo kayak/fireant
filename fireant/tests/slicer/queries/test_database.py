@@ -141,11 +141,11 @@ class FetchDataCleanIndexTests(TestCase):
 
         self.assertListEqual(result.index.tolist(), ['d', 'i', 'r', 'null'])
 
-    def test_convert_cat_totals_converted_to_none(self):
+    def test_convert_cat_totals_converted_to_totals(self):
         result = clean_and_apply_index(cat_dim_nans_df.reset_index(),
                                        [slicer.dimensions.political_party.rollup()])
 
-        self.assertListEqual(result.index.tolist(), ['d', 'i', 'r', None])
+        self.assertListEqual(result.index.tolist(), ['d', 'i', 'r', 'totals'])
 
     def test_convert_numeric_values_to_string(self):
         result = clean_and_apply_index(uni_dim_df.reset_index(), [slicer.dimensions.candidate])
@@ -167,13 +167,13 @@ class FetchDataCleanIndexTests(TestCase):
         result = clean_and_apply_index(uni_dim_nans_df.reset_index(),
                                        [slicer.dimensions.candidate.rollup()])
 
-        self.assertListEqual(result.index.tolist(), [str(x + 1) for x in range(11)] + [None])
+        self.assertListEqual(result.index.tolist(), [str(x + 1) for x in range(11)] + ['totals'])
 
     def test_set_index_for_multiindex_with_nans_and_totals(self):
         result = clean_and_apply_index(cont_uni_dim_nans_totals_df.reset_index(),
                                        [slicer.dimensions.timestamp, slicer.dimensions.state.rollup()])
 
-        self.assertListEqual(result.index.get_level_values(1).unique().tolist(), ['2', '1', 'null', np.nan])
+        self.assertListEqual(result.index.get_level_values(1).unique().tolist(), ['2', '1', 'null', 'totals'])
 
 
 class FetchDimensionOptionsTests(TestCase):

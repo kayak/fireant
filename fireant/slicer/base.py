@@ -19,7 +19,7 @@ class SlicerElement(object):
             used for querying labels.
         """
         self.key = key
-        self.label = label or key
+        self.label = label if label is not None else key
         self.definition = definition
 
         self.display_definition = display_definition

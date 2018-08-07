@@ -26,7 +26,7 @@ from fireant.utils import (
 )
 
 
-class DataTablesTransformerTests(TestCase):
+class PandasTransformerTests(TestCase):
     maxDiff = None
 
     def test_single_metric(self):
@@ -35,8 +35,9 @@ class DataTablesTransformerTests(TestCase):
 
         expected = single_metric_df.copy()[[fm('votes')]]
         expected.columns = ['Votes']
+        expected.columns.name = 'Metrics'
 
-        pandas.testing.assert_frame_equal(result, expected)
+        pandas.testing.assert_frame_equal(expected, result)
 
     def test_multiple_metrics(self):
         result = Pandas(slicer.metrics.votes, slicer.metrics.wins) \
@@ -44,8 +45,9 @@ class DataTablesTransformerTests(TestCase):
 
         expected = multi_metric_df.copy()[[fm('votes'), fm('wins')]]
         expected.columns = ['Votes', 'Wins']
+        expected.columns.name = 'Metrics'
 
-        pandas.testing.assert_frame_equal(result, expected)
+        pandas.testing.assert_frame_equal(expected, result)
 
     def test_multiple_metrics_reversed(self):
         result = Pandas(slicer.metrics.wins, slicer.metrics.votes) \
@@ -53,8 +55,9 @@ class DataTablesTransformerTests(TestCase):
 
         expected = multi_metric_df.copy()[[fm('wins'), fm('votes')]]
         expected.columns = ['Wins', 'Votes']
+        expected.columns.name = 'Metrics'
 
-        pandas.testing.assert_frame_equal(result, expected)
+        pandas.testing.assert_frame_equal(expected, result)
 
     def test_time_series_dim(self):
         result = Pandas(slicer.metrics.wins) \
@@ -63,8 +66,9 @@ class DataTablesTransformerTests(TestCase):
         expected = cont_dim_df.copy()[[fm('wins')]]
         expected.index.names = ['Timestamp']
         expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
 
-        pandas.testing.assert_frame_equal(result, expected)
+        pandas.testing.assert_frame_equal(expected, result)
 
     def test_time_series_dim_with_operation(self):
         result = Pandas(CumSum(slicer.metrics.votes)) \
@@ -73,8 +77,9 @@ class DataTablesTransformerTests(TestCase):
         expected = cont_dim_operation_df.copy()[[fm('cumsum(votes)')]]
         expected.index.names = ['Timestamp']
         expected.columns = ['CumSum(Votes)']
+        expected.columns.name = 'Metrics'
 
-        pandas.testing.assert_frame_equal(result, expected)
+        pandas.testing.assert_frame_equal(expected, result)
 
     def test_cat_dim(self):
         result = Pandas(slicer.metrics.wins) \
@@ -83,8 +88,9 @@ class DataTablesTransformerTests(TestCase):
         expected = cat_dim_df.copy()[[fm('wins')]]
         expected.index = pd.Index(['Democrat', 'Independent', 'Republican'], name='Party')
         expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
 
-        pandas.testing.assert_frame_equal(result, expected)
+        pandas.testing.assert_frame_equal(expected, result)
 
     def test_uni_dim(self):
         result = Pandas(slicer.metrics.wins) \
@@ -96,8 +102,9 @@ class DataTablesTransformerTests(TestCase):
             [[fm('wins')]]
         expected.index.names = ['Candidate']
         expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
 
-        pandas.testing.assert_frame_equal(result, expected)
+        pandas.testing.assert_frame_equal(expected, result)
 
     def test_uni_dim_no_display_definition(self):
         import copy
@@ -114,8 +121,9 @@ class DataTablesTransformerTests(TestCase):
         expected = uni_dim_df_copy.copy()[[fm('wins')]]
         expected.index.names = ['Candidate']
         expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
 
-        pandas.testing.assert_frame_equal(result, expected)
+        pandas.testing.assert_frame_equal(expected, result)
 
     def test_multi_dims_time_series_and_uni(self):
         result = Pandas(slicer.metrics.wins) \
@@ -126,42 +134,59 @@ class DataTablesTransformerTests(TestCase):
             .reset_index(fd('state'), drop=False)[[fm('wins')]]
         expected.index.names = ['Timestamp', 'State']
         expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
 
-        pandas.testing.assert_frame_equal(result, expected)
+        pandas.testing.assert_frame_equal(expected, result)
 
-    def test_pivoted_single_dimension_no_effect(self):
-        result = Pandas(slicer.metrics.wins, pivot=True) \
+    def test_transpose_single_dimension(self):
+        result = Pandas(slicer.metrics.wins, transpose=True) \
             .transform(cat_dim_df, slicer, [slicer.dimensions.political_party], [])
 
         expected = cat_dim_df.copy()[[fm('wins')]]
         expected.index = pd.Index(['Democrat', 'Independent', 'Republican'], name='Party')
         expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
+        expected = expected.transpose()
 
-        pandas.testing.assert_frame_equal(result, expected)
+        pandas.testing.assert_frame_equal(expected, result)
+
+    def test_pivoted_single_dimension_transposes_data_frame(self):
+        result = Pandas(slicer.metrics.wins, pivot=[slicer.dimensions.political_party]) \
+            .transform(cat_dim_df, slicer, [slicer.dimensions.political_party], [])
+
+        expected = cat_dim_df.copy()[[fm('wins')]]
+        expected.index = pd.Index(['Democrat', 'Independent', 'Republican'], name='Party')
+        expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
+        expected = expected.transpose()
+
+        pandas.testing.assert_frame_equal(expected, result)
 
     def test_pivoted_multi_dims_time_series_and_cat(self):
-        result = Pandas(slicer.metrics.wins, pivot=True) \
+        result = Pandas(slicer.metrics.wins, pivot=[slicer.dimensions.political_party]) \
             .transform(cont_cat_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.political_party], [])
 
         expected = cont_cat_dim_df.copy()[[fm('wins')]]
-        expected.index.names = ['Timestamp', 'Party']
-        expected.columns = ['Wins']
-        expected = expected.unstack(level=[1])
+        expected = expected.unstack(level=[1]).fillna(value='')
+        expected.index.names = ['Timestamp']
+        expected.columns = ['Democrat', 'Independent', 'Republican']
+        expected.columns.names = ['Party']
 
-        pandas.testing.assert_frame_equal(result, expected)
+        pandas.testing.assert_frame_equal(expected, result)
 
     def test_pivoted_multi_dims_time_series_and_uni(self):
-        result = Pandas(slicer.metrics.votes, pivot=True) \
+        result = Pandas(slicer.metrics.votes, pivot=[slicer.dimensions.state]) \
             .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
 
         expected = cont_uni_dim_df.copy() \
             .set_index(fd('state_display'), append=True) \
             .reset_index(fd('state'), drop=True)[[fm('votes')]]
-        expected.index.names = ['Timestamp', 'State']
-        expected.columns = ['Votes']
         expected = expected.unstack(level=[1])
+        expected.index.names = ['Timestamp']
+        expected.columns = ['California', 'Texas']
+        expected.columns.names = ['State']
 
-        pandas.testing.assert_frame_equal(result, expected)
+        pandas.testing.assert_frame_equal(expected, result)
 
     def test_time_series_ref(self):
         result = Pandas(slicer.metrics.votes) \
@@ -178,8 +203,9 @@ class DataTablesTransformerTests(TestCase):
             .reset_index(fd('state'), drop=True)[[fm('votes'), fm('votes_eoe')]]
         expected.index.names = ['Timestamp', 'State']
         expected.columns = ['Votes', 'Votes (EoE)']
+        expected.columns.name = 'Metrics'
 
-        pandas.testing.assert_frame_equal(result, expected)
+        pandas.testing.assert_frame_equal(expected, result)
 
     def test_metric_format(self):
         import copy
@@ -197,8 +223,9 @@ class DataTablesTransformerTests(TestCase):
                                  for x in expected[fm('votes')] / 3]
         expected.index.names = ['Timestamp']
         expected.columns = ['Votes']
+        expected.columns.name = 'Metrics'
 
-        pandas.testing.assert_frame_equal(result, expected)
+        pandas.testing.assert_frame_equal(expected, result)
 
     def test_nan_in_metrics(self):
         cat_dim_df_with_nan = cat_dim_df.copy()
@@ -211,8 +238,9 @@ class DataTablesTransformerTests(TestCase):
         expected = cat_dim_df_with_nan.copy()[[fm('wins')]]
         expected.index = pd.Index(['Democrat', 'Independent', 'Republican'], name='Party')
         expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
 
-        pandas.testing.assert_frame_equal(result, expected)
+        pandas.testing.assert_frame_equal(expected, result)
 
     def test_inf_in_metrics(self):
         cat_dim_df_with_nan = cat_dim_df.copy()
@@ -225,8 +253,9 @@ class DataTablesTransformerTests(TestCase):
         expected = cat_dim_df_with_nan.copy()[[fm('wins')]]
         expected.index = pd.Index(['Democrat', 'Independent', 'Republican'], name='Party')
         expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
 
-        pandas.testing.assert_frame_equal(result, expected)
+        pandas.testing.assert_frame_equal(expected, result)
 
     def test_neginf_in_metrics(self):
         cat_dim_df_with_nan = cat_dim_df.copy()
@@ -239,8 +268,9 @@ class DataTablesTransformerTests(TestCase):
         expected = cat_dim_df_with_nan.copy()[[fm('wins')]]
         expected.index = pd.Index(['Democrat', 'Independent', 'Republican'], name='Party')
         expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
 
-        pandas.testing.assert_frame_equal(result, expected)
+        pandas.testing.assert_frame_equal(expected, result)
 
     def test_inf_in_metrics_with_precision_zero(self):
         cat_dim_df_with_nan = cat_dim_df.copy()
@@ -257,5 +287,6 @@ class DataTablesTransformerTests(TestCase):
         expected.index = pd.Index(['Democrat', 'Independent', 'Republican'], name='Party')
         expected['$m$wins'] = ['6', '0', '']
         expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
 
-        pandas.testing.assert_frame_equal(result, expected)
+        pandas.testing.assert_frame_equal(expected, result)

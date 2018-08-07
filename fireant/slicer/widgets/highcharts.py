@@ -1,4 +1,6 @@
 import itertools
+
+import pandas as pd
 from datetime import (
     datetime,
 )
@@ -6,8 +8,6 @@ from typing import (
     Iterable,
     Union,
 )
-
-import pandas as pd
 
 from fireant import (
     DatetimeDimension,
@@ -261,9 +261,9 @@ class HighCharts(TransformableWidget):
 
         categories = ["All"] \
             if isinstance(first_level, pd.RangeIndex) \
-            else [utils.deep_get(dimension_display_values,
-                                 [first_level.name, dimension_value],
-                                 dimension_value or 'Totals')
+            else [utils.getdeepattr(dimension_display_values,
+                                    (first_level.name, dimension_value),
+                                    dimension_value or 'Totals')
                   for dimension_value in first_level]
 
         return {
