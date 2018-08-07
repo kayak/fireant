@@ -5,4 +5,4 @@ from .slicer import *
 # noinspection PyUnresolvedReferences
 from .slicer.widgets import *
 
-__version__ = '1.0.0.dev42'
+__version__ = '1.0.0.dev43'
