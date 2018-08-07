@@ -177,31 +177,45 @@ class ReactTable(Pandas):
         return dimension_display_values
 
     @staticmethod
-    def format_data_frame(df, dimensions):
+    def format_data_frame(data_frame, dimensions):
         """
         This function prepares the raw data frame for transformation by formatting dates in the index and removing any
         remaining NaN/NaT values. It also names the column as metrics so that it can be treated like a dimension level.
 
-        :param df:
+        :param data_frame:
+            The result set data frame
         :param dimensions:
         :return:
         """
         for i, dimension in enumerate(dimensions):
             if isinstance(dimension, DatetimeDimension):
                 date_format = DATE_FORMATS.get(dimension.interval, DATE_FORMATS[daily])
-                df.index = map_index_level(df.index, i, lambda dt: dt.strftime(date_format))
+                data_frame.index = map_index_level(data_frame.index, i, lambda dt: dt.strftime(date_format))
 
-        df.index = fillna_index(df.index, TOTALS_VALUE)
-        df.columns.name = metrics_dimension_key
+        data_frame.index = fillna_index(data_frame.index, TOTALS_VALUE)
+        data_frame.columns.name = metrics_dimension_key
 
     @staticmethod
     def transform_dimension_column_headers(data_frame, dimensions):
         """
-        Convert the unpivoted dimensions into ReactTable column header definitions.
+        Convert the un-pivoted dimensions into ReactTable column header definitions.
 
         :param data_frame:
+            The result set data frame
         :param dimensions:
+            A list of dimensions in the data frame that are part of the index
         :return:
+            A list of column header definitions with the following structure.
+
+            ```
+            columns = [{
+              Header: 'Column A',
+              accessor: 'a',
+            }, {
+              Header: 'Column B',
+              accessor: 'b',
+            }]
+            ```
         """
         dimension_map = {format_dimension_key(d.key): d
                          for d in dimensions + [metrics]}
@@ -227,9 +241,31 @@ class ReactTable(Pandas):
         result in multiple rows of headers.
 
         :param data_frame:
+            The result set data frame
         :param item_map:
+            A map to find metrics/operations based on their keys found in the data frame.
         :param dimension_display_values:
+            A map for finding display values for dimensions based on their key and value.
         :return:
+            A list of column header definitions with the following structure.
+
+            ```
+            columns = [{
+              Header: 'Column A',
+              columns: [{
+                Header: 'SubColumn A.0',
+                accessor: 'a.0',
+              }, {
+                Header: 'SubColumn A.1',
+                accessor: 'a.1',
+              }]
+            }, {
+              Header: 'Column B',
+              columns: [
+                ...
+              ]
+            }]
+            ```
         """
 
         def get_header(column_value, f_dimension_key, is_totals):
@@ -237,28 +273,47 @@ class ReactTable(Pandas):
                 item = item_map[column_value]
                 return getattr(item, 'label', item.key)
 
-            else:
-                return getdeepattr(dimension_display_values, (f_dimension_key, column_value), column_value)
+            return getdeepattr(dimension_display_values, (f_dimension_key, column_value), column_value)
 
-        def _make_columns(df, previous_levels=()):
-            f_dimension_key = df.index.names[0]
-            groups = df.groupby(level=0) \
-                if isinstance(df.index, pd.MultiIndex) else \
-                [(level, None) for level in df.index]
+        def _make_columns(columns_frame, previous_levels=()):
+            """
+            This function recursively creates the individual column definitions for React Table with the above tree
+            structure depending on how many index levels there are in the columns.
+
+            :param columns_frame:
+                A data frame representing the columns of the result set data frame.
+            :param previous_levels:
+                A tuple containing the higher level index level values used for building the data accessor path
+            """
+            f_dimension_key = columns_frame.index.names[0]
+
+            # Group the columns if they are multi-index so we can get the proper sub-column values. This will yield
+            # one group per dimension value with the group data frame containing only the relevant sub-columns
+            groups = columns_frame.groupby(level=0) \
+                if isinstance(columns_frame.index, pd.MultiIndex) else \
+                [(level, None) for level in columns_frame.index]
 
             columns = []
             for column_value, group in groups:
                 is_totals = TOTALS_VALUE == column_value
 
+                # All column definitions have a header
                 column = {'Header': get_header(column_value, f_dimension_key, is_totals)}
 
                 levels = previous_levels + (column_value,)
                 if group is not None:
+                    # If there is a group, then drop this index level from the group data frame and recurse to build
+                    # sub column definitions
                     next_level_df = group.reset_index(level=0, drop=True)
                     column['columns'] = _make_columns(next_level_df, levels)
 
                 else:
+                    # If there is no group, then this is a leaf, or a column header on the bottom row of the table
+                    # head. These are effectively the actual columns in the table. All leaf column header definitions
+                    # require an accessor for how to acccess data the for that column
                     if hasattr(data_frame, 'name'):
+                        # If the metrics column index level was dropped (due to there being a single metric), then the
+                        # index level name will be set as the data frame's name.
                         levels += (data_frame.name,)
                     column['accessor'] = '.'.join(levels)
 
@@ -275,12 +330,15 @@ class ReactTable(Pandas):
     @staticmethod
     def transform_data(data_frame, item_map, dimension_display_values):
         """
-        WRITEME
+        Builds a list of dicts containing the data for ReactTable. This aligns with the accessors set by
+        #transform_dimension_column_headers and #transform_metric_column_headers
 
         :param data_frame:
+            The result set data frame
         :param item_map:
+            A map to find metrics/operations based on their keys found in the data frame.
         :param dimension_display_values:
-        :return:
+            A map for finding display values for dimensions based on their key and value.
         """
         result = []
 
@@ -288,25 +346,35 @@ class ReactTable(Pandas):
             if not isinstance(index, tuple):
                 index = (index,)
 
-            index = [x
-                     if x not in item_map
-                     else getattr(item_map[x], 'label', item_map[x].key)
-                     for x in index]
+            # Get a list of values from the index. These can be metrics or dimensions so it checks in the item map if
+            # there is a display value for the value
+            index = [item
+                     if item not in item_map
+                     else getattr(item_map[item], 'label', item_map[item].key)
+                     for item in index]
 
             row = {}
+
+            # Add the index to the row
             for key, value in zip(data_frame.index.names, index):
                 if key is None:
                     continue
 
                 data = {RAW_VALUE: value}
+
+                # Try to find a display value for the item. If this is a metric the raw value is replaced with the
+                # display value because there is no raw value for a metric label
                 display = getdeepattr(dimension_display_values, (key, value))
                 if display is not None:
                     data['display'] = display
 
                 row[key] = data
 
+            # Add the values to the row
             for key, value in series.iteritems():
                 data = {RAW_VALUE: value}
+
+                # Try to find a display value for the item
                 item = item_map.get(key[0] if isinstance(key, tuple) else key)
                 display = _get_item_display(item, value)
                 if display is not None:
@@ -320,13 +388,20 @@ class ReactTable(Pandas):
 
     def transform(self, data_frame, slicer, dimensions, references):
         """
-        WRITEME
+        Transforms a data frame into a format for ReactTable. This is an object containing attributes `columns` and
+        `data` which align with the props in ReactTable with the same name.
 
         :param data_frame:
+            The result set data frame
         :param slicer:
+            The slicer that generated the data query
         :param dimensions:
+            A list of dimensions that were selected in the data query
         :param references:
+            A list of references that were selected in the data query
         :return:
+            An dict containing attributes `columns` and `data` which align with the props in ReactTable with the same
+            names.
         """
         df_dimension_columns = [format_dimension_key(d.display_key)
                                 for d in dimensions

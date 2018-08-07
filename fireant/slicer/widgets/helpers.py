@@ -67,10 +67,9 @@ def dimensional_metric_label(dimensions, dimension_display_values):
         used_dimensions = dimensions[num_used_dimensions:]
 
         dimension_values = utils.wrap_list(dimension_values)
-        dimension_labels = [utils.deep_get(dimension_display_values,
-                                           [utils.format_dimension_key(dimension.key),
-                                            dimension_value],
-                                           dimension_value)
+        dimension_labels = [utils.getdeepattr(dimension_display_values,
+                                              (utils.format_dimension_key(dimension.key), dimension_value),
+                                              dimension_value)
                             if not pd.isnull(dimension_value)
                             else 'Totals'
                             for dimension, dimension_value in zip(used_dimensions, dimension_values)]

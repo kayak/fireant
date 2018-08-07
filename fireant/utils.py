@@ -5,20 +5,49 @@ def wrap_list(value):
     return value if isinstance(value, (tuple, list)) else [value]
 
 
-def deep_get(d, keys, default=None):
-    d_level = d
-    for key in keys:
-        if key not in d_level:
-            return default
-        d_level = d_level[key]
-    return d_level
+def setdeepattr(d, keys, value):
+    """
+    Similar to the built-in `setattr`, this function accepts a list/tuple of keys to set a value deep in a `dict`
 
+    Given the following dict structure
+    ```
+    d = {
+      'A': {
+        '0': {
+          'a': 1,
+          'b': 2,
+        }
+      },
+    }
+    ```
 
-def setdeepattr(d, key, value):
-    if not isinstance(key, (list, tuple)):
-        key = (key,)
+    Calling `setdeepattr` with a key path to a value deep in the structure will set that value. If the value or any
+    of the objects in the key path do not exist, then a dict will be created.
 
-    top, *rest = key
+    ```
+    # Overwrites the value in `d` at A.0.a, which was 1, to 3
+    setdeepattr(d, ('A', '0', 'a'), 3)
+
+    # Adds an entry in `d` to A.0 with the key 'c' and the value 3
+    setdeepattr(d, ('A', '0', 'c'), 3)
+
+    # Adds an entry in `d` with the key 'X' and the value a new dict
+    # Adds an entry in `d` to `X` with the key '0' and the value a new dict
+    # Adds an entry in `d` to `X.0` with the key 'a' and the value 0
+    setdeepattr(d, ('X', '0', 'a'), 0)
+    ```
+
+    :param d:
+        A dict value with nested dict attributes.
+    :param keys:
+        A list/tuple path of keys in `d` to the desired value
+    :param value:
+        The value to set at the given path `keys`.
+    """
+    if not isinstance(keys, (list, tuple)):
+        keys = (keys,)
+
+    top, *rest = keys
 
     if rest:
         if top not in d:
@@ -31,6 +60,40 @@ def setdeepattr(d, key, value):
 
 
 def getdeepattr(d, keys, default_value=None):
+    """
+    Similar to the built-in `getattr`, this function accepts a list/tuple of keys to get a value deep in a `dict`
+
+    Given the following dict structure
+    ```
+    d = {
+      'A': {
+        '0': {
+          'a': 1,
+          'b': 2,
+        }
+      },
+    }
+    ```
+
+    Calling `getdeepattr` with a key path to a value deep in the structure will return that value. If the value or any
+    of the objects in the key path do not exist, then the default value is returned.
+
+    ```
+    assert 1 == getdeepattr(d, ('A', '0', 'a'))
+    assert 2 == getdeepattr(d, ('A', '0', 'b'))
+    assert 0 == getdeepattr(d, ('A', '0', 'c'), default_value=0)
+    assert 0 == getdeepattr(d, ('X', '0', 'a'), default_value=0)
+    ```
+
+    :param d:
+        A dict value with nested dict attributes.
+    :param keys:
+        A list/tuple path of keys in `d` to the desired value
+    :param default_value:
+        A default value that will be returned if the path `keys` does not yield a value.
+    :return:
+        The value following the path `keys` or `default_value`
+    """
     d_level = d
 
     for key in keys:
@@ -49,12 +112,6 @@ def slice_first(item):
     if isinstance(item, (tuple, list)):
         return item[0]
     return item
-
-
-a = 'a' \
-    if True \
-    else 'b' if True \
-    else 'c'
 
 
 def filter_duplicates(iterable):

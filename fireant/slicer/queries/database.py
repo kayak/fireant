@@ -1,8 +1,7 @@
+import pandas as pd
 import time
 from functools import partial
 from typing import Iterable
-
-import pandas as pd
 
 from fireant.database.base import Database
 from fireant.formats import (
@@ -100,7 +99,7 @@ def fill_nans_in_level(data_frame, dimensions):
 
     number_rollup_dimensions = sum(dimension.is_rollup for dimension in dimensions)
     if 0 < number_rollup_dimensions:
-        fill_nan_for_nulls = partial(_fill_nan_for_nulls, offset=number_rollup_dimensions)
+        fill_nan_for_nulls = partial(_fill_nan_for_nulls, n_rolled_up_dimensions=number_rollup_dimensions)
 
         if 1 < len(dimensions):
             preceding_dimension_keys = [format_dimension_key(d.key)
@@ -115,13 +114,23 @@ def fill_nans_in_level(data_frame, dimensions):
     return data_frame[level].fillna(NULL_VALUE)
 
 
-def _fill_nan_for_nulls(df, offset=1):
+def _fill_nan_for_nulls(df, n_rolled_up_dimensions=1):
     """
     Fills the first NaN with a literal string "null" if there are two NaN values, otherwise nothing is filled.
 
     :param df:
+    :param n_rolled_up_dimensions:
+        The number of rolled up dimensions preceding and including the dimension
     :return:
     """
-    if offset < pd.isnull(df).sum():
+
+    # If there are rolled up dimensions, then fill only the first instance of NULL with a literal string "null" and
+    # the rest of the nulls are totals. This check compares the number of nulls to the number of rolled up dimensions,
+    # or expected nulls which are totals rows. If there are more nulls, there should be exactly
+    # `n_rolled_up_dimensions+1` nulls which means one is a true `null` value.
+    number_of_nulls_for_dimension = pd.isnull(df).sum()
+    if n_rolled_up_dimensions < number_of_nulls_for_dimension:
+        assert n_rolled_up_dimensions + 1 == number_of_nulls_for_dimension
         return df.fillna(NULL_VALUE, limit=1).fillna(TOTALS_VALUE)
+
     return df.fillna(TOTALS_VALUE)

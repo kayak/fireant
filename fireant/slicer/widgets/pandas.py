@@ -89,9 +89,13 @@ class Pandas(TransformableWidget):
         simplicity.
 
         :param data_frame:
+            The result set data frame
         :param pivot:
+            A list of index keys for `data_frame` of levels to shift
         :param transpose:
+            A boolean true or false whether to transpose the data frame.
         :return:
+            The shifted/transposed data frame
         """
         if not (pivot or transpose):
             return data_frame
