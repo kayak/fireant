@@ -45,6 +45,10 @@ metrics_dimension_key = format_dimension_key(metrics.key)
 
 
 def map_index_level(index, level, func):
+    # If the index is empty, do not do anything
+    if 0 == index.size:
+        return index
+
     if isinstance(index, pd.MultiIndex):
         values = index.levels[level]
         return index.set_levels(values.map(func), level)
