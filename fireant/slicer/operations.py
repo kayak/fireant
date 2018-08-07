@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 from fireant.utils import format_metric_key
+from fireant.slicer.references import reference_key
 from .metrics import Metric
 
 
@@ -16,7 +17,7 @@ class Operation(object):
     The `Operation` class represents an operation in the `Slicer` API.
     """
 
-    def apply(self, data_frame):
+    def apply(self, data_frame, reference):
         raise NotImplementedError()
 
     @property
@@ -36,7 +37,7 @@ class _BaseOperation(Operation):
         self.suffix = suffix
         self.precision = precision
 
-    def apply(self, data_frame):
+    def apply(self, data_frame, reference):
         raise NotImplementedError()
 
     @property
@@ -72,7 +73,7 @@ class _Cumulative(_BaseOperation):
 
         self.arg = arg
 
-    def apply(self, data_frame):
+    def apply(self, data_frame, reference):
         raise NotImplementedError()
 
     @property
@@ -93,8 +94,8 @@ class _Cumulative(_BaseOperation):
 
 
 class CumSum(_Cumulative):
-    def apply(self, data_frame):
-        df_key = format_metric_key(self.arg.key)
+    def apply(self, data_frame, reference):
+        df_key = format_metric_key(reference_key(self.arg, reference))
 
         if isinstance(data_frame.index, pd.MultiIndex):
             levels = self._group_levels(data_frame.index)
@@ -107,8 +108,8 @@ class CumSum(_Cumulative):
 
 
 class CumProd(_Cumulative):
-    def apply(self, data_frame):
-        df_key = format_metric_key(self.arg.key)
+    def apply(self, data_frame, reference):
+        df_key = format_metric_key(reference_key(self.arg, reference))
 
         if isinstance(data_frame.index, pd.MultiIndex):
             levels = self._group_levels(data_frame.index)
@@ -125,8 +126,8 @@ class CumMean(_Cumulative):
     def cummean(x):
         return x.cumsum() / np.arange(1, len(x) + 1)
 
-    def apply(self, data_frame):
-        df_key = format_metric_key(self.arg.key)
+    def apply(self, data_frame, reference):
+        df_key = format_metric_key(reference_key(self.arg, reference))
 
         if isinstance(data_frame.index, pd.MultiIndex):
             levels = self._group_levels(data_frame.index)
@@ -161,7 +162,7 @@ class RollingOperation(_BaseOperation):
 
         return first_max_rolling is self
 
-    def apply(self, data_frame):
+    def apply(self, data_frame, reference):
         raise NotImplementedError()
 
     @property
@@ -182,8 +183,8 @@ class RollingMean(RollingOperation):
     def rolling_mean(self, x):
         return x.rolling(self.window, self.min_periods).mean()
 
-    def apply(self, data_frame):
-        df_key = format_metric_key(self.arg.key)
+    def apply(self, data_frame, reference):
+        df_key = format_metric_key(reference_key(self.arg, reference))
 
         if isinstance(data_frame.index, pd.MultiIndex):
             levels = self._group_levels(data_frame.index)

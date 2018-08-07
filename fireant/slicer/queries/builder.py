@@ -1,11 +1,10 @@
-from typing import (
-    Dict,
-    Iterable,
-)
-
 import pandas as pd
 from pypika import (
     Order,
+)
+from typing import (
+    Dict,
+    Iterable,
 )
 
 from fireant.utils import (
@@ -27,6 +26,7 @@ from .makers import (
     make_slicer_query,
     make_slicer_query_with_references_and_totals,
 )
+from .references import reference_key
 from ..base import SlicerElement
 from ..dimensions import Dimension
 
@@ -195,8 +195,9 @@ class SlicerQueryBuilder(QueryBuilder):
         # Apply operations
         operations = find_operations_for_widgets(self._widgets)
         for operation in operations:
-            df_key = format_metric_key(operation.key)
-            data_frame[df_key] = operation.apply(data_frame)
+            for reference in [None] + self._references:
+                df_key = format_metric_key(reference_key(operation, reference))
+                data_frame[df_key] = operation.apply(data_frame, reference)
 
         data_frame = special_cases.apply_operations_to_data_frame(operations, data_frame)
 

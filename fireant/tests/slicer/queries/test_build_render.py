@@ -2,6 +2,7 @@ from unittest import TestCase
 from unittest.mock import (
     ANY,
     Mock,
+    call,
     patch,
 )
 
@@ -12,7 +13,10 @@ from fireant.utils import (
 from ..matchers import (
     DimensionMatcher,
 )
-from ..mocks import slicer
+from ..mocks import (
+    ElectionOverElection,
+    slicer,
+)
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -123,7 +127,32 @@ class QueryBuilderRenderTests(TestCase):
             .widget(mock_widget) \
             .fetch()
 
-        mock_operation.apply.assert_called_once_with(mock_df)
+        mock_operation.apply.assert_called_once_with(mock_df, None)
+
+    def test_operations_evaluated_for_each_reference(self, mock_fetch_data: Mock):
+        eoe = ElectionOverElection(slicer.dimensions.timestamp)
+
+        mock_operation = Mock(name='mock_operation ', spec=f.Operation)
+        mock_operation.key, mock_operation.definition = 'mock_operation', slicer.table.abc
+        mock_operation.metrics = []
+
+        mock_widget = f.Widget(mock_operation)
+        mock_widget.transform = Mock()
+
+        mock_df = {}
+        mock_fetch_data.return_value = mock_df
+
+        # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
+        slicer.data \
+            .dimension(slicer.dimensions.timestamp) \
+            .reference(eoe) \
+            .widget(mock_widget) \
+            .fetch()
+
+        mock_operation.apply.assert_has_calls([
+            call(mock_df, None),
+            call(mock_df, eoe),
+        ])
 
     def test_operations_results_stored_in_data_frame(self, mock_fetch_data: Mock):
         mock_operation = Mock(name='mock_operation ', spec=f.Operation)
