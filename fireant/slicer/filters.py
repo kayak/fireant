@@ -1,4 +1,5 @@
 from pypika import Not
+from pypika.functions import Lower
 
 
 class Filter(object):
@@ -61,10 +62,10 @@ class RangeFilter(DimensionFilter):
 
 class PatternFilter(DimensionFilter):
     def _apply(self, dimension_definition, patterns):
-        definition = dimension_definition.like(patterns[0])
+        definition = Lower(dimension_definition).like(Lower(patterns[0]))
 
         for pattern in patterns[1:]:
-            definition |= dimension_definition.like(pattern)
+            definition |= Lower(dimension_definition).like(Lower(pattern))
 
         return definition
 
