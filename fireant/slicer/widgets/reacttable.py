@@ -1,5 +1,6 @@
 from collections import OrderedDict
 
+import numpy as np
 import pandas as pd
 
 from fireant.formats import (
@@ -414,7 +415,9 @@ class ReactTable(Pandas):
         # Add an extra item to map the totals key to it's label
         item_map[TOTALS_VALUE] = TotalsItem
 
-        df = data_frame[df_dimension_columns + df_metric_columns].copy()
+        df = data_frame[df_dimension_columns + df_metric_columns].copy() \
+            .fillna(value='NaN') \
+            .replace([np.inf, -np.inf], 'Inf')
 
         dimension_display_values = self.map_display_values(df, dimensions)
         self.format_data_frame(df, dimensions)
