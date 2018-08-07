@@ -107,6 +107,35 @@ class TotalsItem:
 
 
 class ReactTable(Pandas):
+    """
+    This component does not work with react-table out of the box, some customization is needed in order to work with
+    the transformed data.
+
+    ```
+    // A Custom TdComponent implementation is required by Fireant in order to render display values
+    const TdComponent = ({
+                           toggleSort,
+                           className,
+                           children,
+                           ...rest
+                         }) =>
+        <div className={classNames('rt-td', className)} role="gridcell" {...rest}>
+            {_.get(children, 'display', children.raw) || <span>&nbsp;</span>}
+        </div>;
+
+    const FireantReactTable = ({
+                            config, // The payload from fireant
+                          }) =>
+        <ReactTable columns={config.columns}
+                    data={config.data}
+                    minRows={0}
+
+                    TdComponent={ DashmoreTdComponent}
+                    defaultSortMethod={(a, b, desc) => ReactTableDefaults.defaultSortMethod(a.raw, b.raw, desc)}>
+        </ReactTable>;
+    ```
+    """
+
     def __init__(self, metric, *metrics: Metric, pivot=(), transpose=False, max_columns=None):
         super(ReactTable, self).__init__(metric, *metrics,
                                          pivot=pivot,
