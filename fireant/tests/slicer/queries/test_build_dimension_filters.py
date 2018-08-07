@@ -41,7 +41,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'WHERE "political_party" LIKE \'Rep%\'', str(query))
+                         'WHERE LOWER("political_party") LIKE LOWER(\'Rep%\')', str(query))
 
     def test_build_query_with_filter_not_like_categorical_dim(self):
         query = slicer.data \
@@ -52,7 +52,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'WHERE NOT "political_party" LIKE \'Rep%\'', str(query))
+                         'WHERE NOT LOWER("political_party") LIKE LOWER(\'Rep%\')', str(query))
 
     def test_build_query_with_filter_isin_unique_dim(self):
         query = slicer.data \
@@ -107,7 +107,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'WHERE "candidate_name" LIKE \'%Trump\'', str(query))
+                         'WHERE LOWER("candidate_name") LIKE LOWER(\'%Trump\')', str(query))
 
     def test_build_query_with_filter_like_display_dim(self):
         query = slicer.data \
@@ -118,7 +118,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'WHERE "candidate_name" LIKE \'%Trump\'', str(query))
+                         'WHERE LOWER("candidate_name") LIKE LOWER(\'%Trump\')', str(query))
 
     def test_build_query_with_filter_not_like_unique_dim(self):
         query = slicer.data \
@@ -129,7 +129,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'WHERE NOT "candidate_name" LIKE \'%Trump\'', str(query))
+                         'WHERE NOT LOWER("candidate_name") LIKE LOWER(\'%Trump\')', str(query))
 
     def test_build_query_with_filter_not_like_display_dim(self):
         query = slicer.data \
@@ -140,7 +140,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'WHERE NOT "candidate_name" LIKE \'%Trump\'', str(query))
+                         'WHERE NOT LOWER("candidate_name") LIKE LOWER(\'%Trump\')', str(query))
 
     def test_build_query_with_filter_like_categorical_dim_multiple_patterns(self):
         query = slicer.data \
@@ -151,8 +151,8 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'WHERE "political_party" LIKE \'Rep%\' '
-                         'OR "political_party" LIKE \'Dem%\'', str(query))
+                         'WHERE LOWER("political_party") LIKE LOWER(\'Rep%\') '
+                         'OR LOWER("political_party") LIKE LOWER(\'Dem%\')', str(query))
 
     def test_build_query_with_filter_not_like_categorical_dim_multiple_patterns(self):
         query = slicer.data \
@@ -163,8 +163,8 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'WHERE NOT ("political_party" LIKE \'Rep%\' '
-                         'OR "political_party" LIKE \'Dem%\')', str(query))
+                         'WHERE NOT (LOWER("political_party") LIKE LOWER(\'Rep%\') '
+                         'OR LOWER("political_party") LIKE LOWER(\'Dem%\'))', str(query))
 
     def test_build_query_with_filter_like_pattern_dim_multiple_patterns(self):
         query = slicer.data \
@@ -175,8 +175,8 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'WHERE "pattern" LIKE \'a%\' '
-                         'OR "pattern" LIKE \'b%\'', str(query))
+                         'WHERE LOWER("pattern") LIKE LOWER(\'a%\') '
+                         'OR LOWER("pattern") LIKE LOWER(\'b%\')', str(query))
 
     def test_build_query_with_filter_not_like_pattern_dim_multiple_patterns(self):
         query = slicer.data \
@@ -187,8 +187,8 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'WHERE NOT ("pattern" LIKE \'a%\' '
-                         'OR "pattern" LIKE \'b%\')', str(query))
+                         'WHERE NOT (LOWER("pattern") LIKE LOWER(\'a%\') '
+                         'OR LOWER("pattern") LIKE LOWER(\'b%\'))', str(query))
 
     def test_build_query_with_filter_like_unique_dim_multiple_patterns(self):
         query = slicer.data \
@@ -199,8 +199,8 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'WHERE "candidate_name" LIKE \'%Trump\' '
-                         'OR "candidate_name" LIKE \'%Clinton\'', str(query))
+                         'WHERE LOWER("candidate_name") LIKE LOWER(\'%Trump\') '
+                         'OR LOWER("candidate_name") LIKE LOWER(\'%Clinton\')', str(query))
 
     def test_build_query_with_filter_like_display_dim_multiple_patterns(self):
         query = slicer.data \
@@ -211,8 +211,8 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'WHERE "candidate_name" LIKE \'%Trump\' '
-                         'OR "candidate_name" LIKE \'%Clinton\'', str(query))
+                         'WHERE LOWER("candidate_name") LIKE LOWER(\'%Trump\') '
+                         'OR LOWER("candidate_name") LIKE LOWER(\'%Clinton\')', str(query))
 
     def test_build_query_with_filter_not_like_unique_dim_multiple_patterns(self):
         query = slicer.data \
@@ -223,8 +223,8 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'WHERE NOT ("candidate_name" LIKE \'%Trump\' '
-                         'OR "candidate_name" LIKE \'%Clinton\')', str(query))
+                         'WHERE NOT (LOWER("candidate_name") LIKE LOWER(\'%Trump\') '
+                         'OR LOWER("candidate_name") LIKE LOWER(\'%Clinton\'))', str(query))
 
     def test_build_query_with_filter_not_like_display_dim_multiple_patterns(self):
         query = slicer.data \
@@ -235,8 +235,8 @@ class QueryBuilderDimensionFilterTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
-                         'WHERE NOT ("candidate_name" LIKE \'%Trump\' '
-                         'OR "candidate_name" LIKE \'%Clinton\')', str(query))
+                         'WHERE NOT (LOWER("candidate_name") LIKE LOWER(\'%Trump\') '
+                         'OR LOWER("candidate_name") LIKE LOWER(\'%Clinton\'))', str(query))
 
     def test_build_query_with_filter_isin_raise_exception_when_display_definition_undefined(self):
         with self.assertRaises(f.QueryException):
