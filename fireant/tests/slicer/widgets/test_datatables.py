@@ -41,7 +41,7 @@ class DataTablesTransformerTests(TestCase):
                 'render': {'_': 'value', 'display': 'display'},
             }],
             'data': [{
-                'votes': {'value': 111674336, 'display': '111674336'}
+                'votes': {'value': 111674336, 'display': '111,674,336'}
             }],
         }, result)
 
@@ -60,7 +60,7 @@ class DataTablesTransformerTests(TestCase):
                 'render': {'_': 'value', 'display': 'display'},
             }],
             'data': [{
-                'votes': {'value': 111674336, 'display': '111674336'},
+                'votes': {'value': 111674336, 'display': '111,674,336'},
                 'wins': {'value': 12, 'display': '12'},
             }],
         }, result)
@@ -81,7 +81,7 @@ class DataTablesTransformerTests(TestCase):
             }],
             'data': [{
                 'wins': {'value': 12, 'display': '12'},
-                'votes': {'value': 111674336, 'display': '111674336'},
+                'votes': {'value': 111674336, 'display': '111,674,336'},
             }],
         }, result)
 
@@ -135,22 +135,22 @@ class DataTablesTransformerTests(TestCase):
                 'render': {'_': 'value', 'display': 'display'},
             }],
             'data': [{
-                'cumsum(votes)': {'display': '15220449', 'value': 15220449},
+                'cumsum(votes)': {'display': '15,220,449', 'value': 15220449},
                 'timestamp': {'value': '1996-01-01'}
             }, {
-                'cumsum(votes)': {'display': '31882466', 'value': 31882466},
+                'cumsum(votes)': {'display': '31,882,466', 'value': 31882466},
                 'timestamp': {'value': '2000-01-01'}
             }, {
-                'cumsum(votes)': {'display': '51497398', 'value': 51497398},
+                'cumsum(votes)': {'display': '51,497,398', 'value': 51497398},
                 'timestamp': {'value': '2004-01-01'}
             }, {
-                'cumsum(votes)': {'display': '72791613', 'value': 72791613},
+                'cumsum(votes)': {'display': '72,791,613', 'value': 72791613},
                 'timestamp': {'value': '2008-01-01'}
             }, {
-                'cumsum(votes)': {'display': '93363823', 'value': 93363823},
+                'cumsum(votes)': {'display': '93,363,823', 'value': 93363823},
                 'timestamp': {'value': '2012-01-01'}
             }, {
-                'cumsum(votes)': {'display': '111674336', 'value': 111674336},
+                'cumsum(votes)': {'display': '111,674,336', 'value': 111674336},
                 'timestamp': {'value': '2016-01-01'}
             }],
         }, result)
@@ -664,38 +664,38 @@ class DataTablesTransformerTests(TestCase):
             'data': [{
                 'timestamp': {'value': '1996-01-01'},
                 'votes': {
-                    '1': {'display': '5574387', 'value': 5574387},
-                    '2': {'display': '9646062', 'value': 9646062}
+                    '1': {'display': '5,574,387', 'value': 5574387},
+                    '2': {'display': '9,646,062', 'value': 9646062}
                 }
             }, {
                 'timestamp': {'value': '2000-01-01'},
                 'votes': {
-                    '1': {'display': '6233385', 'value': 6233385},
-                    '2': {'display': '10428632', 'value': 10428632}
+                    '1': {'display': '6,233,385', 'value': 6233385},
+                    '2': {'display': '10,428,632', 'value': 10428632}
                 }
             }, {
                 'timestamp': {'value': '2004-01-01'},
                 'votes': {
-                    '1': {'display': '7359621', 'value': 7359621},
-                    '2': {'display': '12255311', 'value': 12255311}
+                    '1': {'display': '7,359,621', 'value': 7359621},
+                    '2': {'display': '12,255,311', 'value': 12255311}
                 }
             }, {
                 'timestamp': {'value': '2008-01-01'},
                 'votes': {
-                    '1': {'display': '8007961', 'value': 8007961},
-                    '2': {'display': '13286254', 'value': 13286254}
+                    '1': {'display': '8,007,961', 'value': 8007961},
+                    '2': {'display': '13,286,254', 'value': 13286254}
                 }
             }, {
                 'timestamp': {'value': '2012-01-01'},
                 'votes': {
-                    '1': {'display': '7877967', 'value': 7877967},
-                    '2': {'display': '12694243', 'value': 12694243}
+                    '1': {'display': '7,877,967', 'value': 7877967},
+                    '2': {'display': '12,694,243', 'value': 12694243}
                 }
             }, {
                 'timestamp': {'value': '2016-01-01'},
                 'votes': {
-                    '1': {'display': '5072915', 'value': 5072915},
-                    '2': {'display': '13237598', 'value': 13237598}
+                    '1': {'display': '5,072,915', 'value': 5072915},
+                    '2': {'display': '13,237,598', 'value': 13237598}
                 }
             }],
         }, result)
@@ -732,53 +732,53 @@ class DataTablesTransformerTests(TestCase):
             'data': [{
                 'timestamp': {'value': '2000-01-01'},
                 'state': {'display': 'Texas', 'value': 1},
-                'votes': {'display': '6233385', 'value': 6233385.},
-                'votes_eoe': {'display': '5574387', 'value': 5574387.},
+                'votes': {'display': '6,233,385', 'value': 6233385.},
+                'votes_eoe': {'display': '5,574,387', 'value': 5574387.},
             }, {
                 'timestamp': {'value': '2000-01-01'},
                 'state': {'display': 'California', 'value': 2},
-                'votes': {'display': '10428632', 'value': 10428632.},
-                'votes_eoe': {'display': '9646062', 'value': 9646062.},
+                'votes': {'display': '10,428,632', 'value': 10428632.},
+                'votes_eoe': {'display': '9,646,062', 'value': 9646062.},
             }, {
                 'timestamp': {'value': '2004-01-01'},
                 'state': {'display': 'Texas', 'value': 1},
-                'votes': {'display': '7359621', 'value': 7359621.},
-                'votes_eoe': {'display': '6233385', 'value': 6233385.},
+                'votes': {'display': '7,359,621', 'value': 7359621.},
+                'votes_eoe': {'display': '6,233,385', 'value': 6233385.},
             }, {
                 'timestamp': {'value': '2004-01-01'},
                 'state': {'display': 'California', 'value': 2},
-                'votes': {'display': '12255311', 'value': 12255311.},
-                'votes_eoe': {'display': '10428632', 'value': 10428632.},
+                'votes': {'display': '12,255,311', 'value': 12255311.},
+                'votes_eoe': {'display': '10,428,632', 'value': 10428632.},
             }, {
                 'timestamp': {'value': '2008-01-01'},
                 'state': {'display': 'Texas', 'value': 1},
-                'votes': {'display': '8007961', 'value': 8007961.},
-                'votes_eoe': {'display': '7359621', 'value': 7359621.},
+                'votes': {'display': '8,007,961', 'value': 8007961.},
+                'votes_eoe': {'display': '7,359,621', 'value': 7359621.},
             }, {
                 'timestamp': {'value': '2008-01-01'},
                 'state': {'display': 'California', 'value': 2},
-                'votes': {'display': '13286254', 'value': 13286254.},
-                'votes_eoe': {'display': '12255311', 'value': 12255311.},
+                'votes': {'display': '13,286,254', 'value': 13286254.},
+                'votes_eoe': {'display': '12,255,311', 'value': 12255311.},
             }, {
                 'timestamp': {'value': '2012-01-01'},
                 'state': {'display': 'Texas', 'value': 1},
-                'votes': {'display': '7877967', 'value': 7877967.},
-                'votes_eoe': {'display': '8007961', 'value': 8007961.},
+                'votes': {'display': '7,877,967', 'value': 7877967.},
+                'votes_eoe': {'display': '8,007,961', 'value': 8007961.},
             }, {
                 'timestamp': {'value': '2012-01-01'},
                 'state': {'display': 'California', 'value': 2},
-                'votes': {'display': '12694243', 'value': 12694243.},
-                'votes_eoe': {'display': '13286254', 'value': 13286254.},
+                'votes': {'display': '12,694,243', 'value': 12694243.},
+                'votes_eoe': {'display': '13,286,254', 'value': 13286254.},
             }, {
                 'timestamp': {'value': '2016-01-01'},
                 'state': {'display': 'Texas', 'value': 1},
-                'votes': {'display': '5072915', 'value': 5072915.},
-                'votes_eoe': {'display': '7877967', 'value': 7877967.},
+                'votes': {'display': '5,072,915', 'value': 5072915.},
+                'votes_eoe': {'display': '7,877,967', 'value': 7877967.},
             }, {
                 'timestamp': {'value': '2016-01-01'},
                 'state': {'display': 'California', 'value': 2},
-                'votes': {'display': '13237598', 'value': 13237598.},
-                'votes_eoe': {'display': '12694243', 'value': 12694243.},
+                'votes': {'display': '13,237,598', 'value': 13237598.},
+                'votes_eoe': {'display': '12,694,243', 'value': 12694243.},
             }],
         }, result)
 

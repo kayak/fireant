@@ -6,6 +6,8 @@ import pandas as pd
 from fireant.formats import (
     RAW_VALUE,
     TOTALS_VALUE,
+    metric_display,
+    metric_value,
 )
 from fireant.utils import (
     format_dimension_key,
@@ -67,26 +69,6 @@ def fillna_index(index, value):
                                          names=index.names)
 
     return index.fillna(value)
-
-
-def display_value(value, prefix=None, suffix=None, precision=None):
-    if isinstance(value, bool):
-        value = str(value).lower()
-
-    def format_numeric_value(value):
-        if precision is not None and isinstance(value, float):
-            return '{:.{precision}f}'.format(value, precision=precision)
-
-        if isinstance(value, int):
-            return '{:,}'.format(value)
-
-        return '{}'.format(value)
-
-    return '{prefix}{value}{suffix}'.format(
-          prefix=(prefix or ""),
-          suffix=(suffix or ""),
-          value=format_numeric_value(value),
-    )
 
 
 class ReferenceItem:
@@ -371,17 +353,15 @@ class ReactTable(Pandas):
 
             # Add the values to the row
             for key, value in series.iteritems():
-                # pd.Series casts everything to float, cast it back to int if it's an int
-                if np.int64 == data_frame[key].dtype:
-                    value = int(value)
-
-                data = {RAW_VALUE: value}
+                value = metric_value(value)
+                data = {RAW_VALUE: metric_value(value)}
 
                 # Try to find a display value for the item
                 item = item_map.get(key[0] if isinstance(key, tuple) else key)
-                display = display_value(value, item.prefix, item.suffix, item.precision) \
-                    if item is not None else \
-                    value
+                display = metric_display(value,
+                                         getattr(item, 'prefix', None),
+                                         getattr(item, 'suffix', None),
+                                         getattr(item, 'precision', None))
 
                 if display is not None:
                     data['display'] = display
