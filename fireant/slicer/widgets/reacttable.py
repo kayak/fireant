@@ -69,25 +69,23 @@ def fillna_index(index, value):
     return index.fillna(value)
 
 
-def _get_item_display(item, value):
-    if item is None or all([item.prefix is None, item.suffix is None, item.precision is None]):
-        return
+def display_value(value, prefix=None, suffix=None, precision=None):
+    if isinstance(value, bool):
+        value = str(value).lower()
+
+    def format_numeric_value(value):
+        if precision is not None and isinstance(value, float):
+            return '{:.{precision}f}'.format(value, precision=precision)
+
+        if isinstance(value, int):
+            return '{:,}'.format(value)
+
+        return '{}'.format(value)
 
     return '{prefix}{value}{suffix}'.format(
-          prefix=(item.prefix or ""),
-          suffix=(item.suffix or ""),
-          value=value if item.precision is None else '{:.{precision}f}'.format(0.1234567890, precision=2)
-    )
-
-
-def make_column_format(item):
-    if item is None or all([item.prefix is None, item.suffix is None, item.precision is None]):
-        return
-
-    return '{prefix}{format}{suffix}'.format(
-          prefix=(item.prefix or ""),
-          suffix=(item.suffix or "").replace('%', '%%'),
-          format='%s' if item.precision is None else '%.{}f'.format(item.precision)
+          prefix=(prefix or ""),
+          suffix=(suffix or ""),
+          value=format_numeric_value(value),
     )
 
 
@@ -377,7 +375,10 @@ class ReactTable(Pandas):
 
                 # Try to find a display value for the item
                 item = item_map.get(key[0] if isinstance(key, tuple) else key)
-                display = _get_item_display(item, value)
+                display = display_value(value, item.prefix, item.suffix, item.precision) \
+                    if item is not None else \
+                    value
+
                 if display is not None:
                     data['display'] = display
 

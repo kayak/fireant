@@ -1,6 +1,9 @@
 from unittest import TestCase
 
-from fireant.slicer.widgets.reacttable import ReactTable
+from fireant.slicer.widgets.reacttable import (
+    ReactTable,
+    display_value,
+)
 from fireant.tests.slicer.mocks import (
     CumSum,
     ElectionOverElection,
@@ -1143,3 +1146,89 @@ class ReactTableTransformerTests(TestCase):
                 'totals': {'raw': 111674336.0}
             }]
         }, result)
+
+
+class ReactTableDisplayValueFormat(TestCase):
+    def test_str_value_no_formats(self):
+        display = display_value('abcdef')
+        self.assertEqual('abcdef', display)
+
+    def test_bool_true_value_no_formats(self):
+        display = display_value(True)
+        self.assertEqual('true', display)
+
+    def test_bool_false_value_no_formats(self):
+        display = display_value(False)
+        self.assertEqual('false', display)
+
+    def test_int_value_no_formats(self):
+        display = display_value(12345)
+        self.assertEqual('12,345', display)
+
+    def test_decimal_value_no_formats(self):
+        display = display_value(12345.123456789)
+        self.assertEqual('12345.123456789', display)
+
+    def test_str_value_with_prefix(self):
+        display = display_value('abcdef', prefix='$')
+        self.assertEqual('$abcdef', display)
+
+    def test_bool_true_value_with_prefix(self):
+        display = display_value(True, prefix='$')
+        self.assertEqual('$true', display)
+
+    def test_bool_false_value_with_prefix(self):
+        display = display_value(False, prefix='$')
+        self.assertEqual('$false', display)
+
+    def test_int_value_with_prefix(self):
+        display = display_value(12345, prefix='$')
+        self.assertEqual('$12,345', display)
+
+    def test_decimal_value_with_prefix(self):
+        display = display_value(12345.123456789, prefix='$')
+        self.assertEqual('$12345.123456789', display)
+
+    def test_str_value_with_suffix(self):
+        display = display_value('abcdef', suffix='€')
+        self.assertEqual('abcdef€', display)
+
+    def test_bool_true_value_with_suffix(self):
+        display = display_value(True, suffix='€')
+        self.assertEqual('true€', display)
+
+    def test_bool_false_value_with_suffix(self):
+        display = display_value(False, suffix='€')
+        self.assertEqual('false€', display)
+
+    def test_int_value_with_suffix(self):
+        display = display_value(12345, suffix='€')
+        self.assertEqual('12,345€', display)
+
+    def test_decimal_value_with_suffix(self):
+        display = display_value(12345.123456789, suffix='€')
+        self.assertEqual('12345.123456789€', display)
+
+    def test_str_value_with_precision(self):
+        display = display_value('abcdef', precision=2)
+        self.assertEqual('abcdef', display)
+
+    def test_bool_true_value_with_precision(self):
+        display = display_value(True, precision=2)
+        self.assertEqual('true', display)
+
+    def test_bool_false_value_with_precision(self):
+        display = display_value(False, precision=2)
+        self.assertEqual('false', display)
+
+    def test_int_value_with_precision(self):
+        display = display_value(12345, precision=2)
+        self.assertEqual('12,345', display)
+
+    def test_decimal_value_with_precision_0(self):
+        display = display_value(12345.123456789, precision=0)
+        self.assertEqual('12345', display)
+
+    def test_decimal_value_with_precision_2(self):
+        display = display_value(12345.123456789, precision=2)
+        self.assertEqual('12345.12', display)
