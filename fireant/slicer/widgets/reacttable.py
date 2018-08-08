@@ -371,6 +371,10 @@ class ReactTable(Pandas):
 
             # Add the values to the row
             for key, value in series.iteritems():
+                # pd.Series casts everything to float, cast it back to int if it's an int
+                if np.int64 == data_frame[key].dtype:
+                    value = int(value)
+
                 data = {RAW_VALUE: value}
 
                 # Try to find a display value for the item
