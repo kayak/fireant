@@ -1,12 +1,10 @@
-import locale
+import numpy as np
+import pandas as pd
 from datetime import (
     date,
     datetime,
     time,
 )
-
-import numpy as np
-import pandas as pd
 
 INFINITY = "Infinity"
 NULL_VALUE = 'null'
@@ -116,23 +114,22 @@ def metric_display(value, prefix=None, suffix=None, precision=None):
     if pd.isnull(value) or value in {np.inf, -np.inf}:
         return ''
 
+    if isinstance(value, bool):
+        value = str(value).lower()
+
     if isinstance(value, float):
         if precision is not None:
-            float_format = '%d' if precision == 0 else '%.{}f'.format(precision)
-            value = locale.format(float_format, value, grouping=True)
+            value = '{:,.{precision}f}'.format(value, precision=precision)
 
         elif value.is_integer():
-            float_format = '%d'
-            value = locale.format(float_format, value, grouping=True)
+            value = '{:,.0f}'.format(value)
 
         else:
-            float_format = '%f'
             # Stripping trailing zeros is necessary because %f can add them if no precision is set
-            value = locale.format(float_format, value, grouping=True).rstrip('.0')
+            value = '{:,f}'.format(value).rstrip('.0')
 
     if isinstance(value, int):
-        float_format = '%d'
-        value = locale.format(float_format, value, grouping=True)
+        value = '{:,.0f}'.format(value)
 
     return '{prefix}{value}{suffix}'.format(
           prefix=prefix or '',

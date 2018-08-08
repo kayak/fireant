@@ -219,7 +219,7 @@ class PandasTransformerTests(TestCase):
             .transform(cont_dim_df / 3, slicer, [slicer.dimensions.timestamp], [])
 
         expected = cont_dim_df.copy()[[fm('votes')]]
-        expected[fm('votes')] = ['${0:.2f}€'.format(x)
+        expected[fm('votes')] = ['${0:,.2f}€'.format(x)
                                  for x in expected[fm('votes')] / 3]
         expected.index.names = ['Timestamp']
         expected.columns = ['Votes']

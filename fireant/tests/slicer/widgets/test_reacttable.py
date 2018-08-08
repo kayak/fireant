@@ -2,7 +2,6 @@ from unittest import TestCase
 
 from fireant.slicer.widgets.reacttable import (
     ReactTable,
-    display_value,
 )
 from fireant.tests.slicer.mocks import (
     CumSum,
@@ -467,52 +466,52 @@ class ReactTableTransformerTests(TestCase):
                 '$d$state': {'display': 'Texas', 'raw': '1'},
                 '$d$timestamp': {'raw': '2000-01-01'},
                 '$m$votes': {'display': '6,233,385', 'raw': 6233385},
-                '$m$votes_eoe': {'display': '5574387.0', 'raw': 5574387.0}
+                '$m$votes_eoe': {'display': '5,574,387', 'raw': 5574387}
             }, {
                 '$d$state': {'display': 'California', 'raw': '2'},
                 '$d$timestamp': {'raw': '2000-01-01'},
                 '$m$votes': {'display': '10,428,632', 'raw': 10428632},
-                '$m$votes_eoe': {'display': '9646062.0', 'raw': 9646062.0}
+                '$m$votes_eoe': {'display': '9,646,062', 'raw': 9646062}
             }, {
                 '$d$state': {'display': 'Texas', 'raw': '1'},
                 '$d$timestamp': {'raw': '2004-01-01'},
                 '$m$votes': {'display': '7,359,621', 'raw': 7359621},
-                '$m$votes_eoe': {'display': '6233385.0', 'raw': 6233385.0}
+                '$m$votes_eoe': {'display': '6,233,385', 'raw': 6233385}
             }, {
                 '$d$state': {'display': 'California', 'raw': '2'},
                 '$d$timestamp': {'raw': '2004-01-01'},
                 '$m$votes': {'display': '12,255,311', 'raw': 12255311},
-                '$m$votes_eoe': {'display': '10428632.0', 'raw': 10428632.0}
+                '$m$votes_eoe': {'display': '10,428,632', 'raw': 10428632}
             }, {
                 '$d$state': {'display': 'Texas', 'raw': '1'},
                 '$d$timestamp': {'raw': '2008-01-01'},
                 '$m$votes': {'display': '8,007,961', 'raw': 8007961},
-                '$m$votes_eoe': {'display': '7359621.0', 'raw': 7359621.0}
+                '$m$votes_eoe': {'display': '7,359,621', 'raw': 7359621}
             }, {
                 '$d$state': {'display': 'California', 'raw': '2'},
                 '$d$timestamp': {'raw': '2008-01-01'},
                 '$m$votes': {'display': '13,286,254', 'raw': 13286254},
-                '$m$votes_eoe': {'display': '12255311.0', 'raw': 12255311.0}
+                '$m$votes_eoe': {'display': '12,255,311', 'raw': 12255311}
             }, {
                 '$d$state': {'display': 'Texas', 'raw': '1'},
                 '$d$timestamp': {'raw': '2012-01-01'},
                 '$m$votes': {'display': '7,877,967', 'raw': 7877967},
-                '$m$votes_eoe': {'display': '8007961.0', 'raw': 8007961.0}
+                '$m$votes_eoe': {'display': '8,007,961', 'raw': 8007961}
             }, {
                 '$d$state': {'display': 'California', 'raw': '2'},
                 '$d$timestamp': {'raw': '2012-01-01'},
                 '$m$votes': {'display': '12,694,243', 'raw': 12694243},
-                '$m$votes_eoe': {'display': '13286254.0', 'raw': 13286254.0}
+                '$m$votes_eoe': {'display': '13,286,254', 'raw': 13286254}
             }, {
                 '$d$state': {'display': 'Texas', 'raw': '1'},
                 '$d$timestamp': {'raw': '2016-01-01'},
                 '$m$votes': {'display': '5,072,915', 'raw': 5072915},
-                '$m$votes_eoe': {'display': '7877967.0', 'raw': 7877967.0}
+                '$m$votes_eoe': {'display': '7,877,967', 'raw': 7877967}
             }, {
                 '$d$state': {'display': 'California', 'raw': '2'},
                 '$d$timestamp': {'raw': '2016-01-01'},
                 '$m$votes': {'display': '13,237,598', 'raw': 13237598},
-                '$m$votes_eoe': {'display': '12694243.0', 'raw': 12694243.0}
+                '$m$votes_eoe': {'display': '12,694,243', 'raw': 12694243}
             }]
         }, result)
 
@@ -538,72 +537,72 @@ class ReactTableTransformerTests(TestCase):
                 '$d$state': {'display': 'Texas', 'raw': '1'},
                 '$d$timestamp': {'raw': '2000-01-01'},
                 '$m$votes': {'display': '6,233,385', 'raw': 6233385},
-                '$m$votes_eoe': {'display': '5574387.0', 'raw': 5574387.0},
+                '$m$votes_eoe': {'display': '5,574,387', 'raw': 5574387},
                 '$m$wins': {'display': '1', 'raw': 1},
-                '$m$wins_eoe': {'display': '1.0', 'raw': 1.0}
+                '$m$wins_eoe': {'display': '1', 'raw': 1}
             }, {
                 '$d$state': {'display': 'California', 'raw': '2'},
                 '$d$timestamp': {'raw': '2000-01-01'},
                 '$m$votes': {'display': '10,428,632', 'raw': 10428632},
-                '$m$votes_eoe': {'display': '9646062.0', 'raw': 9646062.0},
+                '$m$votes_eoe': {'display': '9,646,062', 'raw': 9646062},
                 '$m$wins': {'display': '1', 'raw': 1},
-                '$m$wins_eoe': {'display': '1.0', 'raw': 1.0}
+                '$m$wins_eoe': {'display': '1', 'raw': 1}
             }, {
                 '$d$state': {'display': 'Texas', 'raw': '1'},
                 '$d$timestamp': {'raw': '2004-01-01'},
                 '$m$votes': {'display': '7,359,621', 'raw': 7359621},
-                '$m$votes_eoe': {'display': '6233385.0', 'raw': 6233385.0},
+                '$m$votes_eoe': {'display': '6,233,385', 'raw': 6233385},
                 '$m$wins': {'display': '1', 'raw': 1},
-                '$m$wins_eoe': {'display': '1.0', 'raw': 1.0}
+                '$m$wins_eoe': {'display': '1', 'raw': 1}
             }, {
                 '$d$state': {'display': 'California', 'raw': '2'},
                 '$d$timestamp': {'raw': '2004-01-01'},
                 '$m$votes': {'display': '12,255,311', 'raw': 12255311},
-                '$m$votes_eoe': {'display': '10428632.0', 'raw': 10428632.0},
+                '$m$votes_eoe': {'display': '10,428,632', 'raw': 10428632},
                 '$m$wins': {'display': '1', 'raw': 1},
-                '$m$wins_eoe': {'display': '1.0', 'raw': 1.0}
+                '$m$wins_eoe': {'display': '1', 'raw': 1}
             }, {
                 '$d$state': {'display': 'Texas', 'raw': '1'},
                 '$d$timestamp': {'raw': '2008-01-01'},
                 '$m$votes': {'display': '8,007,961', 'raw': 8007961},
-                '$m$votes_eoe': {'display': '7359621.0', 'raw': 7359621.0},
+                '$m$votes_eoe': {'display': '7,359,621', 'raw': 7359621},
                 '$m$wins': {'display': '1', 'raw': 1},
-                '$m$wins_eoe': {'display': '1.0', 'raw': 1.0}
+                '$m$wins_eoe': {'display': '1', 'raw': 1}
             }, {
                 '$d$state': {'display': 'California', 'raw': '2'},
                 '$d$timestamp': {'raw': '2008-01-01'},
                 '$m$votes': {'display': '13,286,254', 'raw': 13286254},
-                '$m$votes_eoe': {'display': '12255311.0', 'raw': 12255311.0},
+                '$m$votes_eoe': {'display': '12,255,311', 'raw': 12255311},
                 '$m$wins': {'display': '1', 'raw': 1},
-                '$m$wins_eoe': {'display': '1.0', 'raw': 1.0}
+                '$m$wins_eoe': {'display': '1', 'raw': 1}
             }, {
                 '$d$state': {'display': 'Texas', 'raw': '1'},
                 '$d$timestamp': {'raw': '2012-01-01'},
                 '$m$votes': {'display': '7,877,967', 'raw': 7877967},
-                '$m$votes_eoe': {'display': '8007961.0', 'raw': 8007961.0},
+                '$m$votes_eoe': {'display': '8,007,961', 'raw': 8007961},
                 '$m$wins': {'display': '1', 'raw': 1},
-                '$m$wins_eoe': {'display': '1.0', 'raw': 1.0}
+                '$m$wins_eoe': {'display': '1', 'raw': 1}
             }, {
                 '$d$state': {'display': 'California', 'raw': '2'},
                 '$d$timestamp': {'raw': '2012-01-01'},
                 '$m$votes': {'display': '12,694,243', 'raw': 12694243},
-                '$m$votes_eoe': {'display': '13286254.0', 'raw': 13286254.0},
+                '$m$votes_eoe': {'display': '13,286,254', 'raw': 13286254},
                 '$m$wins': {'display': '1', 'raw': 1},
-                '$m$wins_eoe': {'display': '1.0', 'raw': 1.0}
+                '$m$wins_eoe': {'display': '1', 'raw': 1}
             }, {
                 '$d$state': {'display': 'Texas', 'raw': '1'},
                 '$d$timestamp': {'raw': '2016-01-01'},
                 '$m$votes': {'display': '5,072,915', 'raw': 5072915},
-                '$m$votes_eoe': {'display': '7877967.0', 'raw': 7877967.0},
+                '$m$votes_eoe': {'display': '7,877,967', 'raw': 7877967},
                 '$m$wins': {'display': '1', 'raw': 1},
-                '$m$wins_eoe': {'display': '1.0', 'raw': 1.0}
+                '$m$wins_eoe': {'display': '1', 'raw': 1}
             }, {
                 '$d$state': {'display': 'California', 'raw': '2'},
                 '$d$timestamp': {'raw': '2016-01-01'},
                 '$m$votes': {'display': '13,237,598', 'raw': 13237598},
-                '$m$votes_eoe': {'display': '12694243.0', 'raw': 12694243.0},
+                '$m$votes_eoe': {'display': '12,694,243', 'raw': 12694243},
                 '$m$wins': {'display': '1', 'raw': 1},
-                '$m$wins_eoe': {'display': '1.0', 'raw': 1.0}
+                '$m$wins_eoe': {'display': '1', 'raw': 1}
             }]
         }, result)
 
@@ -618,9 +617,9 @@ class ReactTableTransformerTests(TestCase):
                         {'Header': 'Republican', 'accessor': 'r'}],
             'data': [{
                 '$d$metrics': {'raw': 'Wins'},
-                'd': {'display': 6, 'raw': 6},
-                'i': {'display': 0, 'raw': 0},
-                'r': {'display': 6, 'raw': 6}
+                'd': {'display': '6', 'raw': 6},
+                'i': {'display': '0', 'raw': 0},
+                'r': {'display': '6', 'raw': 6}
             }]
         }, result)
 
@@ -634,28 +633,28 @@ class ReactTableTransformerTests(TestCase):
                         {'Header': 'California', 'accessor': '2'}],
             'data': [{
                 '$d$timestamp': {'raw': '1996-01-01'},
-                '1': {'display': 1, 'raw': 1},
-                '2': {'display': 1, 'raw': 1}
+                '1': {'display': '1', 'raw': 1},
+                '2': {'display': '1', 'raw': 1}
             }, {
                 '$d$timestamp': {'raw': '2000-01-01'},
-                '1': {'display': 1, 'raw': 1},
-                '2': {'display': 1, 'raw': 1}
+                '1': {'display': '1', 'raw': 1},
+                '2': {'display': '1', 'raw': 1}
             }, {
                 '$d$timestamp': {'raw': '2004-01-01'},
-                '1': {'display': 1, 'raw': 1},
-                '2': {'display': 1, 'raw': 1}
+                '1': {'display': '1', 'raw': 1},
+                '2': {'display': '1', 'raw': 1}
             }, {
                 '$d$timestamp': {'raw': '2008-01-01'},
-                '1': {'display': 1, 'raw': 1},
-                '2': {'display': 1, 'raw': 1}
+                '1': {'display': '1', 'raw': 1},
+                '2': {'display': '1', 'raw': 1}
             }, {
                 '$d$timestamp': {'raw': '2012-01-01'},
-                '1': {'display': 1, 'raw': 1},
-                '2': {'display': 1, 'raw': 1}
+                '1': {'display': '1', 'raw': 1},
+                '2': {'display': '1', 'raw': 1}
             }, {
                 '$d$timestamp': {'raw': '2016-01-01'},
-                '1': {'display': 1, 'raw': 1},
-                '2': {'display': 1, 'raw': 1}
+                '1': {'display': '1', 'raw': 1},
+                '2': {'display': '1', 'raw': 1}
             }]
         }, result)
 
@@ -778,16 +777,16 @@ class ReactTableTransformerTests(TestCase):
                     '2': {'display': '10,428,632', 'raw': 10428632}
                 },
                 '$m$votes_eoe': {
-                    '1': {'display': '5574387.0', 'raw': 5574387.0},
-                    '2': {'display': '9646062.0', 'raw': 9646062.0}
+                    '1': {'display': '5,574,387', 'raw': 5574387},
+                    '2': {'display': '9,646,062', 'raw': 9646062}
                 },
                 '$m$wins': {
                     '1': {'display': '1', 'raw': 1},
                     '2': {'display': '1', 'raw': 1}
                 },
                 '$m$wins_eoe': {
-                    '1': {'display': '1.0', 'raw': 1.0},
-                    '2': {'display': '1.0', 'raw': 1.0}
+                    '1': {'display': '1', 'raw': 1},
+                    '2': {'display': '1', 'raw': 1}
                 }
             }, {
                 '$d$timestamp': {'raw': '2004-01-01'},
@@ -796,16 +795,16 @@ class ReactTableTransformerTests(TestCase):
                     '2': {'display': '12,255,311', 'raw': 12255311}
                 },
                 '$m$votes_eoe': {
-                    '1': {'display': '6233385.0', 'raw': 6233385.0},
-                    '2': {'display': '10428632.0', 'raw': 10428632.0}
+                    '1': {'display': '6,233,385', 'raw': 6233385},
+                    '2': {'display': '10,428,632', 'raw': 10428632}
                 },
                 '$m$wins': {
                     '1': {'display': '1', 'raw': 1},
                     '2': {'display': '1', 'raw': 1}
                 },
                 '$m$wins_eoe': {
-                    '1': {'display': '1.0', 'raw': 1.0},
-                    '2': {'display': '1.0', 'raw': 1.0}
+                    '1': {'display': '1', 'raw': 1},
+                    '2': {'display': '1', 'raw': 1}
                 }
             }, {
                 '$d$timestamp': {'raw': '2008-01-01'},
@@ -814,16 +813,16 @@ class ReactTableTransformerTests(TestCase):
                     '2': {'display': '13,286,254', 'raw': 13286254}
                 },
                 '$m$votes_eoe': {
-                    '1': {'display': '7359621.0', 'raw': 7359621.0},
-                    '2': {'display': '12255311.0', 'raw': 12255311.0}
+                    '1': {'display': '7,359,621', 'raw': 7359621},
+                    '2': {'display': '12,255,311', 'raw': 12255311}
                 },
                 '$m$wins': {
                     '1': {'display': '1', 'raw': 1},
                     '2': {'display': '1', 'raw': 1}
                 },
                 '$m$wins_eoe': {
-                    '1': {'display': '1.0', 'raw': 1.0},
-                    '2': {'display': '1.0', 'raw': 1.0}
+                    '1': {'display': '1', 'raw': 1},
+                    '2': {'display': '1', 'raw': 1}
                 }
             }, {
                 '$d$timestamp': {'raw': '2012-01-01'},
@@ -832,16 +831,16 @@ class ReactTableTransformerTests(TestCase):
                     '2': {'display': '12,694,243', 'raw': 12694243}
                 },
                 '$m$votes_eoe': {
-                    '1': {'display': '8007961.0', 'raw': 8007961.0},
-                    '2': {'display': '13286254.0', 'raw': 13286254.0}
+                    '1': {'display': '8,007,961', 'raw': 8007961},
+                    '2': {'display': '13,286,254', 'raw': 13286254}
                 },
                 '$m$wins': {
                     '1': {'display': '1', 'raw': 1},
                     '2': {'display': '1', 'raw': 1}
                 },
                 '$m$wins_eoe': {
-                    '1': {'display': '1.0', 'raw': 1.0},
-                    '2': {'display': '1.0', 'raw': 1.0}
+                    '1': {'display': '1', 'raw': 1},
+                    '2': {'display': '1', 'raw': 1}
                 }
             }, {
                 '$d$timestamp': {'raw': '2016-01-01'},
@@ -850,16 +849,16 @@ class ReactTableTransformerTests(TestCase):
                     '2': {'display': '13,237,598', 'raw': 13237598}
                 },
                 '$m$votes_eoe': {
-                    '1': {'display': '7877967.0', 'raw': 7877967.0},
-                    '2': {'display': '12694243.0', 'raw': 12694243.0}
+                    '1': {'display': '7,877,967', 'raw': 7877967},
+                    '2': {'display': '12,694,243', 'raw': 12694243}
                 },
                 '$m$wins': {
                     '1': {'display': '1', 'raw': 1},
                     '2': {'display': '1', 'raw': 1}
                 },
                 '$m$wins_eoe': {
-                    '1': {'display': '1.0', 'raw': 1.0},
-                    '2': {'display': '1.0', 'raw': 1.0}
+                    '1': {'display': '1', 'raw': 1},
+                    '2': {'display': '1', 'raw': 1}
                 }
             }]
         }, result)
@@ -883,17 +882,17 @@ class ReactTableTransformerTests(TestCase):
                         {'Header': 'Hillary Clinton', 'accessor': '11'}],
             'data': [{
                 '$d$metrics': {'raw': 'Wins'},
-                '1': {'display': 2, 'raw': 2},
-                '10': {'display': 2, 'raw': 2},
-                '11': {'display': 0, 'raw': 0},
-                '2': {'display': 0, 'raw': 0},
-                '3': {'display': 0, 'raw': 0},
-                '4': {'display': 4, 'raw': 4},
-                '5': {'display': 0, 'raw': 0},
-                '6': {'display': 0, 'raw': 0},
-                '7': {'display': 4, 'raw': 4},
-                '8': {'display': 0, 'raw': 0},
-                '9': {'display': 0, 'raw': 0}
+                '1': {'display': '2', 'raw': 2},
+                '10': {'display': '2', 'raw': 2},
+                '11': {'display': '0', 'raw': 0},
+                '2': {'display': '0', 'raw': 0},
+                '3': {'display': '0', 'raw': 0},
+                '4': {'display': '4', 'raw': 4},
+                '5': {'display': '0', 'raw': 0},
+                '6': {'display': '0', 'raw': 0},
+                '7': {'display': '4', 'raw': 4},
+                '8': {'display': '0', 'raw': 0},
+                '9': {'display': '0', 'raw': 0}
             }]
         }, result)
 
@@ -916,17 +915,17 @@ class ReactTableTransformerTests(TestCase):
                         {'Header': 'Hillary Clinton', 'accessor': '11'}],
             'data': [{
                 '$d$metrics': {'raw': 'Wins'},
-                '1': {'display': 2, 'raw': 2},
-                '10': {'display': 2, 'raw': 2},
-                '11': {'display': 0, 'raw': 0},
-                '2': {'display': 0, 'raw': 0},
-                '3': {'display': 0, 'raw': 0},
-                '4': {'display': 4, 'raw': 4},
-                '5': {'display': 0, 'raw': 0},
-                '6': {'display': 0, 'raw': 0},
-                '7': {'display': 4, 'raw': 4},
-                '8': {'display': 0, 'raw': 0},
-                '9': {'display': 0, 'raw': 0}
+                '1': {'display': '2', 'raw': 2},
+                '10': {'display': '2', 'raw': 2},
+                '11': {'display': '0', 'raw': 0},
+                '2': {'display': '0', 'raw': 0},
+                '3': {'display': '0', 'raw': 0},
+                '4': {'display': '4', 'raw': 4},
+                '5': {'display': '0', 'raw': 0},
+                '6': {'display': '0', 'raw': 0},
+                '7': {'display': '4', 'raw': 4},
+                '8': {'display': '0', 'raw': 0},
+                '9': {'display': '0', 'raw': 0}
             }]
         }, result)
 
@@ -950,30 +949,30 @@ class ReactTableTransformerTests(TestCase):
                         {'Header': 'Hillary Clinton', 'accessor': '11'}],
             'data': [{
                 '$d$metrics': {'raw': 'Wins'},
-                '1': {'display': 2, 'raw': 2},
-                '10': {'display': 2, 'raw': 2},
-                '11': {'display': 0, 'raw': 0},
-                '2': {'display': 0, 'raw': 0},
-                '3': {'display': 0, 'raw': 0},
-                '4': {'display': 4, 'raw': 4},
-                '5': {'display': 0, 'raw': 0},
-                '6': {'display': 0, 'raw': 0},
-                '7': {'display': 4, 'raw': 4},
-                '8': {'display': 0, 'raw': 0},
-                '9': {'display': 0, 'raw': 0}
+                '1': {'display': '2', 'raw': 2},
+                '10': {'display': '2', 'raw': 2},
+                '11': {'display': '0', 'raw': 0},
+                '2': {'display': '0', 'raw': 0},
+                '3': {'display': '0', 'raw': 0},
+                '4': {'display': '4', 'raw': 4},
+                '5': {'display': '0', 'raw': 0},
+                '6': {'display': '0', 'raw': 0},
+                '7': {'display': '4', 'raw': 4},
+                '8': {'display': '0', 'raw': 0},
+                '9': {'display': '0', 'raw': 0}
             }, {
                 '$d$metrics': {'raw': 'Votes'},
-                '1': {'display': 7579518, 'raw': 7579518},
-                '10': {'display': 13438835, 'raw': 13438835},
-                '11': {'display': 4871678, 'raw': 4871678},
-                '2': {'display': 6564547, 'raw': 6564547},
-                '3': {'display': 1076384, 'raw': 1076384},
-                '4': {'display': 18403811, 'raw': 18403811},
-                '5': {'display': 8294949, 'raw': 8294949},
-                '6': {'display': 9578189, 'raw': 9578189},
-                '7': {'display': 24227234, 'raw': 24227234},
-                '8': {'display': 9491109, 'raw': 9491109},
-                '9': {'display': 8148082, 'raw': 8148082}
+                '1': {'display': '7,579,518', 'raw': 7579518},
+                '10': {'display': '13,438,835', 'raw': 13438835},
+                '11': {'display': '4,871,678', 'raw': 4871678},
+                '2': {'display': '6,564,547', 'raw': 6564547},
+                '3': {'display': '1,076,384', 'raw': 1076384},
+                '4': {'display': '18,403,811', 'raw': 18403811},
+                '5': {'display': '8,294,949', 'raw': 8294949},
+                '6': {'display': '9,578,189', 'raw': 9578189},
+                '7': {'display': '24,227,234', 'raw': 24227234},
+                '8': {'display': '9,491,109', 'raw': 9491109},
+                '9': {'display': '8,148,082', 'raw': 8148082}
             }]
         }, result)
 
@@ -1035,74 +1034,74 @@ class ReactTableTransformerTests(TestCase):
             'data': [{
                 '$d$timestamp': {'raw': '1996-01-01'},
                 '$m$votes': {
-                    '1': {'display': '5574387.0', 'raw': 5574387.0},
-                    '2': {'display': '9646062.0', 'raw': 9646062.0},
-                    'totals': {'display': '15220449.0', 'raw': 15220449.0}
+                    '1': {'display': '5,574,387', 'raw': 5574387},
+                    '2': {'display': '9,646,062', 'raw': 9646062},
+                    'totals': {'display': '15,220,449', 'raw': 15220449}
                 },
                 '$m$wins': {
-                    '1': {'display': '1.0', 'raw': 1.0},
-                    '2': {'display': '1.0', 'raw': 1.0},
-                    'totals': {'display': '2.0', 'raw': 2.0}
+                    '1': {'display': '1', 'raw': 1},
+                    '2': {'display': '1', 'raw': 1},
+                    'totals': {'display': '2', 'raw': 2}
                 }
             }, {
                 '$d$timestamp': {'raw': '2000-01-01'},
                 '$m$votes': {
-                    '1': {'display': '6233385.0', 'raw': 6233385.0},
-                    '2': {'display': '10428632.0', 'raw': 10428632.0},
-                    'totals': {'display': '16662017.0', 'raw': 16662017.0}
+                    '1': {'display': '6,233,385', 'raw': 6233385},
+                    '2': {'display': '10,428,632', 'raw': 10428632},
+                    'totals': {'display': '16,662,017', 'raw': 16662017}
                 },
                 '$m$wins': {
-                    '1': {'display': '1.0', 'raw': 1.0},
-                    '2': {'display': '1.0', 'raw': 1.0},
-                    'totals': {'display': '2.0', 'raw': 2.0}
+                    '1': {'display': '1', 'raw': 1},
+                    '2': {'display': '1', 'raw': 1},
+                    'totals': {'display': '2', 'raw': 2}
                 }
             }, {
                 '$d$timestamp': {'raw': '2004-01-01'},
                 '$m$votes': {
-                    '1': {'display': '7359621.0', 'raw': 7359621.0},
-                    '2': {'display': '12255311.0', 'raw': 12255311.0},
-                    'totals': {'display': '19614932.0', 'raw': 19614932.0}
+                    '1': {'display': '7,359,621', 'raw': 7359621},
+                    '2': {'display': '12,255,311', 'raw': 12255311},
+                    'totals': {'display': '19,614,932', 'raw': 19614932}
                 },
                 '$m$wins': {
-                    '1': {'display': '1.0', 'raw': 1.0},
-                    '2': {'display': '1.0', 'raw': 1.0},
-                    'totals': {'display': '2.0', 'raw': 2.0}
+                    '1': {'display': '1', 'raw': 1},
+                    '2': {'display': '1', 'raw': 1},
+                    'totals': {'display': '2', 'raw': 2}
                 }
             }, {
                 '$d$timestamp': {'raw': '2008-01-01'},
                 '$m$votes': {
-                    '1': {'display': '8007961.0', 'raw': 8007961.0},
-                    '2': {'display': '13286254.0', 'raw': 13286254.0},
-                    'totals': {'display': '21294215.0', 'raw': 21294215.0}
+                    '1': {'display': '8,007,961', 'raw': 8007961},
+                    '2': {'display': '13,286,254', 'raw': 13286254},
+                    'totals': {'display': '21,294,215', 'raw': 21294215}
                 },
                 '$m$wins': {
-                    '1': {'display': '1.0', 'raw': 1.0},
-                    '2': {'display': '1.0', 'raw': 1.0},
-                    'totals': {'display': '2.0', 'raw': 2.0}
+                    '1': {'display': '1', 'raw': 1},
+                    '2': {'display': '1', 'raw': 1},
+                    'totals': {'display': '2', 'raw': 2}
                 }
             }, {
                 '$d$timestamp': {'raw': '2012-01-01'},
                 '$m$votes': {
-                    '1': {'display': '7877967.0', 'raw': 7877967.0},
-                    '2': {'display': '12694243.0', 'raw': 12694243.0},
-                    'totals': {'display': '20572210.0', 'raw': 20572210.0}
+                    '1': {'display': '7,877,967', 'raw': 7877967},
+                    '2': {'display': '12,694,243', 'raw': 12694243},
+                    'totals': {'display': '20,572,210', 'raw': 20572210}
                 },
                 '$m$wins': {
-                    '1': {'display': '1.0', 'raw': 1.0},
-                    '2': {'display': '1.0', 'raw': 1.0},
-                    'totals': {'display': '2.0', 'raw': 2.0}
+                    '1': {'display': '1', 'raw': 1},
+                    '2': {'display': '1', 'raw': 1},
+                    'totals': {'display': '2', 'raw': 2}
                 }
             }, {
                 '$d$timestamp': {'raw': '2016-01-01'},
                 '$m$votes': {
-                    '1': {'display': '5072915.0', 'raw': 5072915.0},
-                    '2': {'display': '13237598.0', 'raw': 13237598.0},
-                    'totals': {'display': '18310513.0', 'raw': 18310513.0}
+                    '1': {'display': '5,072,915', 'raw': 5072915},
+                    '2': {'display': '13,237,598', 'raw': 13237598},
+                    'totals': {'display': '18,310,513', 'raw': 18310513}
                 },
                 '$m$wins': {
-                    '1': {'display': '1.0', 'raw': 1.0},
-                    '2': {'display': '1.0', 'raw': 1.0},
-                    'totals': {'display': '2.0', 'raw': 2.0}
+                    '1': {'display': '1', 'raw': 1},
+                    '2': {'display': '1', 'raw': 1},
+                    'totals': {'display': '2', 'raw': 2}
                 }
             }, {
                 '$d$timestamp': {'raw': 'Totals'},
@@ -1110,14 +1109,14 @@ class ReactTableTransformerTests(TestCase):
                     '1': {'display': '', 'raw': ''},
                     '2': {'display': '', 'raw': ''},
                     'totals': {
-                        'display': '111674336.0',
-                        'raw': 111674336.0
+                        'display': '111,674,336',
+                        'raw': 111674336
                     }
                 },
                 '$m$wins': {
                     '1': {'display': '', 'raw': ''},
                     '2': {'display': '', 'raw': ''},
-                    'totals': {'display': '12.0', 'raw': 12.0}
+                    'totals': {'display': '12', 'raw': 12}
                 }
             }]
         }, result)
@@ -1145,63 +1144,63 @@ class ReactTableTransformerTests(TestCase):
             'data': [{
                 '$d$metrics': {'raw': 'Wins'},
                 '$d$state': {'display': 'Texas', 'raw': '1'},
-                '1996-01-01': {'display': 1.0, 'raw': 1.0},
-                '2000-01-01': {'display': 1.0, 'raw': 1.0},
-                '2004-01-01': {'display': 1.0, 'raw': 1.0},
-                '2008-01-01': {'display': 1.0, 'raw': 1.0},
-                '2012-01-01': {'display': 1.0, 'raw': 1.0},
-                '2016-01-01': {'display': 1.0, 'raw': 1.0},
+                '1996-01-01': {'display': '1', 'raw': 1},
+                '2000-01-01': {'display': '1', 'raw': 1},
+                '2004-01-01': {'display': '1', 'raw': 1},
+                '2008-01-01': {'display': '1', 'raw': 1},
+                '2012-01-01': {'display': '1', 'raw': 1},
+                '2016-01-01': {'display': '1', 'raw': 1},
                 'totals': {'display': '', 'raw': ''}
             }, {
                 '$d$metrics': {'raw': 'Wins'},
                 '$d$state': {'display': 'California', 'raw': '2'},
-                '1996-01-01': {'display': 1.0, 'raw': 1.0},
-                '2000-01-01': {'display': 1.0, 'raw': 1.0},
-                '2004-01-01': {'display': 1.0, 'raw': 1.0},
-                '2008-01-01': {'display': 1.0, 'raw': 1.0},
-                '2012-01-01': {'display': 1.0, 'raw': 1.0},
-                '2016-01-01': {'display': 1.0, 'raw': 1.0},
+                '1996-01-01': {'display': '1', 'raw': 1},
+                '2000-01-01': {'display': '1', 'raw': 1},
+                '2004-01-01': {'display': '1', 'raw': 1},
+                '2008-01-01': {'display': '1', 'raw': 1},
+                '2012-01-01': {'display': '1', 'raw': 1},
+                '2016-01-01': {'display': '1', 'raw': 1},
                 'totals': {'display': '', 'raw': ''}
             }, {
                 '$d$metrics': {'raw': 'Wins'},
                 '$d$state': {'raw': 'Totals'},
-                '1996-01-01': {'display': 2.0, 'raw': 2.0},
-                '2000-01-01': {'display': 2.0, 'raw': 2.0},
-                '2004-01-01': {'display': 2.0, 'raw': 2.0},
-                '2008-01-01': {'display': 2.0, 'raw': 2.0},
-                '2012-01-01': {'display': 2.0, 'raw': 2.0},
-                '2016-01-01': {'display': 2.0, 'raw': 2.0},
-                'totals': {'display': '12.0', 'raw': 12.0}
+                '1996-01-01': {'display': '2', 'raw': 2},
+                '2000-01-01': {'display': '2', 'raw': 2},
+                '2004-01-01': {'display': '2', 'raw': 2},
+                '2008-01-01': {'display': '2', 'raw': 2},
+                '2012-01-01': {'display': '2', 'raw': 2},
+                '2016-01-01': {'display': '2', 'raw': 2},
+                'totals': {'display': '12', 'raw': 12}
             }, {
                 '$d$metrics': {'raw': 'Votes'},
                 '$d$state': {'display': 'Texas', 'raw': '1'},
-                '1996-01-01': {'display': 5574387.0, 'raw': 5574387.0},
-                '2000-01-01': {'display': 6233385.0, 'raw': 6233385.0},
-                '2004-01-01': {'display': 7359621.0, 'raw': 7359621.0},
-                '2008-01-01': {'display': 8007961.0, 'raw': 8007961.0},
-                '2012-01-01': {'display': 7877967.0, 'raw': 7877967.0},
-                '2016-01-01': {'display': 5072915.0, 'raw': 5072915.0},
+                '1996-01-01': {'display': '5,574,387', 'raw': 5574387},
+                '2000-01-01': {'display': '6,233,385', 'raw': 6233385},
+                '2004-01-01': {'display': '7,359,621', 'raw': 7359621},
+                '2008-01-01': {'display': '8,007,961', 'raw': 8007961},
+                '2012-01-01': {'display': '7,877,967', 'raw': 7877967},
+                '2016-01-01': {'display': '5,072,915', 'raw': 5072915},
                 'totals': {'display': '', 'raw': ''}
             }, {
                 '$d$metrics': {'raw': 'Votes'},
                 '$d$state': {'display': 'California', 'raw': '2'},
-                '1996-01-01': {'display': 9646062.0, 'raw': 9646062.0},
-                '2000-01-01': {'display': 10428632.0, 'raw': 10428632.0},
-                '2004-01-01': {'display': 12255311.0, 'raw': 12255311.0},
-                '2008-01-01': {'display': 13286254.0, 'raw': 13286254.0},
-                '2012-01-01': {'display': 12694243.0, 'raw': 12694243.0},
-                '2016-01-01': {'display': 13237598.0, 'raw': 13237598.0},
+                '1996-01-01': {'display': '9,646,062', 'raw': 9646062},
+                '2000-01-01': {'display': '10,428,632', 'raw': 10428632},
+                '2004-01-01': {'display': '12,255,311', 'raw': 12255311},
+                '2008-01-01': {'display': '13,286,254', 'raw': 13286254},
+                '2012-01-01': {'display': '12,694,243', 'raw': 12694243},
+                '2016-01-01': {'display': '13,237,598', 'raw': 13237598},
                 'totals': {'display': '', 'raw': ''}
             }, {
                 '$d$metrics': {'raw': 'Votes'},
                 '$d$state': {'raw': 'Totals'},
-                '1996-01-01': {'display': 15220449.0, 'raw': 15220449.0},
-                '2000-01-01': {'display': 16662017.0, 'raw': 16662017.0},
-                '2004-01-01': {'display': 19614932.0, 'raw': 19614932.0},
-                '2008-01-01': {'display': 21294215.0, 'raw': 21294215.0},
-                '2012-01-01': {'display': 20572210.0, 'raw': 20572210.0},
-                '2016-01-01': {'display': 18310513.0, 'raw': 18310513.0},
-                'totals': {'display': '111674336.0', 'raw': 111674336.0}
+                '1996-01-01': {'display': '15,220,449', 'raw': 15220449},
+                '2000-01-01': {'display': '16,662,017', 'raw': 16662017},
+                '2004-01-01': {'display': '19,614,932', 'raw': 19614932},
+                '2008-01-01': {'display': '21,294,215', 'raw': 21294215},
+                '2012-01-01': {'display': '20,572,210', 'raw': 20572210},
+                '2016-01-01': {'display': '18,310,513', 'raw': 18310513},
+                'totals': {'display': '111,674,336', 'raw': 111674336}
             }]
         }, result)
 
@@ -1228,148 +1227,62 @@ class ReactTableTransformerTests(TestCase):
             'data': [{
                 '$d$metrics': {'raw': 'Wins'},
                 '$d$state': {'display': 'Texas', 'raw': '1'},
-                '1996-01-01': {'display': 1.0, 'raw': 1.0},
-                '2000-01-01': {'display': 1.0, 'raw': 1.0},
-                '2004-01-01': {'display': 1.0, 'raw': 1.0},
-                '2008-01-01': {'display': 1.0, 'raw': 1.0},
-                '2012-01-01': {'display': 1.0, 'raw': 1.0},
-                '2016-01-01': {'display': 1.0, 'raw': 1.0},
+                '1996-01-01': {'display': '1', 'raw': 1},
+                '2000-01-01': {'display': '1', 'raw': 1},
+                '2004-01-01': {'display': '1', 'raw': 1},
+                '2008-01-01': {'display': '1', 'raw': 1},
+                '2012-01-01': {'display': '1', 'raw': 1},
+                '2016-01-01': {'display': '1', 'raw': 1},
                 'totals': {'display': '', 'raw': ''}
             }, {
                 '$d$metrics': {'raw': 'Wins'},
                 '$d$state': {'display': 'California', 'raw': '2'},
-                '1996-01-01': {'display': 1.0, 'raw': 1.0},
-                '2000-01-01': {'display': 1.0, 'raw': 1.0},
-                '2004-01-01': {'display': 1.0, 'raw': 1.0},
-                '2008-01-01': {'display': 1.0, 'raw': 1.0},
-                '2012-01-01': {'display': 1.0, 'raw': 1.0},
-                '2016-01-01': {'display': 1.0, 'raw': 1.0},
+                '1996-01-01': {'display': '1', 'raw': 1},
+                '2000-01-01': {'display': '1', 'raw': 1},
+                '2004-01-01': {'display': '1', 'raw': 1},
+                '2008-01-01': {'display': '1', 'raw': 1},
+                '2012-01-01': {'display': '1', 'raw': 1},
+                '2016-01-01': {'display': '1', 'raw': 1},
                 'totals': {'display': '', 'raw': ''}
             }, {
                 '$d$metrics': {'raw': 'Wins'},
                 '$d$state': {'raw': 'Totals'},
-                '1996-01-01': {'display': 2.0, 'raw': 2.0},
-                '2000-01-01': {'display': 2.0, 'raw': 2.0},
-                '2004-01-01': {'display': 2.0, 'raw': 2.0},
-                '2008-01-01': {'display': 2.0, 'raw': 2.0},
-                '2012-01-01': {'display': 2.0, 'raw': 2.0},
-                '2016-01-01': {'display': 2.0, 'raw': 2.0},
-                'totals': {'display': '12.0', 'raw': 12.0}
+                '1996-01-01': {'display': '2', 'raw': 2},
+                '2000-01-01': {'display': '2', 'raw': 2},
+                '2004-01-01': {'display': '2', 'raw': 2},
+                '2008-01-01': {'display': '2', 'raw': 2},
+                '2012-01-01': {'display': '2', 'raw': 2},
+                '2016-01-01': {'display': '2', 'raw': 2},
+                'totals': {'display': '12', 'raw': 12}
             }, {
                 '$d$metrics': {'raw': 'Votes'},
                 '$d$state': {'display': 'Texas', 'raw': '1'},
-                '1996-01-01': {'display': 5574387.0, 'raw': 5574387.0},
-                '2000-01-01': {'display': 6233385.0, 'raw': 6233385.0},
-                '2004-01-01': {'display': 7359621.0, 'raw': 7359621.0},
-                '2008-01-01': {'display': 8007961.0, 'raw': 8007961.0},
-                '2012-01-01': {'display': 7877967.0, 'raw': 7877967.0},
-                '2016-01-01': {'display': 5072915.0, 'raw': 5072915.0},
+                '1996-01-01': {'display': '5,574,387', 'raw': 5574387},
+                '2000-01-01': {'display': '6,233,385', 'raw': 6233385},
+                '2004-01-01': {'display': '7,359,621', 'raw': 7359621},
+                '2008-01-01': {'display': '8,007,961', 'raw': 8007961},
+                '2012-01-01': {'display': '7,877,967', 'raw': 7877967},
+                '2016-01-01': {'display': '5,072,915', 'raw': 5072915},
                 'totals': {'display': '', 'raw': ''}
             }, {
                 '$d$metrics': {'raw': 'Votes'},
                 '$d$state': {'display': 'California', 'raw': '2'},
-                '1996-01-01': {'display': 9646062.0, 'raw': 9646062.0},
-                '2000-01-01': {'display': 10428632.0, 'raw': 10428632.0},
-                '2004-01-01': {'display': 12255311.0, 'raw': 12255311.0},
-                '2008-01-01': {'display': 13286254.0, 'raw': 13286254.0},
-                '2012-01-01': {'display': 12694243.0, 'raw': 12694243.0},
-                '2016-01-01': {'display': 13237598.0, 'raw': 13237598.0},
+                '1996-01-01': {'display': '9,646,062', 'raw': 9646062},
+                '2000-01-01': {'display': '10,428,632', 'raw': 10428632},
+                '2004-01-01': {'display': '12,255,311', 'raw': 12255311},
+                '2008-01-01': {'display': '13,286,254', 'raw': 13286254},
+                '2012-01-01': {'display': '12,694,243', 'raw': 12694243},
+                '2016-01-01': {'display': '13,237,598', 'raw': 13237598},
                 'totals': {'display': '', 'raw': ''}
             }, {
                 '$d$metrics': {'raw': 'Votes'},
                 '$d$state': {'raw': 'Totals'},
-                '1996-01-01': {'display': 15220449.0, 'raw': 15220449.0},
-                '2000-01-01': {'display': 16662017.0, 'raw': 16662017.0},
-                '2004-01-01': {'display': 19614932.0, 'raw': 19614932.0},
-                '2008-01-01': {'display': 21294215.0, 'raw': 21294215.0},
-                '2012-01-01': {'display': 20572210.0, 'raw': 20572210.0},
-                '2016-01-01': {'display': 18310513.0, 'raw': 18310513.0},
-                'totals': {'display': '111674336.0', 'raw': 111674336.0}
+                '1996-01-01': {'display': '15,220,449', 'raw': 15220449},
+                '2000-01-01': {'display': '16,662,017', 'raw': 16662017},
+                '2004-01-01': {'display': '19,614,932', 'raw': 19614932},
+                '2008-01-01': {'display': '21,294,215', 'raw': 21294215},
+                '2012-01-01': {'display': '20,572,210', 'raw': 20572210},
+                '2016-01-01': {'display': '18,310,513', 'raw': 18310513},
+                'totals': {'display': '111,674,336', 'raw': 111674336}
             }]
         }, result)
-
-
-class ReactTableDisplayValueFormat(TestCase):
-    def test_str_value_no_formats(self):
-        display = display_value('abcdef')
-        self.assertEqual('abcdef', display)
-
-    def test_bool_true_value_no_formats(self):
-        display = display_value(True)
-        self.assertEqual('true', display)
-
-    def test_bool_false_value_no_formats(self):
-        display = display_value(False)
-        self.assertEqual('false', display)
-
-    def test_int_value_no_formats(self):
-        display = display_value(12345)
-        self.assertEqual('12,345', display)
-
-    def test_decimal_value_no_formats(self):
-        display = display_value(12345.123456789)
-        self.assertEqual('12345.123456789', display)
-
-    def test_str_value_with_prefix(self):
-        display = display_value('abcdef', prefix='$')
-        self.assertEqual('$abcdef', display)
-
-    def test_bool_true_value_with_prefix(self):
-        display = display_value(True, prefix='$')
-        self.assertEqual('$true', display)
-
-    def test_bool_false_value_with_prefix(self):
-        display = display_value(False, prefix='$')
-        self.assertEqual('$false', display)
-
-    def test_int_value_with_prefix(self):
-        display = display_value(12345, prefix='$')
-        self.assertEqual('$12,345', display)
-
-    def test_decimal_value_with_prefix(self):
-        display = display_value(12345.123456789, prefix='$')
-        self.assertEqual('$12345.123456789', display)
-
-    def test_str_value_with_suffix(self):
-        display = display_value('abcdef', suffix='€')
-        self.assertEqual('abcdef€', display)
-
-    def test_bool_true_value_with_suffix(self):
-        display = display_value(True, suffix='€')
-        self.assertEqual('true€', display)
-
-    def test_bool_false_value_with_suffix(self):
-        display = display_value(False, suffix='€')
-        self.assertEqual('false€', display)
-
-    def test_int_value_with_suffix(self):
-        display = display_value(12345, suffix='€')
-        self.assertEqual('12,345€', display)
-
-    def test_decimal_value_with_suffix(self):
-        display = display_value(12345.123456789, suffix='€')
-        self.assertEqual('12345.123456789€', display)
-
-    def test_str_value_with_precision(self):
-        display = display_value('abcdef', precision=2)
-        self.assertEqual('abcdef', display)
-
-    def test_bool_true_value_with_precision(self):
-        display = display_value(True, precision=2)
-        self.assertEqual('true', display)
-
-    def test_bool_false_value_with_precision(self):
-        display = display_value(False, precision=2)
-        self.assertEqual('false', display)
-
-    def test_int_value_with_precision(self):
-        display = display_value(12345, precision=2)
-        self.assertEqual('12,345', display)
-
-    def test_decimal_value_with_precision_0(self):
-        display = display_value(12345.123456789, precision=0)
-        self.assertEqual('12345', display)
-
-    def test_decimal_value_with_precision_2(self):
-        display = display_value(12345.123456789, precision=2)
-        self.assertEqual('12345.12', display)

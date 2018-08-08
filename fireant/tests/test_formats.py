@@ -59,33 +59,97 @@ class FormatMetricValueTests(TestCase):
 
 
 class DisplayValueTests(TestCase):
-    def test_precision_default(self):
-        result = formats.metric_display(0.123456789)
-        self.assertEqual('0.123457', result)
+    def test_str_value_no_formats(self):
+        display = formats.metric_display('abcdef')
+        self.assertEqual('abcdef', display)
 
-    def test_zero_precision(self):
-        result = formats.metric_display(0.123456789, precision=0)
-        self.assertEqual('0', result)
+    def test_bool_true_value_no_formats(self):
+        display = formats.metric_display(True)
+        self.assertEqual('true', display)
 
-    def test_precision(self):
-        result = formats.metric_display(0.123456789, precision=2)
-        self.assertEqual('0.12', result)
+    def test_bool_false_value_no_formats(self):
+        display = formats.metric_display(False)
+        self.assertEqual('false', display)
 
-    def test_precision_zero(self):
-        result = formats.metric_display(0.0)
-        self.assertEqual('0', result)
+    def test_int_value_no_formats(self):
+        display = formats.metric_display(12345)
+        self.assertEqual('12,345', display)
 
-    def test_precision_trim_trailing_zeros(self):
+    def test_decimal_value_no_formats(self):
+        display = formats.metric_display(12345.123456789)
+        self.assertEqual('12,345.123457', display)
+
+    def test_str_value_with_prefix(self):
+        display = formats.metric_display('abcdef', prefix='$')
+        self.assertEqual('$abcdef', display)
+
+    def test_bool_true_value_with_prefix(self):
+        display = formats.metric_display(True, prefix='$')
+        self.assertEqual('$true', display)
+
+    def test_bool_false_value_with_prefix(self):
+        display = formats.metric_display(False, prefix='$')
+        self.assertEqual('$false', display)
+
+    def test_int_value_with_prefix(self):
+        display = formats.metric_display(12345, prefix='$')
+        self.assertEqual('$12,345', display)
+
+    def test_decimal_value_with_prefix(self):
+        display = formats.metric_display(12345.123456789, prefix='$')
+        self.assertEqual('$12,345.123457', display)
+
+    def test_str_value_with_suffix(self):
+        display = formats.metric_display('abcdef', suffix='€')
+        self.assertEqual('abcdef€', display)
+
+    def test_bool_true_value_with_suffix(self):
+        display = formats.metric_display(True, suffix='€')
+        self.assertEqual('true€', display)
+
+    def test_bool_false_value_with_suffix(self):
+        display = formats.metric_display(False, suffix='€')
+        self.assertEqual('false€', display)
+
+    def test_int_value_with_suffix(self):
+        display = formats.metric_display(12345, suffix='€')
+        self.assertEqual('12,345€', display)
+
+    def test_decimal_value_with_suffix(self):
+        display = formats.metric_display(12345.123456789, suffix='€')
+        self.assertEqual('12,345.123457€', display)
+
+    def test_str_value_with_precision(self):
+        display = formats.metric_display('abcdef', precision=2)
+        self.assertEqual('abcdef', display)
+
+    def test_bool_true_value_with_precision(self):
+        display = formats.metric_display(True, precision=2)
+        self.assertEqual('true', display)
+
+    def test_bool_false_value_with_precision(self):
+        display = formats.metric_display(False, precision=2)
+        self.assertEqual('false', display)
+
+    def test_int_value_with_precision(self):
+        display = formats.metric_display(12345, precision=2)
+        self.assertEqual('12,345', display)
+
+    def test_decimal_value_with_precision_0(self):
+        display = formats.metric_display(12345.123456789, precision=0)
+        self.assertEqual('12,345', display)
+
+    def test_decimal_value_with_precision_2(self):
+        display = formats.metric_display(12345.123456789, precision=2)
+        self.assertEqual('12,345.12', display)
+
+    def test_decimal_value_with_precision_9(self):
+        display = formats.metric_display(12345.123456789, precision=9)
+        self.assertEqual('12,345.123456789', display)
+
+    def test_decimal_value_with_precision_trim_trailing_zeros(self):
         result = formats.metric_display(1.01)
         self.assertEqual('1.01', result)
-
-    def test_prefix(self):
-        result = formats.metric_display(0.12, prefix='$')
-        self.assertEqual('$0.12', result)
-
-    def test_suffix(self):
-        result = formats.metric_display(0.12, suffix='€')
-        self.assertEqual('0.12€', result)
 
 
 class CoerceTypeTests(TestCase):
