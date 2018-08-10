@@ -285,7 +285,7 @@ class PandasTransformerTests(TestCase):
 
         expected = cat_dim_df_with_nan.copy()[[fm('wins')]]
         expected.index = pd.Index(['Democrat', 'Independent', 'Republican'], name='Party')
-        expected['$m$wins'] = ['6', '0', '']
+        expected['$m$wins'] = ['6', '0', 'Inf']
         expected.columns = ['Wins']
         expected.columns.name = 'Metrics'
 
