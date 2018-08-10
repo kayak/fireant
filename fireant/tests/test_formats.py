@@ -1,13 +1,13 @@
+from datetime import (
+    date,
+    datetime,
+)
 from unittest import (
     TestCase,
 )
 
 import numpy as np
 import pandas as pd
-from datetime import (
-    date,
-    datetime,
-)
 
 from fireant import formats
 
@@ -150,6 +150,27 @@ class DisplayValueTests(TestCase):
     def test_decimal_value_with_precision_trim_trailing_zeros(self):
         result = formats.metric_display(1.01)
         self.assertEqual('1.01', result)
+
+    def test_nan_format_no_formatting(self):
+        display = formats.metric_display('NaN', prefix='$', suffix='€', precision=2)
+        self.assertEqual('NaN', display)
+
+    def test_inf_format_no_formatting(self):
+        display = formats.metric_display('Inf', prefix='$', suffix='€', precision=2)
+        self.assertEqual('Inf', display)
+
+    def test_null_format_no_formatting(self):
+        display = formats.metric_display('null', prefix='$', suffix='€', precision=2)
+        self.assertEqual('null', display)
+
+    def test_negative_usd_float_value(self):
+        display = formats.metric_display(-0.12, prefix='$')
+        self.assertEqual('-$0.12', display)
+
+    def test_negative_usd_int_value(self):
+        display = formats.metric_display(-12, prefix='$')
+        self.assertEqual('-$12', display)
+
 
 
 class CoerceTypeTests(TestCase):

@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 
 from fireant.formats import (
+    INF_VALUE,
+    NAN_VALUE,
     RAW_VALUE,
     TOTALS_VALUE,
     metric_display,
@@ -120,7 +122,6 @@ class ReactTable(Pandas):
         </ReactTable>;
     ```
     """
-
     def __init__(self, metric, *metrics: Metric, pivot=(), transpose=False, max_columns=None):
         super(ReactTable, self).__init__(metric, *metrics,
                                          pivot=pivot,
@@ -171,7 +172,13 @@ class ReactTable(Pandas):
         for i, dimension in enumerate(dimensions):
             if isinstance(dimension, DatetimeDimension):
                 date_format = DATE_FORMATS.get(dimension.interval, DATE_FORMATS[daily])
-                data_frame.index = map_index_level(data_frame.index, i, lambda dt: dt.strftime(date_format))
+
+                def format_datetime(dt):
+                    if pd.isnull(dt):
+                        return TOTALS_VALUE
+                    return dt.strftime(date_format)
+
+                data_frame.index = map_index_level(data_frame.index, i, format_datetime)
 
         data_frame.index = fillna_index(data_frame.index, TOTALS_VALUE)
         data_frame.columns.name = metrics_dimension_key
@@ -401,8 +408,8 @@ class ReactTable(Pandas):
         item_map[TOTALS_VALUE] = TotalsItem
 
         df = data_frame[df_dimension_columns + df_metric_columns].copy() \
-            .fillna(value='NaN') \
-            .replace([np.inf, -np.inf], 'Inf')
+            .fillna(value=NAN_VALUE) \
+            .replace([np.inf, -np.inf], INF_VALUE)
 
         dimension_display_values = self.map_display_values(df, dimensions)
         self.format_data_frame(df, dimensions)

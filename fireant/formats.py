@@ -1,13 +1,15 @@
-import numpy as np
-import pandas as pd
 from datetime import (
     date,
     datetime,
     time,
 )
 
-INFINITY = "Infinity"
+import numpy as np
+import pandas as pd
+
+INF_VALUE = "Inf"
 NULL_VALUE = 'null'
+NAN_VALUE = 'NaN'
 TOTALS_VALUE = 'totals'
 RAW_VALUE = 'raw'
 
@@ -111,11 +113,21 @@ def metric_display(value, prefix=None, suffix=None, precision=None):
     :return:
         A formatted string containing the display value for the metric.
     """
-    if pd.isnull(value) or value in {np.inf, -np.inf}:
-        return ''
+    if pd.isnull(value):
+        value = NULL_VALUE
+
+    if value in {np.inf, -np.inf}:
+        value = INF_VALUE
+
+    if value in (NAN_VALUE, INF_VALUE, NULL_VALUE):
+        return value
 
     if isinstance(value, bool):
         value = str(value).lower()
+
+    if prefix == '$' and isinstance(value, (float, int)) and value < 0:
+        value = -value
+        prefix = '-$'
 
     if isinstance(value, float):
         if precision is not None:
