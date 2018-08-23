@@ -301,13 +301,6 @@ class ReactTable(Pandas):
                     column['columns'] = _make_columns(next_level_df, levels)
 
                 else:
-                    # If there is no group, then this is a leaf, or a column header on the bottom row of the table
-                    # head. These are effectively the actual columns in the table. All leaf column header definitions
-                    # require an accessor for how to acccess data the for that column
-                    if hasattr(data_frame, 'name'):
-                        # If the metrics column index level was dropped (due to there being a single metric), then the
-                        # index level name will be set as the data frame's name.
-                        levels += (data_frame.name,)
                     column['accessor'] = '.'.join(levels)
 
                 if is_totals:
