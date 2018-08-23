@@ -122,17 +122,22 @@ class ReactTable(Pandas):
         </ReactTable>;
     ```
     """
-    def __init__(self, metric, *metrics: Metric, pivot=(), transpose=False, max_columns=None):
+
+    def __init__(self, metric, *metrics: Metric, pivot=(), transpose=False, sort=None, ascending=None,
+                 max_columns=None):
         super(ReactTable, self).__init__(metric, *metrics,
                                          pivot=pivot,
                                          transpose=transpose,
+                                         sort=sort,
+                                         ascending=ascending,
                                          max_columns=max_columns)
 
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__,
                                ','.join(str(m) for m in self.items))
 
-    def map_display_values(self, df, dimensions):
+    @staticmethod
+    def map_display_values(df, dimensions):
         """
         WRITEME
 
