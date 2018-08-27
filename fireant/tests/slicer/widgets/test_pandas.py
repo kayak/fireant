@@ -290,3 +290,245 @@ class PandasTransformerTests(TestCase):
         expected.columns.name = 'Metrics'
 
         pandas.testing.assert_frame_equal(expected, result)
+
+
+class PandasTransformerSortTests(TestCase):
+    def test_multiple_metrics_sort_index_asc(self):
+        result = Pandas(slicer.metrics.wins, sort=[0]) \
+            .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp], [])
+
+        expected = cont_dim_df.copy()[[fm('wins')]]
+        expected.index.names = ['Timestamp']
+        expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
+
+        expected = expected.sort_index()
+
+        pandas.testing.assert_frame_equal(expected, result)
+
+    def test_multiple_metrics_sort_index_desc(self):
+        result = Pandas(slicer.metrics.wins, sort=[0], ascending=[False]) \
+            .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp], [])
+
+        expected = cont_dim_df.copy()[[fm('wins')]]
+        expected.index.names = ['Timestamp']
+        expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
+
+        expected = expected.sort_index(ascending=False)
+
+        pandas.testing.assert_frame_equal(expected, result)
+
+    def test_multiple_metrics_sort_value_asc(self):
+        result = Pandas(slicer.metrics.wins, sort=[1]) \
+            .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp], [])
+
+        expected = cont_dim_df.copy()[[fm('wins')]]
+        expected.index.names = ['Timestamp']
+        expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
+
+        expected = expected.sort_values(['Wins'])
+
+        pandas.testing.assert_frame_equal(expected, result)
+
+    def test_multiple_metrics_sort_value_desc(self):
+        result = Pandas(slicer.metrics.wins, sort=[1], ascending=[False]) \
+            .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp], [])
+
+        expected = cont_dim_df.copy()[[fm('wins')]]
+        expected.index.names = ['Timestamp']
+        expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
+
+        expected = expected.sort_values(['Wins'], ascending=False)
+
+        pandas.testing.assert_frame_equal(expected, result)
+
+    def test_multiple_metrics_sort_index_and_value(self):
+        result = Pandas(slicer.metrics.wins, sort=[-0, 1]) \
+            .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp], [])
+
+        expected = cont_dim_df.copy()[[fm('wins')]]
+        expected.index.names = ['Timestamp']
+        expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
+
+        expected = expected.reset_index()
+        expected = expected.sort_values(['Timestamp', 'Wins'], ascending=[True, False])
+        expected = expected.set_index('Timestamp')
+
+        pandas.testing.assert_frame_equal(expected, result)
+
+    def test_pivoted_multi_dims_time_series_and_uni_with_sort_index_asc(self):
+        result = Pandas(slicer.metrics.votes, pivot=[slicer.dimensions.state], sort=[0]) \
+            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
+
+        expected = cont_uni_dim_df.copy() \
+            .set_index(fd('state_display'), append=True) \
+            .reset_index(fd('state'), drop=True)[[fm('votes')]]
+        expected = expected.unstack(level=[1])
+        expected.index.names = ['Timestamp']
+        expected.columns = ['California', 'Texas']
+        expected.columns.names = ['State']
+
+        expected = expected.sort_index()
+
+        pandas.testing.assert_frame_equal(expected, result)
+
+    def test_pivoted_multi_dims_time_series_and_uni_with_sort_index_desc(self):
+        result = Pandas(slicer.metrics.votes, pivot=[slicer.dimensions.state], sort=[0], ascending=[False]) \
+            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
+
+        expected = cont_uni_dim_df.copy() \
+            .set_index(fd('state_display'), append=True) \
+            .reset_index(fd('state'), drop=True)[[fm('votes')]]
+        expected = expected.unstack(level=[1])
+        expected.index.names = ['Timestamp']
+        expected.columns = ['California', 'Texas']
+        expected.columns.names = ['State']
+
+        expected = expected.sort_index(ascending=False)
+
+        pandas.testing.assert_frame_equal(expected, result)
+
+    def test_pivoted_multi_dims_time_series_and_uni_with_sort_first_metric_asc(self):
+        result = Pandas(slicer.metrics.votes, pivot=[slicer.dimensions.state], sort=[1]) \
+            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
+
+        expected = cont_uni_dim_df.copy() \
+            .set_index(fd('state_display'), append=True) \
+            .reset_index(fd('state'), drop=True)[[fm('votes')]]
+        expected = expected.unstack(level=[1])
+        expected.index.names = ['Timestamp']
+        expected.columns = ['California', 'Texas']
+        expected.columns.names = ['State']
+
+        expected = expected.reset_index()
+        expected = expected.sort_values(['California'])
+        expected = expected.set_index('Timestamp')
+
+        pandas.testing.assert_frame_equal(expected, result)
+
+    def test_pivoted_multi_dims_time_series_and_uni_with_sort_first_metric_desc(self):
+        result = Pandas(slicer.metrics.votes, pivot=[slicer.dimensions.state], sort=[1], ascending=[False]) \
+            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
+
+        expected = cont_uni_dim_df.copy() \
+            .set_index(fd('state_display'), append=True) \
+            .reset_index(fd('state'), drop=True)[[fm('votes')]]
+        expected = expected.unstack(level=[1])
+        expected.index.names = ['Timestamp']
+        expected.columns = ['California', 'Texas']
+        expected.columns.names = ['State']
+
+        expected = expected.reset_index()
+        expected = expected.sort_values(['California'], ascending=[False])
+        expected = expected.set_index('Timestamp')
+
+        pandas.testing.assert_frame_equal(expected, result)
+
+    def test_pivoted_multi_dims_time_series_and_uni_with_sort_second_metric_asc(self):
+        result = Pandas(slicer.metrics.votes, pivot=[slicer.dimensions.state], sort=[2]) \
+            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
+
+        expected = cont_uni_dim_df.copy() \
+            .set_index(fd('state_display'), append=True) \
+            .reset_index(fd('state'), drop=True)[[fm('votes')]]
+        expected = expected.unstack(level=[1])
+        expected.index.names = ['Timestamp']
+        expected.columns = ['California', 'Texas']
+        expected.columns.names = ['State']
+
+        expected = expected.reset_index()
+        expected = expected.sort_values(['Texas'], ascending=[True])
+        expected = expected.set_index('Timestamp')
+
+        pandas.testing.assert_frame_equal(expected, result)
+
+    def test_pivoted_multi_dims_time_series_and_uni_with_sort_second_metric_desc(self):
+        result = Pandas(slicer.metrics.votes, pivot=[slicer.dimensions.state], sort=[2], ascending=[False]) \
+            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
+
+        expected = cont_uni_dim_df.copy() \
+            .set_index(fd('state_display'), append=True) \
+            .reset_index(fd('state'), drop=True)[[fm('votes')]]
+        expected = expected.unstack(level=[1])
+        expected.index.names = ['Timestamp']
+        expected.columns = ['California', 'Texas']
+        expected.columns.names = ['State']
+
+        expected = expected.reset_index()
+        expected = expected.sort_values(['Texas'], ascending=[False])
+        expected = expected.set_index('Timestamp')
+
+        pandas.testing.assert_frame_equal(expected, result)
+
+    def test_pivoted_multi_dims_time_series_and_uni_with_sort_index_and_columns(self):
+        result = Pandas(slicer.metrics.votes, pivot=[slicer.dimensions.state], sort=[0, 2], ascending=[True, False]) \
+            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
+
+        expected = cont_uni_dim_df.copy() \
+            .set_index(fd('state_display'), append=True) \
+            .reset_index(fd('state'), drop=True)[[fm('votes')]]
+        expected = expected.unstack(level=[1])
+        expected.index.names = ['Timestamp']
+        expected.columns = ['California', 'Texas']
+        expected.columns.names = ['State']
+
+        expected = expected.reset_index()
+        expected = expected.sort_values(['Timestamp', 'Texas'], ascending=[True, False])
+        expected = expected.set_index('Timestamp')
+
+        pandas.testing.assert_frame_equal(expected, result)
+
+    def test_multi_dims_time_series_and_cat_sort_index_level_0_asc(self):
+        result = Pandas(slicer.metrics.wins, sort=[0]) \
+            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
+
+        expected = cont_uni_dim_df.copy() \
+            .set_index(fd('state_display'), append=True) \
+            .reset_index(fd('state'), drop=False)[[fm('wins')]]
+        expected.index.names = ['Timestamp', 'State']
+        expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
+
+        expected = expected.reset_index()
+        expected = expected.sort_values(['Timestamp'])
+        expected = expected.set_index(['Timestamp', 'State'])
+
+        pandas.testing.assert_frame_equal(expected, result)
+
+    def test_pivoted_multi_dims_time_series_and_cat_sort_index_level_1_desc(self):
+        result = Pandas(slicer.metrics.wins, sort=[1], ascending=[False]) \
+            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
+
+        expected = cont_uni_dim_df.copy() \
+            .set_index(fd('state_display'), append=True) \
+            .reset_index(fd('state'), drop=False)[[fm('wins')]]
+        expected.index.names = ['Timestamp', 'State']
+        expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
+
+        expected = expected.reset_index()
+        expected = expected.sort_values(['State'], ascending=[False])
+        expected = expected.set_index(['Timestamp', 'State'])
+
+        pandas.testing.assert_frame_equal(expected, result)
+
+    def test_pivoted_multi_dims_time_series_and_cat_sort_index_and_values(self):
+        result = Pandas(slicer.metrics.wins, sort=[0, 2], ascending=[False, True]) \
+            .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
+
+        expected = cont_uni_dim_df.copy() \
+            .set_index(fd('state_display'), append=True) \
+            .reset_index(fd('state'), drop=False)[[fm('wins')]]
+        expected.index.names = ['Timestamp', 'State']
+        expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
+
+        expected = expected.reset_index()
+        expected = expected.sort_values(['Timestamp', 'Wins'], ascending=[False, True])
+        expected = expected.set_index(['Timestamp', 'State'])
+
+        pandas.testing.assert_frame_equal(expected, result)

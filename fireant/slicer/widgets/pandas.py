@@ -18,10 +18,13 @@ HARD_MAX_COLUMNS = 24
 
 
 class Pandas(TransformableWidget):
-    def __init__(self, metric, *metrics: Metric, pivot=(), transpose=False, max_columns=None):
+    def __init__(self, metric, *metrics: Metric, pivot=(), transpose=False, sort=None, ascending=None,
+                 max_columns=None):
         super(Pandas, self).__init__(metric, *metrics)
         self.pivot = pivot
         self.transpose = transpose
+        self.sort = sort
+        self.ascending = ascending
         self.max_columns = min(max_columns, HARD_MAX_COLUMNS) \
             if max_columns is not None \
             else HARD_MAX_COLUMNS
@@ -79,8 +82,7 @@ class Pandas(TransformableWidget):
 
         return self.pivot_data_frame(result, [d.label or d.key for d in self.pivot], self.transpose)
 
-    @staticmethod
-    def pivot_data_frame(data_frame, pivot=(), transpose=False):
+    def pivot_data_frame(self, data_frame, pivot=(), transpose=False):
         """
         Pivot and transpose the data frame. Dimensions including in the `pivot` arg will be unshifted to columns. If
         `transpose` is True the data frame will be transposed. If there is only index level in the data frame (ie. one
@@ -98,7 +100,7 @@ class Pandas(TransformableWidget):
             The shifted/transposed data frame
         """
         if not (pivot or transpose):
-            return data_frame
+            return self.sort_data_frame(data_frame)
 
         # NOTE: Don't pivot a single dimension data frame. This turns the data frame into a series and pivots the
         # metrics anyway. Instead, transpose the data frame.
@@ -115,7 +117,29 @@ class Pandas(TransformableWidget):
             data_frame.name = data_frame.columns.levels[0][0]  # capture the name of the metrics column
             data_frame.columns = data_frame.columns.droplevel(0)  # drop the metrics level
 
-        return data_frame.fillna('')
+        data_frame.fillna('', inplace=True)
+
+        return self.sort_data_frame(data_frame)
+
+    def sort_data_frame(self, data_frame):
+        if self.sort is None:
+            return data_frame
+
+        # reset the index so all columns can be sorted together
+        index_names = data_frame.index.names
+        unsorted = data_frame.reset_index()
+
+        column_names = list(unsorted.columns)
+
+        ascending = self.ascending \
+            if self.ascending is not None \
+            else True
+
+        return unsorted \
+            .sort_values([column_names[abs(column)]
+                          for column in self.sort],
+                         ascending=ascending) \
+            .set_index(index_names)
 
     def _replace_display_values_in_index(self, dimension, result):
         """
