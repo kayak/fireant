@@ -147,8 +147,9 @@ class Pandas(TransformableWidget):
         """
         if isinstance(result.index, pd.MultiIndex):
             df_key = format_dimension_key(dimension.key)
+            level = result.index.names.index(df_key)
             values = [dimension.display_values.get(x, x)
-                      for x in result.index.get_level_values(df_key)]
+                      for x in result.index.levels[level]]
             result.index.set_levels(level=df_key,
                                     levels=values,
                                     inplace=True)
