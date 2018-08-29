@@ -532,3 +532,14 @@ class PandasTransformerSortTests(TestCase):
         expected = expected.set_index(['Timestamp', 'State'])
 
         pandas.testing.assert_frame_equal(expected, result)
+
+    def test_empty_sort_array_is_ignored(self):
+        result = Pandas(slicer.metrics.wins, sort=[]) \
+            .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp], [])
+
+        expected = cont_dim_df.copy()[[fm('wins')]]
+        expected.index.names = ['Timestamp']
+        expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
+
+        pandas.testing.assert_frame_equal(expected, result)

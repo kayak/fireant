@@ -122,7 +122,7 @@ class Pandas(TransformableWidget):
         return self.sort_data_frame(data_frame)
 
     def sort_data_frame(self, data_frame):
-        if self.sort is None:
+        if not self.sort:
             return data_frame
 
         # reset the index so all columns can be sorted together
