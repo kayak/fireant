@@ -405,15 +405,15 @@ class ReactTable(Pandas):
         # Add an extra item to map the totals key to it's label
         item_map[TOTALS_VALUE] = TotalsItem
 
-        df = data_frame[df_dimension_columns + df_metric_columns].copy() \
-            .fillna(value=NAN_VALUE) \
-            .replace([np.inf, -np.inf], INF_VALUE)
+        df = data_frame[df_dimension_columns + df_metric_columns].copy() 
 
         dimension_display_values = self.map_display_values(df, dimensions)
         self.format_data_frame(df, dimensions)
 
         dimension_keys = [format_dimension_key(dimension.key) for dimension in self.pivot]
-        df = self.pivot_data_frame(df, dimension_keys, self.transpose)
+        df = self.pivot_data_frame(df, dimension_keys, self.transpose) \
+            .fillna(value=NAN_VALUE) \
+            .replace([np.inf, -np.inf], INF_VALUE)
 
         dimension_columns = self.transform_dimension_column_headers(df, dimensions)
         metric_columns = self.transform_metric_column_headers(df, item_map, dimension_display_values)

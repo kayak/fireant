@@ -135,10 +135,9 @@ class Pandas(TransformableWidget):
             if self.ascending is not None \
             else True
 
+        sort_columns = [column_names[abs(column)] for column in self.sort]
         return unsorted \
-            .sort_values([column_names[abs(column)]
-                          for column in self.sort],
-                         ascending=ascending) \
+            .sort_values(sort_columns, ascending=ascending) \
             .set_index(index_names)
 
     def _replace_display_values_in_index(self, dimension, result):
