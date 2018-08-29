@@ -1,6 +1,11 @@
+import numpy as np
 import pandas as pd
 
 from fireant import utils
+from fireant.formats import (
+    INF_VALUE,
+    NAN_VALUE,
+)
 from ..references import reference_label
 
 
@@ -33,7 +38,9 @@ def extract_display_values(dimensions, data_frame):
 
             display_values[key] = data_frame[f_display_key] \
                 .groupby(level=key) \
-                .first()
+                .first() \
+                .fillna(value=NAN_VALUE) \
+                .replace([np.inf, -np.inf], INF_VALUE)
 
     return display_values
 
