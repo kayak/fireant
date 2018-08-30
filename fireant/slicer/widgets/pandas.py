@@ -135,7 +135,13 @@ class Pandas(TransformableWidget):
             if self.ascending is not None \
             else True
 
-        sort_columns = [column_names[abs(column)] for column in self.sort]
+        sort_columns = [column_names[column]
+                        for column in self.sort
+                        if column < len(column_names)]
+
+        if not sort_columns:
+            return data_frame
+
         return unsorted \
             .sort_values(sort_columns, ascending=ascending) \
             .set_index(index_names)

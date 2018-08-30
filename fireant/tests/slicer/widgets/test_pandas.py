@@ -543,3 +543,15 @@ class PandasTransformerSortTests(TestCase):
         expected.columns.name = 'Metrics'
 
         pandas.testing.assert_frame_equal(expected, result)
+
+
+    def test_sort_value_greater_than_number_of_columns_is_ignored(self):
+        result = Pandas(slicer.metrics.wins, sort=[5]) \
+            .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp], [])
+
+        expected = cont_dim_df.copy()[[fm('wins')]]
+        expected.index.names = ['Timestamp']
+        expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
+
+        pandas.testing.assert_frame_equal(expected, result)
