@@ -16,6 +16,7 @@ from fireant.tests.slicer.mocks import (
     cont_uni_dim_df,
     cont_uni_dim_ref_df,
     multi_metric_df,
+    no_index_df,
     single_metric_df,
     slicer,
     uni_dim_df,
@@ -544,12 +545,22 @@ class PandasTransformerSortTests(TestCase):
 
         pandas.testing.assert_frame_equal(expected, result)
 
-
     def test_sort_value_greater_than_number_of_columns_is_ignored(self):
         result = Pandas(slicer.metrics.wins, sort=[5]) \
             .transform(cont_dim_df, slicer, [slicer.dimensions.timestamp], [])
 
         expected = cont_dim_df.copy()[[fm('wins')]]
+        expected.index.names = ['Timestamp']
+        expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
+
+        pandas.testing.assert_frame_equal(expected, result)
+
+    def test_sort_with_no_index(self):
+        result = Pandas(slicer.metrics.wins, sort=[0]) \
+            .transform(no_index_df, slicer, [slicer.dimensions.timestamp], [])
+
+        expected = no_index_df.copy()[[fm('wins')]]
         expected.index.names = ['Timestamp']
         expected.columns = ['Wins']
         expected.columns.name = 'Metrics'
