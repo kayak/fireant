@@ -117,9 +117,8 @@ class Pandas(TransformableWidget):
             data_frame.name = data_frame.columns.levels[0][0]  # capture the name of the metrics column
             data_frame.columns = data_frame.columns.droplevel(0)  # drop the metrics level
 
-        data_frame.fillna('', inplace=True)
-
-        return self.sort_data_frame(data_frame)
+        return self.sort_data_frame(data_frame) \
+            .fillna(value='')
 
     def sort_data_frame(self, data_frame):
         if not self.sort:
@@ -141,6 +140,13 @@ class Pandas(TransformableWidget):
 
         if not sort_columns:
             return data_frame
+
+        # pandas refuses a single item list for these arguments if the data frame has a single level index
+        if not isinstance(unsorted.index, pd.MultiIndex):
+            if isinstance(sort_columns, list):
+                sort_columns = sort_columns[0]
+            if isinstance(ascending, list):
+                ascending = ascending[0]
 
         return unsorted \
             .sort_values(sort_columns, ascending=ascending) \
