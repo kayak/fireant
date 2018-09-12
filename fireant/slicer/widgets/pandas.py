@@ -121,7 +121,8 @@ class Pandas(TransformableWidget):
             .fillna(value='')
 
     def sort_data_frame(self, data_frame):
-        if not self.sort:
+        if not self.sort or len(data_frame) == 1:
+            # If there are no sort arguments or the data frame is a single row, then no need to sort
             return data_frame
 
         # reset the index so all columns can be sorted together

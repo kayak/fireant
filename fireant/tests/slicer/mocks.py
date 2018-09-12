@@ -1,23 +1,23 @@
 from collections import (
     OrderedDict,
 )
-from unittest.mock import Mock
-
-import pandas as pd
 from datetime import (
     datetime,
 )
-from pypika import (
-    JoinType,
-    Table,
-    functions as fn,
-)
+from unittest.mock import Mock
+
+import pandas as pd
 
 from fireant import *
 from fireant.slicer.references import ReferenceType
 from fireant.utils import (
     format_dimension_key as fd,
     format_metric_key as fm,
+)
+from pypika import (
+    JoinType,
+    Table,
+    functions as fn,
 )
 
 
@@ -259,6 +259,8 @@ multi_metric_df = pd.DataFrame(mock_politics_database[[fm('votes'), fm('wins')]]
 cont_dim_df = mock_politics_database[[fd('timestamp'), fm('votes'), fm('wins')]] \
     .groupby(fd('timestamp')) \
     .sum()
+
+no_index_df = pd.DataFrame(cont_dim_df.sum()).T
 
 cat_dim_df = mock_politics_database[[fd('political_party'), fm('votes'), fm('wins')]] \
     .groupby(fd('political_party')) \
