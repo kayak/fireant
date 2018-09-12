@@ -1,6 +1,6 @@
 six
 pandas==0.22.0
-pypika==0.15.2
+pypika==0.15.5
 pymysql==0.8.0
 toposort==1.5
 typing==3.6.2
