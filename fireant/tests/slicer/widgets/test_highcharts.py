@@ -25,7 +25,7 @@ from fireant.tests.slicer.mocks import (
 class HighChartsLineChartTransformerTests(TestCase):
     maxDiff = None
 
-    chart_class = HighCharts.LineChart
+    chart_class = HighCharts.LineSeries
     chart_type = 'line'
     stacking = None
 
@@ -1152,7 +1152,7 @@ class HighChartsLineChartTransformerTests(TestCase):
 class HighChartsBarChartTransformerTests(TestCase):
     maxDiff = None
 
-    chart_class = HighCharts.BarChart
+    chart_class = HighCharts.BarSeries
     chart_type = 'bar'
     stacking = None
 
@@ -1638,43 +1638,43 @@ class HighChartsBarChartTransformerTests(TestCase):
 
 
 class HighChartsColumnChartTransformerTests(HighChartsBarChartTransformerTests):
-    chart_class = HighCharts.ColumnChart
+    chart_class = HighCharts.ColumnSeries
     chart_type = 'column'
 
 
 class HighChartsStackedBarChartTransformerTests(HighChartsBarChartTransformerTests):
     maxDiff = None
 
-    chart_class = HighCharts.StackedBarChart
+    chart_class = HighCharts.StackedBarSeries
     chart_type = 'bar'
     stacking = 'normal'
 
 
 class HighChartsStackedColumnChartTransformerTests(HighChartsBarChartTransformerTests):
-    chart_class = HighCharts.StackedColumnChart
+    chart_class = HighCharts.StackedColumnSeries
     chart_type = 'column'
     stacking = 'normal'
 
 
 class HighChartsAreaChartTransformerTests(HighChartsLineChartTransformerTests):
-    chart_class = HighCharts.AreaChart
+    chart_class = HighCharts.AreaSeries
     chart_type = 'area'
 
 
 class HighChartsAreaStackedChartTransformerTests(HighChartsAreaChartTransformerTests):
-    chart_class = HighCharts.AreaStackedChart
+    chart_class = HighCharts.AreaStackedSeries
     stacking = 'normal'
 
 
 class HighChartsAreaPercentChartTransformerTests(HighChartsAreaChartTransformerTests):
-    chart_class = HighCharts.AreaPercentageChart
+    chart_class = HighCharts.AreaPercentageSeries
     stacking = 'percent'
 
 
 class HighChartsPieChartTransformerTests(TestCase):
     maxDiff = None
 
-    chart_class = HighCharts.PieChart
+    chart_class = HighCharts.PieSeries
     chart_type = 'pie'
 
     def test_single_metric_chart(self):

@@ -33,7 +33,7 @@ def extract_display_values(dimensions, data_frame):
         if hasattr(dimension, 'display_values'):
             display_values[key] = dimension.display_values
 
-        elif getattr(dimension, 'display_key', None):
+        elif dimension.has_display_field:
             f_display_key = utils.format_dimension_key(dimension.display_key)
 
             display_values[key] = data_frame[f_display_key] \

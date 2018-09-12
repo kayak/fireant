@@ -65,7 +65,7 @@ MARKER_SYMBOLS = (
 )
 
 
-class ChartWidget:
+class Series:
     type = None
     needs_marker = False
     stacking = None
@@ -80,13 +80,13 @@ class ChartWidget:
                                repr(self.metric))
 
 
-class ContinuousAxisChartWidget(ChartWidget):
+class ContinuousAxisSeries(Series):
     pass
 
 
 class HighCharts(TransformableWidget):
     class Axis:
-        def __init__(self, series: Iterable[ChartWidget], y_axis_visible=True):
+        def __init__(self, series: Iterable[Series], y_axis_visible=True):
             self._series = series or []
             self.y_axis_visible = y_axis_visible
 
@@ -99,33 +99,33 @@ class HighCharts(TransformableWidget):
         def __repr__(self):
             return "axis({})".format(", ".join(map(repr, self)))
 
-    class LineChart(ContinuousAxisChartWidget):
+    class LineSeries(ContinuousAxisSeries):
         type = 'line'
         needs_marker = True
 
-    class AreaChart(ContinuousAxisChartWidget):
+    class AreaSeries(ContinuousAxisSeries):
         type = 'area'
         needs_marker = True
 
-    class AreaStackedChart(AreaChart):
+    class AreaStackedSeries(AreaSeries):
         stacking = "normal"
 
-    class AreaPercentageChart(AreaChart):
+    class AreaPercentageSeries(AreaSeries):
         stacking = "percent"
 
-    class PieChart(ChartWidget):
+    class PieSeries(Series):
         type = 'pie'
 
-    class BarChart(ChartWidget):
+    class BarSeries(Series):
         type = 'bar'
 
-    class StackedBarChart(BarChart):
+    class StackedBarSeries(BarSeries):
         stacking = "normal"
 
-    class ColumnChart(ChartWidget):
+    class ColumnSeries(Series):
         type = 'column'
 
-    class StackedColumnChart(ColumnChart):
+    class StackedColumnSeries(ColumnSeries):
         stacking = "normal"
 
     def __init__(self, title=None, colors=None, x_axis_visible=True, tooltip_visible=True):
@@ -139,7 +139,7 @@ class HighCharts(TransformableWidget):
         return ".".join(["HighCharts()"] + [repr(axis) for axis in self.items])
 
     @utils.immutable
-    def axis(self, *series: ChartWidget, **kwargs):
+    def axis(self, *series: Series, **kwargs):
         """
         (Immutable) Adds an axis to the Chart.
 
@@ -331,7 +331,7 @@ class HighCharts(TransformableWidget):
             for (dimension_values, group_df), symbol in zip(data_frame_groups, symbols):
                 dimension_values = utils.wrap_list(dimension_values)
 
-                if isinstance(series, self.PieChart):
+                if isinstance(series, self.PieSeries):
                     # pie charts suck
                     for reference in [None] + references:
                         hc_series += [self._render_pie_series(series,

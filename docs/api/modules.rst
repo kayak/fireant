@@ -1,5 +1,5 @@
-API Reference
-=============
+fireant
+=======
 
 .. toctree::
    :maxdepth: 4

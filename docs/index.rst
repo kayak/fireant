@@ -13,8 +13,10 @@ Contents
     :glob:
 
     1_setup
-    2_slicer
-    3_dashboard
+    2_database
+    3_slicer
+    4_queries
+    5_extending
     api/modules
 
 

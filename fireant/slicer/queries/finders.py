@@ -1,8 +1,7 @@
 import copy
 from collections import (
-    OrderedDict,
-    namedtuple,
     defaultdict,
+    namedtuple,
 )
 
 from toposort import (
@@ -141,16 +140,19 @@ def find_and_group_references_for_dimensions(references):
     type (WoW, WoW.delta, WoW.delta_percent) can share a join query.
 
     :param references:
+
     :return:
         An `OrderedDict` where the keys are 3-item tuples consisting of "Dimension, interval unit, # of intervals.
 
-        for example:
+        .. code-block:: python
 
-        {
-            (Dimension(date_1), 'weeks', 1): [WoW, WoW.delta],
-            (Dimension(date_1), 'years', 1): [YoY],
-            (Dimension(date_7), 'days', 1): [DoD, DoD.delta_percent],
-        }
+            Example
+            {
+                (Dimension(date_1), 'weeks', 1): [WoW, WoW.delta],
+                (Dimension(date_1), 'years', 1): [YoY],
+                (Dimension(date_7), 'days', 1): [DoD, DoD.delta_percent],
+            }
+
     """
 
     def get_dimension_time_unit_and_interval(reference):

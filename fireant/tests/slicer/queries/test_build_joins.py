@@ -97,7 +97,7 @@ class QueryBuilderJoinTests(TestCase):
     def test_dimension_filter_display_field_with_join_includes_join_in_query(self):
         query = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
-            .filter(slicer.dimensions.district.isin(['District 4'], use_display=True)) \
+            .filter(slicer.dimensions.district.display.isin(['District 4'])) \
             .query
 
         self.assertEqual('SELECT '

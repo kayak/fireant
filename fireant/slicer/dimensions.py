@@ -1,18 +1,18 @@
+from typing import Iterable
+
+from fireant.utils import immutable
 from pypika.terms import (
     Case,
     NullValue,
     ValueWrapper,
 )
-from typing import Iterable
-
-from fireant.utils import immutable
 from .base import SlicerElement
 from .exceptions import QueryException
 from .filters import (
+    AntiPatternFilter,
     BooleanFilter,
     ContainsFilter,
     ExcludesFilter,
-    AntiPatternFilter,
     PatternFilter,
     RangeFilter,
 )
@@ -25,6 +25,13 @@ from .intervals import (
 class Dimension(SlicerElement):
     """
     The `Dimension` class represents a dimension in the `Slicer` object.
+
+    :param alias:
+        A unique identifier used to identify the metric when writing slicer queries. This value must be unique over
+        the metrics in the slicer.
+
+    :param definition:
+        A pypika expression which is used to select the value when building SQL queries.
     """
 
     def __init__(self, key, label=None, definition=None, display_definition=None):
@@ -144,41 +151,31 @@ class CategoricalDimension(PatternFilterableMixin, Dimension):
 
 
 class _UniqueDimensionBase(PatternFilterableMixin, Dimension):
-    def isin(self, values, use_display=False):
+    def isin(self, values):
         """
         Creates a filter to filter a slicer query.
 
         :param values:
             An iterable of value to constrain the slicer query results by.
-        :param use_display:
-            When True, the filter will be applied to the Dimesnion's display definition instead of the definition.
 
         :return:
             A slicer query filter used to filter a slicer query to results where this dimension is one of a set of
             values. Opposite of #notin.
         """
-        if use_display and self.display_definition is None:
-            raise QueryException('No value set for display_definition.')
-        filter_field = self.display_definition if use_display else self.definition
-        return ContainsFilter(filter_field, values)
+        return ContainsFilter(self.definition, values)
 
-    def notin(self, values, use_display=False):
+    def notin(self, values):
         """
         Creates a filter to filter a slicer query.
 
         :param values:
             An iterable of value to constrain the slicer query results by.
-        :param use_display:
-            When True, the filter will be applied to the Dimesnion's display definition instead of the definition.
 
         :return:
             A slicer query filter used to filter a slicer query to results where this dimension is *not* one of a set of
             values. Opposite of #isin.
         """
-        if use_display and self.display_definition is None:
-            raise QueryException('No value set for display_definition.')
-        filter_field = self.display_definition if use_display else self.definition
-        return ExcludesFilter(filter_field, values)
+        return ExcludesFilter(self.definition, values)
 
 
 class UniqueDimension(_UniqueDimensionBase):
@@ -186,32 +183,32 @@ class UniqueDimension(_UniqueDimensionBase):
     This is a dimension that represents a field in a database which is a unique identifier, such as a primary/foreign
     key. It provides support for a display value field which is selected and used in the results.
     """
-    pattern_definition_attribute = 'display_definition'
-
     def __init__(self, key, label=None, definition=None, display_definition=None):
         super(UniqueDimension, self).__init__(key,
                                               label,
                                               definition,
                                               display_definition)
+        if display_definition is not None:
+            self.display = DisplayDimension(self)
+
+    @property
+    def has_display_field(self):
+        return hasattr(self, 'display')
 
     def __hash__(self):
         if self.has_display_field:
             return hash('{}({},{})'.format(self.__class__.__name__, self.definition, self.display_definition))
         return super(UniqueDimension, self).__hash__()
 
-    @property
-    def display(self):
-        return self
-
     def like(self, pattern, *patterns):
-        if self.display_definition is None:
+        if not self.has_display_field:
             raise QueryException('No value set for display_definition.')
-        return super(UniqueDimension, self).like(pattern, *patterns)
+        return self.display.like(pattern, *patterns)
 
     def not_like(self, pattern, *patterns):
-        if self.display_definition is None:
+        if not self.has_display_field:
             raise QueryException('No value set for display_definition.')
-        return super(UniqueDimension, self).not_like(pattern, *patterns)
+        return self.display.not_like(pattern, *patterns)
 
 
 class DisplayDimension(_UniqueDimensionBase):
@@ -220,7 +217,7 @@ class DisplayDimension(_UniqueDimensionBase):
     """
 
     def __init__(self, dimension):
-        super(DisplayDimension, self).__init__(dimension.display_key,
+        super(DisplayDimension, self).__init__('{}_display'.format(dimension.key),
                                                dimension.label,
                                                dimension.display_definition)
 
@@ -256,12 +253,12 @@ class DatetimeDimension(ContinuousDimension):
         """
         When calling a datetime dimension an interval can be supplied:
 
-        ```
-        from fireant import weekly
+        .. code-block:: python
 
-        my_slicer.dimensions.date # Daily interval used as default
-        my_slicer.dimensions.date(weekly) # Daily interval used as default
-        ```
+            from fireant import weekly
+
+            my_slicer.dimensions.date # Daily interval used as default
+            my_slicer.dimensions.date(weekly) # Daily interval used as default
 
         :param interval:
             An interval to use with the dimension.  See `fireant.intervals`.
@@ -304,12 +301,12 @@ class PatternDimension(PatternFilterableMixin, Dimension):
         """
         When calling a datetime dimension an interval can be supplied:
 
-        ```
-        from fireant import weekly
+        .. code-block:: python
 
-        my_slicer.dimensions.date # Daily interval used as default
-        my_slicer.dimensions.date(weekly) # Daily interval used as default
-        ```
+            from fireant import weekly
+
+            my_slicer.dimensions.date # Daily interval used as default
+            my_slicer.dimensions.date(weekly) # Daily interval used as default
 
         :param interval:
             An interval to use with the dimension.  See `fireant.intervals`.

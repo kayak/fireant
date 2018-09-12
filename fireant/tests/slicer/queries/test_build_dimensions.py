@@ -190,8 +190,8 @@ class QueryBuilderDimensionTests(TestCase):
         query = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes, slicer.metrics.wins)) \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))
-                    .axis(f.HighCharts.LineChart(slicer.metrics.wins))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.wins))) \
             .dimension(slicer.dimensions.timestamp) \
             .dimension(slicer.dimensions.political_party) \
             .query
