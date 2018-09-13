@@ -195,11 +195,6 @@ class UniqueDimension(_UniqueDimensionBase):
     def has_display_field(self):
         return hasattr(self, 'display')
 
-    def __hash__(self):
-        if self.has_display_field:
-            return hash('{}({},{})'.format(self.__class__.__name__, self.definition, self.display_definition))
-        return super(UniqueDimension, self).__hash__()
-
     def like(self, pattern, *patterns):
         if not self.has_display_field:
             raise QueryException('No value set for display_definition.')

@@ -1,29 +1,22 @@
 import itertools
-from datetime import (
-    datetime,
-)
-from typing import (
-    Iterable,
-    Union,
-)
+from datetime import datetime
 
 import pandas as pd
 
 from fireant import (
     DatetimeDimension,
-    Metric,
-    Operation,
     formats,
     utils,
 )
-from .base import (
-    TransformableWidget,
+from .base import TransformableWidget
+from .chart_base import (
+    ChartWidget,
+    ContinuousAxisSeries,
 )
 from .helpers import (
     dimensional_metric_label,
     extract_display_values,
 )
-from ..exceptions import MetricRequiredException
 from ..references import (
     reference_key,
     reference_label,
@@ -64,70 +57,10 @@ MARKER_SYMBOLS = (
     "triangle-down",
 )
 
-
-class Series:
-    type = None
-    needs_marker = False
-    stacking = None
-
-    def __init__(self, metric: Union[Metric, Operation], name=None, stacking=None):
-        self.metric = metric
-        self.name = name
-        self.stacking = self.stacking or stacking
-
-    def __repr__(self):
-        return "{}({})".format(self.__class__.__name__,
-                               repr(self.metric))
+SERIES_NEEDING_MARKER = (ChartWidget.LineSeries, ChartWidget.AreaSeries)
 
 
-class ContinuousAxisSeries(Series):
-    pass
-
-
-class HighCharts(TransformableWidget):
-    class Axis:
-        def __init__(self, series: Iterable[Series], y_axis_visible=True):
-            self._series = series or []
-            self.y_axis_visible = y_axis_visible
-
-        def __iter__(self):
-            return iter(self._series)
-
-        def __len__(self):
-            return len(self._series)
-
-        def __repr__(self):
-            return "axis({})".format(", ".join(map(repr, self)))
-
-    class LineSeries(ContinuousAxisSeries):
-        type = 'line'
-        needs_marker = True
-
-    class AreaSeries(ContinuousAxisSeries):
-        type = 'area'
-        needs_marker = True
-
-    class AreaStackedSeries(AreaSeries):
-        stacking = "normal"
-
-    class AreaPercentageSeries(AreaSeries):
-        stacking = "percent"
-
-    class PieSeries(Series):
-        type = 'pie'
-
-    class BarSeries(Series):
-        type = 'bar'
-
-    class StackedBarSeries(BarSeries):
-        stacking = "normal"
-
-    class ColumnSeries(Series):
-        type = 'column'
-
-    class StackedColumnSeries(ColumnSeries):
-        stacking = "normal"
-
+class HighCharts(ChartWidget, TransformableWidget):
     def __init__(self, title=None, colors=None, x_axis_visible=True, tooltip_visible=True):
         super(HighCharts, self).__init__()
         self.title = title
@@ -137,41 +70,6 @@ class HighCharts(TransformableWidget):
 
     def __repr__(self):
         return ".".join(["HighCharts()"] + [repr(axis) for axis in self.items])
-
-    @utils.immutable
-    def axis(self, *series: Series, **kwargs):
-        """
-        (Immutable) Adds an axis to the Chart.
-
-        :param axis:
-        :return:
-        """
-
-        self.items.append(self.Axis(series, **kwargs))
-
-    @property
-    def metrics(self):
-        """
-        :return:
-            A set of metrics used in this chart. This collects all metrics across all axes.
-        """
-        if 0 == len(self.items):
-            raise MetricRequiredException(str(self))
-
-        seen = set()
-        return [metric
-                for axis in self.items
-                for series in axis
-                for metric in getattr(series.metric, 'metrics', [series.metric])
-                if not (metric.key in seen or seen.add(metric.key))]
-
-    @property
-    def operations(self):
-        return utils.ordered_distinct_list_by_attr([operation
-                                                    for axis in self.items
-                                                    for series in axis
-                                                    if isinstance(series.metric, Operation)
-                                                    for operation in [series.metric] + series.metric.operations])
 
     def transform(self, data_frame, slicer, dimensions, references):
         """
@@ -327,6 +225,7 @@ class HighCharts(TransformableWidget):
         hc_series = []
         for series in axis:
             symbols = itertools.cycle(MARKER_SYMBOLS)
+            series_color = next(colors) if has_multi_axis else None
 
             for (dimension_values, group_df), symbol in zip(data_frame_groups, symbols):
                 dimension_values = utils.wrap_list(dimension_values)
@@ -363,7 +262,7 @@ class HighCharts(TransformableWidget):
                                   else str(axis_idx)),
 
                         "marker": ({"symbol": symbol, "fillColor": axis_color or series_color}
-                                   if series.needs_marker
+                                   if isinstance(series, SERIES_NEEDING_MARKER)
                                    else {}),
 
                         "stacking": series.stacking,

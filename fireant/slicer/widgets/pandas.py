@@ -1,6 +1,9 @@
 import pandas as pd
 
-from fireant import Metric
+from fireant import (
+    Metric,
+    formats,
+)
 from fireant.utils import (
     format_dimension_key,
     format_metric_key,
@@ -12,7 +15,6 @@ from ..references import (
     reference_key,
     reference_label,
 )
-from ... import formats
 
 HARD_MAX_COLUMNS = 24
 
