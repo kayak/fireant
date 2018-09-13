@@ -1,17 +1,16 @@
-import pandas as pd
-from pypika import (
-    Order,
-)
 from typing import (
     Dict,
     Iterable,
 )
+
+import pandas as pd
 
 from fireant.utils import (
     format_dimension_key,
     format_metric_key,
     immutable,
 )
+from pypika import Order
 from . import special_cases
 from .database import fetch_data
 from .finders import (

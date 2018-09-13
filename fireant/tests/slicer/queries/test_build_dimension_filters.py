@@ -79,7 +79,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
     def test_build_query_with_filter_isin_unique_dim_display(self):
         query = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
-            .filter(slicer.dimensions.candidate.isin(['Donald Trump'], use_display=True)) \
+            .filter(slicer.dimensions.candidate.display.isin(['Donald Trump'])) \
             .query
 
         self.assertEqual('SELECT '
@@ -90,7 +90,7 @@ class QueryBuilderDimensionFilterTests(TestCase):
     def test_build_query_with_filter_notin_unique_dim_display(self):
         query = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
-            .filter(slicer.dimensions.candidate.notin(['Donald Trump'], use_display=True)) \
+            .filter(slicer.dimensions.candidate.display.notin(['Donald Trump'])) \
             .query
 
         self.assertEqual('SELECT '
@@ -237,18 +237,6 @@ class QueryBuilderDimensionFilterTests(TestCase):
                          'FROM "politics"."politician" '
                          'WHERE NOT (LOWER("candidate_name") LIKE LOWER(\'%Trump\') '
                          'OR LOWER("candidate_name") LIKE LOWER(\'%Clinton\'))', str(query))
-
-    def test_build_query_with_filter_isin_raise_exception_when_display_definition_undefined(self):
-        with self.assertRaises(f.QueryException):
-            slicer.data \
-                .widget(f.DataTablesJS(slicer.metrics.votes)) \
-                .filter(slicer.dimensions.deepjoin.isin([1], use_display=True))
-
-    def test_build_query_with_filter_notin_raise_exception_when_display_definition_undefined(self):
-        with self.assertRaises(f.QueryException):
-            slicer.data \
-                .widget(f.DataTablesJS(slicer.metrics.votes)) \
-                .filter(slicer.dimensions.deepjoin.notin([1], use_display=True))
 
     def test_build_query_with_filter_like_raise_exception_when_display_definition_undefined(self):
         with self.assertRaises(f.QueryException):

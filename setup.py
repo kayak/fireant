@@ -22,7 +22,7 @@ def find_version(*file_paths):
 
 setup(
     name='fireant',
-      version=find_version("fireant", "__init__.py"),
+    version=find_version("fireant", "__init__.py"),
 
     author='KAYAK, GmbH',
     author_email='bandit@kayak.com',

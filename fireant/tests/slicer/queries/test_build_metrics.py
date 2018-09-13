@@ -41,7 +41,7 @@ class QueryBuilderMetricTests(TestCase):
     def test_build_query_for_chart_visualization_with_single_axis(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .query
 
         self.assertEqual('SELECT '
@@ -51,8 +51,8 @@ class QueryBuilderMetricTests(TestCase):
     def test_build_query_for_chart_visualization_with_multiple_axes(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))
-                    .axis(f.HighCharts.LineChart(slicer.metrics.wins))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.wins))) \
             .query
 
         self.assertEqual('SELECT '

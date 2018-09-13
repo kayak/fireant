@@ -98,29 +98,29 @@ class ReactTable(Pandas):
     This component does not work with react-table out of the box, some customization is needed in order to work with
     the transformed data.
 
-    ```
-    // A Custom TdComponent implementation is required by Fireant in order to render display values
-    const TdComponent = ({
-                           toggleSort,
-                           className,
-                           children,
-                           ...rest
-                         }) =>
-        <div className={classNames('rt-td', className)} role="gridcell" {...rest}>
-            {_.get(children, 'display', children.raw) || <span>&nbsp;</span>}
-        </div>;
+    .. code-block:: jsx
 
-    const FireantReactTable = ({
-                            config, // The payload from fireant
-                          }) =>
-        <ReactTable columns={config.columns}
-                    data={config.data}
-                    minRows={0}
+        // A Custom TdComponent implementation is required by Fireant in order to render display values
+        const TdComponent = ({
+                               toggleSort,
+                               className,
+                               children,
+                               ...rest
+                             }) =>
+            <div className={classNames('rt-td', className)} role="gridcell" {...rest}>
+                {_.get(children, 'display', children.raw) || <span>&nbsp;</span>}
+            </div>;
 
-                    TdComponent={ DashmoreTdComponent}
-                    defaultSortMethod={(a, b, desc) => ReactTableDefaults.defaultSortMethod(a.raw, b.raw, desc)}>
-        </ReactTable>;
-    ```
+        const FireantReactTable = ({
+                                config, // The payload from fireant
+                              }) =>
+            <ReactTable columns={config.columns}
+                        data={config.data}
+                        minRows={0}
+
+                        TdComponent={ DashmoreTdComponent}
+                        defaultSortMethod={(a, b, desc) => ReactTableDefaults.defaultSortMethod(a.raw, b.raw, desc)}>
+            </ReactTable>;
     """
 
     def __init__(self, metric, *metrics: Metric, pivot=(), transpose=False, sort=None, ascending=None,
@@ -200,7 +200,9 @@ class ReactTable(Pandas):
         :return:
             A list of column header definitions with the following structure.
 
-            ```
+
+        .. code-block:: jsx
+
             columns = [{
               Header: 'Column A',
               accessor: 'a',
@@ -208,7 +210,6 @@ class ReactTable(Pandas):
               Header: 'Column B',
               accessor: 'b',
             }]
-            ```
         """
         dimension_map = {format_dimension_key(d.key): d
                          for d in dimensions + [metrics]}
@@ -242,7 +243,8 @@ class ReactTable(Pandas):
         :return:
             A list of column header definitions with the following structure.
 
-            ```
+        .. code-block:: jsx
+
             columns = [{
               Header: 'Column A',
               columns: [{
@@ -258,7 +260,6 @@ class ReactTable(Pandas):
                 ...
               ]
             }]
-            ```
         """
 
         def get_header(column_value, f_dimension_key, is_totals):
@@ -405,7 +406,7 @@ class ReactTable(Pandas):
         # Add an extra item to map the totals key to it's label
         item_map[TOTALS_VALUE] = TotalsItem
 
-        df = data_frame[df_dimension_columns + df_metric_columns].copy() 
+        df = data_frame[df_dimension_columns + df_metric_columns].copy()
 
         dimension_display_values = self.map_display_values(df, dimensions)
         self.format_data_frame(df, dimensions)

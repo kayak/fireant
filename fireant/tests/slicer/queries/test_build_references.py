@@ -12,7 +12,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_single_reference_dod_with_no_dimension_uses_multiple_from_clauses_instead_of_joins(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .query
 
@@ -33,7 +33,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_single_reference_dod_with_dimension_but_not_reference_dimension_in_query_using_filter(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.political_party) \
             .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .filter(slicer.dimensions.timestamp.between(date(2000, 1, 1), date(2000, 3, 1))) \
@@ -69,7 +69,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_dimension_with_single_reference_dod(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp) \
             .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .query
@@ -103,7 +103,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_dimension_with_single_reference_wow(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp) \
             .reference(f.WeekOverWeek(slicer.dimensions.timestamp)) \
             .query
@@ -137,7 +137,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_dimension_with_single_reference_mom(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp) \
             .reference(f.MonthOverMonth(slicer.dimensions.timestamp)) \
             .query
@@ -171,7 +171,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_dimension_with_single_reference_qoq(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp) \
             .reference(f.QuarterOverQuarter(slicer.dimensions.timestamp)) \
             .query
@@ -205,7 +205,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_dimension_with_single_reference_yoy(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp) \
             .reference(f.YearOverYear(slicer.dimensions.timestamp)) \
             .query
@@ -239,7 +239,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_dimension_with_single_reference_as_a_delta(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp) \
             .reference(f.DayOverDay(slicer.dimensions.timestamp, delta=True)) \
             .query
@@ -273,7 +273,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_dimension_with_single_reference_as_a_delta_percentage(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp) \
             .reference(f.DayOverDay(slicer.dimensions.timestamp, delta_percent=True)) \
             .query
@@ -309,7 +309,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         weekly_timestamp = slicer.dimensions.timestamp(f.weekly)
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(weekly_timestamp) \
             .reference(f.DayOverDay(weekly_timestamp)) \
             .query
@@ -343,7 +343,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_reference_on_dimension_with_weekly_interval_no_interval_on_reference(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp(f.weekly)) \
             .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .query
@@ -377,7 +377,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_reference_on_dimension_with_monthly_interval(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp(f.monthly)) \
             .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .query
@@ -411,7 +411,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_reference_on_dimension_with_quarterly_interval(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp(f.quarterly)) \
             .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .query
@@ -445,7 +445,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_reference_on_dimension_with_annual_interval(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp(f.annually)) \
             .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .query
@@ -479,7 +479,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_dimension_with_multiple_references(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp) \
             .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .reference(f.YearOverYear(slicer.dimensions.timestamp, delta_percent=True)) \
@@ -531,7 +531,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_reference_joins_nested_query_on_dimensions(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp) \
             .dimension(slicer.dimensions.political_party) \
             .reference(f.YearOverYear(slicer.dimensions.timestamp)) \
@@ -570,7 +570,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_reference_with_unique_dimension_includes_display_definition(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp) \
             .dimension(slicer.dimensions.candidate) \
             .reference(f.YearOverYear(slicer.dimensions.timestamp)) \
@@ -613,7 +613,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_adjust_reference_dimension_filters_in_reference_query(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp) \
             .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .filter(slicer.dimensions.timestamp
@@ -651,7 +651,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_adjust_reference_dimension_filters_in_reference_query_with_multiple_filters(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp) \
             .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .filter(slicer.dimensions.timestamp
@@ -693,7 +693,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_adapt_dow_for_leap_year_for_yoy_reference(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp(f.weekly)) \
             .reference(f.YearOverYear(slicer.dimensions.timestamp)) \
             .query
@@ -727,7 +727,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_adapt_dow_for_leap_year_for_yoy_delta_reference(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp(f.weekly)) \
             .reference(f.YearOverYear(slicer.dimensions.timestamp, delta=True)) \
             .query
@@ -761,7 +761,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_adapt_dow_for_leap_year_for_yoy_delta_percent_reference(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp(f.weekly)) \
             .reference(f.YearOverYear(slicer.dimensions.timestamp, delta_percent=True)) \
             .query
@@ -796,7 +796,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_adapt_dow_for_leap_year_for_yoy_reference_with_date_filter(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp(f.weekly)) \
             .reference(f.YearOverYear(slicer.dimensions.timestamp)) \
             .filter(slicer.dimensions.timestamp.between(date(2018, 1, 1), date(2018, 1, 31))) \
@@ -833,7 +833,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_adding_duplicate_reference_does_not_join_more_queries(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp) \
             .reference(f.DayOverDay(slicer.dimensions.timestamp),
                        f.DayOverDay(slicer.dimensions.timestamp)) \
@@ -868,7 +868,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_use_same_nested_query_for_joining_references_with_same_period_and_dimension(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp) \
             .reference(f.DayOverDay(slicer.dimensions.timestamp),
                        f.DayOverDay(slicer.dimensions.timestamp, delta=True),
@@ -907,7 +907,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_use_same_nested_query_for_joining_references_with_same_period_and_dimension_with_different_periods(self):
         query = slicer.data \
             .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineChart(slicer.metrics.votes))) \
+                    .axis(f.HighCharts.LineSeries(slicer.metrics.votes))) \
             .dimension(slicer.dimensions.timestamp) \
             .reference(f.DayOverDay(slicer.dimensions.timestamp),
                        f.DayOverDay(slicer.dimensions.timestamp, delta=True),

@@ -185,11 +185,10 @@ class ReactTableTransformerTests(TestCase):
     def test_uni_dim_no_display_definition(self):
         import copy
         candidate = copy.copy(slicer.dimensions.candidate)
-        candidate.display_key = None
-        candidate.display_definition = None
 
         uni_dim_df_copy = uni_dim_df.copy()
-        del uni_dim_df_copy[fd(slicer.dimensions.candidate.display_key)]
+        del uni_dim_df_copy[fd(slicer.dimensions.candidate.display.key)]
+        del candidate.display
 
         result = ReactTable(slicer.metrics.wins) \
             .transform(uni_dim_df_copy, slicer, [candidate], [])

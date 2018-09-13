@@ -15,15 +15,16 @@ class _Container(object):
     """
     This is a list of slicer elements, metrics or dimensions, used for accessing an element by key with a dot syntax.
 
-    For Example:
-    ```
-    slicer = Slicer(
-        dimensions=[
-            Dimension(key='my_dimension1')
-        ]
-    )
-    slicer.dimensions.my_dimension1
-    ```
+    Example:
+
+    .. code-block:: python
+
+        slicer = Slicer(
+            dimensions=[
+                Dimension(key='my_dimension1')
+            ]
+        )
+        slicer.dimensions.my_dimension1
     """
     def __init__(self, items):
         self._items = items
@@ -32,7 +33,7 @@ class _Container(object):
 
             # Special case to include display definitions for filters
             if item.has_display_field:
-                setattr(self, item.display_key, DisplayDimension(item))
+                setattr(self, item.display.key, DisplayDimension(item))
 
     def __iter__(self):
         return iter(self._items)

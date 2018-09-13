@@ -10,32 +10,33 @@ def setdeepattr(d, keys, value):
     Similar to the built-in `setattr`, this function accepts a list/tuple of keys to set a value deep in a `dict`
 
     Given the following dict structure
-    ```
-    d = {
-      'A': {
-        '0': {
-          'a': 1,
-          'b': 2,
+
+    .. code-block:: python
+
+        d = {
+          'A': {
+            '0': {
+              'a': 1,
+              'b': 2,
+            }
+          },
         }
-      },
-    }
-    ```
 
     Calling `setdeepattr` with a key path to a value deep in the structure will set that value. If the value or any
     of the objects in the key path do not exist, then a dict will be created.
 
-    ```
-    # Overwrites the value in `d` at A.0.a, which was 1, to 3
-    setdeepattr(d, ('A', '0', 'a'), 3)
+    .. code-block:: python
 
-    # Adds an entry in `d` to A.0 with the key 'c' and the value 3
-    setdeepattr(d, ('A', '0', 'c'), 3)
+        # Overwrites the value in `d` at A.0.a, which was 1, to 3
+        setdeepattr(d, ('A', '0', 'a'), 3)
 
-    # Adds an entry in `d` with the key 'X' and the value a new dict
-    # Adds an entry in `d` to `X` with the key '0' and the value a new dict
-    # Adds an entry in `d` to `X.0` with the key 'a' and the value 0
-    setdeepattr(d, ('X', '0', 'a'), 0)
-    ```
+        # Adds an entry in `d` to A.0 with the key 'c' and the value 3
+        setdeepattr(d, ('A', '0', 'c'), 3)
+
+        # Adds an entry in `d` with the key 'X' and the value a new dict
+        # Adds an entry in `d` to `X` with the key '0' and the value a new dict
+        # Adds an entry in `d` to `X.0` with the key 'a' and the value 0
+        setdeepattr(d, ('X', '0', 'a'), 0)
 
     :param d:
         A dict value with nested dict attributes.
@@ -64,26 +65,27 @@ def getdeepattr(d, keys, default_value=None):
     Similar to the built-in `getattr`, this function accepts a list/tuple of keys to get a value deep in a `dict`
 
     Given the following dict structure
-    ```
-    d = {
-      'A': {
-        '0': {
-          'a': 1,
-          'b': 2,
+
+    .. code-block:: python
+
+        d = {
+          'A': {
+            '0': {
+              'a': 1,
+              'b': 2,
+            }
+          },
         }
-      },
-    }
-    ```
 
     Calling `getdeepattr` with a key path to a value deep in the structure will return that value. If the value or any
     of the objects in the key path do not exist, then the default value is returned.
 
-    ```
-    assert 1 == getdeepattr(d, ('A', '0', 'a'))
-    assert 2 == getdeepattr(d, ('A', '0', 'b'))
-    assert 0 == getdeepattr(d, ('A', '0', 'c'), default_value=0)
-    assert 0 == getdeepattr(d, ('X', '0', 'a'), default_value=0)
-    ```
+    .. code-block:: python
+
+        assert 1 == getdeepattr(d, ('A', '0', 'a'))
+        assert 2 == getdeepattr(d, ('A', '0', 'b'))
+        assert 0 == getdeepattr(d, ('A', '0', 'c'), default_value=0)
+        assert 0 == getdeepattr(d, ('X', '0', 'a'), default_value=0)
 
     :param d:
         A dict value with nested dict attributes.
@@ -183,12 +185,16 @@ def ordered_distinct_list_by_attr(l, attr='key'):
 def groupby(items, by):
     """
     Group items using a function to derive a key.
-    :param items: The items to group
-    :param by: A lambda function to create a key based on the item
+
+    :param items:
+        The items to group
+
+    :param by:
+        A lambda function to create a key based on the item
+
     :return:
         an Ordered dict
     """
-
     result = OrderedDict()
     for item in items:
         key = by(item)

@@ -6,7 +6,7 @@ FireAnt - Analytics and Reporting
 |BuildStatus|  |CoverageStatus|  |Codacy|  |Docs|  |PyPi|  |License|
 
 
-|Brand| is a a data analysis tool used for quickly building charts, tables, reports, and dashboards.  It defines a schema for configuring metrics and dimensions which removes most of the leg work of writing queries and formatting charts.  |Brand| even works great with Jupyter notebooks and in the Python shell providing quick and easy access to your data.
+|Brand| is a a data analysis tool used for quickly building charts, tables, reports, and dashboards. It defines a schema for configuring metrics and dimensions which removes most of the leg work of writing queries and formatting charts. |Brand| even works great with Jupyter notebooks and in the Python shell providing quick and easy access to your data.
 
 .. _intro_end:
 
@@ -26,14 +26,26 @@ To install |Brand|, run the following command in the terminal:
 
 .. _installation_end:
 
+Introduction
+------------
+
+|Brand| arose out of an environment where several different teams, each working with data sets often with crossover, were individually building their own dashboard platforms. |Brand| was developed as a centralized way of building dashboards without the legwork.
+
+|Brand| is used to create configurations of data sets using |FeatureSlicer| which backs a database table containing analytics and defines sets of |FeatureDimension| and |FeatureMetric|. A |FeatureDimension| is used to group data by properties, such as a timestamp, an account, a device type, etc. A |FeatureMetric| is used to render quanitifiers such as clicks, ROI, conversions into a widget such as a chart or table.
+
+A |FeatureSlicer| exposes a rich builder API that allows a wide range of queries to be constructed that can be rendered as several widgets. A |FeatureSlicer| can be used directly in a Jupyter_ notebook, eliminating the need to write repetitive custom queries and render the data in visualizations.
+
 Slicers
 -------
 
-Slicers are the core component of |Brand|.  A Slicer is a configuration of two types of elements, metrics and dimensions, which represent what kinds of data exist and how the data can be organized.  A metric is a type of data, a measurement such as clicks and a dimension is a range over which metrics can be extended or grouped by.  Concretely, metrics represent the data *in* a chart or table and dimensions represent the rows and columns, axes, or categories.
+|FeatureSlicer| are the core component of |Brand|. A |FeatureSlicer| is a representation of a data set and is used to execute queries and transform result sets into widgets such as charts or tables.
 
-To configure a slicer, instantiate a |ClassSlicer| with either a |ClassVerticaDatabase|, |ClassMySQLDatabase|, |ClassPostgreSQLDatabase| or a |ClassRedshiftDatabase| and a |ClassTable| or |ClassTables|, with a list of |ClassMetric| and |ClassDimension|.
+A |FeatureSlicer| requires only a couple of definitions in order to use: A database connector, a database table, join tables, and dimensions and metrics. Metrics and Dimension definitions tell |Brand| how to query and use data in widgets. Once a slicer is created, it's query API can be used to build queries with just a few lines of code selecting which dimensions and metrics to use and how to filter the data.
 
 .. _slicer_example_start:
+
+Instantiating a Slicer
+""""""""""""""""""""""
 
 .. code-block:: python
 
@@ -41,7 +53,7 @@ To configure a slicer, instantiate a |ClassSlicer| with either a |ClassVerticaDa
     from fireant.database import VerticaDatabase
     from pypika import Tables, functions as fn
 
-    vertica_database = VerticaDatabase(user='fakeuser', password='fakepassword')
+    vertica_database = VerticaDatabase(user='myuser', password='mypassword')
     analytics, accounts = Tables('analytics', 'accounts')
 
     my_slicer = Slicer(
@@ -53,7 +65,7 @@ To configure a slicer, instantiate a |ClassSlicer| with either a |ClassVerticaDa
 
         joins=[
             # Metrics and dimensions can use columns from joined tables by
-            # configuring the join here.  Joins will only be used when necessary.
+            # configuring the join here. Joins will only be used when necessary.
             Join('accounts', accounts, analytics.account_id == accounts.id),
         ],
 
@@ -100,85 +112,56 @@ To configure a slicer, instantiate a |ClassSlicer| with either a |ClassVerticaDa
 
 .. _slicer_example_end:
 
+.. _slicer_query_example_start:
 
-Querying Data and Rendering Charts
-----------------------------------
+Building queries with a Slicer
+""""""""""""""""""""""""""""""
 
-Once a slicer is configured, it is ready to be used.  Each slicer comes with a |ClassSlicerManager| and several |ClassTransformerManager| which expose an interface for executing queries and transforming the results.  Each function in the manager uses the same signature.  The principal function is ``data`` and all othe functions call this function first.  The additional functions provide a transformation to the data.
+Use the ``data`` attribute start building a slicer query. A slicer query allows method calls to be chained together to select what should be included in the result.
 
-The notebooks transformer bundle includes different functions for use in Jupyter_ notebooks.  Other formats return results in JSON format.
-
-.. _manager_api_start:
-
-* ``my_slicer.manager.data`` - A Pandas_ data frame indexed by the selected dimensions.
-* ``my_slicer.manager.query_string`` - A string containing the raw SQL query that FireAnt is running.
-
-* ``my_slicer.notebooks.row_index_table`` - A Datatables_ row-indexed table.
-* ``my_slicer.notebooks.column_index_table`` - A Datatables_ column-indexed table.
-
-* ``my_slicer.notebooks.line_chart`` - A Matplotlib_ line chart. (Requires [matplotlib] dependency)
-* ``my_slicer.notebooks.column_chart`` - A Matplotlib_ column chart. (Requires [matplotlib] dependency)
-* ``my_slicer.notebooks.bar_chart`` - A Matplotlib_ bar chart. (Requires [matplotlib] dependency)
-
-* ``my_slicer.highcharts.line_chart`` - A Highcharts_ line chart.
-* ``my_slicer.highcharts.column_chart`` - A Highcharts_ column chart.
-* ``my_slicer.highcharts.bar_chart`` - A Highcharts_ bar chart.
-
-* ``my_slicer.datatables.row_index_table`` - A Datatables_ row-indexed table.
-* ``my_slicer.datatables.column_index_table`` - A Datatables_ column-indexed table.
+This example uses the slicer defined above
 
 .. code-block:: python
 
-    def data(self, metrics, dimensions, metric_filters, dimension_filters, references, operations):
+   from fireant import Matplotlib, Pandas, daily
 
-.. _manager_api_end:
+    matplotlib_chart, pandas_df = my_slicer.data \
+         .dimension(
+            # Select the date dimension with a daily interval to group the data by the day applies to
+            # dimensions are referenced by `slicer.dimensions.{alias}`
+            my_slicer.dimensions.date(daily),
 
-Examples
---------
+            # Select the device_type dimension to break the data down further by which device it applies to
+            my_slicer.dimensions.device_type,
+         ) \
+         .filter(
+            # Filter the result set to data to the year of 2018
+            my_slicer.dimensions.date.between(date(2018, 1, 1), date(2018, 12, 31))
+         ) \
+         # Add a week over week reference to compare data to values from the week prior
+         .reference(WeekOverWeek(slicer.dimension.date))
+         .widget(
+            # Add a matpotlib chart widget
+            Matplotlib()
+               # Add axes with series to the chart
+               .axis(Matplotlib.LineSeries(slicer.metrics.clicks))
 
-Use the ``data`` function to get a Pandas_ data frame or series.  The following example will result in a data frame with 'device' as the index, containing the values 'Desktop', 'Tablet', and 'Mobile', and the columns 'Clicks' and 'ROI'.
+               # metrics are referenced by `slicer.metrics.{alias}`
+               .axis(Matplotlib.ColumnSeries(slicer.metrics.cost, slicer.metrics.revenue))
+         ) \
+         .widget(
+            # Add a pandas data frame table widget
+            Pandas(slicer.metrics.clicks, slicer.metrics.cost, slicer.metrics.revenue)
+         ) \
+         .fetch()
 
-.. code-block:: python
+    # Display the chart
+    matplotlib_chart.plot()
 
-    df = my_slicer.manager.data(
-        metrics=['clicks', 'roi'],
-        dimensions=['device']
-    )
+    # Display the chart
+    print(pandas_df)
 
-Removing the dimension will yield a similar result except as a Pandas_ series containing 'Clicks' and 'ROI'.  These are the aggregated values over the entire data base table.
-
-.. code-block:: python
-
-    df = my_slicer.manager.data(
-        metrics=['clicks', 'roi'],
-    )
-
-The transformer functions us the data function but then apply a transformation to convert the data into formats for Highcharts_ or Datatables_.  The results for these can be serialized directly into json objects.
-
-
-.. code-block:: python
-
-    import json
-
-    result = my_slicer.manager.line_chart(
-        metrics=['clicks', 'roi'],
-        dimensions=['date', 'device'],
-    )
-
-    json.dumps(result)
-
-
-.. code-block:: python
-
-    import json
-
-    result = my_slicer.manager.row_index_table(
-        metrics=['clicks', 'revenue', 'cost', 'roi'],
-        dimensions=['account', 'device'],
-    )
-
-    json.dumps(result)
-
+.. _slicer_query_example_end:
 
 License
 -------
@@ -201,7 +184,6 @@ limitations under the License.
 Crafted with ♥ in Berlin.
 
 .. _license_end:
-
 
 
 .. _available_badges_start:
@@ -231,42 +213,44 @@ Crafted with ♥ in Berlin.
 .. |FeatureFilter| replace:: *Filter*
 .. |FeatureReference| replace:: *Reference*
 .. |FeatureOperation| replace:: *Operation*
-.. |FeatureTransformer| replace:: *Transformer*
-
-.. |FeatureWidgetGroup| replace:: *Dashboard*
-.. |FeatureWidget| replace:: *Section*
 
 .. |ClassSlicer| replace:: ``fireant.Slicer``
-.. |ClassSlicerManager| replace:: ``fireant.slicer.SlicerManager``
-.. |ClassMetric| replace:: ``fireant.slicer.Metric``
-.. |ClassDimension| replace:: ``fireant.slicer.Dimension``
-
-.. |ClassContDimension| replace:: ``fireant.slicer.ContinuousDimension``
-.. |ClassDateDimension| replace:: ``fireant.slicer.DatetimeDimension``
-.. |ClassCatDimension| replace:: ``fireant.slicer.CategoricalDimension``
-.. |ClassUniqueDimension| replace:: ``fireant.slicer.UniqueDimension``
-
-.. |ClassWidgetGroup| replace:: ``fireant.dashboards.WidgetGroup``
-.. |ClassWidget| replace:: ``fireant.dashboards.Widget``
-.. |ClassWidgetGroupManager| replace:: ``fireant.dashboards.WidgetGroupManager``
-
-.. |ClassEqualityFilter| replace:: ``fireant.slicer.EqualityFilter``
-.. |ClassContainsFilter| replace:: ``fireant.slicer.ContainsFilter``
-.. |ClassRangeFilter| replace:: ``fireant.slicer.RangeFilter``
-.. |ClassFuzzyFilter| replace:: ``fireant.slicer.FuzzyFilter``
-
-.. |ClassFilter| replace:: ``fireant.slicer.Filter``
-.. |ClassReference| replace:: ``fireant.slicer.Reference``
-.. |ClassOperation| replace:: ``fireant.slicer.Operation``
-
-.. |ClassDashboard| replace:: ``fireant.Dashboard``
-.. |ClassSection| replace:: ``fireant.dashboards.Section``
-
 .. |ClassDatabase| replace:: ``fireant.database.Database``
+.. |ClassJoin| replace:: ``fireant.slicer.joins.Join``
+.. |ClassMetric| replace:: ``fireant.slicer.metrics.Metric``
+
+.. |ClassDimension| replace:: ``fireant.slicer.dimensions.Dimension``
+.. |ClassBooleanDimension| replace:: ``fireant.slicer.dimensions.BooleanDimension``
+.. |ClassContDimension| replace:: ``fireant.slicer.dimensions.ContinuousDimension``
+.. |ClassDateDimension| replace:: ``fireant.slicer.dimensions.DatetimeDimension``
+.. |ClassCatDimension| replace:: ``fireant.slicer.dimensions.CategoricalDimension``
+.. |ClassUniqueDimension| replace:: ``fireant.slicer.dimensions.UniqueDimension``
+.. |ClassDisplayDimension| replace:: ``fireant.slicer.dimensions.DisplayDimension``
+
+.. |ClassFilter| replace:: ``fireant.slicer.filters.Filter``
+.. |ClassComparatorFilter| replace:: ``fireant.slicer.filters.ComparatorFilter``
+.. |ClassBooleanFilter| replace:: ``fireant.slicer.filters.BooleanFilter``
+.. |ClassContainsFilter| replace:: ``fireant.slicer.filters.ContainsFilter``
+.. |ClassExcludesFilter| replace:: ``fireant.slicer.filters.ExcludesFilter``
+.. |ClassRangeFilter| replace:: ``fireant.slicer.filters.RangeFilter``
+.. |ClassPatternFilter| replace:: ``fireant.slicer.filters.PatternFilter``
+.. |ClassAntiPatternFilter| replace:: ``fireant.slicer.filters.AntiPatternFilter``
+
+.. |ClassWidget| replace:: ``fireant.slicer.widgets.base.Widget``
+.. |ClassPandasWidget| replace:: ``fireant.slicer.widgets.pandas.Pandas``
+.. |ClassHighChartsWidget| replace:: ``fireant.slicer.widgets.highcharts.HighCharts``
+.. |ClassHighChartsSeries| replace:: ``fireant.slicer.widgets.highcharts.Series``
+
+.. |ClassReference| replace:: ``fireant.slicer.references.Reference``
+
+.. |ClassOperation| replace:: ``fireant.slicer.operations.Operation``
+
 .. |ClassVerticaDatabase| replace:: ``fireant.database.VerticaDatabase``
 .. |ClassMySQLDatabase| replace:: ``fireant.database.MySQLDatabase``
 .. |ClassPostgreSQLDatabase| replace:: ``fireant.database.PostgreSQLDatabase``
 .. |ClassRedshiftDatabase| replace:: ``fireant.database.RedshiftDatabase``
+
+.. |ClassDatetimeInterval| replace:: ``fireant.DatetimeInterval``
 
 .. |ClassTable| replace:: ``pypika.Table``
 .. |ClassTables| replace:: ``pypika.Tables``
@@ -275,7 +259,8 @@ Crafted with ♥ in Berlin.
 .. _Pandas: http://pandas.pydata.org/
 .. _Jupyter: http://jupyter.org/
 .. _Matplotlib: http://matplotlib.org/
-.. _Highcharts: http://www.highcharts.com/
+.. _HighCharts: http://www.highcharts.com/
 .. _Datatables: https://datatables.net/
+.. _React-Table: https://react-table.js.org/
 
 .. _appendix_end:

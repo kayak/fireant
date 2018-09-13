@@ -5,7 +5,10 @@ from unittest import (
 )
 
 from fireant import CumSum
-from fireant.slicer.widgets.highcharts import HighCharts
+from fireant.slicer.widgets.highcharts import (
+    DEFAULT_COLORS,
+    HighCharts,
+)
 from fireant.tests.slicer.mocks import (
     ElectionOverElection,
     cat_dim_df,
@@ -25,7 +28,7 @@ from fireant.tests.slicer.mocks import (
 class HighChartsLineChartTransformerTests(TestCase):
     maxDiff = None
 
-    chart_class = HighCharts.LineChart
+    chart_class = HighCharts.LineSeries
     chart_type = 'line'
     stacking = None
 
@@ -67,7 +70,8 @@ class HighChartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-            }]
+            }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     def test_metric_prefix_line_chart(self):
@@ -110,7 +114,8 @@ class HighChartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-            }]
+            }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     def test_metric_suffix_line_chart(self):
@@ -153,7 +158,8 @@ class HighChartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-            }]
+            }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     def test_metric_precision_line_chart(self):
@@ -196,7 +202,8 @@ class HighChartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-            }]
+            }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     def test_single_operation_line_chart(self):
@@ -237,7 +244,8 @@ class HighChartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-            }]
+            }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     def test_single_metric_with_uni_dim_line_chart(self):
@@ -298,7 +306,8 @@ class HighChartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "square", "fillColor": "#55BF3B"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-            }]
+            }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     def test_multi_metrics_single_axis_line_chart(self):
@@ -337,7 +346,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#DDDF0D",
+                "color": "#55BF3B",
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
@@ -356,7 +365,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#DDDF0D",
+                "color": "#DF5353",
                 "marker": {"symbol": "square", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
@@ -375,7 +384,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#55BF3B",
+                "color": "#7798BF",
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
@@ -394,11 +403,12 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#55BF3B",
+                "color": "#AAEEEE",
                 "marker": {"symbol": "square", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-            }]
+            }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     def test_multi_metrics_multi_axis_line_chart(self):
@@ -461,7 +471,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#55BF3B",
+                "color": "#DDDF0D",
                 "marker": {"symbol": "square", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
@@ -499,11 +509,12 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#DF5353",
+                "color": "#55BF3B",
                 "marker": {"symbol": "square", "fillColor": "#55BF3B"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-            }]
+            }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     def test_multi_dim_with_totals_line_chart(self):
@@ -552,7 +563,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 'type': self.chart_type,
                 'yAxis': '0'
             }, {
-                'color': '#55BF3B',
+                'color': '#DDDF0D',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 9646062),
                          (946684800000, 10428632),
@@ -571,7 +582,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 'type': self.chart_type,
                 'yAxis': '0'
             }, {
-                'color': '#DF5353',
+                'color': '#DDDF0D',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 15220449),
                          (946684800000, 16662017),
@@ -609,7 +620,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 'type': self.chart_type,
                 'yAxis': '1'
             }, {
-                'color': '#DF5353',
+                'color': '#55BF3B',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 1),
                          (946684800000, 1),
@@ -628,7 +639,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 'type': self.chart_type,
                 'yAxis': '1'
             }, {
-                'color': '#7798BF',
+                'color': '#55BF3B',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 2),
                          (946684800000, 2),
@@ -647,6 +658,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 'type': self.chart_type,
                 'yAxis': '1'
             }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     def test_multi_dim_with_totals_on_first_dim_line_chart(self):
@@ -695,7 +707,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 'type': self.chart_type,
                 'yAxis': '0'
             }, {
-                'color': '#55BF3B',
+                'color': '#DDDF0D',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 9646062),
                          (946684800000, 10428632),
@@ -714,7 +726,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 'type': self.chart_type,
                 'yAxis': '0'
             }, {
-                'color': '#DF5353',
+                'color': '#DDDF0D',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 15220449),
                          (946684800000, 16662017),
@@ -752,7 +764,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 'type': self.chart_type,
                 'yAxis': '1'
             }, {
-                'color': '#DF5353',
+                'color': '#55BF3B',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 1),
                          (946684800000, 1),
@@ -771,7 +783,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 'type': self.chart_type,
                 'yAxis': '1'
             }, {
-                'color': '#7798BF',
+                'color': '#55BF3B',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 2),
                          (946684800000, 2),
@@ -790,6 +802,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 'type': self.chart_type,
                 'yAxis': '1'
             }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     def test_uni_dim_with_ref_line_chart(self):
@@ -890,7 +903,8 @@ class HighChartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "square", "fillColor": "#55BF3B"},
                 "dashStyle": "Dash",
                 "stacking": self.stacking,
-            }]
+            }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     def test_uni_dim_with_ref_delta_line_chart(self):
@@ -997,7 +1011,8 @@ class HighChartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "square", "fillColor": "#55BF3B"},
                 "dashStyle": "Dash",
                 "stacking": self.stacking,
-            }]
+            }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     def test_invisible_y_axis(self):
@@ -1038,7 +1053,8 @@ class HighChartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
-            }]
+            }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     def test_ref_axes_set_to_same_visibility_as_parent_axis(self):
@@ -1145,14 +1161,15 @@ class HighChartsLineChartTransformerTests(TestCase):
                 "marker": {"symbol": "square", "fillColor": "#55BF3B"},
                 "dashStyle": "Dash",
                 "stacking": self.stacking,
-            }]
+            }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
 
 class HighChartsBarChartTransformerTests(TestCase):
     maxDiff = None
 
-    chart_class = HighCharts.BarChart
+    chart_class = HighCharts.BarSeries
     chart_type = 'bar'
     stacking = None
 
@@ -1186,11 +1203,10 @@ class HighChartsBarChartTransformerTests(TestCase):
                     'valuePrefix': None,
                     'valueSuffix': None
                 },
-                "color": "#DDDF0D",
-                "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-            }]
+            }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     def test_multi_metric_bar_chart(self):
@@ -1224,8 +1240,6 @@ class HighChartsBarChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#DDDF0D",
-                "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
             }, {
@@ -1238,11 +1252,10 @@ class HighChartsBarChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#55BF3B",
-                "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-            }]
+            }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     def test_cat_dim_single_metric_bar_chart(self):
@@ -1275,11 +1288,10 @@ class HighChartsBarChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#DDDF0D",
-                "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-            }]
+            }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     def test_cat_dim_multi_metric_bar_chart(self):
@@ -1313,8 +1325,6 @@ class HighChartsBarChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#DDDF0D",
-                "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
             }, {
@@ -1327,11 +1337,10 @@ class HighChartsBarChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#55BF3B",
-                "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-            }]
+            }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     def test_cont_uni_dims_single_metric_bar_chart(self):
@@ -1369,8 +1378,6 @@ class HighChartsBarChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#DDDF0D",
-                "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
             }, {
@@ -1388,11 +1395,10 @@ class HighChartsBarChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#55BF3B",
-                "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-            }]
+            }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     def test_cont_uni_dims_multi_metric_single_axis_bar_chart(self):
@@ -1430,8 +1436,6 @@ class HighChartsBarChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#DDDF0D",
-                "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
             }, {
@@ -1449,8 +1453,6 @@ class HighChartsBarChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#DDDF0D",
-                "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
             }, {
@@ -1468,8 +1470,6 @@ class HighChartsBarChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#55BF3B",
-                "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
             }, {
@@ -1487,11 +1487,10 @@ class HighChartsBarChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#55BF3B",
-                "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-            }]
+            }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     def test_cont_uni_dims_multi_metric_multi_axis_bar_chart(self):
@@ -1534,8 +1533,6 @@ class HighChartsBarChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#DDDF0D",
-                "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
             }, {
@@ -1553,8 +1550,6 @@ class HighChartsBarChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#55BF3B",
-                "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
             }, {
@@ -1572,8 +1567,6 @@ class HighChartsBarChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#55BF3B",
-                "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
             }, {
@@ -1591,11 +1584,10 @@ class HighChartsBarChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#DF5353",
-                "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-            }]
+            }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     def test_invisible_y_axis(self):
@@ -1629,52 +1621,51 @@ class HighChartsBarChartTransformerTests(TestCase):
                     'valuePrefix': None,
                     'valueSuffix': None
                 },
-                "color": "#DDDF0D",
-                "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-            }]
+            }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
 
 class HighChartsColumnChartTransformerTests(HighChartsBarChartTransformerTests):
-    chart_class = HighCharts.ColumnChart
+    chart_class = HighCharts.ColumnSeries
     chart_type = 'column'
 
 
 class HighChartsStackedBarChartTransformerTests(HighChartsBarChartTransformerTests):
     maxDiff = None
 
-    chart_class = HighCharts.StackedBarChart
+    chart_class = HighCharts.StackedBarSeries
     chart_type = 'bar'
     stacking = 'normal'
 
 
 class HighChartsStackedColumnChartTransformerTests(HighChartsBarChartTransformerTests):
-    chart_class = HighCharts.StackedColumnChart
+    chart_class = HighCharts.StackedColumnSeries
     chart_type = 'column'
     stacking = 'normal'
 
 
 class HighChartsAreaChartTransformerTests(HighChartsLineChartTransformerTests):
-    chart_class = HighCharts.AreaChart
+    chart_class = HighCharts.AreaSeries
     chart_type = 'area'
 
 
 class HighChartsAreaStackedChartTransformerTests(HighChartsAreaChartTransformerTests):
-    chart_class = HighCharts.AreaStackedChart
+    chart_class = HighCharts.AreaStackedSeries
     stacking = 'normal'
 
 
 class HighChartsAreaPercentChartTransformerTests(HighChartsAreaChartTransformerTests):
-    chart_class = HighCharts.AreaPercentageChart
+    chart_class = HighCharts.AreaPercentageSeries
     stacking = 'percent'
 
 
 class HighChartsPieChartTransformerTests(TestCase):
     maxDiff = None
 
-    chart_class = HighCharts.PieChart
+    chart_class = HighCharts.PieSeries
     chart_type = 'pie'
 
     def test_single_metric_chart(self):
@@ -1694,9 +1685,9 @@ class HighChartsPieChartTransformerTests(TestCase):
                     "name": "Votes",
                     "y": 111674336,
                 }],
-                'colors': ['#DDDF0D', '#55BF3B', '#DF5353', '#7798BF', '#AAEEEE', '#FF0066', '#EEAAEE', '#DF5353',
-                           '#7798BF', '#AAEEEE'],
                 'tooltip': {
+                    'pointFormat': '<span style="color:{point.color}">●</span> '
+                                   '{series.name}: <b>{point.y} ({point.percentage:.1f}%)</b><br/>',
                     'valueDecimals': None,
                     'valuePrefix': None,
                     'valueSuffix': None
@@ -1713,6 +1704,7 @@ class HighChartsPieChartTransformerTests(TestCase):
                 'title': {'text': None},
                 'visible': True
             }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     def test_multi_metric_chart(self):
@@ -1732,9 +1724,9 @@ class HighChartsPieChartTransformerTests(TestCase):
                     "name": "Votes",
                     "y": 111674336,
                 }],
-                'colors': ['#DDDF0D', '#55BF3B', '#DF5353', '#7798BF', '#AAEEEE', '#FF0066', '#EEAAEE', '#DF5353',
-                           '#7798BF', '#AAEEEE'],
                 'tooltip': {
+                    'pointFormat': '<span style="color:{point.color}">●</span> '
+                                   '{series.name}: <b>{point.y} ({point.percentage:.1f}%)</b><br/>',
                     'valueDecimals': None,
                     'valuePrefix': None,
                     'valueSuffix': None
@@ -1746,9 +1738,9 @@ class HighChartsPieChartTransformerTests(TestCase):
                     "name": "Wins",
                     "y": 12,
                 }],
-                'colors': ['#DDDF0D', '#55BF3B', '#DF5353', '#7798BF', '#AAEEEE', '#FF0066', '#EEAAEE', '#DF5353',
-                           '#7798BF', '#AAEEEE'],
                 'tooltip': {
+                    'pointFormat': '<span style="color:{point.color}">●</span> '
+                                   '{series.name}: <b>{point.y} ({point.percentage:.1f}%)</b><br/>',
                     'valueDecimals': None,
                     'valuePrefix': None,
                     'valueSuffix': None
@@ -1765,6 +1757,7 @@ class HighChartsPieChartTransformerTests(TestCase):
                 'title': {'text': None},
                 'visible': True
             }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     def test_cat_dim_single_metric_chart(self):
@@ -1779,19 +1772,14 @@ class HighChartsPieChartTransformerTests(TestCase):
             'series': [{
                 'name': 'Votes',
                 'type': 'pie',
-                'data': [{
-                    'y': 54551568,
-                    'name': 'Democrat',
-                }, {
-                    'y': 1076384,
-                    'name': 'Independent',
-                }, {
-                    'y': 56046384,
-                    'name': 'Republican',
-                }],
-                'colors': ['#DDDF0D', '#55BF3B', '#DF5353', '#7798BF', '#AAEEEE', '#FF0066', '#EEAAEE', '#DF5353',
-                           '#7798BF', '#AAEEEE'],
+                'data': [
+                    {'y': 56046384, 'name': 'Republican'},
+                    {'y': 54551568, 'name': 'Democrat'},
+                    {'y': 1076384, 'name': 'Independent'},
+                ],
                 'tooltip': {
+                    'pointFormat': '<span style="color:{point.color}">●</span> '
+                                   '{series.name}: <b>{point.y} ({point.percentage:.1f}%)</b><br/>',
                     'valuePrefix': None,
                     'valueSuffix': None,
                     'valueDecimals': None,
@@ -1807,7 +1795,8 @@ class HighChartsPieChartTransformerTests(TestCase):
                 'type': 'category',
                 'categories': ['Democrat', 'Independent', 'Republican'],
                 'visible': True,
-            }
+            },
+            "colors": DEFAULT_COLORS,
         }, result)
 
     @skip
@@ -1859,7 +1848,8 @@ class HighChartsPieChartTransformerTests(TestCase):
                 "dashStyle": "Solid",
                 "marker": {},
                 "stacking": self.stacking,
-            }]
+            }],
+            "colors": DEFAULT_COLORS,
         }, result)
 
     @skip
