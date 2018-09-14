@@ -1,12 +1,12 @@
 from functools import partial
-from pypika import JoinType
 
 from fireant.utils import (
     flatten,
-    format_key,
     format_dimension_key,
+    format_key,
     format_metric_key,
 )
+from pypika import JoinType
 from .finders import (
     find_joins_for_tables,
     find_required_tables_to_join,

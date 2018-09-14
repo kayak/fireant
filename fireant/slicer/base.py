@@ -41,4 +41,4 @@ class SlicerElement(object):
                and str(self.definition) == str(other.definition)
 
     def __hash__(self):
-        return hash('{}({})'.format(self.__class__.__name__, self.key, self.definition))
+        return hash('{}({})'.format(self.__class__.__name__, self.key))
