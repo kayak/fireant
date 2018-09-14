@@ -1,12 +1,10 @@
-# coding: utf-8
 from pypika import (
     VerticaQuery,
     functions as fn,
     terms,
 )
 
-from fireant.database import Database
-from fireant.slicer import DatetimeInterval
+from .base import Database
 
 
 class Trunc(terms.Function):
@@ -26,20 +24,20 @@ class VerticaDatabase(Database):
     """
     Vertica client that uses the vertica_python driver.
     """
+
     # The pypika query class to use for constructing queries
     query_cls = VerticaQuery
 
     DATETIME_INTERVALS = {
-        'hour': DatetimeInterval('HH'),
-        'day': DatetimeInterval('DD'),
-        'week': DatetimeInterval('IW'),
-        'month': DatetimeInterval('MM'),
-        'quarter': DatetimeInterval('Q'),
-        'year': DatetimeInterval('Y')
+        'hour': 'HH',
+        'day': 'DD',
+        'week': 'IW',
+        'month': 'MM',
+        'quarter': 'Q',
+        'year': 'Y'
     }
 
-    def __init__(self, host='localhost', port=5433, database='vertica',
-                 user='vertica', password=None,
+    def __init__(self, host='localhost', port=5433, database='vertica', user='vertica', password=None,
                  read_timeout=None):
         self.host = host
         self.port = port
@@ -51,21 +49,17 @@ class VerticaDatabase(Database):
     def connect(self):
         import vertica_python
 
-        return vertica_python.connect(
-            host=self.host, port=self.port, database=self.database,
-            user=self.user, password=self.password,
-            read_timeout=self.read_timeout,
-        )
+        return vertica_python.connect(host=self.host, port=self.port, database=self.database,
+                                      user=self.user, password=self.password,
+                                      read_timeout=self.read_timeout,
+                                      unicode_error='replace')
+
+    def fetch(self, query):
+        return super(VerticaDatabase, self).fetch(query)
 
     def trunc_date(self, field, interval):
-        interval = self.DATETIME_INTERVALS[interval]
-        return Trunc(field, interval.size)
+        trunc_date_interval = self.DATETIME_INTERVALS.get(str(interval), 'DD')
+        return Trunc(field, trunc_date_interval)
 
-    def date_add(self, date_part, interval, field):
-        return fn.TimestampAdd(date_part, interval, field)
-
-
-def Vertica(*args, **kwargs):
-    from warnings import warn
-    warn('The Vertica class is now deprecated. Please use VerticaDatabase instead!')
-    return VerticaDatabase(*args, **kwargs)
+    def date_add(self, field, date_part, interval):
+        return fn.TimestampAdd(str(date_part), interval, field)

@@ -1,85 +1,196 @@
-# coding: utf8
+import numpy as np
+import pandas as pd
+
+from fireant.utils import format_metric_key
+from fireant.slicer.references import reference_key
+from .metrics import Metric
+
+
+def _extract_key_or_arg(data_frame, key):
+    return data_frame[key] \
+        if key in data_frame \
+        else key
 
 
 class Operation(object):
     """
     The `Operation` class represents an operation in the `Slicer` API.
     """
-    key = None
-    label = None
 
-    def schemas(self):
-        pass
+    def apply(self, data_frame, reference):
+        raise NotImplementedError()
 
+    @property
     def metrics(self):
+        raise NotImplementedError()
+
+    @property
+    def operations(self):
         return []
 
 
-class Totals(Operation):
-    """
-    `Operation` for rolling up totals across dimensions in queries.  This will append the totals across a dimension to
-    a dimension.
-    """
-    key = '_total'
-    label = 'Total'
+class _BaseOperation(Operation):
+    def __init__(self, key, label, prefix=None, suffix=None, precision=None):
+        self.key = key
+        self.label = label
+        self.prefix = prefix
+        self.suffix = suffix
+        self.precision = precision
 
-    def __init__(self, *dimension_keys):
-        self.dimension_keys = dimension_keys
+    def apply(self, data_frame, reference):
+        raise NotImplementedError()
 
-
-class L1Loss(Operation):
-    """
-    Performs L1 Loss (mean abs. error) operation on a metric using another metric as the target.
-    """
-    key = 'l1loss'
-    label = 'L1 loss'
-
-    def __init__(self, metric_key, target_metric_key):
-        self.metric_key = metric_key
-        self.target_metric_key = target_metric_key
-
-    def schemas(self):
-        return {
-            'key': self.key,
-            'metric': self.metric_key,
-            'target': self.target_metric_key,
-        }
-
+    @property
     def metrics(self):
-        return [self.metric_key, self.target_metric_key]
+        raise NotImplementedError()
+
+    @property
+    def operations(self):
+        raise NotImplementedError()
+
+    def _group_levels(self, index):
+        """
+        Get the index levels that need to be grouped. This is to avoid apply the cumulative function across separate
+        dimensions. Only the first dimension should be accumulated across.
+
+        :param index:
+        :return:
+        """
+        return index.names[1:]
 
 
-class L2Loss(L1Loss):
-    """
-    Performs L2 Loss (mean sqr. error) operation on a metric using another metric as the target.
-    """
-    key = 'l2loss'
-    label = 'L2 loss'
+class _Cumulative(_BaseOperation):
+    def __init__(self, arg):
+        super(_Cumulative, self).__init__(
+              key='{}({})'.format(self.__class__.__name__.lower(),
+                                  getattr(arg, 'key', arg)),
+              label='{}({})'.format(self.__class__.__name__,
+                                    getattr(arg, 'label', arg)),
+              prefix=getattr(arg, 'prefix'),
+              suffix=getattr(arg, 'suffix'),
+              precision=getattr(arg, 'precision'),
+        )
 
+        self.arg = arg
 
-class CumSum(Operation):
-    """
-    Accumulates the sum of one or more metrics.
-    """
-    key = 'cumsum'
-    label = 'cum. sum'
+    def apply(self, data_frame, reference):
+        raise NotImplementedError()
 
-    def __init__(self, metric_key):
-        self.metric_key = metric_key
-
-    def schemas(self):
-        return {
-            'key': self.key,
-            'metric': self.metric_key,
-        }
-
+    @property
     def metrics(self):
-        return (self.metric_key,)
+        return [metric
+                for metric in [self.arg]
+                if isinstance(metric, Metric)]
+
+    @property
+    def operations(self):
+        return [op_and_children
+                for operation in [self.arg]
+                if isinstance(operation, Operation)
+                for op_and_children in [operation] + operation.operations]
+
+    def __repr__(self):
+        return self.key
 
 
-class CumMean(CumSum):
-    """
-    Accumulates the mean of one or more metrics
-    """
-    key = 'cummean'
-    label = 'cum. mean'
+class CumSum(_Cumulative):
+    def apply(self, data_frame, reference):
+        df_key = format_metric_key(reference_key(self.arg, reference))
+
+        if isinstance(data_frame.index, pd.MultiIndex):
+            levels = self._group_levels(data_frame.index)
+
+            return data_frame[df_key] \
+                .groupby(level=levels) \
+                .cumsum()
+
+        return data_frame[df_key].cumsum()
+
+
+class CumProd(_Cumulative):
+    def apply(self, data_frame, reference):
+        df_key = format_metric_key(reference_key(self.arg, reference))
+
+        if isinstance(data_frame.index, pd.MultiIndex):
+            levels = self._group_levels(data_frame.index)
+
+            return data_frame[df_key] \
+                .groupby(level=levels) \
+                .cumprod()
+
+        return data_frame[df_key].cumprod()
+
+
+class CumMean(_Cumulative):
+    @staticmethod
+    def cummean(x):
+        return x.cumsum() / np.arange(1, len(x) + 1)
+
+    def apply(self, data_frame, reference):
+        df_key = format_metric_key(reference_key(self.arg, reference))
+
+        if isinstance(data_frame.index, pd.MultiIndex):
+            levels = self._group_levels(data_frame.index)
+
+            return data_frame[df_key] \
+                .groupby(level=levels) \
+                .apply(self.cummean)
+
+        return self.cummean(data_frame[df_key])
+
+
+class RollingOperation(_BaseOperation):
+    def __init__(self, arg, window, min_periods=None):
+        super(RollingOperation, self).__init__(
+              key='{}({})'.format(self.__class__.__name__.lower(),
+                                  getattr(arg, 'key', arg)),
+              label='{}({})'.format(self.__class__.__name__,
+                                    getattr(arg, 'label', arg)),
+              prefix=getattr(arg, 'prefix'),
+              suffix=getattr(arg, 'suffix'),
+              precision=getattr(arg, 'precision'),
+        )
+
+        self.arg = arg
+        self.window = window
+        self.min_periods = min_periods
+
+    def _should_adjust(self, other_operations):
+        # Need to figure out if this rolling operation is has the largest window, and if it's the first of multiple
+        # rolling operations if there are more than one operation sharing the largest window.
+        first_max_rolling = list(sorted(other_operations, key=lambda operation: operation.window))[0]
+
+        return first_max_rolling is self
+
+    def apply(self, data_frame, reference):
+        raise NotImplementedError()
+
+    @property
+    def metrics(self):
+        return [metric
+                for metric in [self.arg]
+                if isinstance(metric, Metric)]
+
+    @property
+    def operations(self):
+        return [op_and_children
+                for operation in [self.arg]
+                if isinstance(operation, Operation)
+                for op_and_children in [operation] + operation.operations]
+
+
+class RollingMean(RollingOperation):
+    def rolling_mean(self, x):
+        return x.rolling(self.window, self.min_periods).mean()
+
+    def apply(self, data_frame, reference):
+        df_key = format_metric_key(reference_key(self.arg, reference))
+
+        if isinstance(data_frame.index, pd.MultiIndex):
+            levels = self._group_levels(data_frame.index)
+
+            return data_frame[df_key] \
+                .groupby(level=levels) \
+                .apply(self.rolling_mean)
+
+        return self.rolling_mean(data_frame[df_key])

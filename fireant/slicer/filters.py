@@ -1,115 +1,79 @@
-# coding: utf8
-from fireant import utils
+from pypika import Not
+from pypika.functions import Lower
 
 
 class Filter(object):
-    def __init__(self, element_key):
-        self.element_key = element_key
-
-
-class EqualityFilter(Filter):
-    def __init__(self, element_key, operator, value):
-        super(EqualityFilter, self).__init__(element_key)
-        self.operator = operator
-        self.value = value
-
-    def schemas(self, elements, **kwargs):
-        elements = utils.wrap_list(elements)
-        value = utils.wrap_list(self.value)
-
-        criterion = None
-        for element, value in zip(elements, value):
-            crit = getattr(element, self.operator)(value)
-            if criterion:
-                criterion = criterion & crit
-            else:
-                criterion = crit
-
-        return criterion
+    def __init__(self, definition):
+        self.definition = definition
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) \
-               and self.element_key == other.element_key \
-               and self.operator == other.operator \
-               and self.value == other.value
+               and str(self.definition) == str(other.definition)
+
+    def __repr__(self):
+        return str(self.definition)
 
 
-class BooleanFilter(Filter):
+class DimensionFilter(Filter):
+    pass
+
+
+class MetricFilter(Filter):
+    pass
+
+
+class ComparatorFilter(MetricFilter):
+    class Operator(object):
+        eq = 'eq'
+        ne = 'ne'
+        gt = 'gt'
+        lt = 'lt'
+        gte = 'gte'
+        lte = 'lte'
+
+    def __init__(self, metric_definition, operator, value):
+        definition = getattr(metric_definition, operator)(value)
+        super(ComparatorFilter, self).__init__(definition)
+
+
+class BooleanFilter(DimensionFilter):
     def __init__(self, element_key, value):
-        super(BooleanFilter, self).__init__(element_key)
-        self.value = value
-
-    def schemas(self, element):
-        if not self.value:
-            return element.negate()
-        return element
+        definition = element_key if value else Not(element_key)
+        super(BooleanFilter, self).__init__(definition)
 
 
-class ContainsFilter(Filter):
-    def __init__(self, element_key, values):
-        super(ContainsFilter, self).__init__(element_key)
-        self.values = values
-
-    def schemas(self, element):
-        return element.isin(self.values)
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) \
-               and self.element_key == other.element_key \
-               and self.values == other.values
+class ContainsFilter(DimensionFilter):
+    def __init__(self, dimension_definition, values):
+        definition = dimension_definition.isin(values)
+        super(ContainsFilter, self).__init__(definition)
 
 
-class ExcludesFilter(Filter):
-    def __init__(self, element_key, values):
-        super(ExcludesFilter, self).__init__(element_key)
-        self.values = values
-
-    def schemas(self, element):
-        return element.notin(self.values)
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) \
-               and self.element_key == other.element_key \
-               and self.values == other.values
+class ExcludesFilter(DimensionFilter):
+    def __init__(self, dimension_definition, values):
+        definition = dimension_definition.notin(values)
+        super(ExcludesFilter, self).__init__(definition)
 
 
-class RangeFilter(Filter):
-    def __init__(self, element_key, start, stop):
-        super(RangeFilter, self).__init__(element_key)
-        self.start = start
-        self.stop = stop
-
-    def schemas(self, element):
-        element = utils.wrap_list(element)
-        starts = utils.wrap_list(self.start)
-        stops = utils.wrap_list(self.stop)
-
-        criterion = None
-        for el, start, stop in zip(element, starts, stops):
-            crit = el[start:stop]
-            if criterion:
-                criterion = criterion & crit
-            else:
-                criterion = crit
-
-        return criterion
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) \
-               and self.element_key == other.element_key \
-               and self.start == other.start \
-               and self.stop == other.stop
+class RangeFilter(DimensionFilter):
+    def __init__(self, dimension_definition, start, stop):
+        definition = dimension_definition[start:stop]
+        super(RangeFilter, self).__init__(definition)
 
 
-class WildcardFilter(Filter):
-    def __init__(self, element_key, value):
-        super(WildcardFilter, self).__init__(element_key)
-        self.value = value
+class PatternFilter(DimensionFilter):
+    def _apply(self, dimension_definition, patterns):
+        definition = Lower(dimension_definition).like(Lower(patterns[0]))
 
-    def schemas(self, element):
-        return element.like(self.value)
+        for pattern in patterns[1:]:
+            definition |= Lower(dimension_definition).like(Lower(pattern))
 
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) \
-               and self.element_key == other.element_key \
-               and self.value == other.value
+        return definition
+
+    def __init__(self, dimension_definition, pattern, *patterns):
+        definition = self._apply(dimension_definition, (pattern,) + patterns)
+        super(PatternFilter, self).__init__(definition)
+
+
+class AntiPatternFilter(PatternFilter):
+    def _apply(self, dimension_definition, pattern):
+        return super(AntiPatternFilter, self)._apply(dimension_definition, pattern).negate()

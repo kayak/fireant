@@ -1,12 +1,13 @@
-# coding: utf-8
 import pandas as pd
 from pypika import (
     Dialects,
     MySQLQuery,
+    enums,
+    functions as fn,
     terms,
 )
 
-from fireant.database import Database
+from .base import Database
 
 
 class Trunc(terms.Function):
@@ -51,25 +52,26 @@ class MySQLDatabase(Database):
     def connect(self):
         import pymysql
 
-        return pymysql.connect(
-            host=self.host, port=self.port, db=self.database,
-            user=self.user, password=self.password,
-            charset=self.charset,
-            cursorclass=pymysql.cursors.Cursor,
-        )
+        return pymysql.connect(host=self.host, port=self.port, db=self.database,
+                               user=self.user, password=self.password,
+                               charset=self.charset,
+                               cursorclass=pymysql.cursors.Cursor)
 
     def fetch(self, query):
         with self.connect().cursor() as cursor:
             cursor.execute(query)
             return cursor.fetchall()
 
-    def fetch_dataframe(self, query):
+    def fetch_data(self, query):
         return pd.read_sql(query, self.connect())
 
     def trunc_date(self, field, interval):
-        return Trunc(field, interval)
+        return Trunc(field, str(interval))
 
-    def date_add(self, date_part, interval, field):
+    def to_char(self, definition):
+        return fn.Cast(definition, enums.SqlTypes.CHAR)
+
+    def date_add(self, field, date_part, interval):
         # adding an extra 's' as MySQL's interval doesn't work with 'year', 'week' etc, it expects a plural
         interval_term = terms.Interval(**{'{}s'.format(str(date_part)): interval, 'dialect': Dialects.MYSQL})
         return DateAdd(field, interval_term)

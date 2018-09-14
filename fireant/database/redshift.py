@@ -1,7 +1,4 @@
-# coding: utf-8
-from pypika import (
-    RedshiftQuery,
-)
+from pypika import RedshiftQuery
 
 from .postgresql import PostgreSQLDatabase
 
@@ -10,6 +7,7 @@ class RedshiftDatabase(PostgreSQLDatabase):
     """
     Redshift client that uses the psycopg module.
     """
+
     # The pypika query class to use for constructing queries
     query_cls = RedshiftQuery
 
