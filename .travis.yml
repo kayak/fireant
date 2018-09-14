@@ -10,7 +10,6 @@ install:
     - "python setup.py install"
     - "pip install coverage"
     - "pip install coveralls"
-    - "pip install matplotlib"
 
 script:
     - "coverage run --source=fireant setup.py test"
