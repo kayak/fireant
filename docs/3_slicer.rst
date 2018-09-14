@@ -43,7 +43,7 @@ Creating a |FeatureSlicer| involves instantiating a |ClassSlicer| with at a mini
 Metrics
 -------
 
-A |FeatureMetric| is a quantifier which is aggregated across dimensions when used in a |FeatureSlicer| query. A |FeatureSlicer| requires at a minimum one metric. |FeatureMetric|s are the values used to draw lines or bars in charts or fill cells in tables, the measurements in the data.
+A |FeatureMetric| is a quantifier which is aggregated across dimensions when used in a |FeatureSlicer| query. A |FeatureSlicer| requires at a minimum one metric. Metrics are the values used to draw lines or bars in charts or fill cells in tables, the measurements in the data.
 
 A |FeatureMetric| is represented in code by the class |ClassMetric|. When instantiating a |FeatureSlicer|, at least one instance of |ClassMetric| must be given in the ``metrics`` argument.
 

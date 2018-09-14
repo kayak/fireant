@@ -20,6 +20,9 @@ def find_version(*file_paths):
         return version_match.group(1)
     raise RuntimeError("Unable to find version string.")
 
+with open('requirements.txt') as f:
+    required = f.read().splitlines()
+
 setup(
     name='fireant',
     version=find_version("fireant", "__init__.py"),
@@ -71,13 +74,7 @@ setup(
     keywords=('fireant python query builder querybuilder sql mysql postgres psql oracle vertica aggregated '
               'relational database rdbms business analytics bi data science analysis pandas'),
 
-    install_requires=[
-        'six',
-        'pandas==0.22.0',
-        'pypika==0.14.9',
-        'toposort==1.5',
-        'typing==3.6.2',
-    ],
+    install_requires=required,
     tests_require=[
         'mock'
     ],
