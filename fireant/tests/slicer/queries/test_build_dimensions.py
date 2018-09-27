@@ -140,36 +140,6 @@ class QueryBuilderDimensionTests(TestCase):
                          'GROUP BY "$d$election","$d$election_display" '
                          'ORDER BY "$d$election_display"', str(query))
 
-    def test_build_query_with_pattern_dimension(self):
-        query = slicer.data \
-            .widget(f.DataTablesJS(slicer.metrics.votes)) \
-            .dimension(slicer.dimensions.pattern(['groupA%', 'groupB%'])) \
-            .query
-
-        self.assertEqual('SELECT '
-                         'CASE '
-                         'WHEN "pattern" LIKE \'groupA%\' THEN \'groupA%\' '
-                         'WHEN "pattern" LIKE \'groupB%\' THEN \'groupB%\' '
-                         'ELSE \'No Group\' '
-                         'END "$d$pattern",'
-                         'SUM("votes") "$m$votes" '
-                         'FROM "politics"."politician" '
-                         'GROUP BY "$d$pattern" '
-                         'ORDER BY "$d$pattern"', str(query))
-
-    def test_build_query_with_pattern_no_values(self):
-        query = slicer.data \
-            .widget(f.DataTablesJS(slicer.metrics.votes)) \
-            .dimension(slicer.dimensions.pattern) \
-            .query
-
-        self.assertEqual('SELECT '
-                         '\'No Group\' "$d$pattern",'
-                         'SUM("votes") "$m$votes" '
-                         'FROM "politics"."politician" '
-                         'GROUP BY "$d$pattern" '
-                         'ORDER BY "$d$pattern"', str(query))
-
     def test_build_query_with_multiple_dimensions(self):
         query = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \

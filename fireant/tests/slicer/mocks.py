@@ -91,9 +91,6 @@ slicer = Slicer(
                            definition=politicians_table.is_winner),
           UniqueDimension('deepjoin',
                           definition=deep_join_table.id),
-          PatternDimension('pattern',
-                           label='Pattern',
-                           definition=politicians_table.pattern),
       ),
 
       metrics=(

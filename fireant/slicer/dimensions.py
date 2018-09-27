@@ -277,54 +277,6 @@ class DatetimeDimension(ContinuousDimension):
         return RangeFilter(self.definition, start, stop)
 
 
-class PatternDimension(PatternFilterableMixin, Dimension):
-    """
-    This is a dimension that represents a boolean true/false value.  The expression should always result in a boolean
-    value.
-    """
-    pattern_definition_attribute = 'field'
-    _DEFAULT = ValueWrapper('No Group')
-
-    def __init__(self, key, label=None, definition=None):
-        super(PatternDimension, self).__init__(key,
-                                               label,
-                                               self._DEFAULT)
-        self.field = definition
-
-    @immutable
-    def __call__(self, groups):
-        """
-        When calling a datetime dimension an interval can be supplied:
-
-        .. code-block:: python
-
-            from fireant import weekly
-
-            my_slicer.dimensions.date # Daily interval used as default
-            my_slicer.dimensions.date(weekly) # Daily interval used as default
-
-        :param interval:
-            An interval to use with the dimension.  See `fireant.intervals`.
-        :return:
-            A copy of the dimension with the interval set.
-        """
-        self.groups = groups
-
-        cases = Case()
-        for group in groups:
-            cases = cases.when(self.field.like(group), group)
-
-        self.definition = cases.else_(self._DEFAULT)
-
-    def __repr__(self):
-        dimension = super().__repr__()
-
-        if self.groups is not None:
-            return '{}({})'.format(dimension, self.groups)
-
-        return dimension
-
-
 class TotalsDimension(Dimension):
     def __init__(self, dimension):
         totals_definition = NullValue()

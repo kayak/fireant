@@ -46,4 +46,4 @@ class SlicerContainerTests(TestCase):
     def test_iter_dimensions(self):
         dimension_keys = [dimension.key for dimension in slicer.dimensions]
         self.assertListEqual(dimension_keys, ['timestamp', 'political_party', 'candidate', 'election', 'district',
-                                              'state', 'winner', 'deepjoin', 'pattern'])
+                                              'state', 'winner', 'deepjoin'])

@@ -166,30 +166,6 @@ class QueryBuilderDimensionFilterTests(TestCase):
                          'WHERE NOT (LOWER("political_party") LIKE LOWER(\'Rep%\') '
                          'OR LOWER("political_party") LIKE LOWER(\'Dem%\'))', str(query))
 
-    def test_build_query_with_filter_like_pattern_dim_multiple_patterns(self):
-        query = slicer.data \
-            .widget(f.DataTablesJS(slicer.metrics.votes)) \
-            .filter(slicer.dimensions.pattern.like('a%', 'b%')) \
-            .query
-
-        self.assertEqual('SELECT '
-                         'SUM("votes") "$m$votes" '
-                         'FROM "politics"."politician" '
-                         'WHERE LOWER("pattern") LIKE LOWER(\'a%\') '
-                         'OR LOWER("pattern") LIKE LOWER(\'b%\')', str(query))
-
-    def test_build_query_with_filter_not_like_pattern_dim_multiple_patterns(self):
-        query = slicer.data \
-            .widget(f.DataTablesJS(slicer.metrics.votes)) \
-            .filter(slicer.dimensions.pattern.not_like('a%', 'b%')) \
-            .query
-
-        self.assertEqual('SELECT '
-                         'SUM("votes") "$m$votes" '
-                         'FROM "politics"."politician" '
-                         'WHERE NOT (LOWER("pattern") LIKE LOWER(\'a%\') '
-                         'OR LOWER("pattern") LIKE LOWER(\'b%\'))', str(query))
-
     def test_build_query_with_filter_like_unique_dim_multiple_patterns(self):
         query = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
