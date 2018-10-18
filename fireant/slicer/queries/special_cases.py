@@ -1,6 +1,5 @@
-from datetime import timedelta
-
 import pandas as pd
+from dateutil.relativedelta import relativedelta
 
 from fireant.slicer.dimensions import DatetimeDimension
 from fireant.slicer.filters import RangeFilter
@@ -50,7 +49,7 @@ def adjust_daterange_filter_for_rolling_window(dimensions, operations, filters):
         args = {dim0.interval + 's': max_rolling_period} \
             if 'quarter' != dim0.interval \
             else {'months': max_rolling_period * 3}
-        filter_.definition.start.value -= timedelta(**args)
+        filter_.definition.start.value -= relativedelta(**args)
 
     return filters
 
