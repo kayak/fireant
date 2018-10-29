@@ -66,7 +66,9 @@ class Slicer(object):
     class Metrics(_Container):
         pass
 
-    def __init__(self, table, database, joins=(), dimensions=(), metrics=(), hint_table=None):
+    def __init__(self, table, database, joins=(), dimensions=(), metrics=(),
+                 hint_table=None,
+                 always_query_all_metrics=False):
         """
         Constructor for a slicer.  Contains all the fields to initialize the slicer.
 
@@ -92,6 +94,9 @@ class Slicer(object):
             must have the same definition as the table omitting dimensions which do not have a set of options (such as
             datetime or boolean dimensions) and the metrics.  This is provided to more efficiently query dimension
             options.
+
+        :param always_query_all_metrics: (Default: False)
+            When true, all metrics will be included in database queries in order to increase cache hits.
         """
         self.table = table
         self.database = database
@@ -107,6 +112,8 @@ class Slicer(object):
             if not isinstance(dimension, (UniqueDimension, CategoricalDimension)):
                 continue
             dimension.choices = DimensionChoicesQueryBuilder(self, dimension)
+
+        self.always_query_all_metrics = always_query_all_metrics
 
     def __eq__(self, other):
         return isinstance(other, Slicer) \

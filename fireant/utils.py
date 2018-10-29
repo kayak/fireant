@@ -106,8 +106,15 @@ def getdeepattr(d, keys, default_value=None):
 
     return d_level
 
+
 def flatten(items):
     return [item for level in items for item in wrap_list(level)]
+
+
+def chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    return [l[i:i + n]
+            for i in range(0, len(l), n)]
 
 
 def slice_first(item):

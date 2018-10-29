@@ -5,7 +5,10 @@ from unittest.mock import (
     patch,
 )
 
-from ..matchers import DimensionMatcher
+from ..matchers import (
+    DimensionMatcher,
+    PypikaQueryMatcher,
+)
 from ..mocks import slicer
 
 
@@ -16,7 +19,7 @@ class DimensionsChoicesQueryBuilderTests(TestCase):
     def test_query_choices_for_cat_dimension(self):
         query = slicer.dimensions.political_party \
             .choices \
-            .query
+            .queries[0]
 
         self.assertEqual('SELECT '
                          '"political_party" "$d$political_party" '
@@ -26,7 +29,7 @@ class DimensionsChoicesQueryBuilderTests(TestCase):
     def test_query_choices_for_uni_dimension(self):
         query = slicer.dimensions.candidate \
             .choices \
-            .query
+            .queries[0]
 
         self.assertEqual('SELECT '
                          '"candidate_id" "$d$candidate",'
@@ -37,7 +40,7 @@ class DimensionsChoicesQueryBuilderTests(TestCase):
     def test_query_choices_for_uni_dimension_with_join(self):
         query = slicer.dimensions.district \
             .choices \
-            .query
+            .queries[0]
 
         self.assertEqual('SELECT '
                          '"politician"."district_id" "$d$district",'
@@ -59,7 +62,7 @@ class DimensionsChoicesQueryBuilderTests(TestCase):
         query = slicer.dimensions.candidate \
             .choices \
             .filter(slicer.dimensions.political_party.isin(['d', 'r'])) \
-            .query
+            .queries[0]
 
         self.assertEqual('SELECT '
                          '"candidate_id" "$d$candidate",'
@@ -78,12 +81,12 @@ class DimensionsChoicesFetchTests(TestCase):
             .fetch()
 
         mock_fetch_data.assert_called_once_with(ANY,
-                                                'SELECT '
-                                                '"political_party" "$d$political_party" '
-                                                'FROM "politics"."politician" '
-                                                'GROUP BY "$d$political_party" '
-                                                'ORDER BY "$d$political_party"',
-                                                dimensions=DimensionMatcher(slicer.dimensions.political_party))
+                                                [PypikaQueryMatcher('SELECT '
+                                                                    '"political_party" "$d$political_party" '
+                                                                    'FROM "politics"."politician" '
+                                                                    'GROUP BY "$d$political_party" '
+                                                                    'ORDER BY "$d$political_party"')],
+                                                DimensionMatcher(slicer.dimensions.political_party))
 
     def test_query_choices_for_uni_dimension(self, mock_fetch_data: Mock):
         slicer.dimensions.candidate \
@@ -91,10 +94,10 @@ class DimensionsChoicesFetchTests(TestCase):
             .fetch()
 
         mock_fetch_data.assert_called_once_with(ANY,
-                                                'SELECT '
-                                                '"candidate_id" "$d$candidate",'
-                                                '"candidate_name" "$d$candidate_display" '
-                                                'FROM "politics"."politician" '
-                                                'GROUP BY "$d$candidate","$d$candidate_display" '
-                                                'ORDER BY "$d$candidate_display"',
-                                                dimensions=DimensionMatcher(slicer.dimensions.candidate))
+                                                [PypikaQueryMatcher('SELECT '
+                                                                    '"candidate_id" "$d$candidate",'
+                                                                    '"candidate_name" "$d$candidate_display" '
+                                                                    'FROM "politics"."politician" '
+                                                                    'GROUP BY "$d$candidate","$d$candidate_display" '
+                                                                    'ORDER BY "$d$candidate_display"')],
+                                                DimensionMatcher(slicer.dimensions.candidate))

@@ -1,5 +1,3 @@
-import pandas as pd
-
 from pypika import (
     PostgreSQLQuery,
     functions as fn,
@@ -29,11 +27,11 @@ class PostgreSQLDatabase(Database):
     # The pypika query class to use for constructing queries
     query_cls = PostgreSQLQuery
 
-    def __init__(self, database=None, host='localhost', port=5432,
-                 user=None, password=None):
-        self.host = host
-        self.port = port
-        self.database = database
+    def __init__(self, host='localhost', port=5432, database=None,
+                 user=None, password=None, max_processes=1, cache_middleware=None):
+        super(PostgreSQLDatabase, self).__init__(host, port, database,
+                                                 max_processes=max_processes,
+                                                 cache_middleware=cache_middleware)
         self.user = user
         self.password = password
 
@@ -42,14 +40,6 @@ class PostgreSQLDatabase(Database):
 
         return psycopg2.connect(host=self.host, port=self.port, dbname=self.database,
                                 user=self.user, password=self.password)
-
-    def fetch(self, query):
-        with self.connect().cursor() as cursor:
-            cursor.execute(query)
-            return cursor.fetchall()
-
-    def fetch_data(self, query):
-        return pd.read_sql(query, self.connect())
 
     def trunc_date(self, field, interval):
         return DateTrunc(field, str(interval))

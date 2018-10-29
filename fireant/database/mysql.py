@@ -1,4 +1,5 @@
 import pandas as pd
+
 from pypika import (
     Dialects,
     MySQLQuery,
@@ -6,7 +7,6 @@ from pypika import (
     functions as fn,
     terms,
 )
-
 from .base import Database
 
 
@@ -40,11 +40,11 @@ class MySQLDatabase(Database):
     # The pypika query class to use for constructing queries
     query_cls = MySQLQuery
 
-    def __init__(self, database=None, host='localhost', port=3306,
-                 user=None, password=None, charset='utf8mb4'):
-        self.host = host
-        self.port = port
-        self.database = database
+    def __init__(self, host='localhost', port=3306, database=None,
+                 user=None, password=None, charset='utf8mb4', max_processes=1, cache_middleware=None):
+        super(MySQLDatabase, self).__init__(host, port, database,
+                                            max_processes=max_processes,
+                                            cache_middleware=cache_middleware)
         self.user = user
         self.password = password
         self.charset = charset
@@ -56,14 +56,6 @@ class MySQLDatabase(Database):
                                user=self.user, password=self.password,
                                charset=self.charset,
                                cursorclass=pymysql.cursors.Cursor)
-
-    def fetch(self, query):
-        with self.connect().cursor() as cursor:
-            cursor.execute(query)
-            return cursor.fetchall()
-
-    def fetch_data(self, query):
-        return pd.read_sql(query, self.connect())
 
     def trunc_date(self, field, interval):
         return Trunc(field, str(interval))

@@ -8,6 +8,7 @@ from unittest.mock import (
 import fireant as f
 from ..matchers import (
     DimensionMatcher,
+    PypikaQueryMatcher,
 )
 from ..mocks import slicer
 
@@ -22,13 +23,14 @@ class QueryBuildPaginationTests(TestCase):
             .fetch()
 
         mock_fetch_data.assert_called_once_with(ANY,
-                                                'SELECT '
-                                                'TRUNC("timestamp",\'DD\') "$d$timestamp",'
-                                                'SUM("votes") "$m$votes" '
-                                                'FROM "politics"."politician" '
-                                                'GROUP BY "$d$timestamp" '
-                                                'ORDER BY "$d$timestamp" LIMIT 20',
-                                                dimensions=DimensionMatcher(slicer.dimensions.timestamp))
+                                                [PypikaQueryMatcher('SELECT '
+                                                                    'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                                                                    'SUM("votes") "$m$votes" '
+                                                                    'FROM "politics"."politician" '
+                                                                    'GROUP BY "$d$timestamp" '
+                                                                    'ORDER BY "$d$timestamp" LIMIT 20')],
+                                                DimensionMatcher(slicer.dimensions.timestamp),
+                                                ANY)
 
     def test_set_offset(self, mock_fetch_data: Mock):
         slicer.data \
@@ -38,14 +40,15 @@ class QueryBuildPaginationTests(TestCase):
             .fetch()
 
         mock_fetch_data.assert_called_once_with(ANY,
-                                                'SELECT '
-                                                'TRUNC("timestamp",\'DD\') "$d$timestamp",'
-                                                'SUM("votes") "$m$votes" '
-                                                'FROM "politics"."politician" '
-                                                'GROUP BY "$d$timestamp" '
-                                                'ORDER BY "$d$timestamp" '
-                                                'OFFSET 20',
-                                                dimensions=DimensionMatcher(slicer.dimensions.timestamp))
+                                                [PypikaQueryMatcher('SELECT '
+                                                                    'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                                                                    'SUM("votes") "$m$votes" '
+                                                                    'FROM "politics"."politician" '
+                                                                    'GROUP BY "$d$timestamp" '
+                                                                    'ORDER BY "$d$timestamp" '
+                                                                    'OFFSET 20')],
+                                                DimensionMatcher(slicer.dimensions.timestamp),
+                                                ANY)
 
     def test_set_limit_and_offset(self, mock_fetch_data: Mock):
         slicer.data \
@@ -56,12 +59,13 @@ class QueryBuildPaginationTests(TestCase):
             .fetch()
 
         mock_fetch_data.assert_called_once_with(ANY,
-                                                'SELECT '
-                                                'TRUNC("timestamp",\'DD\') "$d$timestamp",'
-                                                'SUM("votes") "$m$votes" '
-                                                'FROM "politics"."politician" '
-                                                'GROUP BY "$d$timestamp" '
-                                                'ORDER BY "$d$timestamp" '
-                                                'LIMIT 20 '
-                                                'OFFSET 30',
-                                                dimensions=DimensionMatcher(slicer.dimensions.timestamp))
+                                                [PypikaQueryMatcher('SELECT '
+                                                                    'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                                                                    'SUM("votes") "$m$votes" '
+                                                                    'FROM "politics"."politician" '
+                                                                    'GROUP BY "$d$timestamp" '
+                                                                    'ORDER BY "$d$timestamp" '
+                                                                    'LIMIT 20 '
+                                                                    'OFFSET 30')],
+                                                DimensionMatcher(slicer.dimensions.timestamp),
+                                                ANY)
