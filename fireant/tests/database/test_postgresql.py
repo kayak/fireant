@@ -1,20 +1,18 @@
 from unittest import TestCase
-
 from unittest.mock import (
     Mock,
     patch,
 )
-from pypika import Field
 
 from fireant import (
-    DatetimeInterval,
-    hourly,
-    daily,
-    weekly,
-    quarterly,
     annually,
+    daily,
+    hourly,
+    quarterly,
+    weekly,
 )
 from fireant.database import PostgreSQLDatabase
+from pypika import Field
 
 
 class TestPostgreSQL(TestCase):
@@ -33,7 +31,7 @@ class TestPostgreSQL(TestCase):
         with patch.dict('sys.modules', psycopg2=mock_postgresql):
             mock_postgresql.connect.return_value = 'OK'
 
-            postgresql = PostgreSQLDatabase('test_database', 'test_host', 1234,
+            postgresql = PostgreSQLDatabase('test_host', 1234, 'test_database',
                                             'test_user', 'password')
             result = postgresql.connect()
 

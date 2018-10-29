@@ -1,17 +1,24 @@
-import pandas as pd
-import time
-from functools import partial
-from typing import Iterable
+from functools import (
+    partial,
+    reduce,
+)
+from multiprocessing.pool import ThreadPool
+from typing import (
+    Iterable,
+    Sized,
+    Union,
+)
 
-from fireant.database.base import Database
+import pandas as pd
+
+from fireant.database import Database
 from fireant.formats import (
     NULL_VALUE,
     TOTALS_VALUE,
 )
-from fireant.utils import format_dimension_key
-from .logger import (
-    query_logger,
-    slow_query_logger,
+from fireant.utils import (
+    chunks,
+    format_dimension_key,
 )
 from ..dimensions import (
     ContinuousDimension,
@@ -19,7 +26,23 @@ from ..dimensions import (
 )
 
 
-def fetch_data(database: Database, query: str, dimensions: Iterable[Dimension]):
+def fetch_data(database: Database, queries: Union[Sized, Iterable], dimensions: Iterable[Dimension],
+               reference_groups=()):
+    iterable = [(database, str(query), dimensions)
+                for query in queries]
+
+    with ThreadPool(processes=database.max_processes) as pool:
+        results = pool.map(_exec, iterable)
+        pool.close()
+
+    return _reduce_result_set(results, reference_groups)
+
+
+def _exec(args):
+    return _do_fetch_data(*args)
+
+
+def _do_fetch_data(database: Database, query: str, dimensions: Iterable[Dimension]):
     """
     Executes a query to fetch data from database middleware and builds/cleans the data as a data frame. The query
     execution is logged with its duration.
@@ -31,22 +54,64 @@ def fetch_data(database: Database, query: str, dimensions: Iterable[Dimension]):
 
     :return: `pd.DataFrame` constructed from the result of the query
     """
-    start_time = time.time()
-    query_logger.debug(query)
-
     data_frame = database.fetch_data(str(query))
-
-    duration = round(time.time() - start_time, 4)
-    query_log_msg = '[{duration} seconds]: {query}'.format(duration=duration, query=query)
-    query_logger.info(query_log_msg)
-
-    if duration >= database.slow_query_log_min_seconds:
-        slow_query_logger.warning(query_log_msg)
-
-    return clean_and_apply_index(data_frame, dimensions)
+    return _clean_and_apply_index(data_frame, dimensions)
 
 
-def clean_and_apply_index(data_frame: pd.DataFrame, dimensions: Iterable[Dimension]):
+def _reduce_result_set(results: Iterable[pd.DataFrame], reference_groups=()):
+    """
+    Reduces the result sets from individual queries into a single data frame. This effectively joins sets of references
+    and concats the sets of totals.
+
+    :param results: A list of data frame
+    :param reference_groups: A list of groups of references (grouped by interval such as WoW, etc)
+    :return:
+    """
+    result_groups = chunks(results, 1 + len(reference_groups))
+
+    groups = []
+    for result_group in result_groups:
+        base_df = result_group[0]
+        reference_dfs = [_make_reference_data_frame(base_df, result, reference)
+                         for result, reference_group in zip(result_group[1:], reference_groups)
+                         for reference in reference_group]
+
+        reduced = reduce(lambda left, right: pd.merge(left, right, how='outer', left_index=True, right_index=True),
+                         [base_df] + reference_dfs)
+        groups.append(reduced)
+
+    return pd.concat(groups)
+
+
+def _make_reference_data_frame(base_df, ref_df, reference):
+    """
+    This applies the reference metrics to the data frame given the base data frame and the reference data frame.
+
+    When a reference is selected as a delta or a delta percentage, the calculation is performed here. Otherwise, the
+    reference data frame is returned.
+
+    :param base_df:
+    :param ref_df:
+    :param reference:
+    :return:
+    """
+    if reference.delta_percent:
+        ref_matrix = ref_df.as_matrix()
+        return pd.DataFrame((base_df.as_matrix() - ref_matrix) / ref_matrix,
+                            index=ref_df.index,
+                            columns=[col.replace(reference.reference_type.key, reference.key)
+                                     for col in ref_df.columns])
+
+    if reference.delta:
+        return pd.DataFrame(base_df.as_matrix() - ref_df.as_matrix(),
+                            index=ref_df.index,
+                            columns=[col.replace(reference.reference_type.key, reference.key)
+                                     for col in ref_df.columns])
+
+    return ref_df
+
+
+def _clean_and_apply_index(data_frame: pd.DataFrame, dimensions: Iterable[Dimension]):
     """
     Sets the index on a data frame. This will also replace any nulls from the database with an empty string for
     non-continuous dimensions. Totals will be indexed with Nones.
@@ -68,7 +133,7 @@ def clean_and_apply_index(data_frame: pd.DataFrame, dimensions: Iterable[Dimensi
             continue
 
         level = format_dimension_key(dimension.key)
-        data_frame[level] = fill_nans_in_level(data_frame, dimensions[:i + 1]) \
+        data_frame[level] = _fill_nans_in_level(data_frame, dimensions[:i + 1]) \
             .apply(
               # Handles an annoying case of pandas in which the ENTIRE data frame gets converted from int to float if
               # the are NaNs, even if there are no NaNs in the column :/
@@ -79,7 +144,7 @@ def clean_and_apply_index(data_frame: pd.DataFrame, dimensions: Iterable[Dimensi
     return data_frame.set_index(dimension_keys)
 
 
-def fill_nans_in_level(data_frame, dimensions):
+def _fill_nans_in_level(data_frame, dimensions):
     """
     In case there are NaN values representing both totals (from ROLLUP) and database nulls, we need to replace the real
     nulls with an empty string in order to distinguish between them.  We choose to replace the actual database nulls

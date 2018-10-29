@@ -1,4 +1,3 @@
-
 from unittest.mock import (
     Mock,
     patch,
@@ -15,7 +14,7 @@ class TestRedshift(TestPostgreSQL):
         cls.database = RedshiftDatabase()
 
     def test_defaults(self):
-        self.assertIsNone(self.database.host)
+        self.assertEqual('localhost', self.database.host)
         self.assertEqual(5439, self.database.port)
         self.assertIsNone(self.database.database)
         self.assertIsNone(self.database.password)
@@ -25,7 +24,7 @@ class TestRedshift(TestPostgreSQL):
         with patch.dict('sys.modules', psycopg2=mock_redshift):
             mock_redshift.connect.return_value = 'OK'
 
-            redshift = RedshiftDatabase('test_database', 'test_host', 1234,
+            redshift = RedshiftDatabase('test_host', 1234, 'test_database',
                                         'test_user', 'password')
             result = redshift.connect()
 

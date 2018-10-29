@@ -12,6 +12,7 @@ from fireant.utils import (
 )
 from ..matchers import (
     DimensionMatcher,
+    PypikaQueryMatcher,
 )
 from ..mocks import (
     ElectionOverElection,
@@ -32,7 +33,8 @@ class QueryBuilderRenderTests(TestCase):
 
         mock_fetch_data.assert_called_once_with(slicer.database,
                                                 ANY,
-                                                dimensions=ANY)
+                                                ANY,
+                                                ANY)
 
     def test_pass_query_from_builder_as_arg(self, mock_fetch_data: Mock):
         mock_widget = f.Widget(slicer.metrics.votes)
@@ -43,9 +45,10 @@ class QueryBuilderRenderTests(TestCase):
             .fetch()
 
         mock_fetch_data.assert_called_once_with(ANY,
-                                                'SELECT SUM("votes") "$m$votes" '
-                                                'FROM "politics"."politician"',
-                                                dimensions=ANY)
+                                                [PypikaQueryMatcher('SELECT SUM("votes") "$m$votes" '
+                                                                    'FROM "politics"."politician"')],
+                                                ANY,
+                                                ANY)
 
     def test_builder_dimensions_as_arg_with_zero_dimensions(self, mock_fetch_data: Mock):
         mock_widget = f.Widget(slicer.metrics.votes)
@@ -55,7 +58,7 @@ class QueryBuilderRenderTests(TestCase):
             .widget(mock_widget) \
             .fetch()
 
-        mock_fetch_data.assert_called_once_with(ANY, ANY, dimensions=[])
+        mock_fetch_data.assert_called_once_with(ANY, ANY, [], ANY)
 
     def test_builder_dimensions_as_arg_with_one_dimension(self, mock_fetch_data: Mock):
         mock_widget = f.Widget(slicer.metrics.votes)
@@ -68,7 +71,7 @@ class QueryBuilderRenderTests(TestCase):
             .dimension(*dimensions) \
             .fetch()
 
-        mock_fetch_data.assert_called_once_with(ANY, ANY, dimensions=DimensionMatcher(*dimensions))
+        mock_fetch_data.assert_called_once_with(ANY, ANY, DimensionMatcher(*dimensions), ANY)
 
     def test_builder_dimensions_as_arg_with_multiple_dimensions(self, mock_fetch_data: Mock):
         mock_widget = f.Widget(slicer.metrics.votes)
@@ -81,7 +84,7 @@ class QueryBuilderRenderTests(TestCase):
             .dimension(*dimensions) \
             .fetch()
 
-        mock_fetch_data.assert_called_once_with(ANY, ANY, dimensions=DimensionMatcher(*dimensions))
+        mock_fetch_data.assert_called_once_with(ANY, ANY, DimensionMatcher(*dimensions), ANY)
 
     def test_call_transform_on_widget(self, mock_fetch_data: Mock):
         mock_widget = f.Widget(slicer.metrics.votes)

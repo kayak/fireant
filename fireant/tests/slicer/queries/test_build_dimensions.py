@@ -10,127 +10,147 @@ class QueryBuilderDimensionTests(TestCase):
     maxDiff = None
 
     def test_build_query_with_datetime_dimension(self):
-        query = slicer.data \
+        queries = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.timestamp) \
-            .query
+            .queries
+
+        self.assertEqual(len(queries), 1)
 
         self.assertEqual('SELECT '
                          'TRUNC("timestamp",\'DD\') "$d$timestamp",'
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "$d$timestamp" '
-                         'ORDER BY "$d$timestamp"', str(query))
+                         'ORDER BY "$d$timestamp"', str(queries[0]))
 
     def test_build_query_with_datetime_dimension_hourly(self):
-        query = slicer.data \
+        queries = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.timestamp(f.hourly)) \
-            .query
+            .queries
+
+        self.assertEqual(len(queries), 1)
 
         self.assertEqual('SELECT '
                          'TRUNC("timestamp",\'HH\') "$d$timestamp",'
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "$d$timestamp" '
-                         'ORDER BY "$d$timestamp"', str(query))
+                         'ORDER BY "$d$timestamp"', str(queries[0]))
 
     def test_build_query_with_datetime_dimension_daily(self):
-        query = slicer.data \
+        queries = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.timestamp(f.daily)) \
-            .query
+            .queries
+
+        self.assertEqual(len(queries), 1)
 
         self.assertEqual('SELECT '
                          'TRUNC("timestamp",\'DD\') "$d$timestamp",'
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "$d$timestamp" '
-                         'ORDER BY "$d$timestamp"', str(query))
+                         'ORDER BY "$d$timestamp"', str(queries[0]))
 
     def test_build_query_with_datetime_dimension_weekly(self):
-        query = slicer.data \
+        queries = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.timestamp(f.weekly)) \
-            .query
+            .queries
+
+        self.assertEqual(len(queries), 1)
 
         self.assertEqual('SELECT '
                          'TRUNC("timestamp",\'IW\') "$d$timestamp",'
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "$d$timestamp" '
-                         'ORDER BY "$d$timestamp"', str(query))
+                         'ORDER BY "$d$timestamp"', str(queries[0]))
 
     def test_build_query_with_datetime_dimension_monthly(self):
-        query = slicer.data \
+        queries = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.timestamp(f.monthly)) \
-            .query
+            .queries
+
+        self.assertEqual(len(queries), 1)
 
         self.assertEqual('SELECT '
                          'TRUNC("timestamp",\'MM\') "$d$timestamp",'
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "$d$timestamp" '
-                         'ORDER BY "$d$timestamp"', str(query))
+                         'ORDER BY "$d$timestamp"', str(queries[0]))
 
     def test_build_query_with_datetime_dimension_quarterly(self):
-        query = slicer.data \
+        queries = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.timestamp(f.quarterly)) \
-            .query
+            .queries
+
+        self.assertEqual(len(queries), 1)
 
         self.assertEqual('SELECT '
                          'TRUNC("timestamp",\'Q\') "$d$timestamp",'
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "$d$timestamp" '
-                         'ORDER BY "$d$timestamp"', str(query))
+                         'ORDER BY "$d$timestamp"', str(queries[0]))
 
     def test_build_query_with_datetime_dimension_annually(self):
-        query = slicer.data \
+        queries = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.timestamp(f.annually)) \
-            .query
+            .queries
+
+        self.assertEqual(len(queries), 1)
 
         self.assertEqual('SELECT '
                          'TRUNC("timestamp",\'Y\') "$d$timestamp",'
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "$d$timestamp" '
-                         'ORDER BY "$d$timestamp"', str(query))
+                         'ORDER BY "$d$timestamp"', str(queries[0]))
 
     def test_build_query_with_boolean_dimension(self):
-        query = slicer.data \
+        queries = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.winner) \
-            .query
+            .queries
+
+        self.assertEqual(len(queries), 1)
 
         self.assertEqual('SELECT '
                          '"is_winner" "$d$winner",'
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "$d$winner" '
-                         'ORDER BY "$d$winner"', str(query))
+                         'ORDER BY "$d$winner"', str(queries[0]))
 
     def test_build_query_with_categorical_dimension(self):
-        query = slicer.data \
+        queries = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.political_party) \
-            .query
+            .queries
+
+        self.assertEqual(len(queries), 1)
 
         self.assertEqual('SELECT '
                          '"political_party" "$d$political_party",'
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "$d$political_party" '
-                         'ORDER BY "$d$political_party"', str(query))
+                         'ORDER BY "$d$political_party"', str(queries[0]))
 
     def test_build_query_with_unique_dimension(self):
-        query = slicer.data \
+        queries = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.election) \
-            .query
+            .queries
+
+        self.assertEqual(len(queries), 1)
 
         self.assertEqual('SELECT '
                          '"election_id" "$d$election",'
@@ -138,14 +158,16 @@ class QueryBuilderDimensionTests(TestCase):
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "$d$election","$d$election_display" '
-                         'ORDER BY "$d$election_display"', str(query))
+                         'ORDER BY "$d$election_display"', str(queries[0]))
 
     def test_build_query_with_multiple_dimensions(self):
-        query = slicer.data \
+        queries = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.timestamp) \
             .dimension(slicer.dimensions.candidate) \
-            .query
+            .queries
+
+        self.assertEqual(len(queries), 1)
 
         self.assertEqual('SELECT '
                          'TRUNC("timestamp",\'DD\') "$d$timestamp",'
@@ -154,17 +176,19 @@ class QueryBuilderDimensionTests(TestCase):
                          'SUM("votes") "$m$votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "$d$timestamp","$d$candidate","$d$candidate_display" '
-                         'ORDER BY "$d$timestamp","$d$candidate_display"', str(query))
+                         'ORDER BY "$d$timestamp","$d$candidate_display"', str(queries[0]))
 
     def test_build_query_with_multiple_dimensions_and_visualizations(self):
-        query = slicer.data \
+        queries = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes, slicer.metrics.wins)) \
             .widget(f.HighCharts()
                     .axis(f.HighCharts.LineSeries(slicer.metrics.votes))
                     .axis(f.HighCharts.LineSeries(slicer.metrics.wins))) \
             .dimension(slicer.dimensions.timestamp) \
             .dimension(slicer.dimensions.political_party) \
-            .query
+            .queries
+
+        self.assertEqual(len(queries), 1)
 
         self.assertEqual('SELECT '
                          'TRUNC("timestamp",\'DD\') "$d$timestamp",'
@@ -173,7 +197,7 @@ class QueryBuilderDimensionTests(TestCase):
                          'SUM("is_winner") "$m$wins" '
                          'FROM "politics"."politician" '
                          'GROUP BY "$d$timestamp","$d$political_party" '
-                         'ORDER BY "$d$timestamp","$d$political_party"', str(query))
+                         'ORDER BY "$d$timestamp","$d$political_party"', str(queries[0]))
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -181,242 +205,221 @@ class QueryBuilderDimensionTotalsTests(TestCase):
     maxDiff = None
 
     def test_build_query_with_totals_cat_dimension(self):
-        query = slicer.data \
+        queries = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.political_party.rollup()) \
-            .query
+            .queries
 
-        self.assertEqual('(SELECT '
-                         '"political_party" "$d$political_party",'
-                         'SUM("votes") "$m$votes" '
-                         'FROM "politics"."politician" '
-                         'GROUP BY "$d$political_party") '
+        self.assertEqual(len(queries), 2)
 
-                         'UNION ALL '
+        with self.subTest('base query is same as without references or totals'):
+            self.assertEqual('SELECT '
+                             '"political_party" "$d$political_party",' 
+                             'SUM("votes") "$m$votes" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$d$political_party" '
+                             'ORDER BY "$d$political_party"', str(queries[0]))
 
-                         '(SELECT '
-                         'NULL "$d$political_party",'
-                         'SUM("votes") "$m$votes" '
-                         'FROM "politics"."politician") '
-
-                         'ORDER BY "$d$political_party"', str(query))
+        with self.subTest('totals dimension is replaced with NULL'):
+            self.assertEqual('SELECT '
+                             'NULL "$d$political_party",' 
+                             'SUM("votes") "$m$votes" '
+                             'FROM "politics"."politician" '
+                             'ORDER BY "$d$political_party"', str(queries[1]))
 
     def test_build_query_with_totals_uni_dimension(self):
-        query = slicer.data \
+        queries = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.candidate.rollup()) \
-            .query
+            .queries
 
-        self.assertEqual('(SELECT '
-                         '"candidate_id" "$d$candidate",'
-                         '"candidate_name" "$d$candidate_display",'
-                         'SUM("votes") "$m$votes" '
-                         'FROM "politics"."politician" '
-                         'GROUP BY "$d$candidate","$d$candidate_display") '
+        self.assertEqual(len(queries), 2)
 
-                         'UNION ALL '
+        with self.subTest('base query is same as without references or totals'):
+            self.assertEqual('SELECT '
+                             '"candidate_id" "$d$candidate",'
+                             '"candidate_name" "$d$candidate_display",'
+                             'SUM("votes") "$m$votes" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$d$candidate","$d$candidate_display" '
+                             'ORDER BY "$d$candidate_display"', str(queries[0]))
 
-                         '(SELECT '
-                         'NULL "$d$candidate",'
-                         'NULL "$d$candidate_display",'
-                         'SUM("votes") "$m$votes" '
-                         'FROM "politics"."politician") '
-
-                         'ORDER BY "$d$candidate_display"', str(query))
+        with self.subTest('totals dimension is replaced with NULL'):
+            self.assertEqual('SELECT '
+                             'NULL "$d$candidate",'
+                             'NULL "$d$candidate_display",'
+                             'SUM("votes") "$m$votes" '
+                             'FROM "politics"."politician" '
+                             'ORDER BY "$d$candidate_display"', str(queries[1]))
 
     def test_build_query_with_totals_on_dimension_and_subsequent_dimensions(self):
-        query = slicer.data \
+        queries = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.timestamp,
                        slicer.dimensions.candidate.rollup(),
                        slicer.dimensions.political_party) \
-            .query
+            .queries
 
-        self.assertEqual('(SELECT '
-                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
-                         '"candidate_id" "$d$candidate",'
-                         '"candidate_name" "$d$candidate_display",'
-                         '"political_party" "$d$political_party",'
-                         'SUM("votes") "$m$votes" '
-                         'FROM "politics"."politician" '
-                         'GROUP BY "$d$timestamp","$d$candidate","$d$candidate_display","$d$political_party") '
+        self.assertEqual(len(queries), 2)
 
-                         'UNION ALL '
+        with self.subTest('base query is same as without references or totals'):
+            self.assertEqual('SELECT '
+                             'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                             '"candidate_id" "$d$candidate",'
+                             '"candidate_name" "$d$candidate_display",'
+                             '"political_party" "$d$political_party",'
+                             'SUM("votes") "$m$votes" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$d$timestamp","$d$candidate","$d$candidate_display","$d$political_party" '
+                             'ORDER BY "$d$timestamp","$d$candidate_display","$d$political_party"', str(queries[0]))
 
-                         '(SELECT '
-                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
-                         'NULL "$d$candidate",'
-                         'NULL "$d$candidate_display",'
-                         'NULL "$d$political_party",'
-                         'SUM("votes") "$m$votes" '
-                         'FROM "politics"."politician" '
-                         'GROUP BY "$d$timestamp") '
-                         'ORDER BY "$d$timestamp","$d$candidate_display","$d$political_party"', str(query))
+        with self.subTest('all dimensions after the rolled up dimension are NULL'):
+            self.assertEqual('SELECT '
+                             'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                             'NULL "$d$candidate",'
+                             'NULL "$d$candidate_display",'
+                             'NULL "$d$political_party",'
+                             'SUM("votes") "$m$votes" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$d$timestamp" '
+                             'ORDER BY "$d$timestamp","$d$candidate_display","$d$political_party"', str(queries[1]))
 
     def test_build_query_with_totals_on_multiple_dimensions_dimension(self):
-        query = slicer.data \
+        queries = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.timestamp,
                        slicer.dimensions.candidate.rollup(),
                        slicer.dimensions.political_party.rollup()) \
-            .query
+            .queries
 
-        self.assertEqual('(SELECT '
-                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
-                         '"candidate_id" "$d$candidate",'
-                         '"candidate_name" "$d$candidate_display",'
-                         '"political_party" "$d$political_party",'
-                         'SUM("votes") "$m$votes" '
-                         'FROM "politics"."politician" '
-                         'GROUP BY "$d$timestamp","$d$candidate","$d$candidate_display","$d$political_party") '
+        self.assertEqual(len(queries), 3)
 
-                         'UNION ALL '
+        with self.subTest('base query is same as without references or totals'):
+            self.assertEqual('SELECT '
+                             'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                             '"candidate_id" "$d$candidate",'
+                             '"candidate_name" "$d$candidate_display",'
+                             '"political_party" "$d$political_party",'
+                             'SUM("votes") "$m$votes" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$d$timestamp","$d$candidate","$d$candidate_display","$d$political_party" '
+                             'ORDER BY "$d$timestamp","$d$candidate_display","$d$political_party"', str(queries[0]))
 
-                         '(SELECT '
-                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
-                         'NULL "$d$candidate",'
-                         'NULL "$d$candidate_display",'
-                         'NULL "$d$political_party",'
-                         'SUM("votes") "$m$votes" '
-                         'FROM "politics"."politician" '
-                         'GROUP BY "$d$timestamp") '
+        with self.subTest('all totals dimension are replaced with null'):
+            self.assertEqual('SELECT '
+                             'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                             'NULL "$d$candidate",'
+                             'NULL "$d$candidate_display",'
+                             'NULL "$d$political_party",'
+                             'SUM("votes") "$m$votes" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$d$timestamp" '
+                             'ORDER BY "$d$timestamp","$d$candidate_display","$d$political_party"', str(queries[1]))
 
-                         'UNION ALL '
-
-                         '(SELECT '
-                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
-                         '"candidate_id" "$d$candidate",'
-                         '"candidate_name" "$d$candidate_display",'
-                         'NULL "$d$political_party",'
-                         'SUM("votes") "$m$votes" '
-                         'FROM "politics"."politician" '
-                         'GROUP BY "$d$timestamp","$d$candidate","$d$candidate_display") '
-
-                         'ORDER BY "$d$timestamp","$d$candidate_display","$d$political_party"', str(query))
+        with self.subTest('first totals dimension is replaced with null'):
+            self.assertEqual('SELECT '
+                             'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                             '"candidate_id" "$d$candidate",'
+                             '"candidate_name" "$d$candidate_display",'
+                             'NULL "$d$political_party",'
+                             'SUM("votes") "$m$votes" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$d$timestamp","$d$candidate","$d$candidate_display" '
+                             'ORDER BY "$d$timestamp","$d$candidate_display","$d$political_party"', str(queries[2]))
 
     def test_build_query_with_totals_cat_dimension_with_references(self):
-        query = slicer.data \
+        queries = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.timestamp,
                        slicer.dimensions.political_party.rollup()) \
             .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
-            .query
+            .queries
 
-        # Important that in reference queries when using totals that the null dimensions are omitted from the nested
-        # queries and selected in the container query
-        self.assertEqual('(SELECT '
-                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) '
-                         '"$d$timestamp",'
-                         'COALESCE("$base"."$d$political_party","$dod"."$d$political_party") "$d$political_party",'
-                         '"$base"."$m$votes" "$m$votes",'
-                         '"$dod"."$m$votes" "$m$votes_dod" '
-                         'FROM ('
+        self.assertEqual(len(queries), 4)
 
-                         'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
-                         '"political_party" "$d$political_party",'
-                         'SUM("votes") "$m$votes" '
-                         'FROM "politics"."politician" '
-                         'GROUP BY "$d$timestamp","$d$political_party"'
-                         ') "$base" '
+        with self.subTest('base query is same as without references or totals'):
+            self.assertEqual('SELECT '
+                             'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                             '"political_party" "$d$political_party",'
+                             'SUM("votes") "$m$votes" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$d$timestamp","$d$political_party" '
+                             'ORDER BY "$d$timestamp","$d$political_party"', str(queries[0]))
 
-                         'FULL OUTER JOIN ('
-                         'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
-                         '"political_party" "$d$political_party",'
-                         'SUM("votes") "$m$votes" '
-                         'FROM "politics"."politician" '
-                         'GROUP BY "$d$timestamp","$d$political_party"'
-                         ') "$dod" '
-                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp") '
-                         'AND "$base"."$d$political_party"="$dod"."$d$political_party") '
+        with self.subTest('reference query is shifted'):
+            self.assertEqual('SELECT '
+                             'TRUNC(TIMESTAMPADD(\'day\',1,"timestamp"),\'DD\') "$d$timestamp",'
+                             '"political_party" "$d$political_party",'
+                             'SUM("votes") "$m$votes_dod" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$d$timestamp","$d$political_party" '
+                             'ORDER BY "$d$timestamp","$d$political_party"', str(queries[1]))
 
-                         'UNION ALL '
+        with self.subTest('base totals query is same as base query minus the totals dimension'):
+            self.assertEqual('SELECT '
+                             'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                             'NULL "$d$political_party",'
+                             'SUM("votes") "$m$votes" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$d$timestamp" '
+                             'ORDER BY "$d$timestamp","$d$political_party"', str(queries[2]))
 
-                         '(SELECT '
-                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) '
-                         '"$d$timestamp",'
-                         'NULL "$d$political_party",'
-                         '"$base"."$m$votes" "$m$votes",'
-                         '"$dod"."$m$votes" "$m$votes_dod" '
-                         'FROM ('
-                         'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
-                         'SUM("votes") "$m$votes" '
-                         'FROM "politics"."politician" '
-                         'GROUP BY "$d$timestamp"'
-                         ') "$base" '
-
-                         'FULL OUTER JOIN ('
-                         'SELECT TRUNC("timestamp",\'DD\') "$d$timestamp",'
-                         'SUM("votes") "$m$votes" '
-                         'FROM "politics"."politician" '
-                         'GROUP BY "$d$timestamp"'
-                         ') "$dod" '
-                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) '
-                         'ORDER BY "$d$timestamp","$d$political_party"', str(query))
+        with self.subTest('reference total query is shifted without the totals dimension'):
+            self.assertEqual('SELECT '
+                             'TRUNC(TIMESTAMPADD(\'day\',1,"timestamp"),\'DD\') "$d$timestamp",'
+                             'NULL "$d$political_party",'
+                             'SUM("votes") "$m$votes_dod" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$d$timestamp" '
+                             'ORDER BY "$d$timestamp","$d$political_party"', str(queries[3]))
 
     def test_build_query_with_totals_cat_dimension_with_references_and_date_filters(self):
-        query = slicer.data \
+        queries = slicer.data \
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.timestamp) \
             .dimension(slicer.dimensions.political_party.rollup()) \
             .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .filter(slicer.dimensions.timestamp.between(date(2018, 1, 1), date(2019, 1, 1))) \
-            .query
+            .queries
 
-        self.assertEqual('(SELECT '
-                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) '
-                         '"$d$timestamp",'
-                         'COALESCE("$base"."$d$political_party","$dod"."$d$political_party") "$d$political_party",'
-                         '"$base"."$m$votes" "$m$votes",'
-                         '"$dod"."$m$votes" "$m$votes_dod" '
-                         'FROM ('
+        self.assertEqual(len(queries), 4)
 
-                         'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
-                         '"political_party" "$d$political_party",'
-                         'SUM("votes") "$m$votes" '
-                         'FROM "politics"."politician" '
-                         'WHERE "timestamp" BETWEEN \'2018-01-01\' AND \'2019-01-01\' '
-                         'GROUP BY "$d$timestamp","$d$political_party"'
-                         ') "$base" '
+        with self.subTest('base query is same as without references or totals'):
+            self.assertEqual('SELECT '
+                             'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                             '"political_party" "$d$political_party",'
+                             'SUM("votes") "$m$votes" '
+                             'FROM "politics"."politician" '
+                             'WHERE "timestamp" BETWEEN \'2018-01-01\' AND \'2019-01-01\' '
+                             'GROUP BY "$d$timestamp","$d$political_party" '
+                             'ORDER BY "$d$timestamp","$d$political_party"', str(queries[0]))
 
-                         'FULL OUTER JOIN ('
-                         'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
-                         '"political_party" "$d$political_party",'
-                         'SUM("votes") "$m$votes" '
-                         'FROM "politics"."politician" '
-                         'WHERE TIMESTAMPADD(\'day\',1,"timestamp") BETWEEN \'2018-01-01\' AND \'2019-01-01\' '
-                         'GROUP BY "$d$timestamp","$d$political_party"'
-                         ') "$dod" '
-                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp") '
-                         'AND "$base"."$d$political_party"="$dod"."$d$political_party") '
+        with self.subTest('reference query is shifted'):
+            self.assertEqual('SELECT '
+                             'TRUNC(TIMESTAMPADD(\'day\',1,"timestamp"),\'DD\') "$d$timestamp",'
+                             '"political_party" "$d$political_party",'
+                             'SUM("votes") "$m$votes_dod" '
+                             'FROM "politics"."politician" '
+                             'WHERE TIMESTAMPADD(\'day\',1,"timestamp") BETWEEN \'2018-01-01\' AND \'2019-01-01\' '
+                             'GROUP BY "$d$timestamp","$d$political_party" '
+                             'ORDER BY "$d$timestamp","$d$political_party"', str(queries[1]))
 
-                         'UNION ALL '
+        with self.subTest('base totals query is same as base query minus the totals dimension'):
+            self.assertEqual('SELECT '
+                             'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                             'NULL "$d$political_party",'
+                             'SUM("votes") "$m$votes" '
+                             'FROM "politics"."politician" '
+                             'WHERE "timestamp" BETWEEN \'2018-01-01\' AND \'2019-01-01\' '
+                             'GROUP BY "$d$timestamp" '
+                             'ORDER BY "$d$timestamp","$d$political_party"', str(queries[2]))
 
-                         '(SELECT '
-                         'COALESCE("$base"."$d$timestamp",TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) '
-                         '"$d$timestamp",'
-                         'NULL "$d$political_party",'
-                         '"$base"."$m$votes" "$m$votes",'
-                         '"$dod"."$m$votes" "$m$votes_dod" '
-                         'FROM ('
-                         'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
-                         'SUM("votes") "$m$votes" '
-                         'FROM "politics"."politician" '
-                         'WHERE "timestamp" BETWEEN \'2018-01-01\' AND \'2019-01-01\' '
-                         'GROUP BY "$d$timestamp"'
-                         ') "$base" '
-
-                         'FULL OUTER JOIN ('
-                         'SELECT TRUNC("timestamp",\'DD\') "$d$timestamp",'
-                         'SUM("votes") "$m$votes" '
-                         'FROM "politics"."politician" '
-                         'WHERE TIMESTAMPADD(\'day\',1,"timestamp") BETWEEN \'2018-01-01\' AND \'2019-01-01\' '
-                         'GROUP BY "$d$timestamp"'
-                         ') "$dod" '
-                         'ON "$base"."$d$timestamp"=TIMESTAMPADD(\'day\',1,"$dod"."$d$timestamp")) '
-                         'ORDER BY "$d$timestamp","$d$political_party"', str(query))
+        with self.subTest('reference total query is shifted without the totals dimension'):
+            self.assertEqual('SELECT '
+                             'TRUNC(TIMESTAMPADD(\'day\',1,"timestamp"),\'DD\') "$d$timestamp",'
+                             'NULL "$d$political_party",'
+                             'SUM("votes") "$m$votes_dod" '
+                             'FROM "politics"."politician" '
+                             'WHERE TIMESTAMPADD(\'day\',1,"timestamp") BETWEEN \'2018-01-01\' AND \'2019-01-01\' '
+                             'GROUP BY "$d$timestamp" '
+                             'ORDER BY "$d$timestamp","$d$political_party"', str(queries[3]))

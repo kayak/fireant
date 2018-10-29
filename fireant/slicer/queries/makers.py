@@ -1,31 +1,122 @@
-from functools import partial
+from typing import Iterable
 
 from fireant.utils import (
     flatten,
     format_dimension_key,
-    format_key,
     format_metric_key,
 )
-from pypika import JoinType
+from pypika import Table
 from .finders import (
+    find_and_group_references_for_dimensions,
     find_joins_for_tables,
     find_required_tables_to_join,
+    find_rolled_up_dimensions,
 )
-from .references import (
-    make_dimension_terms_for_reference_container_query,
-    make_metric_terms_for_reference_container_query,
-    make_reference_filters,
-    make_reference_join_criterion,
-    make_terms_for_references,
-    monkey_patch_align_weekdays,
+from .references import adapt_for_reference_query
+from .special_cases import apply_special_cases
+from ..dimensions import (
+    Dimension,
+    TotalsDimension,
 )
-from ..dimensions import TotalsDimension
-from ..filters import DimensionFilter
-from ..intervals import weekly
-from ..references import YearOverYear
+from ..filters import (
+    DimensionFilter,
+    Filter,
+)
+from ..joins import Join
+from ..metrics import Metric
+from ...database import Database
 
 
-def make_slicer_query(database, base_table, joins=(), dimensions=(), metrics=(), filters=()):
+def adapt_for_totals_query(totals_dimension, dimensions):
+    # Get an index to split the dimensions before and after the totals dimension
+    index = dimensions.index(totals_dimension) \
+        if totals_dimension is not None \
+        else len(dimensions)
+
+    grouped_dims, totaled_dims = dimensions[:index], dimensions[index:]
+    return grouped_dims + [TotalsDimension(dimension)
+                           for dimension in totaled_dims]
+
+
+@apply_special_cases
+def make_slicer_query_with_rollup_and_references(database,
+                                                 table,
+                                                 joins,
+                                                 dimensions,
+                                                 metrics,
+                                                 operations,
+                                                 filters,
+                                                 references,
+                                                 orders):
+    """
+    :param database:
+    :param table:
+    :param joins:
+    :param dimensions:
+    :param metrics:
+    :param filters:
+    :param orders:
+    :param references:
+    :param operations:
+    :return:
+    """
+
+    """
+    The following two loops will run over the spread of the two sets including a NULL value in each set:
+     - reference group (WoW, MoM, etc.)
+     - dimension with roll up/totals enabled (totals dimension)
+
+    This will result in at least one query where the reference group and totals dimension is NULL, which shall be
+    called base query. The base query will ALWAYS be present, even if there are zero reference groups or totals
+    dimensions.
+
+    For a concrete example, check the test case in :
+    ```
+    fireant.tests.slicer.queries.test_build_dimensions.QueryBuilderDimensionTotalsTests
+        #test_build_query_with_totals_cat_dimension_with_references
+    ```
+    """
+    rollup_dimensions = find_rolled_up_dimensions(dimensions)
+    rollup_dimensions_and_none = [None] + rollup_dimensions
+
+    reference_groups = find_and_group_references_for_dimensions(references)
+    reference_groups_and_none = [(None, None)] + list(reference_groups.items())
+
+    queries = []
+    for rollup_dimension in rollup_dimensions_and_none:
+        query_dimensions = adapt_for_totals_query(rollup_dimension, dimensions)
+
+        for reference_parts, references in reference_groups_and_none:
+            (ref_database,
+             ref_dimensions,
+             ref_metrics,
+             ref_filters) = adapt_for_reference_query(reference_parts,
+                                                      database,
+                                                      query_dimensions,
+                                                      metrics,
+                                                      filters,
+                                                      references)
+            query = make_slicer_query(ref_database,
+                                      table,
+                                      joins,
+                                      ref_dimensions,
+                                      ref_metrics,
+                                      ref_filters,
+                                      orders)
+            query._references = references
+
+            queries.append(query)
+
+    return queries
+
+
+def make_slicer_query(database: Database,
+                      base_table: Table,
+                      joins: Iterable[Join] = (),
+                      dimensions: Iterable[Dimension] = (),
+                      metrics: Iterable[Metric] = (),
+                      filters: Iterable[Filter] = (),
+                      orders: Iterable = ()):
     """
     Creates a pypika/SQL query from a list of slicer elements.
 
@@ -42,14 +133,16 @@ def make_slicer_query(database, base_table, joins=(), dimensions=(), metrics=(),
     :param base_table:
         pypika.Table - The base table of the query, the one in the FROM clause
     :param joins:
-        Iterable<fireant.Join> - A collection of joins available in the slicer. This should include all slicer joins.
-        Only joins required for the query will be used.
+        A collection of joins available in the slicer. This should include all slicer joins. Only joins required for
+        the query will be used.
     :param dimensions:
-        Iterable<fireant.Dimension> - A collection of dimensions to use in the query.
+        A collection of dimensions to use in the query.
     :param metrics:
-        Iterable<fireant.Metric> - A collection of metircs to use in the query.
+        A collection of metircs to use in the query.
     :param filters:
-        Iterable<fireant.Filter> - A collection of filters to apply to the query.
+        A collection of filters to apply to the query.
+    :param orders:
+        A collection of orders as tuples of the metric/dimension to order by and the direction to order in.
     :return:
     """
     query = database.query_cls.from_(base_table)
@@ -80,145 +173,10 @@ def make_slicer_query(database, base_table, joins=(), dimensions=(), metrics=(),
     if terms:
         query = query.select(*terms)
 
-    return query
-
-
-def make_slicer_query_with_references_and_totals(database, table, joins, dimensions, metrics, filters,
-                                                 reference_groups, totals_dimensions):
-    """
-    WRITEME
-
-    :param database:
-    :param table:
-    :param joins:
-    :param dimensions:
-    :param metrics:
-    :param filters:
-    :param reference_groups:
-    :param totals_dimensions:
-    :return:
-    """
-    make_query = partial(make_slicer_query_with_references, reference_groups=reference_groups) \
-        if reference_groups else \
-        make_slicer_query
-
-    query = make_query(database,
-                       table,
-                       joins,
-                       dimensions,
-                       metrics,
-                       filters)
-
-    for dimension in totals_dimensions:
-        index = dimensions.index(dimension)
-        grouped_dims, totaled_dims = dimensions[:index], dimensions[index:]
-
-        # Replace the dimension and all following dimensions with a TotalsDimension. This will prevent those dimensions
-        # from being grouped on in the totals UNION query, selecting NULL instead
-        dimensions_with_totals = grouped_dims + [TotalsDimension(dimension)
-                                                 for dimension in totaled_dims]
-
-        totals_query = make_query(database,
-                                  table,
-                                  joins,
-                                  dimensions_with_totals,
-                                  metrics,
-                                  filters)
-
-        # UNION ALL
-        query = query.union_all(totals_query)
+    for (term, orientation) in orders:
+        query = query.orderby(term, order=orientation)
 
     return query
-
-
-def make_slicer_query_with_references(database, base_table, joins, dimensions, metrics, filters, reference_groups):
-    """
-    WRITEME
-
-    :param database:
-    :param base_table:
-    :param joins:
-    :param dimensions:
-    :param metrics:
-    :param filters:
-    :param reference_groups:
-    :return:
-    """
-    # Do not include totals dimensions in the reference query (they are selected directly in the container query)
-    non_totals_dimensions = [dimension
-                             for dimension in dimensions
-                             if not isinstance(dimension, TotalsDimension)]
-
-    original_query = make_slicer_query(database=database,
-                                       base_table=base_table,
-                                       joins=joins,
-                                       dimensions=non_totals_dimensions,
-                                       metrics=metrics,
-                                       filters=filters) \
-        .as_('$base')
-
-    container_query = database.query_cls.from_(original_query)
-
-    ref_dimension_definitions, ref_terms = [], []
-    for (ref_dimension, time_unit, interval), references in reference_groups.items():
-        offset_func = partial(database.date_add,
-                              date_part=time_unit,
-                              interval=interval)
-
-        # NOTE: In the case of weekly intervals with YoY references, the trunc date function needs to adjust for weekday
-        # to keep things aligned. To do this, the date is first shifted forward a year before being truncated by week
-        # and then shifted back.
-        offset_for_weekday = weekly == ref_dimension.interval and YearOverYear.time_unit == time_unit
-        ref_database = monkey_patch_align_weekdays(database, time_unit, interval) \
-            if offset_for_weekday \
-            else database
-
-        ref_filters = make_reference_filters(filters,
-                                             ref_dimension,
-                                             offset_func)
-
-        # Grab the first reference out of the list since all of the references in the group must share the same
-        # reference type
-        alias = references[0].reference_type.key
-        ref_query = make_slicer_query(ref_database,
-                                      base_table,
-                                      joins,
-                                      non_totals_dimensions,
-                                      metrics,
-                                      ref_filters) \
-            .as_(format_key(alias))
-
-        join_criterion = make_reference_join_criterion(ref_dimension,
-                                                       non_totals_dimensions,
-                                                       original_query,
-                                                       ref_query,
-                                                       offset_func)
-
-        if join_criterion:
-            container_query = container_query \
-                .join(ref_query, JoinType.full_outer) \
-                .on(join_criterion)
-        else:
-            container_query = container_query.from_(ref_query)
-
-        ref_dimension_definitions.append([offset_func(ref_query.field(format_dimension_key(dimension.key)))
-                                          if ref_dimension == dimension
-                                          else ref_query.field(format_dimension_key(dimension.key))
-                                          for dimension in dimensions])
-
-        ref_terms += make_terms_for_references(references,
-                                               original_query,
-                                               ref_query,
-                                               metrics)
-
-    dimension_terms = make_dimension_terms_for_reference_container_query(original_query,
-                                                                         dimensions,
-                                                                         ref_dimension_definitions)
-    metric_terms = make_metric_terms_for_reference_container_query(original_query,
-                                                                   metrics)
-
-    all_terms = dimension_terms + metric_terms + ref_terms
-    return container_query.select(*all_terms)
 
 
 def make_terms_for_metrics(metrics):

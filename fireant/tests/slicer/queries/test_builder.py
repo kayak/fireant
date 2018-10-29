@@ -42,7 +42,7 @@ class QueryBuilderValidationTests(TestCase):
             slicer.data \
                 .widget(f.HighCharts()) \
                 .dimension(slicer.dimensions.timestamp) \
-                .query
+                .queries
 
     def test_datatablesjs_requires_at_least_one_metric(self):
         with self.assertRaises(TypeError):

@@ -16,21 +16,24 @@ from .database import fetch_data
 from .finders import (
     find_and_group_references_for_dimensions,
     find_and_replace_reference_dimensions,
-    find_dimensions_with_totals,
     find_metrics_for_widgets,
     find_operations_for_widgets,
 )
 from .makers import (
     make_orders_for_dimensions,
     make_slicer_query,
-    make_slicer_query_with_references_and_totals,
+    make_slicer_query_with_rollup_and_references,
 )
-from .references import reference_key
 from ..base import SlicerElement
 from ..dimensions import Dimension
+from ..references import reference_key
 
 
 class QueryBuilder(object):
+    """
+    This is the base class for building slicer queries. This class provides an interface for building slicer queries
+    via a set of functions which can be chained together.
+    """
     def __init__(self, slicer, table):
         self.slicer = slicer
         self.table = table
@@ -65,9 +68,9 @@ class QueryBuilder(object):
         self._offset = offset
 
     @property
-    def query(self):
+    def queries(self):
         """
-        Serialize a pypika/SQL query from the slicer builder query.
+        Serialize this query builder object to a set of Pypika/SQL queries.
 
         This is the base implementation shared by two implementations: the query to fetch data for a slicer request and
         the query to fetch choices for dimensions.
@@ -82,7 +85,8 @@ class QueryBuilder(object):
 
 class SlicerQueryBuilder(QueryBuilder):
     """
-    WRITEME
+    Slicer queries consist of widgets, dimensions, filters, and references. At least one or more widgets is required.
+    All others are optional.
     """
 
     def __init__(self, slicer):
@@ -138,41 +142,40 @@ class SlicerQueryBuilder(QueryBuilder):
         self._orders += [(element.definition.as_(format_key(element.key)), orientation)]
 
     @property
-    def query(self):
+    def queries(self):
         """
-        Build the pypika query for this Slicer query. This collects all of the metrics in each widget, dimensions, and
-        filters and builds a corresponding pypika query to fetch the data.  When references are used, the base query
-        normally produced is wrapped in an outer query and a query for each reference is joined based on the referenced
-        dimension shifted.
+        Serialize this query builder to a list of Pypika/SQL queries. This function will return one query for every
+        combination of reference and rolled up dimension (including null options).
+
+        This collects all of the metrics in each widget, dimensions, and filters and builds a corresponding pypika query
+        to fetch the data.  When references are used, the base query normally produced is wrapped in an outer query and
+        a query for each reference is joined based on the referenced dimension shifted.
         """
         # First run validation for the query on all widgets
         for widget in self._widgets:
             if hasattr(widget, 'validate'):
                 widget.validate(self._dimensions)
 
-        self._references = find_and_replace_reference_dimensions(self._references, self._dimensions)
-        reference_groups = find_and_group_references_for_dimensions(self._references)
-        totals_dimensions = find_dimensions_with_totals(self._dimensions)
-
+        # Optionally select all metrics for slicer to better utilize caching
+        metrics = list(self.slicer.metrics) \
+            if self.slicer.always_query_all_metrics \
+            else find_metrics_for_widgets(self._widgets)
         operations = find_operations_for_widgets(self._widgets)
-        args = special_cases.apply_to_query_args(self.slicer.database,
-                                                 self.table,
-                                                 self.slicer.joins,
-                                                 self._dimensions,
-                                                 find_metrics_for_widgets(self._widgets),
-                                                 self._filters,
-                                                 reference_groups,
-                                                 totals_dimensions,
-                                                 operations)
-
-        query = make_slicer_query_with_references_and_totals(*args)
-
-        # Add ordering
+        references = find_and_replace_reference_dimensions(self._references, self._dimensions)
         orders = (self._orders or make_orders_for_dimensions(self._dimensions))
-        for (term, orientation) in orders:
-            query = query.orderby(term, order=orientation)
 
-        return query.limit(self._limit).offset(self._offset)
+        queries = make_slicer_query_with_rollup_and_references(self.slicer.database,
+                                                               self.table,
+                                                               self.slicer.joins,
+                                                               self._dimensions,
+                                                               metrics,
+                                                               operations,
+                                                               self._filters,
+                                                               references,
+                                                               orders)
+
+        return [query.limit(self._limit).offset(self._offset)
+                for query in queries]
 
     def fetch(self, hint=None) -> Iterable[Dict]:
         """
@@ -183,13 +186,13 @@ class SlicerQueryBuilder(QueryBuilder):
         :return:
             A list of dict (JSON) objects containing the widget configurations.
         """
-        query = self.query
-        if hint and hasattr(query, 'hint') and callable(query.hint):
-            query = query.hint(hint)
+        queries = self.queries
+        if hint and hasattr(queries, 'hint') and callable(queries.hint):
+            queries = queries.hint(hint)
 
-        data_frame = fetch_data(self.slicer.database,
-                                str(query),
-                                dimensions=self._dimensions)
+        dimensions = self._dimensions
+        reference_groups = list(find_and_group_references_for_dimensions(self._references).values())
+        data_frame = fetch_data(self.slicer.database, queries, dimensions, reference_groups)
 
         # Apply operations
         operations = find_operations_for_widgets(self._widgets)
@@ -201,11 +204,11 @@ class SlicerQueryBuilder(QueryBuilder):
         data_frame = special_cases.apply_operations_to_data_frame(operations, data_frame)
 
         # Apply transformations
-        return [widget.transform(data_frame, self.slicer, self._dimensions, self._references)
+        return [widget.transform(data_frame, self.slicer, dimensions, self._references)
                 for widget in self._widgets]
 
     def __str__(self):
-        return str(self.query)
+        return str(self.queries)
 
     def __repr__(self):
         return ".".join(["slicer", "data"]
@@ -221,33 +224,33 @@ class SlicerQueryBuilder(QueryBuilder):
 
 class DimensionChoicesQueryBuilder(QueryBuilder):
     """
-    WRITEME
+    This builder is used for building slicer queries for fetching the choices for a dimension given a set of filters.
     """
+
     def __init__(self, slicer, dimension):
         super(DimensionChoicesQueryBuilder, self).__init__(slicer, slicer.hint_table or slicer.table)
         self._dimensions.append(dimension)
 
     @property
-    def query(self):
+    def queries(self):
         """
-        Serialize a pypika/SQL query from the slicer builder query.
-
-        This is the base implementation shared by two implementations: the query to fetch data for a slicer request and
-        the query to fetch choices for dimensions.
+        Serializes this query builder as a set of SQL queries.  This method will always return a list of one query since
+        only one query is required to retrieve dimension choices.
 
         This function only handles dimensions (select+group by) and filtering (where/having), which is everything needed
         for the query to fetch choices for dimensions.
 
         The slicer query extends this with metrics, references, and totals.
         """
-
-        return make_slicer_query(database=self.slicer.database,
-                                 base_table=self.table,
-                                 joins=self.slicer.joins,
-                                 dimensions=self._dimensions,
-                                 filters=self._filters) \
+        query = make_slicer_query(database=self.slicer.database,
+                                  base_table=self.table,
+                                  joins=self.slicer.joins,
+                                  dimensions=self._dimensions,
+                                  filters=self._filters) \
             .limit(self._limit) \
             .offset(self._offset)
+
+        return [query]
 
     def fetch(self, hint=None, force_include=()) -> pd.Series:
         """
@@ -259,7 +262,7 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
         :return:
             A list of dict (JSON) objects containing the widget configurations.
         """
-        query = self.query
+        query = self.queries[0]
         if hint and hasattr(query, 'hint') and callable(query.hint):
             query = query.hint(hint)
 
@@ -278,9 +281,7 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
         # Order by the dimension definition that the choices are for
         query = query.orderby(definition)
 
-        data = fetch_data(self.slicer.database,
-                          str(query),
-                          dimensions=self._dimensions)
+        data = fetch_data(self.slicer.database, [query], self._dimensions)
 
         df_key = format_dimension_key(getattr(dimension, 'display_key', None))
         if df_key is not None:

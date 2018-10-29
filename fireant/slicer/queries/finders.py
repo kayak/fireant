@@ -105,7 +105,7 @@ def find_operations_for_widgets(widgets):
                                           for operation in widget.operations])
 
 
-def find_dimensions_with_totals(dimensions):
+def find_rolled_up_dimensions(dimensions):
     return [dimension
             for dimension in dimensions
             if dimension.is_rollup]
@@ -152,7 +152,6 @@ def find_and_group_references_for_dimensions(references):
                 (Dimension(date_1), 'years', 1): [YoY],
                 (Dimension(date_7), 'days', 1): [DoD, DoD.delta_percent],
             }
-
     """
 
     def get_dimension_time_unit_and_interval(reference):

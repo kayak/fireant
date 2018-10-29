@@ -1,3 +1,5 @@
+import functools
+
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 
@@ -89,11 +91,17 @@ def adjust_dataframe_for_rolling_window(operations, data_frame):
     return data_frame
 
 
-def apply_to_query_args(database, table, joins, dimensions, metrics, filters, reference_groups, totals_dimensions,
-                        operations):
+def apply_to_query_args(database, table, joins, dimensions, metrics, operations, filters, references, orders):
     filters = adjust_daterange_filter_for_rolling_window(dimensions, operations, filters)
+    return (database, table, joins, dimensions, metrics, operations, filters, references, orders)
 
-    return database, table, joins, dimensions, metrics, filters, reference_groups, totals_dimensions
+
+def apply_special_cases(f):
+    @functools.wraps(f)
+    def wrapper(*args):
+        return f(*apply_to_query_args(*args))
+
+    return wrapper
 
 
 def apply_operations_to_data_frame(operations, data_frame):
