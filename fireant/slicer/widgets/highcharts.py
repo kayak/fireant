@@ -109,18 +109,16 @@ class HighCharts(ChartWidget, TransformableWidget):
 
         y_axes, series = [], []
         for axis_idx, axis in enumerate(self.items):
-            axis_color = next(colors) if 1 < total_num_series else None
             colors, series_colors = itertools.tee(colors)
 
             # prepend axes, append series, this keeps everything ordered left-to-right
             y_axes[0:0] = self._render_y_axis(axis_idx,
-                                              axis_color,
+                                              next(series_colors) if 1 < total_num_series else None,
                                               references)
             is_timeseries = dimensions and isinstance(dimensions[0], DatetimeDimension)
             series += self._render_series(axis,
                                           axis_idx,
-                                          axis_color,
-                                          series_colors,
+                                          colors,
                                           groups,
                                           render_series_label,
                                           references,
@@ -203,7 +201,7 @@ class HighCharts(ChartWidget, TransformableWidget):
 
         return y_axes
 
-    def _render_series(self, axis, axis_idx, axis_color, colors, data_frame_groups, render_series_label,
+    def _render_series(self, axis, axis_idx, colors, data_frame_groups, render_series_label,
                        references, is_timeseries=False):
         """
         Renders the series configuration.
@@ -212,7 +210,6 @@ class HighCharts(ChartWidget, TransformableWidget):
 
         :param axis:
         :param axis_idx:
-        :param axis_color:
         :param colors:
         :param data_frame_groups:
         :param render_series_label:
@@ -220,12 +217,13 @@ class HighCharts(ChartWidget, TransformableWidget):
         :param is_timeseries:
         :return:
         """
-        has_multi_axis = 1 < len(self.items)
+        # Don't overwrite the iterator here, this function should keep advancing it.
+        _, axis_colors = itertools.tee(colors)
+        axis_color = next(axis_colors)
 
         hc_series = []
         for series in axis:
             symbols = itertools.cycle(MARKER_SYMBOLS)
-            series_color = next(colors) if has_multi_axis else None
 
             for (dimension_values, group_df), symbol in zip(data_frame_groups, symbols):
                 dimension_values = utils.wrap_list(dimension_values)
@@ -241,9 +239,7 @@ class HighCharts(ChartWidget, TransformableWidget):
 
                 # With a single axis, use different colors for each series
                 # With multiple axes, use the same color for the entire axis and only change the dash style
-                series_color = axis_color \
-                    if has_multi_axis \
-                    else next(colors)
+                series_color = next(colors)
 
                 for reference, dash_style in zip([None] + references, itertools.cycle(DASH_STYLES)):
                     metric_key = utils.format_metric_key(reference_key(series.metric, reference))
@@ -272,7 +268,6 @@ class HighCharts(ChartWidget, TransformableWidget):
                         # Set each series in a continuous series to a specific color
                         hc_series[-1]["color"] = series_color
                         hc_series[-1]["dashStyle"] = dash_style
-
 
         return hc_series
 

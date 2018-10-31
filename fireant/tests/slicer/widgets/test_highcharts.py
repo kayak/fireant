@@ -303,7 +303,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueDecimals': None,
                 },
                 "color": "#55BF3B",
-                "marker": {"symbol": "square", "fillColor": "#55BF3B"},
+                "marker": {"symbol": "square", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
             }],
@@ -346,7 +346,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#55BF3B",
+                "color": "#DDDF0D",
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
@@ -365,7 +365,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#DF5353",
+                "color": "#55BF3B",
                 "marker": {"symbol": "square", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
@@ -384,7 +384,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#7798BF",
+                "color": "#DF5353",
                 "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
@@ -403,7 +403,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#AAEEEE",
+                "color": "#7798BF",
                 "marker": {"symbol": "square", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
@@ -427,7 +427,7 @@ class HighChartsLineChartTransformerTests(TestCase):
             "yAxis": [{
                 "id": "1",
                 "title": {"text": None},
-                "labels": {"style": {"color": "#55BF3B"}},
+                "labels": {"style": {"color": "#DF5353"}},
                 "visible": True,
             }, {
                 "id": "0",
@@ -471,7 +471,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#DDDF0D",
+                "color": "#55BF3B",
                 "marker": {"symbol": "square", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
@@ -490,8 +490,8 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#55BF3B",
-                "marker": {"symbol": "circle", "fillColor": "#55BF3B"},
+                "color": "#DF5353",
+                "marker": {"symbol": "circle", "fillColor": "#DF5353"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
             }, {
@@ -509,8 +509,8 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                "color": "#55BF3B",
-                "marker": {"symbol": "square", "fillColor": "#55BF3B"},
+                "color": "#7798BF",
+                "marker": {"symbol": "square", "fillColor": "#DF5353"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
             }],
@@ -533,7 +533,7 @@ class HighChartsLineChartTransformerTests(TestCase):
             "yAxis": [{
                 "id": "1",
                 "title": {"text": None},
-                "labels": {"style": {"color": "#55BF3B"}},
+                "labels": {"style": {"color": "#7798BF"}},
                 "visible": True,
             }, {
                 "id": "0",
@@ -563,7 +563,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 'type': self.chart_type,
                 'yAxis': '0'
             }, {
-                'color': '#DDDF0D',
+                'color': '#55BF3B',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 9646062),
                          (946684800000, 10428632),
@@ -582,7 +582,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 'type': self.chart_type,
                 'yAxis': '0'
             }, {
-                'color': '#DDDF0D',
+                'color': '#DF5353',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 15220449),
                          (946684800000, 16662017),
@@ -601,7 +601,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 'type': self.chart_type,
                 'yAxis': '0'
             }, {
-                'color': '#55BF3B',
+                'color': '#7798BF',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 1),
                          (946684800000, 1),
@@ -614,13 +614,13 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                'marker': {'fillColor': '#55BF3B', 'symbol': 'circle'},
+                'marker': {'fillColor': '#7798BF', 'symbol': 'circle'},
                 'name': 'Wins (Texas)',
                 'stacking': self.stacking,
                 'type': self.chart_type,
                 'yAxis': '1'
             }, {
-                'color': '#55BF3B',
+                'color': '#AAEEEE',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 1),
                          (946684800000, 1),
@@ -633,13 +633,13 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                'marker': {'fillColor': '#55BF3B', 'symbol': 'square'},
+                'marker': {'fillColor': '#7798BF', 'symbol': 'square'},
                 'name': 'Wins (California)',
                 'stacking': self.stacking,
                 'type': self.chart_type,
                 'yAxis': '1'
             }, {
-                'color': '#55BF3B',
+                'color': '#FF0066',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 2),
                          (946684800000, 2),
@@ -652,7 +652,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                'marker': {'fillColor': '#55BF3B', 'symbol': 'diamond'},
+                'marker': {'fillColor': '#7798BF', 'symbol': 'diamond'},
                 'name': 'Wins (Totals)',
                 'stacking': self.stacking,
                 'type': self.chart_type,
@@ -677,7 +677,7 @@ class HighChartsLineChartTransformerTests(TestCase):
             "yAxis": [{
                 "id": "1",
                 "title": {"text": None},
-                "labels": {"style": {"color": "#55BF3B"}},
+                "labels": {"style": {"color": "#7798BF"}},
                 "visible": True,
             }, {
                 "id": "0",
@@ -707,7 +707,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 'type': self.chart_type,
                 'yAxis': '0'
             }, {
-                'color': '#DDDF0D',
+                'color': '#55BF3B',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 9646062),
                          (946684800000, 10428632),
@@ -726,7 +726,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 'type': self.chart_type,
                 'yAxis': '0'
             }, {
-                'color': '#DDDF0D',
+                'color': '#DF5353',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 15220449),
                          (946684800000, 16662017),
@@ -745,7 +745,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 'type': self.chart_type,
                 'yAxis': '0'
             }, {
-                'color': '#55BF3B',
+                'color': '#7798BF',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 1),
                          (946684800000, 1),
@@ -758,13 +758,13 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                'marker': {'fillColor': '#55BF3B', 'symbol': 'circle'},
+                'marker': {'fillColor': '#7798BF', 'symbol': 'circle'},
                 'name': 'Wins (Texas)',
                 'stacking': self.stacking,
                 'type': self.chart_type,
                 'yAxis': '1'
             }, {
-                'color': '#55BF3B',
+                'color': '#AAEEEE',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 1),
                          (946684800000, 1),
@@ -777,13 +777,13 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                'marker': {'fillColor': '#55BF3B', 'symbol': 'square'},
+                'marker': {'fillColor': '#7798BF', 'symbol': 'square'},
                 'name': 'Wins (California)',
                 'stacking': self.stacking,
                 'type': self.chart_type,
                 'yAxis': '1'
             }, {
-                'color': '#55BF3B',
+                'color': '#FF0066',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 2),
                          (946684800000, 2),
@@ -796,7 +796,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                'marker': {'fillColor': '#55BF3B', 'symbol': 'diamond'},
+                'marker': {'fillColor': '#7798BF', 'symbol': 'diamond'},
                 'name': 'Wins (Totals)',
                 'stacking': self.stacking,
                 'type': self.chart_type,
@@ -882,7 +882,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueDecimals': None,
                 },
                 "color": "#55BF3B",
-                "marker": {"symbol": "square", "fillColor": "#55BF3B"},
+                "marker": {"symbol": "square", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
             }, {
@@ -900,7 +900,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueDecimals': None,
                 },
                 "color": "#55BF3B",
-                "marker": {"symbol": "square", "fillColor": "#55BF3B"},
+                "marker": {"symbol": "square", "fillColor": "#DDDF0D"},
                 "dashStyle": "Dash",
                 "stacking": self.stacking,
             }],
@@ -990,7 +990,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueDecimals': None,
                 },
                 "color": "#55BF3B",
-                "marker": {"symbol": "square", "fillColor": "#55BF3B"},
+                "marker": {"symbol": "square", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
             }, {
@@ -1008,7 +1008,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueDecimals': None,
                 },
                 "color": "#55BF3B",
-                "marker": {"symbol": "square", "fillColor": "#55BF3B"},
+                "marker": {"symbol": "square", "fillColor": "#DDDF0D"},
                 "dashStyle": "Dash",
                 "stacking": self.stacking,
             }],
@@ -1140,7 +1140,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueDecimals': None,
                 },
                 "color": "#55BF3B",
-                "marker": {"symbol": "square", "fillColor": "#55BF3B"},
+                "marker": {"symbol": "square", "fillColor": "#DDDF0D"},
                 "dashStyle": "Solid",
                 "stacking": self.stacking,
             }, {
@@ -1158,7 +1158,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueDecimals': None,
                 },
                 "color": "#55BF3B",
-                "marker": {"symbol": "square", "fillColor": "#55BF3B"},
+                "marker": {"symbol": "square", "fillColor": "#DDDF0D"},
                 "dashStyle": "Dash",
                 "stacking": self.stacking,
             }],
@@ -1508,7 +1508,7 @@ class HighChartsBarChartTransformerTests(TestCase):
             "yAxis": [{
                 "id": "1",
                 "title": {"text": None},
-                "labels": {"style": {"color": "#55BF3B"}},
+                "labels": {"style": {"color": "#DF5353"}},
                 "visible": True,
             }, {
                 "id": "0",
