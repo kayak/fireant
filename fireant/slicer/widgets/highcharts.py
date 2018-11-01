@@ -2,12 +2,12 @@ import itertools
 from datetime import datetime
 
 import pandas as pd
-
 from fireant import (
     DatetimeDimension,
     formats,
     utils,
 )
+
 from .base import TransformableWidget
 from .chart_base import (
     ChartWidget,
@@ -109,15 +109,18 @@ class HighCharts(ChartWidget, TransformableWidget):
 
         y_axes, series = [], []
         for axis_idx, axis in enumerate(self.items):
-            colors, series_colors = itertools.tee(colors)
+            # Don't overwrite the iterator here, this function should keep advancing it.
+            colors, series_colors, axis_colors = itertools.tee(colors, 3)
 
             # prepend axes, append series, this keeps everything ordered left-to-right
             y_axes[0:0] = self._render_y_axis(axis_idx,
                                               next(series_colors) if 1 < total_num_series else None,
                                               references)
             is_timeseries = dimensions and isinstance(dimensions[0], DatetimeDimension)
+
             series += self._render_series(axis,
                                           axis_idx,
+                                          next(axis_colors),
                                           colors,
                                           groups,
                                           render_series_label,
@@ -201,7 +204,7 @@ class HighCharts(ChartWidget, TransformableWidget):
 
         return y_axes
 
-    def _render_series(self, axis, axis_idx, colors, data_frame_groups, render_series_label,
+    def _render_series(self, axis, axis_idx, axis_color, colors, data_frame_groups, render_series_label,
                        references, is_timeseries=False):
         """
         Renders the series configuration.
@@ -210,6 +213,7 @@ class HighCharts(ChartWidget, TransformableWidget):
 
         :param axis:
         :param axis_idx:
+        :param axis_color:
         :param colors:
         :param data_frame_groups:
         :param render_series_label:
@@ -217,10 +221,6 @@ class HighCharts(ChartWidget, TransformableWidget):
         :param is_timeseries:
         :return:
         """
-        # Don't overwrite the iterator here, this function should keep advancing it.
-        _, axis_colors = itertools.tee(colors)
-        axis_color = next(axis_colors)
-
         hc_series = []
         for series in axis:
             symbols = itertools.cycle(MARKER_SYMBOLS)
@@ -272,8 +272,6 @@ class HighCharts(ChartWidget, TransformableWidget):
         return hc_series
 
     def _render_pie_series(self, series, reference, data_frame, render_series_label):
-        colors = itertools.cycle(self.colors)
-
         metric = series.metric
         name = reference_label(metric, reference)
         df_key = utils.format_metric_key(series.metric.key)
