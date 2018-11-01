@@ -2,10 +2,12 @@ from unittest import TestCase
 from unittest.mock import (
     MagicMock,
     Mock,
+    patch,
 )
 
 import numpy as np
 import pandas as pd
+import time
 
 from fireant.slicer.queries.database import (
     _clean_and_apply_index,
@@ -24,36 +26,102 @@ from fireant.utils import format_dimension_key as fd
 
 class FetchDataTests(TestCase):
     def setUp(self):
-        self.mock_database = Mock(name='database')
+        self.mock_database = Mock()
         self.mock_database.slow_query_log_min_seconds = 15
-        self.mock_data_frame = self.mock_database.fetch_data.return_value = MagicMock(name='data_frame')
+        self.mock_database.cache_middleware = None
+
+        mock_connect = self.mock_database.connect.return_value = MagicMock()
+        self.mock_connection = mock_connect.__enter__.return_value
+        mock_cursor_func = self.mock_connection.cursor
+        mock_cursor = mock_cursor_func.return_value = MagicMock(name='mock_cursor')
+        self.mock_data_frame = mock_cursor.fetchall.return_value = MagicMock(name='data_frame')
+
         self.mock_query = 'SELECT *'
         self.mock_dimensions = [Mock(), Mock()]
         self.mock_dimensions[0].is_rollup = False
         self.mock_dimensions[1].is_rollup = True
 
-    def test_do_fetch_data_calls_database_fetch_data(self):
-        _do_fetch_data(self.mock_database, self.mock_query, self.mock_dimensions)
+    def test_do_fetch_data_calls_database_fetch_data(self, ):
+        with patch('fireant.slicer.queries.database.pd.read_sql', return_value=self.mock_data_frame) as mock_read_sql:
+            _do_fetch_data(self.mock_query, self.mock_database, self.mock_dimensions)
 
-        self.mock_database.fetch_data.assert_called_once_with(self.mock_query)
+            mock_read_sql.assert_called_once_with(self.mock_query,
+                                                  self.mock_connection,
+                                                  coerce_float=True,
+                                                  parse_dates=True)
 
     def test_index_set_on_data_frame_result(self):
-        _do_fetch_data(self.mock_database, self.mock_query, self.mock_dimensions)
+        with patch('fireant.slicer.queries.database.pd.read_sql', return_value=self.mock_data_frame):
+            _do_fetch_data(self.mock_query, self.mock_database, self.mock_dimensions)
 
-        self.mock_data_frame.set_index.assert_called_once_with([fd(d.key)
-                                                                for d in self.mock_dimensions])
+            self.mock_data_frame.set_index.assert_called_once_with([fd(d.key)
+                                                                    for d in self.mock_dimensions])
+
+
+@patch('fireant.slicer.queries.database.pd.read_sql')
+class FetchDataLoggingTests(TestCase):
+    def setUp(self):
+        self.mock_query = 'SELECT *'
+
+        self.mock_database = Mock()
+        self.mock_database.cache_middleware = None
+        self.mock_database.slow_query_log_min_seconds = 15
+
+        mock_connect = self.mock_database.connect.return_value = MagicMock()
+        mock_cursor_func = mock_connect.__enter__.return_value.cursor
+        mock_cursor = mock_cursor_func.return_value = MagicMock(name='mock_cursor')
+        mock_cursor.fetchall.return_value = 'OK'
+
+        self.mock_dimensions = [Mock(), Mock()]
+        self.mock_dimensions[0].is_rollup = False
+        self.mock_dimensions[1].is_rollup = False
+
+    @patch('fireant.slicer.queries.database.query_logger')
+    def test_debug_query_log_called_with_query(self, mock_logger, *mocks):
+        _do_fetch_data(self.mock_query, self.mock_database, self.mock_dimensions)
+
+        mock_logger.debug.assert_called_once_with('SELECT *')
+
+    @patch.object(time, 'time', return_value=1520520255.0)
+    @patch('fireant.slicer.queries.database.query_logger')
+    def test_info_query_log_called_with_query_and_duration(self, mock_logger, *mocks):
+        _do_fetch_data(self.mock_query, self.mock_database, self.mock_dimensions)
+
+        mock_logger.info.assert_called_once_with('[0.0 seconds]: SELECT *')
+
+    @patch.object(time, 'time')
+    @patch('fireant.slicer.queries.database.slow_query_logger')
+    def test_warning_slow_query_logger_called_with_duration_and_query_if_over_slow_query_limit(self,
+                                                                                               mock_logger,
+                                                                                               mock_time,
+                                                                                               *mocks):
+        mock_time.side_effect = [1520520255.0, 1520520277.0]
+        _do_fetch_data(self.mock_query, self.mock_database, self.mock_dimensions)
+
+        mock_logger.warning.assert_called_once_with('[22.0 seconds]: SELECT *')
+
+    @patch.object(time, 'time')
+    @patch('fireant.slicer.queries.database.slow_query_logger')
+    def test_warning_slow_query_logger_not_called_with_duration_and_query_if_not_over_slow_query_limit(self,
+                                                                                                       mock_logger,
+                                                                                                       mock_time,
+                                                                                                       *mocks):
+        mock_time.side_effect = [1520520763.0, 1520520764.0]
+        _do_fetch_data(self.mock_query, self.mock_database, self.mock_dimensions)
+
+        mock_logger.warning.assert_not_called()
 
 
 cat_dim_nans_df = cat_dim_df.append(
-    pd.DataFrame([[300, 2]],
-                 columns=cat_dim_df.columns,
-                 index=pd.Index([None],
-                                name=cat_dim_df.index.name)))
+      pd.DataFrame([[300, 2]],
+                   columns=cat_dim_df.columns,
+                   index=pd.Index([None],
+                                  name=cat_dim_df.index.name)))
 uni_dim_nans_df = uni_dim_df.append(
-    pd.DataFrame([[None, 300, 2]],
-                 columns=uni_dim_df.columns,
-                 index=pd.Index([None],
-                                name=uni_dim_df.index.name)))
+      pd.DataFrame([[None, 300, 2]],
+                   columns=uni_dim_df.columns,
+                   index=pd.Index([None],
+                                  name=uni_dim_df.index.name)))
 
 
 def add_nans(df):

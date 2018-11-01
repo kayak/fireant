@@ -1,6 +1,7 @@
 from functools import (
     partial,
     reduce,
+    wraps,
 )
 from multiprocessing.pool import ThreadPool
 from typing import (
@@ -10,6 +11,7 @@ from typing import (
 )
 
 import pandas as pd
+import time
 
 from fireant.database import Database
 from fireant.formats import (
@@ -20,6 +22,10 @@ from fireant.utils import (
     chunks,
     format_dimension_key,
 )
+from .logger import (
+    query_logger,
+    slow_query_logger,
+)
 from ..dimensions import (
     ContinuousDimension,
     Dimension,
@@ -28,7 +34,7 @@ from ..dimensions import (
 
 def fetch_data(database: Database, queries: Union[Sized, Iterable], dimensions: Iterable[Dimension],
                reference_groups=()):
-    iterable = [(database, str(query), dimensions)
+    iterable = [(str(query), database, dimensions)
                 for query in queries]
 
     with ThreadPool(processes=database.max_processes) as pool:
@@ -42,7 +48,40 @@ def _exec(args):
     return _do_fetch_data(*args)
 
 
-def _do_fetch_data(database: Database, query: str, dimensions: Iterable[Dimension]):
+def db_cache(func):
+    @wraps(func)
+    def wrapper(query, database, *args):
+        if database.cache_middleware is not None:
+            return database.cache_middleware(func)(query, database, *args)
+        return func(query, database, *args)
+
+    return wrapper
+
+
+def log(func):
+    @wraps(func)
+    def wrapper(query, database, *args):
+        start_time = time.time()
+        query_logger.debug(query)
+
+        result = func(query, database, *args)
+
+        duration = round(time.time() - start_time, 4)
+        query_log_msg = '[{duration} seconds]: {query}'.format(duration=duration,
+                                                               query=query)
+        query_logger.info(query_log_msg)
+
+        if database.slow_query_log_min_seconds is not None and duration >= database.slow_query_log_min_seconds:
+            slow_query_logger.warning(query_log_msg)
+
+        return result
+
+    return wrapper
+
+
+@db_cache
+@log
+def _do_fetch_data(query: str, database: Database, dimensions: Iterable[Dimension]):
     """
     Executes a query to fetch data from database middleware and builds/cleans the data as a data frame. The query
     execution is logged with its duration.
@@ -54,8 +93,9 @@ def _do_fetch_data(database: Database, query: str, dimensions: Iterable[Dimensio
 
     :return: `pd.DataFrame` constructed from the result of the query
     """
-    data_frame = database.fetch_data(str(query))
-    return _clean_and_apply_index(data_frame, dimensions)
+    with database.connect() as connection:
+        data_frame = pd.read_sql(query, connection, coerce_float=True, parse_dates=True)
+        return _clean_and_apply_index(data_frame, dimensions)
 
 
 def _reduce_result_set(results: Iterable[pd.DataFrame], reference_groups=()):

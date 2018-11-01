@@ -1,53 +1,9 @@
-from functools import wraps
-
-import pandas as pd
-import time
-
 from pypika import (
     Query,
     enums,
     functions as fn,
     terms,
 )
-from .logger import (
-    query_logger,
-    slow_query_logger,
-)
-
-
-def log(func):
-    @wraps(func)
-    def wrapper(database, query):
-        start_time = time.time()
-        query_logger.debug(query)
-
-        result = func(database, query)
-
-        duration = round(time.time() - start_time, 4)
-        query_log_msg = '[{duration} seconds]: {query}'.format(duration=duration,
-                                                               query=query)
-        query_logger.info(query_log_msg)
-
-        if duration >= database.slow_query_log_min_seconds:
-            slow_query_logger.warning(query_log_msg)
-
-        return result
-
-    return wrapper
-
-
-@log
-def fetch(database, query):
-    with database.connect() as connection:
-        cursor = connection.cursor()
-        cursor.execute(query)
-        return cursor.fetchall()
-
-
-@log
-def fetch_data(database, query):
-    with database.connect() as connection:
-        return pd.read_sql(query, connection, coerce_float=True, parse_dates=True)
 
 
 class Database(object):
@@ -87,14 +43,3 @@ class Database(object):
 
     def to_char(self, definition):
         return fn.Cast(definition, enums.SqlTypes.VARCHAR)
-
-    def fetch(self, query):
-        if self.cache_middleware is not None:
-            return self.cache_middleware(fetch)(self, query)
-        return fetch(self, query)
-
-    def fetch_data(self, query):
-        if self.cache_middleware is not None:
-            return self.cache_middleware(fetch_data)(self, query)
-
-        return fetch_data(self, query)
