@@ -137,7 +137,7 @@ def _make_reference_data_frame(base_df, ref_df, reference):
     """
     if reference.delta_percent:
         ref_matrix = ref_df.as_matrix()
-        return pd.DataFrame((base_df.as_matrix() - ref_matrix) / ref_matrix,
+        return pd.DataFrame(100. * (base_df.as_matrix() - ref_matrix) / ref_matrix,
                             index=ref_df.index,
                             columns=[col.replace(reference.reference_type.key, reference.key)
                                      for col in ref_df.columns])

@@ -1,11 +1,7 @@
 from typing import Iterable
 
 from fireant.utils import immutable
-from pypika.terms import (
-    Case,
-    NullValue,
-    ValueWrapper,
-)
+from pypika.terms import NullValue
 from .base import SlicerElement
 from .exceptions import QueryException
 from .filters import (
