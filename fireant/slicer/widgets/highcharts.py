@@ -2,12 +2,12 @@ import itertools
 from datetime import datetime
 
 import pandas as pd
+
 from fireant import (
     DatetimeDimension,
     formats,
     utils,
 )
-
 from .base import TransformableWidget
 from .chart_base import (
     ChartWidget,
@@ -160,7 +160,7 @@ class HighCharts(ChartWidget, TransformableWidget):
             }
 
         categories = ["All"] \
-            if isinstance(first_level, pd.RangeIndex) \
+            if not isinstance(data_frame.index, pd.MultiIndex) and data_frame.index.name is None \
             else [utils.getdeepattr(dimension_display_values,
                                     (first_level.name, dimension_value),
                                     dimension_value or 'Totals')
