@@ -1,5 +1,3 @@
-import pandas as pd
-
 from pypika import (
     Dialects,
     MySQLQuery,
@@ -49,13 +47,39 @@ class MySQLDatabase(Database):
         self.password = password
         self.charset = charset
 
-    def connect(self):
+    def _get_connection_class(self):
         import pymysql
 
-        return pymysql.connect(host=self.host, port=self.port, db=self.database,
-                               user=self.user, password=self.password,
-                               charset=self.charset,
-                               cursorclass=pymysql.cursors.Cursor)
+        class MySQLConnection(pymysql.connections.Connection):
+            """
+            PyMySQL has deprecated context managers in the connection class.
+            To make the functionality consistent with other database drivers, we override
+            the context manager to return the connection instead of the cursor object.
+
+            This also fixes an issue where connections were not being closed in the current PyMySQL
+            context manager implementation!
+            https://github.com/PyMySQL/PyMySQL/issues/735
+            """
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc, value, traceback):
+                self.close()
+
+        return MySQLConnection
+
+    def connect(self):
+        """
+        Returns a MySQL connection
+
+        :return: pymysql Connection class
+        """
+        import pymysql
+        connection_class = self._get_connection_class()
+        return connection_class(host=self.host, port=self.port, db=self.database,
+                                user=self.user, password=self.password,
+                                charset=self.charset, cursorclass=pymysql.cursors.Cursor)
 
     def trunc_date(self, field, interval):
         return Trunc(field, str(interval))
