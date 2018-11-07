@@ -215,7 +215,7 @@ class ReactTable(Pandas):
                          for d in dimensions + [metrics]}
 
         columns = []
-        if isinstance(data_frame.index, pd.RangeIndex):
+        if not isinstance(data_frame.index, pd.MultiIndex) and data_frame.index.name is None:
             return columns
 
         for f_dimension_key in data_frame.index.names:
