@@ -9,8 +9,8 @@ from pypika import (
 class Database(object):
     """
     This is a abstract base class used for interfacing with a database platform.
-
     """
+
     # The pypika query class to use for constructing queries
     query_cls = Query
 
