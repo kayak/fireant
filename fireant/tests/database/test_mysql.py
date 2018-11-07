@@ -29,17 +29,17 @@ class TestMySQLDatabase(TestCase):
         self.assertIsNone(self.mysql.user)
         self.assertIsNone(self.mysql.password)
 
-    def test_connect(self):
+    @patch.object(MySQLDatabase, '_get_connection_class')
+    def test_connect(self, mock_connection_class):
         mock_pymysql = Mock()
         with patch.dict('sys.modules', pymysql=mock_pymysql):
             mock_pymysql.connect.return_value = 'OK'
 
             mysql = MySQLDatabase(database='test_database', host='test_host', port=1234,
                                   user='test_user', password='password')
-            result = mysql.connect()
+            mysql.connect()
 
-        self.assertEqual('OK', result)
-        mock_pymysql.connect.assert_called_once_with(
+        mock_connection_class.return_value.assert_called_once_with(
             host='test_host', port=1234, db='test_database', charset='utf8mb4',
             user='test_user', password='password', cursorclass=ANY
         )
