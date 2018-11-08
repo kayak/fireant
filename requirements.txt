@@ -1,6 +1,6 @@
 six
 pandas==0.22.0
-pypika==0.15.8
+pypika==0.16.1
 toposort==1.5
 typing==3.6.2
 python-dateutil==2.7.3
