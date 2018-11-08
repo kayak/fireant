@@ -1,3 +1,4 @@
+import time
 from functools import (
     partial,
     reduce,
@@ -11,8 +12,6 @@ from typing import (
 )
 
 import pandas as pd
-import time
-
 from fireant.database import Database
 from fireant.formats import (
     NULL_VALUE,
@@ -22,6 +21,7 @@ from fireant.utils import (
     chunks,
     format_dimension_key,
 )
+
 from .logger import (
     query_logger,
     slow_query_logger,
@@ -135,20 +135,22 @@ def _make_reference_data_frame(base_df, ref_df, reference):
     :param reference:
     :return:
     """
+    if not (reference.delta or reference.delta_percent):
+        return ref_df
+
+    columns = [col.replace(reference.reference_type.key, reference.key)
+               for col in ref_df.columns]
+
+    base_df, ref_df = base_df.copy(), ref_df.copy()
+    base_df.columns, ref_df.columns = columns, columns
+
+    new_values = base_df - ref_df
     if reference.delta_percent:
-        ref_matrix = ref_df.as_matrix()
-        return pd.DataFrame(100. * (base_df.as_matrix() - ref_matrix) / ref_matrix,
-                            index=ref_df.index,
-                            columns=[col.replace(reference.reference_type.key, reference.key)
-                                     for col in ref_df.columns])
+        new_values = 100. * new_values / ref_df
 
-    if reference.delta:
-        return pd.DataFrame(base_df.as_matrix() - ref_df.as_matrix(),
-                            index=ref_df.index,
-                            columns=[col.replace(reference.reference_type.key, reference.key)
-                                     for col in ref_df.columns])
-
-    return ref_df
+    return pd.DataFrame(new_values,
+                        index=ref_df.index,
+                        columns=columns)
 
 
 def _clean_and_apply_index(data_frame: pd.DataFrame, dimensions: Iterable[Dimension]):
