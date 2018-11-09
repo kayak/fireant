@@ -50,14 +50,6 @@ class DimensionsChoicesQueryBuilderTests(TestCase):
                          'ON "politician"."district_id"="district"."id" '
                          'GROUP BY "$d$district","$d$district_display"', str(query))
 
-    def test_no_choices_attr_for_datetime_dimension(self):
-        with self.assertRaises(AttributeError):
-            slicer.dimensions.timestamp.choices
-
-    def test_no_choices_attr_for_boolean_dimension(self):
-        with self.assertRaises(AttributeError):
-            slicer.dimensions.winner.choices
-
     def test_filter_choices(self):
         query = slicer.dimensions.candidate \
             .choices \
