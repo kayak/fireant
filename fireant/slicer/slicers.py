@@ -1,12 +1,9 @@
 import itertools
 
-from .dimensions import (
-    CategoricalDimension,
-    DisplayDimension,
-    UniqueDimension,
-)
+from .dimensions import DisplayDimension
 from .queries import (
     DimensionChoicesQueryBuilder,
+    DimensionLatestQueryBuilder,
     SlicerQueryBuilder,
 )
 
@@ -108,9 +105,8 @@ class Slicer(object):
 
         # add query builder entry points
         self.data = SlicerQueryBuilder(self)
+        self.latest = DimensionLatestQueryBuilder(self)
         for dimension in dimensions:
-            if not isinstance(dimension, (UniqueDimension, CategoricalDimension)):
-                continue
             dimension.choices = DimensionChoicesQueryBuilder(self, dimension)
 
         self.always_query_all_metrics = always_query_all_metrics

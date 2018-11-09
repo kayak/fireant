@@ -26,8 +26,7 @@ def date_as_millis(value):
 
 
 def coerce_type(value):
-    # Should never be any real NaNs or INFs at this point, so if that's the value, it's meant to be that.
-    if value.lower() in ['nan', 'inf']:
+    if isinstance(value, date):
         return value
 
     for type_cast in (int, float):
@@ -35,6 +34,10 @@ def coerce_type(value):
             return type_cast(value)
         except:
             pass
+
+    # Should never be any real NaNs or INFs at this point, so if that's the value, it's meant to be that.
+    if value.lower() in ['nan', 'inf']:
+        return value
 
     if NULL_VALUE == value:
         return None

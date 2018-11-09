@@ -5,7 +5,10 @@ from fireant.utils import (
     format_dimension_key,
     format_metric_key,
 )
-from pypika import Table
+from pypika import (
+    Table,
+    functions as fn,
+)
 from .finders import (
     find_and_group_references_for_dimensions,
     find_joins_for_tables,
@@ -178,6 +181,23 @@ def make_slicer_query(database: Database,
 
     return query
 
+
+def make_latest_query(database: Database,
+                      base_table: Table,
+                      joins: Iterable[Join] = (),
+                      dimensions: Iterable[Dimension] = ()):
+    query = database.query_cls.from_(base_table)
+
+    # Add joins
+    join_tables_needed_for_query = find_required_tables_to_join(dimensions, base_table)
+    for join in find_joins_for_tables(joins, base_table, join_tables_needed_for_query):
+        query = query.join(join.table, how=join.join_type).on(join.criterion)
+
+    for dimension in dimensions:
+        f_dimension_key = format_dimension_key(dimension.key)
+        query = query.select(fn.Max(dimension.definition).as_(f_dimension_key))
+
+    return query
 
 def make_terms_for_metrics(metrics):
     return [metric.definition.as_(format_metric_key(metric.key))
