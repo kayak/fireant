@@ -4,13 +4,13 @@ from typing import (
 )
 
 import pandas as pd
+
 from fireant.utils import (
     format_dimension_key,
     format_metric_key,
     immutable,
 )
 from pypika import Order
-
 from . import special_cases
 from .database import fetch_data
 from .finders import (
@@ -29,6 +29,14 @@ from .. import QueryException
 from ..base import SlicerElement
 from ..dimensions import Dimension
 from ..references import reference_key
+
+
+def add_hints(queries, hint=None):
+    return [query.hint(hint)
+            if hint is not None and hasattr(query.__class__, 'hint')
+            else query
+            for query in queries]
+
 
 
 class QueryBuilder(object):
@@ -86,10 +94,7 @@ class QueryBuilder(object):
         raise NotImplementedError()
 
     def fetch(self, hint=None):
-        queries = [query.hint(hint)
-                   if hint is not None
-                   else query
-                   for query in self.queries]
+        queries = add_hints(self.queries, hint)
 
         return fetch_data(self.slicer.database, queries, self._dimensions)
 
@@ -197,10 +202,7 @@ class SlicerQueryBuilder(QueryBuilder):
         :return:
             A list of dict (JSON) objects containing the widget configurations.
         """
-        queries = [query.hint(hint)
-                   if hint is not None
-                   else query
-                   for query in self.queries]
+        queries = add_hints(self.queries, hint)
 
         reference_groups = list(find_and_group_references_for_dimensions(self._references).values())
         data_frame = fetch_data(self.slicer.database, queries, self._dimensions, reference_groups)
@@ -273,11 +275,7 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
         :return:
             A list of dict (JSON) objects containing the widget configurations.
         """
-
-        query = [query.hint(hint)
-                 if hint is not None
-                 else query
-                 for query in self.queries][0]
+        query = add_hints(self.queries, hint)[0]
 
         dimension = self._dimensions[0]
         definition = dimension.display_definition.as_(format_dimension_key(dimension.display_key)) \
