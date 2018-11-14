@@ -140,11 +140,15 @@ class ReactTable(Pandas):
     @staticmethod
     def map_display_values(df, dimensions):
         """
-        WRITEME
+        Creates a mapping for dimension values to their display values.
 
         :param df:
+            The result data set that is being transformed.
         :param dimensions:
+            The list of dimensions included in the query that created the result data set df.
         :return:
+            A tree-structure dict with two levels of depth. The top level dict has keys for each dimension's display
+            key. The lower level dict has keys for each raw dimension value and values which are the display value.
         """
         dimension_display_values = {}
 
@@ -167,11 +171,22 @@ class ReactTable(Pandas):
     @staticmethod
     def map_hyperlink_templates(df, dimensions):
         """
-        WRITEME
+        Creates a mapping for each dimension to it's hyperlink template if it is possible to create the hyperlink
+        template for it.
+
+        The hyperlink template is a URL-like string containing curley braces enclosing dimension keys: `{dimension}`.
+        While rendering this widget, the dimension key placeholders need to be replaced with the dimension values for
+        that row.
 
         :param df:
+            The result data set that is being transformed. The data frame SHOULD be pivoted/transposed if that step is
+            required, before calling this function, in order to prevent the template from being included for the
+            dimension if one of the required dimensions is pivoted.
         :param dimensions:
+            The list of dimensions included in the query that created the result data set df.
         :return:
+            A dict with the dimension key as the key and the hyperlink template as the value. Templates will only be
+            included if it will be possible to fill in the required parameters.
         """
         hyperlink_templates = {}
         pattern = re.compile(r'{[^{}]+}')
@@ -181,17 +196,20 @@ class ReactTable(Pandas):
             if hyperlink_template is None:
                 continue
 
-            arguments = [format_dimension_key(argument[1:-1])
-                         for argument in pattern.findall(hyperlink_template)]
-            missing_dimensions = set(arguments) & set(df.index.names)
-            if not missing_dimensions:
+            required_hyperlink_parameters = [format_dimension_key(argument[1:-1])
+                                             for argument in pattern.findall(hyperlink_template)]
+
+            # Check that all of the required dimensions are in the result data set. Only include the hyperlink template
+            # in the return value of this function if all are present.
+            unavailable_hyperlink_parameters = set(required_hyperlink_parameters) & set(df.index.names)
+            if not unavailable_hyperlink_parameters:
                 continue
 
             # replace the dimension keys with the formatted values. This will come in handy later when replacing the
             # actual values
             hyperlink_template = hyperlink_template.format(**{
                 argument[3:]: '{' + argument + '}'
-                for argument in arguments
+                for argument in required_hyperlink_parameters
             })
 
             f_dimension_key = format_dimension_key(dimension.key)
