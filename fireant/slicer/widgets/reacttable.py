@@ -1,3 +1,4 @@
+import re
 from collections import OrderedDict
 
 import numpy as np
@@ -164,6 +165,41 @@ class ReactTable(Pandas):
         return dimension_display_values
 
     @staticmethod
+    def map_hyperlink_templates(df, dimensions):
+        """
+        WRITEME
+
+        :param df:
+        :param dimensions:
+        :return:
+        """
+        hyperlink_templates = {}
+        pattern = re.compile(r'{[^{}]+}')
+
+        for dimension in dimensions:
+            hyperlink_template = dimension.hyperlink_template
+            if hyperlink_template is None:
+                continue
+
+            arguments = [format_dimension_key(argument[1:-1])
+                         for argument in pattern.findall(hyperlink_template)]
+            missing_dimensions = set(arguments) & set(df.index.names)
+            if not missing_dimensions:
+                continue
+
+            # replace the dimension keys with the formatted values. This will come in handy later when replacing the
+            # actual values
+            hyperlink_template = hyperlink_template.format(**{
+                argument[3:]: '{' + argument + '}'
+                for argument in arguments
+            })
+
+            f_dimension_key = format_dimension_key(dimension.key)
+            hyperlink_templates[f_dimension_key] = hyperlink_template
+
+        return hyperlink_templates
+
+    @staticmethod
     def format_data_frame(data_frame, dimensions):
         """
         This function prepares the raw data frame for transformation by formatting dates in the index and removing any
@@ -314,8 +350,56 @@ class ReactTable(Pandas):
         column_frame = data_frame.columns.to_frame()
         return _make_columns(column_frame)
 
-    @staticmethod
-    def transform_data(data_frame, item_map, dimension_display_values):
+    @classmethod
+    def transform_data_row_index(cls, index_values, dimension_display_values, dimension_hyperlink_templates):
+        # Add the index to the row
+        row = {}
+        for key, value in index_values.items():
+            if key is None:
+                continue
+
+            data = {RAW_VALUE: value}
+
+            # Try to find a display value for the item. If this is a metric the raw value is replaced with the
+            # display value because there is no raw value for a metric label
+            display = getdeepattr(dimension_display_values, (key, value))
+            if display is not None:
+                data['display'] = display
+
+            # If the dimension has a hyperlink template, then apply the template by formatting it with the dimension
+            # values for this row. The values contained in `index_values` will always contain all of the required values
+            # at this point, otherwise the hyperlink template will not be included.
+            if key in dimension_hyperlink_templates:
+                data['hyperlink'] = dimension_hyperlink_templates[key].format(**index_values)
+
+            row[key] = data
+
+        return row
+
+    @classmethod
+    def transform_data_row_values(cls, series, item_map):
+        # Add the values to the row
+        row = {}
+        for key, value in series.iteritems():
+            value = metric_value(value)
+            data = {RAW_VALUE: metric_value(value)}
+
+            # Try to find a display value for the item
+            item = item_map.get(key[0] if isinstance(key, tuple) else key)
+            display = metric_display(value,
+                                     getattr(item, 'prefix', None),
+                                     getattr(item, 'suffix', None),
+                                     getattr(item, 'precision', None))
+
+            if display is not None:
+                data['display'] = display
+
+            setdeepattr(row, key, data)
+
+        return row
+
+    @classmethod
+    def transform_data(cls, data_frame, item_map, dimension_display_values, dimension_hyperlink_templates):
         """
         Builds a list of dicts containing the data for ReactTable. This aligns with the accessors set by
         #transform_dimension_column_headers and #transform_metric_column_headers
@@ -326,8 +410,11 @@ class ReactTable(Pandas):
             A map to find metrics/operations based on their keys found in the data frame.
         :param dimension_display_values:
             A map for finding display values for dimensions based on their key and value.
+        :param dimension_hyperlink_templates:
         """
-        result = []
+        index_names = data_frame.index.names
+
+        rows = []
 
         for index, series in data_frame.iterrows():
             if not isinstance(index, tuple):
@@ -339,44 +426,19 @@ class ReactTable(Pandas):
                      if item not in item_map
                      else getattr(item_map[item], 'label', item_map[item].key)
                      for item in index]
+            index_values = OrderedDict(zip(index_names, index))
+
+            index_cols = cls.transform_data_row_index(index_values,
+                                                      dimension_display_values,
+                                                      dimension_hyperlink_templates)
+            value_cols = cls.transform_data_row_values(series, item_map)
 
             row = {}
+            row.update(index_cols)
+            row.update(value_cols)
+            rows.append(row)
 
-            # Add the index to the row
-            for key, value in zip(data_frame.index.names, index):
-                if key is None:
-                    continue
-
-                data = {RAW_VALUE: value}
-
-                # Try to find a display value for the item. If this is a metric the raw value is replaced with the
-                # display value because there is no raw value for a metric label
-                display = getdeepattr(dimension_display_values, (key, value))
-                if display is not None:
-                    data['display'] = display
-
-                row[key] = data
-
-            # Add the values to the row
-            for key, value in series.iteritems():
-                value = metric_value(value)
-                data = {RAW_VALUE: metric_value(value)}
-
-                # Try to find a display value for the item
-                item = item_map.get(key[0] if isinstance(key, tuple) else key)
-                display = metric_display(value,
-                                         getattr(item, 'prefix', None),
-                                         getattr(item, 'suffix', None),
-                                         getattr(item, 'precision', None))
-
-                if display is not None:
-                    data['display'] = display
-
-                setdeepattr(row, key, data)
-
-            result.append(row)
-
-        return result
+        return rows
 
     def transform(self, data_frame, slicer, dimensions, references):
         """
@@ -409,6 +471,7 @@ class ReactTable(Pandas):
         df = data_frame[df_dimension_columns + df_metric_columns].copy()
 
         dimension_display_values = self.map_display_values(df, dimensions)
+
         self.format_data_frame(df, dimensions)
 
         dimension_keys = [format_dimension_key(dimension.key) for dimension in self.pivot]
@@ -416,9 +479,11 @@ class ReactTable(Pandas):
             .fillna(value=NAN_VALUE) \
             .replace([np.inf, -np.inf], INF_VALUE)
 
+        dimension_hyperlink_templates = self.map_hyperlink_templates(df, dimensions)
+
         dimension_columns = self.transform_dimension_column_headers(df, dimensions)
         metric_columns = self.transform_metric_column_headers(df, item_map, dimension_display_values)
-        data = self.transform_data(df, item_map, dimension_display_values)
+        data = self.transform_data(df, item_map, dimension_display_values, dimension_hyperlink_templates)
 
         return {
             'columns': dimension_columns + metric_columns,

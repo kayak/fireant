@@ -1,12 +1,12 @@
+import copy
 from unittest import TestCase
 
-from fireant.slicer.widgets.reacttable import (
-    ReactTable,
-)
+from fireant.slicer.widgets.reacttable import ReactTable
 from fireant.tests.slicer.mocks import (
     CumSum,
     ElectionOverElection,
     cat_dim_df,
+    cat_uni_dim_df,
     cont_dim_df,
     cont_dim_operation_df,
     cont_uni_dim_all_totals_df,
@@ -69,27 +69,22 @@ class ReactTableTransformerTests(TestCase):
             'data': [{
                 '$d$timestamp': {'raw': '1996-01-01'},
                 '$m$wins': {'display': '2', 'raw': 2}
-            },
-                {
-                    '$d$timestamp': {'raw': '2000-01-01'},
-                    '$m$wins': {'display': '2', 'raw': 2}
-                },
-                {
-                    '$d$timestamp': {'raw': '2004-01-01'},
-                    '$m$wins': {'display': '2', 'raw': 2}
-                },
-                {
-                    '$d$timestamp': {'raw': '2008-01-01'},
-                    '$m$wins': {'display': '2', 'raw': 2}
-                },
-                {
-                    '$d$timestamp': {'raw': '2012-01-01'},
-                    '$m$wins': {'display': '2', 'raw': 2}
-                },
-                {
-                    '$d$timestamp': {'raw': '2016-01-01'},
-                    '$m$wins': {'display': '2', 'raw': 2}
-                }]
+            }, {
+                '$d$timestamp': {'raw': '2000-01-01'},
+                '$m$wins': {'display': '2', 'raw': 2}
+            }, {
+                '$d$timestamp': {'raw': '2004-01-01'},
+                '$m$wins': {'display': '2', 'raw': 2}
+            }, {
+                '$d$timestamp': {'raw': '2008-01-01'},
+                '$m$wins': {'display': '2', 'raw': 2}
+            }, {
+                '$d$timestamp': {'raw': '2012-01-01'},
+                '$m$wins': {'display': '2', 'raw': 2}
+            }, {
+                '$d$timestamp': {'raw': '2016-01-01'},
+                '$m$wins': {'display': '2', 'raw': 2}
+            }]
         }, result)
 
     def test_time_series_dim_with_operation(self):
@@ -218,6 +213,9 @@ class ReactTableTransformerTests(TestCase):
         result = ReactTable(slicer.metrics.wins) \
             .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
 
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
+
         self.assertEqual({
             'columns': [{'Header': 'Timestamp', 'accessor': '$d$timestamp'},
                         {'Header': 'State', 'accessor': '$d$state'},
@@ -229,46 +227,6 @@ class ReactTableTransformerTests(TestCase):
             }, {
                 '$d$state': {'display': 'California', 'raw': '2'},
                 '$d$timestamp': {'raw': '1996-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '2000-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '2000-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '2004-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '2004-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '2008-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '2008-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '2012-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '2012-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '2016-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '2016-01-01'},
                 '$m$wins': {'display': '1', 'raw': 1}
             }]
         }, result)
@@ -278,71 +236,14 @@ class ReactTableTransformerTests(TestCase):
             .transform(cont_uni_dim_totals_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state.rollup()],
                        [])
 
+        self.assertIn('data', result)
+        result['data'] = result['data'][-3:]  # shorten the results to make the test easier to read
+
         self.assertEqual({
             'columns': [{'Header': 'Timestamp', 'accessor': '$d$timestamp'},
                         {'Header': 'State', 'accessor': '$d$state'},
                         {'Header': 'Wins', 'accessor': '$m$wins'}],
             'data': [{
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '1996-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '1996-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'raw': 'Totals'},
-                '$d$timestamp': {'raw': '1996-01-01'},
-                '$m$wins': {'display': '2', 'raw': 2}
-            }, {
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '2000-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '2000-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'raw': 'Totals'},
-                '$d$timestamp': {'raw': '2000-01-01'},
-                '$m$wins': {'display': '2', 'raw': 2}
-            }, {
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '2004-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '2004-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'raw': 'Totals'},
-                '$d$timestamp': {'raw': '2004-01-01'},
-                '$m$wins': {'display': '2', 'raw': 2}
-            }, {
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '2008-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '2008-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'raw': 'Totals'},
-                '$d$timestamp': {'raw': '2008-01-01'},
-                '$m$wins': {'display': '2', 'raw': 2}
-            }, {
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '2012-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '2012-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'raw': 'Totals'},
-                '$d$timestamp': {'raw': '2012-01-01'},
-                '$m$wins': {'display': '2', 'raw': 2}
-            }, {
                 '$d$state': {'display': 'Texas', 'raw': '1'},
                 '$d$timestamp': {'raw': '2016-01-01'},
                 '$m$wins': {'display': '1', 'raw': 1}
@@ -361,6 +262,8 @@ class ReactTableTransformerTests(TestCase):
         result = ReactTable(slicer.metrics.wins) \
             .transform(cont_uni_dim_all_totals_df, slicer, [slicer.dimensions.timestamp.rollup(),
                                                             slicer.dimensions.state.rollup()], [])
+        self.assertIn('data', result)
+        result['data'] = result['data'][:3] + result['data'][-1:]  # shorten the results to make the test easier to read
 
         self.assertEqual({
             'columns': [{'Header': 'Timestamp', 'accessor': '$d$timestamp'},
@@ -377,66 +280,6 @@ class ReactTableTransformerTests(TestCase):
             }, {
                 '$d$state': {'raw': 'Totals'},
                 '$d$timestamp': {'raw': '1996-01-01'},
-                '$m$wins': {'display': '2', 'raw': 2}
-            }, {
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '2000-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '2000-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'raw': 'Totals'},
-                '$d$timestamp': {'raw': '2000-01-01'},
-                '$m$wins': {'display': '2', 'raw': 2}
-            }, {
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '2004-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '2004-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'raw': 'Totals'},
-                '$d$timestamp': {'raw': '2004-01-01'},
-                '$m$wins': {'display': '2', 'raw': 2}
-            }, {
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '2008-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '2008-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'raw': 'Totals'},
-                '$d$timestamp': {'raw': '2008-01-01'},
-                '$m$wins': {'display': '2', 'raw': 2}
-            }, {
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '2012-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '2012-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'raw': 'Totals'},
-                '$d$timestamp': {'raw': '2012-01-01'},
-                '$m$wins': {'display': '2', 'raw': 2}
-            }, {
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '2016-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '2016-01-01'},
-                '$m$wins': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'raw': 'Totals'},
-                '$d$timestamp': {'raw': '2016-01-01'},
                 '$m$wins': {'display': '2', 'raw': 2}
             }, {
                 '$d$state': {'raw': 'Totals'},
@@ -456,6 +299,9 @@ class ReactTableTransformerTests(TestCase):
                            ElectionOverElection(slicer.dimensions.timestamp)
                        ])
 
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
+
         self.assertEqual({
             'columns': [{'Header': 'Timestamp', 'accessor': '$d$timestamp'},
                         {'Header': 'State', 'accessor': '$d$state'},
@@ -471,46 +317,6 @@ class ReactTableTransformerTests(TestCase):
                 '$d$timestamp': {'raw': '2000-01-01'},
                 '$m$votes': {'display': '10,428,632', 'raw': 10428632},
                 '$m$votes_eoe': {'display': '9,646,062', 'raw': 9646062}
-            }, {
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '2004-01-01'},
-                '$m$votes': {'display': '7,359,621', 'raw': 7359621},
-                '$m$votes_eoe': {'display': '6,233,385', 'raw': 6233385}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '2004-01-01'},
-                '$m$votes': {'display': '12,255,311', 'raw': 12255311},
-                '$m$votes_eoe': {'display': '10,428,632', 'raw': 10428632}
-            }, {
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '2008-01-01'},
-                '$m$votes': {'display': '8,007,961', 'raw': 8007961},
-                '$m$votes_eoe': {'display': '7,359,621', 'raw': 7359621}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '2008-01-01'},
-                '$m$votes': {'display': '13,286,254', 'raw': 13286254},
-                '$m$votes_eoe': {'display': '12,255,311', 'raw': 12255311}
-            }, {
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '2012-01-01'},
-                '$m$votes': {'display': '7,877,967', 'raw': 7877967},
-                '$m$votes_eoe': {'display': '8,007,961', 'raw': 8007961}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '2012-01-01'},
-                '$m$votes': {'display': '12,694,243', 'raw': 12694243},
-                '$m$votes_eoe': {'display': '13,286,254', 'raw': 13286254}
-            }, {
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '2016-01-01'},
-                '$m$votes': {'display': '5,072,915', 'raw': 5072915},
-                '$m$votes_eoe': {'display': '7,877,967', 'raw': 7877967}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '2016-01-01'},
-                '$m$votes': {'display': '13,237,598', 'raw': 13237598},
-                '$m$votes_eoe': {'display': '12,694,243', 'raw': 12694243}
             }]
         }, result)
 
@@ -524,6 +330,9 @@ class ReactTableTransformerTests(TestCase):
                        ], [
                            ElectionOverElection(slicer.dimensions.timestamp)
                        ])
+
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual({
             'columns': [{'Header': 'Timestamp', 'accessor': '$d$timestamp'},
@@ -544,62 +353,6 @@ class ReactTableTransformerTests(TestCase):
                 '$d$timestamp': {'raw': '2000-01-01'},
                 '$m$votes': {'display': '10,428,632', 'raw': 10428632},
                 '$m$votes_eoe': {'display': '9,646,062', 'raw': 9646062},
-                '$m$wins': {'display': '1', 'raw': 1},
-                '$m$wins_eoe': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '2004-01-01'},
-                '$m$votes': {'display': '7,359,621', 'raw': 7359621},
-                '$m$votes_eoe': {'display': '6,233,385', 'raw': 6233385},
-                '$m$wins': {'display': '1', 'raw': 1},
-                '$m$wins_eoe': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '2004-01-01'},
-                '$m$votes': {'display': '12,255,311', 'raw': 12255311},
-                '$m$votes_eoe': {'display': '10,428,632', 'raw': 10428632},
-                '$m$wins': {'display': '1', 'raw': 1},
-                '$m$wins_eoe': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '2008-01-01'},
-                '$m$votes': {'display': '8,007,961', 'raw': 8007961},
-                '$m$votes_eoe': {'display': '7,359,621', 'raw': 7359621},
-                '$m$wins': {'display': '1', 'raw': 1},
-                '$m$wins_eoe': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '2008-01-01'},
-                '$m$votes': {'display': '13,286,254', 'raw': 13286254},
-                '$m$votes_eoe': {'display': '12,255,311', 'raw': 12255311},
-                '$m$wins': {'display': '1', 'raw': 1},
-                '$m$wins_eoe': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '2012-01-01'},
-                '$m$votes': {'display': '7,877,967', 'raw': 7877967},
-                '$m$votes_eoe': {'display': '8,007,961', 'raw': 8007961},
-                '$m$wins': {'display': '1', 'raw': 1},
-                '$m$wins_eoe': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '2012-01-01'},
-                '$m$votes': {'display': '12,694,243', 'raw': 12694243},
-                '$m$votes_eoe': {'display': '13,286,254', 'raw': 13286254},
-                '$m$wins': {'display': '1', 'raw': 1},
-                '$m$wins_eoe': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '$d$timestamp': {'raw': '2016-01-01'},
-                '$m$votes': {'display': '5,072,915', 'raw': 5072915},
-                '$m$votes_eoe': {'display': '7,877,967', 'raw': 7877967},
-                '$m$wins': {'display': '1', 'raw': 1},
-                '$m$wins_eoe': {'display': '1', 'raw': 1}
-            }, {
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '$d$timestamp': {'raw': '2016-01-01'},
-                '$m$votes': {'display': '13,237,598', 'raw': 13237598},
-                '$m$votes_eoe': {'display': '12,694,243', 'raw': 12694243},
                 '$m$wins': {'display': '1', 'raw': 1},
                 '$m$wins_eoe': {'display': '1', 'raw': 1}
             }]
@@ -661,6 +414,9 @@ class ReactTableTransformerTests(TestCase):
         result = ReactTable(slicer.metrics.wins, slicer.metrics.votes, pivot=[slicer.dimensions.state]) \
             .transform(cont_uni_dim_df, slicer, [slicer.dimensions.timestamp, slicer.dimensions.state], [])
 
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
+
         self.assertEqual({
             'columns': [{'Header': 'Timestamp', 'accessor': '$d$timestamp'},
                         {
@@ -692,46 +448,6 @@ class ReactTableTransformerTests(TestCase):
                     '1': {'display': '1', 'raw': 1},
                     '2': {'display': '1', 'raw': 1}
                 }
-            }, {
-                '$d$timestamp': {'raw': '2004-01-01'},
-                '$m$votes': {
-                    '1': {'display': '7,359,621', 'raw': 7359621},
-                    '2': {'display': '12,255,311', 'raw': 12255311}
-                },
-                '$m$wins': {
-                    '1': {'display': '1', 'raw': 1},
-                    '2': {'display': '1', 'raw': 1}
-                }
-            }, {
-                '$d$timestamp': {'raw': '2008-01-01'},
-                '$m$votes': {
-                    '1': {'display': '8,007,961', 'raw': 8007961},
-                    '2': {'display': '13,286,254', 'raw': 13286254}
-                },
-                '$m$wins': {
-                    '1': {'display': '1', 'raw': 1},
-                    '2': {'display': '1', 'raw': 1}
-                }
-            }, {
-                '$d$timestamp': {'raw': '2012-01-01'},
-                '$m$votes': {
-                    '1': {'display': '7,877,967', 'raw': 7877967},
-                    '2': {'display': '12,694,243', 'raw': 12694243}
-                },
-                '$m$wins': {
-                    '1': {'display': '1', 'raw': 1},
-                    '2': {'display': '1', 'raw': 1}
-                }
-            }, {
-                '$d$timestamp': {'raw': '2016-01-01'},
-                '$m$votes': {
-                    '1': {'display': '5,072,915', 'raw': 5072915},
-                    '2': {'display': '13,237,598', 'raw': 13237598}
-                },
-                '$m$wins': {
-                    '1': {'display': '1', 'raw': 1},
-                    '2': {'display': '1', 'raw': 1}
-                }
             }]
         }, result)
 
@@ -743,6 +459,9 @@ class ReactTableTransformerTests(TestCase):
                        ], [
                            ElectionOverElection(slicer.dimensions.timestamp)
                        ])
+
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual({
             'columns': [{'Header': 'Timestamp', 'accessor': '$d$timestamp'},
@@ -796,60 +515,6 @@ class ReactTableTransformerTests(TestCase):
                 '$m$votes_eoe': {
                     '1': {'display': '6,233,385', 'raw': 6233385},
                     '2': {'display': '10,428,632', 'raw': 10428632}
-                },
-                '$m$wins': {
-                    '1': {'display': '1', 'raw': 1},
-                    '2': {'display': '1', 'raw': 1}
-                },
-                '$m$wins_eoe': {
-                    '1': {'display': '1', 'raw': 1},
-                    '2': {'display': '1', 'raw': 1}
-                }
-            }, {
-                '$d$timestamp': {'raw': '2008-01-01'},
-                '$m$votes': {
-                    '1': {'display': '8,007,961', 'raw': 8007961},
-                    '2': {'display': '13,286,254', 'raw': 13286254}
-                },
-                '$m$votes_eoe': {
-                    '1': {'display': '7,359,621', 'raw': 7359621},
-                    '2': {'display': '12,255,311', 'raw': 12255311}
-                },
-                '$m$wins': {
-                    '1': {'display': '1', 'raw': 1},
-                    '2': {'display': '1', 'raw': 1}
-                },
-                '$m$wins_eoe': {
-                    '1': {'display': '1', 'raw': 1},
-                    '2': {'display': '1', 'raw': 1}
-                }
-            }, {
-                '$d$timestamp': {'raw': '2012-01-01'},
-                '$m$votes': {
-                    '1': {'display': '7,877,967', 'raw': 7877967},
-                    '2': {'display': '12,694,243', 'raw': 12694243}
-                },
-                '$m$votes_eoe': {
-                    '1': {'display': '8,007,961', 'raw': 8007961},
-                    '2': {'display': '13,286,254', 'raw': 13286254}
-                },
-                '$m$wins': {
-                    '1': {'display': '1', 'raw': 1},
-                    '2': {'display': '1', 'raw': 1}
-                },
-                '$m$wins_eoe': {
-                    '1': {'display': '1', 'raw': 1},
-                    '2': {'display': '1', 'raw': 1}
-                }
-            }, {
-                '$d$timestamp': {'raw': '2016-01-01'},
-                '$m$votes': {
-                    '1': {'display': '5,072,915', 'raw': 5072915},
-                    '2': {'display': '13,237,598', 'raw': 13237598}
-                },
-                '$m$votes_eoe': {
-                    '1': {'display': '7,877,967', 'raw': 7877967},
-                    '2': {'display': '12,694,243', 'raw': 12694243}
                 },
                 '$m$wins': {
                     '1': {'display': '1', 'raw': 1},
@@ -1009,6 +674,9 @@ class ReactTableTransformerTests(TestCase):
             .transform(cont_uni_dim_all_totals_df, slicer, [slicer.dimensions.timestamp.rollup(),
                                                             state], [])
 
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2] + result['data'][-1:]  # shorten the results to make the test easier to read
+
         self.assertEqual({
             'columns': [{'Header': 'Timestamp', 'accessor': '$d$timestamp'},
                         {
@@ -1055,54 +723,6 @@ class ReactTableTransformerTests(TestCase):
                     'totals': {'display': '2', 'raw': 2}
                 }
             }, {
-                '$d$timestamp': {'raw': '2004-01-01'},
-                '$m$votes': {
-                    '1': {'display': '7,359,621', 'raw': 7359621},
-                    '2': {'display': '12,255,311', 'raw': 12255311},
-                    'totals': {'display': '19,614,932', 'raw': 19614932}
-                },
-                '$m$wins': {
-                    '1': {'display': '1', 'raw': 1},
-                    '2': {'display': '1', 'raw': 1},
-                    'totals': {'display': '2', 'raw': 2}
-                }
-            }, {
-                '$d$timestamp': {'raw': '2008-01-01'},
-                '$m$votes': {
-                    '1': {'display': '8,007,961', 'raw': 8007961},
-                    '2': {'display': '13,286,254', 'raw': 13286254},
-                    'totals': {'display': '21,294,215', 'raw': 21294215}
-                },
-                '$m$wins': {
-                    '1': {'display': '1', 'raw': 1},
-                    '2': {'display': '1', 'raw': 1},
-                    'totals': {'display': '2', 'raw': 2}
-                }
-            }, {
-                '$d$timestamp': {'raw': '2012-01-01'},
-                '$m$votes': {
-                    '1': {'display': '7,877,967', 'raw': 7877967},
-                    '2': {'display': '12,694,243', 'raw': 12694243},
-                    'totals': {'display': '20,572,210', 'raw': 20572210}
-                },
-                '$m$wins': {
-                    '1': {'display': '1', 'raw': 1},
-                    '2': {'display': '1', 'raw': 1},
-                    'totals': {'display': '2', 'raw': 2}
-                }
-            }, {
-                '$d$timestamp': {'raw': '2016-01-01'},
-                '$m$votes': {
-                    '1': {'display': '5,072,915', 'raw': 5072915},
-                    '2': {'display': '13,237,598', 'raw': 13237598},
-                    'totals': {'display': '18,310,513', 'raw': 18310513}
-                },
-                '$m$wins': {
-                    '1': {'display': '1', 'raw': 1},
-                    '2': {'display': '1', 'raw': 1},
-                    'totals': {'display': '2', 'raw': 2}
-                }
-            }, {
                 '$d$timestamp': {'raw': 'Totals'},
                 '$m$votes': {
                     '1': {'display': '', 'raw': ''},
@@ -1126,6 +746,9 @@ class ReactTableTransformerTests(TestCase):
             .transform(cont_uni_dim_all_totals_df, slicer, [slicer.dimensions.timestamp.rollup(),
                                                             state], [])
 
+        self.assertIn('data', result)
+        result['data'] = result['data'][:6:3]  # shorten the results to make the test easier to read
+
         self.assertEqual({
             'columns': [{'Header': '', 'accessor': '$d$metrics'},
                         {'Header': 'State', 'accessor': '$d$state'},
@@ -1151,26 +774,6 @@ class ReactTableTransformerTests(TestCase):
                 '2016-01-01': {'display': '1', 'raw': 1},
                 'totals': {'display': '', 'raw': ''}
             }, {
-                '$d$metrics': {'raw': 'Wins'},
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '1996-01-01': {'display': '1', 'raw': 1},
-                '2000-01-01': {'display': '1', 'raw': 1},
-                '2004-01-01': {'display': '1', 'raw': 1},
-                '2008-01-01': {'display': '1', 'raw': 1},
-                '2012-01-01': {'display': '1', 'raw': 1},
-                '2016-01-01': {'display': '1', 'raw': 1},
-                'totals': {'display': '', 'raw': ''}
-            }, {
-                '$d$metrics': {'raw': 'Wins'},
-                '$d$state': {'raw': 'Totals'},
-                '1996-01-01': {'display': '2', 'raw': 2},
-                '2000-01-01': {'display': '2', 'raw': 2},
-                '2004-01-01': {'display': '2', 'raw': 2},
-                '2008-01-01': {'display': '2', 'raw': 2},
-                '2012-01-01': {'display': '2', 'raw': 2},
-                '2016-01-01': {'display': '2', 'raw': 2},
-                'totals': {'display': '12', 'raw': 12}
-            }, {
                 '$d$metrics': {'raw': 'Votes'},
                 '$d$state': {'display': 'Texas', 'raw': '1'},
                 '1996-01-01': {'display': '5,574,387', 'raw': 5574387},
@@ -1180,26 +783,6 @@ class ReactTableTransformerTests(TestCase):
                 '2012-01-01': {'display': '7,877,967', 'raw': 7877967},
                 '2016-01-01': {'display': '5,072,915', 'raw': 5072915},
                 'totals': {'display': '', 'raw': ''}
-            }, {
-                '$d$metrics': {'raw': 'Votes'},
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '1996-01-01': {'display': '9,646,062', 'raw': 9646062},
-                '2000-01-01': {'display': '10,428,632', 'raw': 10428632},
-                '2004-01-01': {'display': '12,255,311', 'raw': 12255311},
-                '2008-01-01': {'display': '13,286,254', 'raw': 13286254},
-                '2012-01-01': {'display': '12,694,243', 'raw': 12694243},
-                '2016-01-01': {'display': '13,237,598', 'raw': 13237598},
-                'totals': {'display': '', 'raw': ''}
-            }, {
-                '$d$metrics': {'raw': 'Votes'},
-                '$d$state': {'raw': 'Totals'},
-                '1996-01-01': {'display': '15,220,449', 'raw': 15220449},
-                '2000-01-01': {'display': '16,662,017', 'raw': 16662017},
-                '2004-01-01': {'display': '19,614,932', 'raw': 19614932},
-                '2008-01-01': {'display': '21,294,215', 'raw': 21294215},
-                '2012-01-01': {'display': '20,572,210', 'raw': 20572210},
-                '2016-01-01': {'display': '18,310,513', 'raw': 18310513},
-                'totals': {'display': '111,674,336', 'raw': 111674336}
             }]
         }, result)
 
@@ -1209,6 +792,9 @@ class ReactTableTransformerTests(TestCase):
             .transform(cont_uni_dim_all_totals_df, slicer, [slicer.dimensions.timestamp.rollup(),
                                                             state], [])
 
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
+
         self.assertEqual({
             'columns': [{'Header': '', 'accessor': '$d$metrics'},
                         {'Header': 'State', 'accessor': '$d$state'},
@@ -1243,45 +829,91 @@ class ReactTableTransformerTests(TestCase):
                 '2012-01-01': {'display': '1', 'raw': 1},
                 '2016-01-01': {'display': '1', 'raw': 1},
                 'totals': {'display': '', 'raw': ''}
+            }]
+        }, result)
+
+
+class ReactTableHyperlinkTransformerTests(TestCase):
+    maxDiff = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.slicer = copy.deepcopy(slicer)
+
+    def test_dim_with_hyperlink_hyperlink_is_always_included(self):
+        slicer = self.slicer
+        slicer.dimensions.political_party.hyperlink_template = 'http://example.com/{political_party}'
+
+        result = ReactTable(slicer.metrics.wins) \
+            .transform(cat_dim_df, slicer, [slicer.dimensions.political_party], [])
+
+        self.assertEqual({
+            'columns': [{'Header': 'Party', 'accessor': '$d$political_party'},
+                        {'Header': 'Wins', 'accessor': '$m$wins'}],
+            'data': [{
+                '$d$political_party': {'display': 'Democrat', 'hyperlink': 'http://example.com/d', 'raw': 'd'},
+                '$m$wins': {'display': '6', 'raw': 6}
             }, {
-                '$d$metrics': {'raw': 'Wins'},
-                '$d$state': {'raw': 'Totals'},
-                '1996-01-01': {'display': '2', 'raw': 2},
-                '2000-01-01': {'display': '2', 'raw': 2},
-                '2004-01-01': {'display': '2', 'raw': 2},
-                '2008-01-01': {'display': '2', 'raw': 2},
-                '2012-01-01': {'display': '2', 'raw': 2},
-                '2016-01-01': {'display': '2', 'raw': 2},
-                'totals': {'display': '12', 'raw': 12}
+                '$d$political_party': {'display': 'Independent', 'hyperlink': 'http://example.com/i', 'raw': 'i'},
+
+                '$m$wins': {'display': '0', 'raw': 0}
             }, {
-                '$d$metrics': {'raw': 'Votes'},
-                '$d$state': {'display': 'Texas', 'raw': '1'},
-                '1996-01-01': {'display': '5,574,387', 'raw': 5574387},
-                '2000-01-01': {'display': '6,233,385', 'raw': 6233385},
-                '2004-01-01': {'display': '7,359,621', 'raw': 7359621},
-                '2008-01-01': {'display': '8,007,961', 'raw': 8007961},
-                '2012-01-01': {'display': '7,877,967', 'raw': 7877967},
-                '2016-01-01': {'display': '5,072,915', 'raw': 5072915},
-                'totals': {'display': '', 'raw': ''}
+                '$d$political_party': {'display': 'Republican', 'hyperlink': 'http://example.com/r', 'raw': 'r'},
+                '$m$wins': {'display': '6', 'raw': 6}
+            }]
+        }, result)
+
+    def test_dim_with_hyperlink_depending_on_another_dim_not_included_if_other_dim_is_not_selected(self):
+        slicer = self.slicer
+        slicer.dimensions.political_party.hyperlink_template = 'http://example.com/{candidate}'
+
+        result = ReactTable(slicer.metrics.wins) \
+            .transform(cat_dim_df, slicer, [slicer.dimensions.political_party], [])
+
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
+
+        self.assertEqual({
+            'columns': [{'Header': 'Party', 'accessor': '$d$political_party'},
+                        {'Header': 'Wins', 'accessor': '$m$wins'}],
+            'data': [{
+                '$d$political_party': {'display': 'Democrat', 'raw': 'd'},
+                '$m$wins': {'display': '6', 'raw': 6}
             }, {
-                '$d$metrics': {'raw': 'Votes'},
-                '$d$state': {'display': 'California', 'raw': '2'},
-                '1996-01-01': {'display': '9,646,062', 'raw': 9646062},
-                '2000-01-01': {'display': '10,428,632', 'raw': 10428632},
-                '2004-01-01': {'display': '12,255,311', 'raw': 12255311},
-                '2008-01-01': {'display': '13,286,254', 'raw': 13286254},
-                '2012-01-01': {'display': '12,694,243', 'raw': 12694243},
-                '2016-01-01': {'display': '13,237,598', 'raw': 13237598},
-                'totals': {'display': '', 'raw': ''}
+                '$d$political_party': {'display': 'Independent', 'raw': 'i'},
+                '$m$wins': {'display': '0', 'raw': 0}
+            }]
+        }, result)
+
+    def test_dim_with_hyperlink_depending_on_another_dim_included_if_other_dim_is_selected(self):
+        slicer = self.slicer
+        slicer.dimensions.political_party.hyperlink_template = 'http://example.com/candidates/{candidate}/'
+
+        result = ReactTable(slicer.metrics.wins) \
+            .transform(cat_uni_dim_df, slicer, [slicer.dimensions.political_party, slicer.dimensions.candidate], [])
+
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
+
+        self.assertEqual({
+            'columns': [{'Header': 'Party', 'accessor': '$d$political_party'},
+                        {'Header': 'Candidate', 'accessor': '$d$candidate'},
+                        {'Header': 'Wins', 'accessor': '$m$wins'}],
+            'data': [{
+                '$d$candidate': {'display': 'Bill Clinton', 'raw': '1'},
+                '$d$political_party': {
+                    'display': 'Democrat',
+                    'hyperlink': 'http://example.com/candidates/1/',
+                    'raw': 'd'
+                },
+                '$m$wins': {'display': '2', 'raw': 2}
             }, {
-                '$d$metrics': {'raw': 'Votes'},
-                '$d$state': {'raw': 'Totals'},
-                '1996-01-01': {'display': '15,220,449', 'raw': 15220449},
-                '2000-01-01': {'display': '16,662,017', 'raw': 16662017},
-                '2004-01-01': {'display': '19,614,932', 'raw': 19614932},
-                '2008-01-01': {'display': '21,294,215', 'raw': 21294215},
-                '2012-01-01': {'display': '20,572,210', 'raw': 20572210},
-                '2016-01-01': {'display': '18,310,513', 'raw': 18310513},
-                'totals': {'display': '111,674,336', 'raw': 111674336}
+                '$d$candidate': {'display': 'Al Gore', 'raw': '5'},
+                '$d$political_party': {
+                    'display': 'Democrat',
+                    'hyperlink': 'http://example.com/candidates/5/',
+                    'raw': 'd'
+                },
+                '$m$wins': {'display': '0', 'raw': 0}
             }]
         }, result)
