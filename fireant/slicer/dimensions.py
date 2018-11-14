@@ -28,11 +28,19 @@ class Dimension(SlicerElement):
 
     :param definition:
         A pypika expression which is used to select the value when building SQL queries.
+
+    :param display_definition:
+        A pypika expression which is used to select the display value for this dimension.
+
+    :param hyperlink_template:
+        A hyperlink template for constructing a URL that can link a value for a dimension to a web page. This is used
+        by some transformers such as the ReactTable transformer for displaying hyperlinks.
     """
 
-    def __init__(self, key, label=None, definition=None, display_definition=None):
+    def __init__(self, key, label=None, definition=None, display_definition=None, hyperlink_template=None):
         super(Dimension, self).__init__(key, label, definition, display_definition)
         self.is_rollup = False
+        self.hyperlink_template = hyperlink_template
 
     @immutable
     def rollup(self):
@@ -53,10 +61,11 @@ class BooleanDimension(Dimension):
     value.
     """
 
-    def __init__(self, key, label=None, definition=None):
+    def __init__(self, key, label=None, definition=None, hyperlink_template=None):
         super(BooleanDimension, self).__init__(key,
-                                               label,
-                                               definition)
+                                               label=label,
+                                               definition=definition,
+                                               hyperlink_template=hyperlink_template)
 
     def is_(self, value: bool):
         """
@@ -88,7 +97,8 @@ class PatternFilterableMixin:
             A slicer query filter used to filter a slicer query to results where this dimension's display definition
             matches the pattern.
         """
-        return PatternFilter(getattr(self, self.pattern_definition_attribute), pattern, *patterns)
+        definition = getattr(self, self.pattern_definition_attribute)
+        return PatternFilter(definition, pattern, *patterns)
 
     def not_like(self, pattern, *patterns):
         """
@@ -104,7 +114,8 @@ class PatternFilterableMixin:
             A slicer query filter used to filter a slicer query to results where this dimension's display definition
             matches the pattern.
         """
-        return AntiPatternFilter(getattr(self, self.pattern_definition_attribute), pattern, *patterns)
+        definition = getattr(self, self.pattern_definition_attribute)
+        return AntiPatternFilter(definition, pattern, *patterns)
 
 
 class CategoricalDimension(PatternFilterableMixin, Dimension):
@@ -113,10 +124,11 @@ class CategoricalDimension(PatternFilterableMixin, Dimension):
     provides support for configuring a display value for each of the possible values.
     """
 
-    def __init__(self, key, label=None, definition=None, display_values=()):
+    def __init__(self, key, label=None, definition=None, hyperlink_template=None, display_values=()):
         super(CategoricalDimension, self).__init__(key,
-                                                   label,
-                                                   definition)
+                                                   label=label,
+                                                   definition=definition,
+                                                   hyperlink_template=hyperlink_template)
         self.display_values = dict(display_values)
 
     def isin(self, values: Iterable):
@@ -179,11 +191,13 @@ class UniqueDimension(_UniqueDimensionBase):
     This is a dimension that represents a field in a database which is a unique identifier, such as a primary/foreign
     key. It provides support for a display value field which is selected and used in the results.
     """
-    def __init__(self, key, label=None, definition=None, display_definition=None):
+
+    def __init__(self, key, label=None, definition=None, display_definition=None, hyperlink_template=None):
         super(UniqueDimension, self).__init__(key,
-                                              label,
-                                              definition,
-                                              display_definition)
+                                              label=label,
+                                              definition=definition,
+                                              display_definition=display_definition,
+                                              hyperlink_template=hyperlink_template)
         if display_definition is not None:
             self.display = DisplayDimension(self)
 
@@ -209,8 +223,9 @@ class DisplayDimension(_UniqueDimensionBase):
 
     def __init__(self, dimension):
         super(DisplayDimension, self).__init__('{}_display'.format(dimension.key),
-                                               dimension.label,
-                                               dimension.display_definition)
+                                               label=dimension.label,
+                                               definition=dimension.display_definition,
+                                               hyperlink_template=dimension.hyperlink_template)
 
 
 class ContinuousDimension(Dimension):
@@ -219,10 +234,12 @@ class ContinuousDimension(Dimension):
     or date/time. It requires the use of an interval which is the window over the values.
     """
 
-    def __init__(self, key, label=None, definition=None, default_interval=NumericInterval(1, 0)):
+    def __init__(self, key, label=None, definition=None, hyperlink_template=None,
+                 default_interval=NumericInterval(1, 0)):
         super(ContinuousDimension, self).__init__(key,
-                                                  label,
-                                                  definition)
+                                                  label=label,
+                                                  definition=definition,
+                                                  hyperlink_template=hyperlink_template)
         self.interval = default_interval
 
 
@@ -233,10 +250,11 @@ class DatetimeDimension(ContinuousDimension):
     week-over-week or month-over-month.
     """
 
-    def __init__(self, key, label=None, definition=None, default_interval=daily):
+    def __init__(self, key, label=None, definition=None, hyperlink_template=None, default_interval=daily):
         super(DatetimeDimension, self).__init__(key,
-                                                label,
-                                                definition,
+                                                label=label,
+                                                definition=definition,
+                                                hyperlink_template=hyperlink_template,
                                                 default_interval=default_interval)
 
     @immutable
@@ -281,6 +299,7 @@ class TotalsDimension(Dimension):
             else None
 
         super(TotalsDimension, self).__init__(dimension.key,
-                                              dimension.label,
-                                              totals_definition,
-                                              display_definition)
+                                              label=dimension.label,
+                                              definition=totals_definition,
+                                              display_definition=display_definition,
+                                              hyperlink_template=dimension.hyperlink_template)

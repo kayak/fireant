@@ -269,6 +269,12 @@ cat_dim_df = mock_politics_database[[fd('political_party'), fm('votes'), fm('win
     .groupby(fd('political_party')) \
     .sum()
 
+cat_uni_dim_df = mock_politics_database[[fd('political_party'), fd('candidate'), fd('candidate_display'),
+                                         fm('votes'), fm('wins')]] \
+    .groupby([fd('political_party'), fd('candidate'), fd('candidate_display')]) \
+    .sum() \
+    .reset_index(fd('candidate_display'))
+
 uni_dim_df = mock_politics_database[[fd('candidate'), fd('candidate_display'), fm('votes'), fm('wins')]] \
     .groupby([fd('candidate'), fd('candidate_display')]) \
     .sum() \
