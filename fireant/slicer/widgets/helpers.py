@@ -81,7 +81,7 @@ def dimensional_metric_label(dimensions, dimension_display_values):
                             else 'Totals'
                             for dimension, dimension_value in zip(used_dimensions, dimension_values)]
 
-        label = ", ".join(dimension_labels)
+        label = ", ".join([str(label) for label in dimension_labels])
 
         if metric is None:
             if reference is not None:
