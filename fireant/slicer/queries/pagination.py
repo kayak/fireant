@@ -100,7 +100,7 @@ def _group_paginate(data_frame, start=None, end=None, orders=()):
         sorted_dimension_values = tuple(sorted_df.index)[start:end]
 
     else:
-        sorted_dimension_values = tuple(dimension_groups.groups.keys())[start:end]
+        sorted_dimension_values = tuple(dimension_groups.apply(lambda g: g.name))[start:end]
 
     sorted_dimension_values = pd.Index(sorted_dimension_values, name=dimension_levels[0]) \
         if len(dimension_levels) == 1 \

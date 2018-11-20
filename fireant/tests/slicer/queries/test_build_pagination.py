@@ -1,5 +1,6 @@
 from unittest import TestCase
 from unittest.mock import (
+    ANY,
     Mock,
     patch,
 )
@@ -36,13 +37,13 @@ class SimplePaginationTests(TestCase):
     def test_that_with_no_widgets_using_group_pagination_that_simple_pagination_is_applied(self, mock_paginate):
         paginate(cont_cat_dim_df, [mock_table_widget])
 
-        mock_paginate.assert_called_once()
+        mock_paginate.assert_called_once_with(ANY, ANY, ANY, ANY)
 
     @patch('fireant.slicer.queries.pagination._simple_paginate')
     def test_that_with_group_pagination_and_one_dimension_that_simple_pagination_is_applied(self, mock_paginate):
         paginate(cat_uni_dim_df, [mock_table_widget])
 
-        mock_paginate.assert_called_once()
+        mock_paginate.assert_called_once_with(ANY, ANY, ANY, ANY)
 
     def test_paginate_with_limit_slice_data_frame_to_limit(self):
         paginated = paginate(cont_cat_dim_df, [mock_table_widget], limit=5)
@@ -108,7 +109,7 @@ class GroupPaginationTests(TestCase):
     def test_with_one_widget_using_group_pagination_that_group_pagination_is_applied(self, mock_paginate):
         paginate(cont_cat_dim_df, [mock_chart_widget, mock_table_widget])
 
-        mock_paginate.assert_called_once()
+        mock_paginate.assert_called_once_with(ANY, ANY, ANY, ANY)
 
     def test_paginate_with_limit_slice_data_frame_to_limit_in_each_group(self):
         paginated = paginate(cont_cat_dim_df, [mock_chart_widget], limit=2)
