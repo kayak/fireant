@@ -1,12 +1,12 @@
 from collections import (
     OrderedDict,
 )
-from datetime import (
-    datetime,
-)
 from unittest.mock import Mock
 
 import pandas as pd
+from datetime import (
+    datetime,
+)
 
 from fireant import *
 from fireant.slicer.references import ReferenceType
@@ -288,6 +288,14 @@ cont_uni_dim_df = mock_politics_database[[fd('timestamp'), fd('state'), fd('stat
     .groupby([fd('timestamp'), fd('state'), fd('state_display')]) \
     .sum() \
     .reset_index(fd('state_display'))
+
+cont_cat_uni_dim_df = mock_politics_database[[fd('timestamp'), fd('political_party'),
+                                              fd('state'), fd('state_display'),
+                                              fm('votes'), fm('wins')]] \
+    .groupby([fd('timestamp'), fd('political_party'), fd('state'), fd('state_display')]) \
+    .sum() \
+    .reset_index(fd('state_display'))
+
 
 cont_dim_operation_df = cont_dim_df.copy()
 

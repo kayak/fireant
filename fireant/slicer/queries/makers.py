@@ -106,6 +106,9 @@ def make_slicer_query_with_rollup_and_references(database,
                                       ref_metrics,
                                       ref_filters,
                                       orders)
+
+            # Add this to the query instance so when the data frames are joined together, the correct references can be
+            # applied.
             query._references = references
 
             queries.append(query)

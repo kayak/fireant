@@ -45,8 +45,8 @@ class _Container(object):
         """
         Checks if the other object is an instance of _Container and has the same number of items with matching keys.
         """
-        return isinstance(other, _Container) \
-               and all([a is not None
+        return isinstance(other, _Container) and \
+               all([a is not None
                         and b is not None
                         and a.key == b.key
                         for a, b in itertools.zip_longest(self._items, getattr(other, '_items', ()))])
@@ -56,11 +56,13 @@ class Slicer(object):
     """
     WRITEME
     """
-
     class Dimensions(_Container):
         pass
 
     class Metrics(_Container):
+        pass
+
+    class Fields(_Container):
         pass
 
     def __init__(self, table, database, joins=(), dimensions=(), metrics=(),
@@ -102,6 +104,7 @@ class Slicer(object):
         self.hint_table = hint_table
         self.dimensions = Slicer.Dimensions(dimensions)
         self.metrics = Slicer.Metrics(metrics)
+        self.fields = Slicer.Fields(metrics + dimensions)
 
         # add query builder entry points
         self.data = SlicerQueryBuilder(self)

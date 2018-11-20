@@ -1,5 +1,4 @@
 import itertools
-from datetime import datetime
 
 import pandas as pd
 
@@ -61,6 +60,9 @@ SERIES_NEEDING_MARKER = (ChartWidget.LineSeries, ChartWidget.AreaSeries)
 
 
 class HighCharts(ChartWidget, TransformableWidget):
+    # Pagination should be applied to groups of the 0th index level (the x-axis) in order to paginate series
+    group_pagination = True
+
     def __init__(self, title=None, colors=None, x_axis_visible=True, tooltip_visible=True):
         super(HighCharts, self).__init__()
         self.title = title
@@ -75,7 +77,7 @@ class HighCharts(ChartWidget, TransformableWidget):
         """
         - Main entry point -
 
-        Transforms a data frame into highcharts JSON format.
+        Transforms a data frame into HighCharts JSON format.
 
         See https://api.highcharts.com/highcharts/
 
@@ -92,37 +94,46 @@ class HighCharts(ChartWidget, TransformableWidget):
         """
         colors = itertools.cycle(self.colors)
 
-        def group_series(keys):
-            if isinstance(keys[0], datetime) and pd.isnull(keys[0]):
-                return tuple('Totals' for _ in keys[1:])
-            return tuple(str(key) if not pd.isnull(key) else 'Totals' for key in keys[1:])
-
-        groups = list(data_frame.groupby(group_series)) \
-            if isinstance(data_frame.index, pd.MultiIndex) \
-            else [([], data_frame)]
-
         dimension_display_values = extract_display_values(dimensions, data_frame)
         render_series_label = dimensional_metric_label(dimensions, dimension_display_values)
+
+        # fill NaNs in all index levels besides the 0th
+        # the `groupby` function drops all NaN values. Since the 0th dimension is not filled, the totals values for it
+        # will get filtered out. This is okay, because there isn't a way to represent the totals across the 0th
+        # dimension on a chart.
+        if isinstance(data_frame.index, pd.MultiIndex):
+            data_frame.update(data_frame.groupby(level=0).fillna(value='Totals'))
+
+            # Group the results by index levels after the 0th, one for each series
+        # This will result in a series for every combination of dimension values and each series will contain a data set
+        # across the 0th dimension (used for the x-axis)
+        series_data_frames = list(data_frame.groupby(level=data_frame.index.names[1:])) \
+            if isinstance(data_frame.index, pd.MultiIndex) \
+            else [([], data_frame)]
 
         total_num_series = sum([len(axis)
                                 for axis in self.items])
 
         y_axes, series = [], []
         for axis_idx, axis in enumerate(self.items):
-            # Don't overwrite the iterator here, this function should keep advancing it.
-            colors, series_colors, axis_colors = itertools.tee(colors, 3)
+            # Tee the colors iterator so we can peek at the next color. The next color in the iterator becomes the
+            # axis color. The first series on each axis should match the axis color, and will progress the colors
+            # iterator. The next axis color should be the next color in the iterator after the last color used by a
+            # series on the current axis in order to get a better variety of color.
+            colors, tee_colors = itertools.tee(colors)
+            axis_color = next(tee_colors)
 
             # prepend axes, append series, this keeps everything ordered left-to-right
             y_axes[0:0] = self._render_y_axis(axis_idx,
-                                              next(series_colors) if 1 < total_num_series else None,
+                                              axis_color if 1 < total_num_series else None,
                                               references)
             is_timeseries = dimensions and isinstance(dimensions[0], DatetimeDimension)
 
             series += self._render_series(axis,
                                           axis_idx,
-                                          next(axis_colors),
+                                          axis_color,
                                           colors,
-                                          groups,
+                                          series_data_frames,
                                           render_series_label,
                                           references,
                                           is_timeseries)
@@ -204,7 +215,7 @@ class HighCharts(ChartWidget, TransformableWidget):
 
         return y_axes
 
-    def _render_series(self, axis, axis_idx, axis_color, colors, data_frame_groups, render_series_label,
+    def _render_series(self, axis, axis_idx, axis_color, colors, series_data_frames, render_series_label,
                        references, is_timeseries=False):
         """
         Renders the series configuration.
@@ -215,7 +226,7 @@ class HighCharts(ChartWidget, TransformableWidget):
         :param axis_idx:
         :param axis_color:
         :param colors:
-        :param data_frame_groups:
+        :param series_data_frames:
         :param render_series_label:
         :param references:
         :param is_timeseries:
@@ -225,7 +236,7 @@ class HighCharts(ChartWidget, TransformableWidget):
         for series in axis:
             symbols = itertools.cycle(MARKER_SYMBOLS)
 
-            for (dimension_values, group_df), symbol in zip(data_frame_groups, symbols):
+            for (dimension_values, group_df), symbol in zip(series_data_frames, symbols):
                 dimension_values = utils.wrap_list(dimension_values)
 
                 if isinstance(series, self.PieSeries):

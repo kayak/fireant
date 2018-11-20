@@ -1,9 +1,8 @@
+import pandas as pd
 from typing import (
     Dict,
     Iterable,
 )
-
-import pandas as pd
 
 from fireant.utils import (
     format_dimension_key,
@@ -25,6 +24,7 @@ from .makers import (
     make_slicer_query,
     make_slicer_query_with_rollup_and_references,
 )
+from .pagination import paginate
 from .. import QueryException
 from ..base import SlicerElement
 from ..dimensions import Dimension
@@ -36,7 +36,6 @@ def add_hints(queries, hint=None):
             if hint is not None and hasattr(query.__class__, 'hint')
             else query
             for query in queries]
-
 
 
 class QueryBuilder(object):
@@ -94,6 +93,13 @@ class QueryBuilder(object):
         raise NotImplementedError()
 
     def fetch(self, hint=None):
+        """
+        Fetches the data for this query instance and returns it in an instance of `pd.DataFrame`
+
+        :param hint:
+            For database vendors that support it, add a query hint to collect analytics on the queries triggerd by
+            fireant.
+        """
         queries = add_hints(self.queries, hint)
 
         return fetch_data(self.slicer.database, queries, self._dimensions)
@@ -143,7 +149,7 @@ class SlicerQueryBuilder(QueryBuilder):
         self._references += references
 
     @immutable
-    def orderby(self, element: SlicerElement, orientation=None):
+    def orderby(self, element: SlicerElement, orientation: Order = None):
         """
         :param element:
             The element to order by, either a metric or dimension.
@@ -180,18 +186,15 @@ class SlicerQueryBuilder(QueryBuilder):
         references = find_and_replace_reference_dimensions(self._references, self._dimensions)
         orders = (self._orders or make_orders_for_dimensions(self._dimensions))
 
-        queries = make_slicer_query_with_rollup_and_references(self.slicer.database,
-                                                               self.table,
-                                                               self.slicer.joins,
-                                                               self._dimensions,
-                                                               metrics,
-                                                               operations,
-                                                               self._filters,
-                                                               references,
-                                                               orders)
-
-        return [query.limit(self._limit).offset(self._offset)
-                for query in queries]
+        return make_slicer_query_with_rollup_and_references(self.slicer.database,
+                                                            self.table,
+                                                            self.slicer.joins,
+                                                            self._dimensions,
+                                                            metrics,
+                                                            operations,
+                                                            self._filters,
+                                                            references,
+                                                            orders)
 
     def fetch(self, hint=None) -> Iterable[Dict]:
         """
@@ -215,6 +218,11 @@ class SlicerQueryBuilder(QueryBuilder):
                 data_frame[df_key] = operation.apply(data_frame, reference)
 
         data_frame = special_cases.apply_operations_to_data_frame(operations, data_frame)
+
+        data_frame = paginate(data_frame,
+                              self._widgets,
+                              orders=self._orders,
+                              limit=self._limit, offset=self._offset)
 
         # Apply transformations
         return [widget.transform(data_frame, self.slicer, self._dimensions, self._references)
@@ -269,6 +277,9 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
         """
         Fetch the data for this query and transform it into the widgets.
 
+        :param hint:
+            For database vendors that support it, add a query hint to collect analytics on the queries triggerd by
+            fireant.
         :param force_include:
             A list of dimension values to include in the result set. This can be used to avoid having necessary results
             cut off due to the pagination.  These results will be returned at the head of the results.
