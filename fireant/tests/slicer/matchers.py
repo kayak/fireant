@@ -2,7 +2,6 @@ from fireant import (
     Dimension,
     Metric,
 )
-from pypika.queries import QueryBuilder
 
 
 class PypikaQueryMatcher:
@@ -10,11 +9,10 @@ class PypikaQueryMatcher:
         self.query_str = query_str
 
     def __eq__(self, other):
-        return isinstance(other, QueryBuilder) \
-               and str(self.query_str) == str(other)
+        return str(self.query_str) == str(other)
 
     def __repr__(self):
-        return self.query_str
+        return repr(self.query_str)
 
 
 class _ElementsMatcher:

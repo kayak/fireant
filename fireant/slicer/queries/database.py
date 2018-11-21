@@ -5,13 +5,14 @@ from functools import (
     wraps,
 )
 from multiprocessing.pool import ThreadPool
+
+import pandas as pd
 from typing import (
     Iterable,
     Sized,
     Union,
 )
 
-import pandas as pd
 from fireant.database import Database
 from fireant.formats import (
     NULL_VALUE,
@@ -21,7 +22,6 @@ from fireant.utils import (
     chunks,
     format_dimension_key,
 )
-
 from .logger import (
     query_logger,
     slow_query_logger,
@@ -34,7 +34,7 @@ from ..dimensions import (
 
 def fetch_data(database: Database, queries: Union[Sized, Iterable], dimensions: Iterable[Dimension],
                reference_groups=()):
-    iterable = [(str(query), database, dimensions)
+    iterable = [(str(query.limit(int(database.max_result_set_size))), database, dimensions)
                 for query in queries]
 
     with ThreadPool(processes=database.max_processes) as pool:
@@ -120,7 +120,7 @@ def _reduce_result_set(results: Iterable[pd.DataFrame], reference_groups=()):
                          [base_df] + reference_dfs)
         groups.append(reduced)
 
-    return pd.concat(groups)
+    return pd.concat(groups, sort=False)
 
 
 def _make_reference_data_frame(base_df, ref_df, reference):
@@ -135,22 +135,27 @@ def _make_reference_data_frame(base_df, ref_df, reference):
     :param reference:
     :return:
     """
+    mertric_column_indices = [i
+                              for i, column in enumerate(ref_df.columns)
+                              if column not in base_df.columns]
+    ref_columns = [ref_df.columns[i] for i in mertric_column_indices]
+
     if not (reference.delta or reference.delta_percent):
-        return ref_df
+        return ref_df[ref_columns]
 
-    columns = [col.replace(reference.reference_type.key, reference.key)
-               for col in ref_df.columns]
+    base_columns = [base_df.columns[i] for i in mertric_column_indices]
 
-    base_df, ref_df = base_df.copy(), ref_df.copy()
-    base_df.columns, ref_df.columns = columns, columns
+    # Select just the metric columns from the DF and rename them with the reference key as a suffix
+    base_df, ref_df = base_df[base_columns].copy(), ref_df[ref_columns].copy()
+    # Both data frame columns are renamed in order to perform the calculation below.
+    base_df.columns = ref_df.columns = [column.replace(reference.reference_type.key, reference.key)
+                                        for column in ref_columns]
 
-    new_values = base_df - ref_df
+    ref_delta_df = base_df - ref_df
+
     if reference.delta_percent:
-        new_values = 100. * new_values / ref_df
-
-    return pd.DataFrame(new_values,
-                        index=ref_df.index,
-                        columns=columns)
+        return 100. * ref_delta_df / ref_df
+    return ref_delta_df
 
 
 def _clean_and_apply_index(data_frame: pd.DataFrame, dimensions: Iterable[Dimension]):
