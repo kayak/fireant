@@ -237,6 +237,7 @@ class HighCharts(ChartWidget, TransformableWidget):
             symbols = itertools.cycle(MARKER_SYMBOLS)
 
             for (dimension_values, group_df), symbol in zip(series_data_frames, symbols):
+                group_df.sort_index(level=0, inplace=True)
                 dimension_values = utils.wrap_list(dimension_values)
 
                 if isinstance(series, self.PieSeries):
