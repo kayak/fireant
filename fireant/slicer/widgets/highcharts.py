@@ -1,12 +1,12 @@
 import itertools
 
 import pandas as pd
+
 from fireant import (
     DatetimeDimension,
     formats,
     utils,
 )
-
 from .base import TransformableWidget
 from .chart_base import (
     ChartWidget,
@@ -104,12 +104,10 @@ class HighCharts(ChartWidget, TransformableWidget):
         if isinstance(data_frame.index, pd.MultiIndex):
             data_frame.update(data_frame.groupby(level=0).fillna(value='Totals'))
 
-            # Group the results by index levels after the 0th, one for each series
+        # Group the results by index levels after the 0th, one for each series
         # This will result in a series for every combination of dimension values and each series will contain a data set
         # across the 0th dimension (used for the x-axis)
-        series_data_frames = list(data_frame.groupby(level=data_frame.index.names[1:])) \
-            if isinstance(data_frame.index, pd.MultiIndex) \
-            else [([], data_frame)]
+        series_data_frames = self._group_by_series(data_frame)
 
         total_num_series = sum([len(axis)
                                 for axis in self.items])
@@ -182,6 +180,13 @@ class HighCharts(ChartWidget, TransformableWidget):
             "categories": categories,
             "visible": self.x_axis_visible,
         }
+
+    def _group_by_series(self, data_frame):
+        if not isinstance(data_frame.index, pd.MultiIndex):
+            return [([], data_frame)]
+
+        series = data_frame.index.names[1:]
+        return data_frame.groupby(level=series, sort=False)
 
     def _render_y_axis(self, axis_idx, color, references):
         """
