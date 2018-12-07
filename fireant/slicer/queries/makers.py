@@ -179,8 +179,12 @@ def make_slicer_query(database: Database,
     if terms:
         query = query.select(*terms)
 
+    select_aliases = {el.alias for el in query._selects}
     for (term, orientation) in orders:
         query = query.orderby(term, order=orientation)
+
+        if term.alias not in select_aliases:
+            query = query.select(term)
 
     return query
 
@@ -201,6 +205,7 @@ def make_latest_query(database: Database,
         query = query.select(fn.Max(dimension.definition).as_(f_dimension_key))
 
     return query
+
 
 def make_terms_for_metrics(metrics):
     return [metric.definition.as_(format_metric_key(metric.key))
@@ -256,4 +261,3 @@ def make_orders_for_dimensions(dimensions):
 
     return [(definition, None)
             for definition in definitions]
-
