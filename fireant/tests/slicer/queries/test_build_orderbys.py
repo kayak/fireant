@@ -1,8 +1,7 @@
 from unittest import TestCase
 
-from pypika import Order
-
 import fireant as f
+from pypika import Order
 from ..mocks import slicer
 
 
@@ -193,3 +192,20 @@ class QueryBuilderOrderTests(TestCase):
                          'FROM "politics"."politician" '
                          'GROUP BY "$d$timestamp" '
                          'ORDER BY "$d$timestamp" ASC,"$m$votes" DESC', str(queries[0]))
+
+    def test_build_query_order_by_metric_not_in_widget(self):
+        queries = slicer.data \
+            .widget(f.DataTablesJS(slicer.metrics.votes)) \
+            .dimension(slicer.dimensions.timestamp) \
+            .orderby(slicer.metrics.wins) \
+            .queries
+
+        self.assertEqual(len(queries), 1)
+
+        self.assertEqual('SELECT '
+                         'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                         'SUM("votes") "$m$votes",'
+                         'SUM("is_winner") "$m$wins" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "$d$timestamp" '
+                         'ORDER BY "$m$wins"', str(queries[0]))

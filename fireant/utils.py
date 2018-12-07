@@ -237,3 +237,10 @@ def format_dimension_key(key):
 
 def format_metric_key(key):
     return format_key(key, 'm')
+
+
+def repr_field_key(key):
+    field_type_symbol = key[1]
+    field_key = key[3:]
+    field_type = {'m': 'metrics', 'd': 'dimensions'}[field_type_symbol]
+    return 'slicer.{}.{}'.format(field_type, field_key)

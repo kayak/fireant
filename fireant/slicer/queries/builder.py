@@ -1,13 +1,15 @@
-import pandas as pd
 from typing import (
     Dict,
     Iterable,
 )
 
+import pandas as pd
+
 from fireant.utils import (
     format_dimension_key,
     format_metric_key,
     immutable,
+    repr_field_key,
 )
 from pypika import Order
 from . import special_cases
@@ -240,7 +242,10 @@ class SlicerQueryBuilder(QueryBuilder):
                         + ["filter({})".format(repr(filter))
                            for filter in self._filters]
                         + ["reference({})".format(repr(reference))
-                           for reference in self._references])
+                           for reference in self._references]
+                        + ["orderby({}, {})".format(repr_field_key(definition.alias),
+                                                    orientation)
+                           for (definition, orientation) in self._orders])
 
 
 class DimensionChoicesQueryBuilder(QueryBuilder):
