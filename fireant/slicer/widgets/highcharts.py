@@ -97,13 +97,6 @@ class HighCharts(ChartWidget, TransformableWidget):
         dimension_display_values = extract_display_values(dimensions, data_frame)
         render_series_label = dimensional_metric_label(dimensions, dimension_display_values)
 
-        # fill NaNs in all index levels besides the 0th
-        # the `groupby` function drops all NaN values. Since the 0th dimension is not filled, the totals values for it
-        # will get filtered out. This is okay, because there isn't a way to represent the totals across the 0th
-        # dimension on a chart.
-        if isinstance(data_frame.index, pd.MultiIndex):
-            data_frame.update(data_frame.groupby(level=0).fillna(value='Totals'))
-
         # Group the results by index levels after the 0th, one for each series
         # This will result in a series for every combination of dimension values and each series will contain a data set
         # across the 0th dimension (used for the x-axis)
