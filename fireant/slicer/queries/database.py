@@ -124,10 +124,16 @@ def _reduce_result_set(results: Iterable[pd.DataFrame], reference_groups, dimens
         reduced = reduce(lambda left, right: pd.merge(left, right, how='outer', left_index=True, right_index=True),
                          [base_df] + reference_dfs)
 
+        # If there are rolled up dimensions in this result set then replace the NaNs for that dimension value with a
+        # marker to indicate totals.
+        # The data frames will be ordered so that the first group will contain the data without any rolled up
+        # dimensions, then followed by the groups with them, ordered by the last rollup dimension first.
         if rollup_dimension_keys[:i]:
             reduced = _replace_nans_for_rollup_values(reduced, rollup_dimension_dtypes[-i:])
 
-        reduced = reduced.set_index(dimension_keys)
+        if dimension_keys:
+            reduced = reduced.set_index(dimension_keys)
+
         group_data_frames.append(reduced)
 
     return pd.concat(group_data_frames, sort=False) \
