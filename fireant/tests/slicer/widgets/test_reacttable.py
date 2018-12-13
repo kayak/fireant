@@ -688,7 +688,7 @@ class ReactTableTransformerTests(TestCase):
                                         {'Header': 'California', 'accessor': '$m$votes.2'},
                                         {
                                             'Header': 'Totals',
-                                            'accessor': f'$m$votes.{MAX_STRING}',
+                                            'accessor': '$m$votes.{}'.format(MAX_STRING),
                                             'className': 'fireant-totals'
                                         }]
                         }, {
@@ -697,7 +697,7 @@ class ReactTableTransformerTests(TestCase):
                                         {'Header': 'California', 'accessor': '$m$wins.2'},
                                         {
                                             'Header': 'Totals',
-                                            'accessor': f'$m$wins.{MAX_STRING}',
+                                            'accessor': '$m$wins.{}'.format(MAX_STRING),
                                             'className': 'fireant-totals'
                                         }]
                         }],
