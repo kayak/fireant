@@ -728,16 +728,16 @@ class ReactTableTransformerTests(TestCase):
             }, {
                 '$d$timestamp': {'raw': 'Totals'},
                 '$m$votes': {
-                    '1': {'display': '', 'raw': ''},
-                    '2': {'display': '', 'raw': ''},
+                    '1': {'display': 'null', 'raw': None},
+                    '2': {'display': 'null', 'raw': None},
                     MAX_STRING: {
                         'display': '111,674,336',
                         'raw': 111674336
                     }
                 },
                 '$m$wins': {
-                    '1': {'display': '', 'raw': ''},
-                    '2': {'display': '', 'raw': ''},
+                    '1': {'display': 'null', 'raw': None},
+                    '2': {'display': 'null', 'raw': None},
                     MAX_STRING: {'display': '12', 'raw': 12}
                 }
             }]
@@ -775,7 +775,7 @@ class ReactTableTransformerTests(TestCase):
                 '2008-01-01': {'display': '1', 'raw': 1},
                 '2012-01-01': {'display': '1', 'raw': 1},
                 '2016-01-01': {'display': '1', 'raw': 1},
-                'Totals': {'display': '', 'raw': ''}
+                'Totals': {'display': 'null', 'raw': None}
             }, {
                 '$d$metrics': {'raw': 'Votes'},
                 '$d$state': {'display': 'Texas', 'raw': '1'},
@@ -785,7 +785,7 @@ class ReactTableTransformerTests(TestCase):
                 '2008-01-01': {'display': '8,007,961', 'raw': 8007961},
                 '2012-01-01': {'display': '7,877,967', 'raw': 7877967},
                 '2016-01-01': {'display': '5,072,915', 'raw': 5072915},
-                'Totals': {'display': '', 'raw': ''}
+                'Totals': {'display': 'null', 'raw': None}
             }]
         }, result)
 
@@ -821,7 +821,7 @@ class ReactTableTransformerTests(TestCase):
                 '2008-01-01': {'display': '1', 'raw': 1},
                 '2012-01-01': {'display': '1', 'raw': 1},
                 '2016-01-01': {'display': '1', 'raw': 1},
-                'Totals': {'display': '', 'raw': ''}
+                'Totals': {'display': 'null', 'raw': None}
             }, {
                 '$d$metrics': {'raw': 'Wins'},
                 '$d$state': {'display': 'California', 'raw': '2'},
@@ -831,7 +831,7 @@ class ReactTableTransformerTests(TestCase):
                 '2008-01-01': {'display': '1', 'raw': 1},
                 '2012-01-01': {'display': '1', 'raw': 1},
                 '2016-01-01': {'display': '1', 'raw': 1},
-                'Totals': {'display': '', 'raw': ''}
+                'Totals': {'display': 'null', 'raw': None}
             }]
         }, result)
 
