@@ -31,6 +31,9 @@ def date_as_millis(value):
 
 
 def coerce_type(value):
+    if value is None:
+        return None
+
     if isinstance(value, date):
         return value
 
@@ -41,7 +44,7 @@ def coerce_type(value):
             pass
 
     # Should never be any real NaNs or INFs at this point, so if that's the value, it's meant to be that.
-    if value.lower() in ['nan', 'inf']:
+    if str.lower(value) in ['nan', 'inf']:
         return value
 
     if NULL_VALUE == value:
