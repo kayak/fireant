@@ -1,6 +1,7 @@
 import itertools
 
 import pandas as pd
+from datetime import timedelta
 
 from fireant import (
     DatetimeDimension,
@@ -57,6 +58,7 @@ MARKER_SYMBOLS = (
 )
 
 SERIES_NEEDING_MARKER = (ChartWidget.LineSeries, ChartWidget.AreaSeries)
+TS_UPPER_BOUND = pd.Timestamp.max - timedelta(seconds=1)
 
 
 class HighCharts(ChartWidget, TransformableWidget):
@@ -96,6 +98,12 @@ class HighCharts(ChartWidget, TransformableWidget):
 
         dimension_display_values = extract_display_values(dimensions, data_frame)
         render_series_label = dimensional_metric_label(dimensions, dimension_display_values)
+        is_timeseries = dimensions and isinstance(dimensions[0], DatetimeDimension)
+
+        # Timestamp.max is used as a marker for rolled up dimensions (totals). Filter out the totals value for the
+        # dimension used for the x-axis
+        if is_timeseries:
+            data_frame = data_frame.loc[:TS_UPPER_BOUND]
 
         # Group the results by index levels after the 0th, one for each series
         # This will result in a series for every combination of dimension values and each series will contain a data set
@@ -118,7 +126,6 @@ class HighCharts(ChartWidget, TransformableWidget):
             y_axes[0:0] = self._render_y_axis(axis_idx,
                                               axis_color if 1 < total_num_series else None,
                                               references)
-            is_timeseries = dimensions and isinstance(dimensions[0], DatetimeDimension)
 
             series += self._render_series(axis,
                                           axis_idx,

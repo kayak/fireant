@@ -80,7 +80,7 @@ def make_slicer_query_with_rollup_and_references(database,
     ```
     """
     rollup_dimensions = find_rolled_up_dimensions(dimensions)
-    rollup_dimensions_and_none = [None] + rollup_dimensions
+    rollup_dimensions_and_none = [None] + rollup_dimensions[::-1]
 
     reference_groups = find_and_group_references_for_dimensions(references)
     reference_groups_and_none = [(None, None)] + list(reference_groups.items())

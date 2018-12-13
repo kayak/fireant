@@ -18,7 +18,10 @@ from fireant.tests.slicer.mocks import (
     slicer,
     uni_dim_df,
 )
-from fireant.utils import format_dimension_key as fd
+from fireant.utils import (
+    MAX_STRING,
+    format_dimension_key as fd,
+)
 
 
 class ReactTableTransformerTests(TestCase):
@@ -685,7 +688,7 @@ class ReactTableTransformerTests(TestCase):
                                         {'Header': 'California', 'accessor': '$m$votes.2'},
                                         {
                                             'Header': 'Totals',
-                                            'accessor': '$m$votes.totals',
+                                            'accessor': f'$m$votes.{MAX_STRING}',
                                             'className': 'fireant-totals'
                                         }]
                         }, {
@@ -694,7 +697,7 @@ class ReactTableTransformerTests(TestCase):
                                         {'Header': 'California', 'accessor': '$m$wins.2'},
                                         {
                                             'Header': 'Totals',
-                                            'accessor': '$m$wins.totals',
+                                            'accessor': f'$m$wins.{MAX_STRING}',
                                             'className': 'fireant-totals'
                                         }]
                         }],
@@ -703,31 +706,31 @@ class ReactTableTransformerTests(TestCase):
                 '$m$votes': {
                     '1': {'display': '5,574,387', 'raw': 5574387},
                     '2': {'display': '9,646,062', 'raw': 9646062},
-                    'totals': {'display': '15,220,449', 'raw': 15220449}
+                    MAX_STRING: {'display': '15,220,449', 'raw': 15220449}
                 },
                 '$m$wins': {
                     '1': {'display': '1', 'raw': 1},
                     '2': {'display': '1', 'raw': 1},
-                    'totals': {'display': '2', 'raw': 2}
+                    MAX_STRING: {'display': '2', 'raw': 2}
                 }
             }, {
                 '$d$timestamp': {'raw': '2000-01-01'},
                 '$m$votes': {
                     '1': {'display': '6,233,385', 'raw': 6233385},
                     '2': {'display': '10,428,632', 'raw': 10428632},
-                    'totals': {'display': '16,662,017', 'raw': 16662017}
+                    MAX_STRING: {'display': '16,662,017', 'raw': 16662017}
                 },
                 '$m$wins': {
                     '1': {'display': '1', 'raw': 1},
                     '2': {'display': '1', 'raw': 1},
-                    'totals': {'display': '2', 'raw': 2}
+                    MAX_STRING: {'display': '2', 'raw': 2}
                 }
             }, {
                 '$d$timestamp': {'raw': 'Totals'},
                 '$m$votes': {
                     '1': {'display': '', 'raw': ''},
                     '2': {'display': '', 'raw': ''},
-                    'totals': {
+                    MAX_STRING: {
                         'display': '111,674,336',
                         'raw': 111674336
                     }
@@ -735,7 +738,7 @@ class ReactTableTransformerTests(TestCase):
                 '$m$wins': {
                     '1': {'display': '', 'raw': ''},
                     '2': {'display': '', 'raw': ''},
-                    'totals': {'display': '12', 'raw': 12}
+                    MAX_STRING: {'display': '12', 'raw': 12}
                 }
             }]
         }, result)
@@ -760,7 +763,7 @@ class ReactTableTransformerTests(TestCase):
                         {'Header': '2016-01-01', 'accessor': '2016-01-01'},
                         {
                             'Header': 'Totals',
-                            'accessor': 'totals',
+                            'accessor': 'Totals',
                             'className': 'fireant-totals'
                         }],
             'data': [{
@@ -772,7 +775,7 @@ class ReactTableTransformerTests(TestCase):
                 '2008-01-01': {'display': '1', 'raw': 1},
                 '2012-01-01': {'display': '1', 'raw': 1},
                 '2016-01-01': {'display': '1', 'raw': 1},
-                'totals': {'display': '', 'raw': ''}
+                'Totals': {'display': '', 'raw': ''}
             }, {
                 '$d$metrics': {'raw': 'Votes'},
                 '$d$state': {'display': 'Texas', 'raw': '1'},
@@ -782,7 +785,7 @@ class ReactTableTransformerTests(TestCase):
                 '2008-01-01': {'display': '8,007,961', 'raw': 8007961},
                 '2012-01-01': {'display': '7,877,967', 'raw': 7877967},
                 '2016-01-01': {'display': '5,072,915', 'raw': 5072915},
-                'totals': {'display': '', 'raw': ''}
+                'Totals': {'display': '', 'raw': ''}
             }]
         }, result)
 
@@ -806,7 +809,7 @@ class ReactTableTransformerTests(TestCase):
                         {'Header': '2016-01-01', 'accessor': '2016-01-01'},
                         {
                             'Header': 'Totals',
-                            'accessor': 'totals',
+                            'accessor': 'Totals',
                             'className': 'fireant-totals'
                         }],
             'data': [{
@@ -818,7 +821,7 @@ class ReactTableTransformerTests(TestCase):
                 '2008-01-01': {'display': '1', 'raw': 1},
                 '2012-01-01': {'display': '1', 'raw': 1},
                 '2016-01-01': {'display': '1', 'raw': 1},
-                'totals': {'display': '', 'raw': ''}
+                'Totals': {'display': '', 'raw': ''}
             }, {
                 '$d$metrics': {'raw': 'Wins'},
                 '$d$state': {'display': 'California', 'raw': '2'},
@@ -828,7 +831,7 @@ class ReactTableTransformerTests(TestCase):
                 '2008-01-01': {'display': '1', 'raw': 1},
                 '2012-01-01': {'display': '1', 'raw': 1},
                 '2016-01-01': {'display': '1', 'raw': 1},
-                'totals': {'display': '', 'raw': ''}
+                'Totals': {'display': '', 'raw': ''}
             }]
         }, result)
 

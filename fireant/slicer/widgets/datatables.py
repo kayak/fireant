@@ -7,7 +7,11 @@ from fireant import (
     formats,
     utils,
 )
+from fireant.formats import NAN_VALUE
 from fireant.utils import (
+    MAX_NUMBER,
+    MAX_STRING,
+    MAX_TIMESTAMP,
     format_dimension_key,
     format_metric_key,
 )
@@ -40,8 +44,10 @@ def _render_dimension_cell(dimension_value: str, display_values: dict):
     dimension_cell = {'value': formats.dimension_value(dimension_value)}
 
     if display_values is not None:
-        if pd.isnull(dimension_value):
+        if dimension_value in {MAX_STRING, MAX_NUMBER, MAX_TIMESTAMP}:
             dimension_cell['display'] = 'Totals'
+        elif pd.isnull(dimension_value):
+            dimension_cell['display'] = NAN_VALUE
         else:
             display_value = display_values.get(dimension_value, dimension_value)
             dimension_cell['display'] = formats.dimension_value(display_value)

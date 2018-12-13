@@ -224,7 +224,8 @@ class SlicerQueryBuilder(QueryBuilder):
         data_frame = paginate(data_frame,
                               self._widgets,
                               orders=self._orders,
-                              limit=self._limit, offset=self._offset)
+                              limit=self._limit,
+                              offset=self._offset)
 
         # Apply transformations
         return [widget.transform(data_frame, self.slicer, self._dimensions, self._references)
