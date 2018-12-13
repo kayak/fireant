@@ -1,4 +1,11 @@
+import sys
 from collections import OrderedDict
+
+import pandas as pd
+
+MAX_TIMESTAMP = pd.Timestamp.max
+MAX_NUMBER = sys.maxsize
+MAX_STRING = '~~totals'
 
 
 def wrap_list(value):

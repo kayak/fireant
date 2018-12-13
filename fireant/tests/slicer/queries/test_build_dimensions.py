@@ -1,5 +1,6 @@
-from datetime import date
 from unittest import TestCase
+
+from datetime import date
 
 import fireant as f
 from ..mocks import slicer
@@ -305,17 +306,6 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                              'GROUP BY "$d$timestamp","$d$candidate","$d$candidate_display","$d$political_party" '
                              'ORDER BY "$d$timestamp","$d$candidate_display","$d$political_party"', str(queries[0]))
 
-        with self.subTest('all totals dimension are replaced with null'):
-            self.assertEqual('SELECT '
-                             'TRUNC("timestamp",\'DD\') "$d$timestamp",'
-                             'NULL "$d$candidate",'
-                             'NULL "$d$candidate_display",'
-                             'NULL "$d$political_party",'
-                             'SUM("votes") "$m$votes" '
-                             'FROM "politics"."politician" '
-                             'GROUP BY "$d$timestamp" '
-                             'ORDER BY "$d$timestamp","$d$candidate_display","$d$political_party"', str(queries[1]))
-
         with self.subTest('first totals dimension is replaced with null'):
             self.assertEqual('SELECT '
                              'TRUNC("timestamp",\'DD\') "$d$timestamp",'
@@ -325,6 +315,17 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                              'SUM("votes") "$m$votes" '
                              'FROM "politics"."politician" '
                              'GROUP BY "$d$timestamp","$d$candidate","$d$candidate_display" '
+                             'ORDER BY "$d$timestamp","$d$candidate_display","$d$political_party"', str(queries[1]))
+
+        with self.subTest('all totals dimension are replaced with null'):
+            self.assertEqual('SELECT '
+                             'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                             'NULL "$d$candidate",'
+                             'NULL "$d$candidate_display",'
+                             'NULL "$d$political_party",'
+                             'SUM("votes") "$m$votes" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$d$timestamp" '
                              'ORDER BY "$d$timestamp","$d$candidate_display","$d$political_party"', str(queries[2]))
 
     def test_build_query_with_totals_cat_dimension_with_references(self):

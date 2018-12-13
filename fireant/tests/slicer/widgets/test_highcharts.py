@@ -533,7 +533,7 @@ class HighChartsLineChartTransformerTests(TestCase):
             "yAxis": [{
                 "id": "1",
                 "title": {"text": None},
-                "labels": {"style": {"color": "#DF5353"}},
+                "labels": {"style": {"color": "#7798BF"}},
                 "visible": True,
             }, {
                 "id": "0",
@@ -544,6 +544,7 @@ class HighChartsLineChartTransformerTests(TestCase):
             "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
+                'name': 'Votes (Texas)',
                 'color': '#DDDF0D',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 5574387),
@@ -558,11 +559,11 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueDecimals': None,
                 },
                 'marker': {'fillColor': '#DDDF0D', 'symbol': 'circle'},
-                'name': 'Votes (Texas)',
                 'stacking': self.stacking,
                 'type': self.chart_type,
                 'yAxis': '0'
             }, {
+                'name': 'Votes (California)',
                 'color': '#55BF3B',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 9646062),
@@ -577,30 +578,30 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueDecimals': None,
                 },
                 'marker': {'fillColor': '#DDDF0D', 'symbol': 'square'},
-                'name': 'Votes (California)',
                 'stacking': self.stacking,
                 'type': self.chart_type,
                 'yAxis': '0'
             }, {
+                'name': 'Votes (Totals)',
                 'color': '#DF5353',
                 'dashStyle': 'Solid',
-                'data': [(820454400000, 1),
-                         (946684800000, 1),
-                         (1072915200000, 1),
-                         (1199145600000, 1),
-                         (1325376000000, 1),
-                         (1451606400000, 1)],
+                'data': [(820454400000, 15220449),
+                         (946684800000, 16662017),
+                         (1072915200000, 19614932),
+                         (1199145600000, 21294215),
+                         (1325376000000, 20572210),
+                         (1451606400000, 18310513)],
+                'marker': {'fillColor': '#DDDF0D', 'symbol': 'diamond'},
                 'tooltip': {
-                    'valuePrefix': None,
-                    'valueSuffix': None,
                     'valueDecimals': None,
+                    'valuePrefix': None,
+                    'valueSuffix': None
                 },
-                'marker': {'fillColor': '#DF5353', 'symbol': 'circle'},
-                'name': 'Wins (Texas)',
                 'stacking': self.stacking,
                 'type': self.chart_type,
-                'yAxis': '1'
+                'yAxis': '0'
             }, {
+                'name': 'Wins (Texas)',
                 'color': '#7798BF',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 1),
@@ -614,8 +615,45 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                'marker': {'fillColor': '#DF5353', 'symbol': 'square'},
+                'marker': {'fillColor': '#7798BF', 'symbol': 'circle'},
+                'stacking': self.stacking,
+                'type': self.chart_type,
+                'yAxis': '1'
+            }, {
                 'name': 'Wins (California)',
+                'color': '#AAEEEE',
+                'dashStyle': 'Solid',
+                'data': [(820454400000, 1),
+                         (946684800000, 1),
+                         (1072915200000, 1),
+                         (1199145600000, 1),
+                         (1325376000000, 1),
+                         (1451606400000, 1)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
+                'marker': {'fillColor': '#7798BF', 'symbol': 'square'},
+                'stacking': self.stacking,
+                'type': self.chart_type,
+                'yAxis': '1'
+            }, {
+                'name': 'Wins (Totals)',
+                'color': '#FF0066',
+                'dashStyle': 'Solid',
+                'data': [(820454400000, 2),
+                         (946684800000, 2),
+                         (1072915200000, 2),
+                         (1199145600000, 2),
+                         (1325376000000, 2),
+                         (1451606400000, 2)],
+                'marker': {'fillColor': '#7798BF', 'symbol': 'diamond'},
+                'tooltip': {
+                    'valueDecimals': None,
+                    'valuePrefix': None,
+                    'valueSuffix': None
+                },
                 'stacking': self.stacking,
                 'type': self.chart_type,
                 'yAxis': '1'
@@ -639,7 +677,7 @@ class HighChartsLineChartTransformerTests(TestCase):
             "yAxis": [{
                 "id": "1",
                 "title": {"text": None},
-                "labels": {"style": {"color": "#DF5353"}},
+                "labels": {"style": {"color": "#7798BF"}},
                 "visible": True,
             }, {
                 "id": "0",
@@ -650,6 +688,7 @@ class HighChartsLineChartTransformerTests(TestCase):
             "tooltip": {"shared": True, "useHTML": True, "enabled": True},
             "legend": {"useHTML": True},
             "series": [{
+                'name': 'Votes (Texas)',
                 'color': '#DDDF0D',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 5574387),
@@ -664,11 +703,11 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueDecimals': None,
                 },
                 'marker': {'fillColor': '#DDDF0D', 'symbol': 'circle'},
-                'name': 'Votes (Texas)',
                 'stacking': self.stacking,
                 'type': self.chart_type,
                 'yAxis': '0'
             }, {
+                'name': 'Votes (California)',
                 'color': '#55BF3B',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 9646062),
@@ -683,30 +722,30 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueDecimals': None,
                 },
                 'marker': {'fillColor': '#DDDF0D', 'symbol': 'square'},
-                'name': 'Votes (California)',
                 'stacking': self.stacking,
                 'type': self.chart_type,
                 'yAxis': '0'
             }, {
+                'name': 'Votes (Totals)',
                 'color': '#DF5353',
                 'dashStyle': 'Solid',
-                'data': [(820454400000, 1),
-                         (946684800000, 1),
-                         (1072915200000, 1),
-                         (1199145600000, 1),
-                         (1325376000000, 1),
-                         (1451606400000, 1)],
+                'data': [(820454400000, 15220449),
+                         (946684800000, 16662017),
+                         (1072915200000, 19614932),
+                         (1199145600000, 21294215),
+                         (1325376000000, 20572210),
+                         (1451606400000, 18310513)],
+                'marker': {'fillColor': '#DDDF0D', 'symbol': 'diamond'},
                 'tooltip': {
-                    'valuePrefix': None,
-                    'valueSuffix': None,
                     'valueDecimals': None,
+                    'valuePrefix': None,
+                    'valueSuffix': None
                 },
-                'marker': {'fillColor': '#DF5353', 'symbol': 'circle'},
-                'name': 'Wins (Texas)',
                 'stacking': self.stacking,
                 'type': self.chart_type,
-                'yAxis': '1'
+                'yAxis': '0'
             }, {
+                'name': 'Wins (Texas)',
                 'color': '#7798BF',
                 'dashStyle': 'Solid',
                 'data': [(820454400000, 1),
@@ -720,8 +759,45 @@ class HighChartsLineChartTransformerTests(TestCase):
                     'valueSuffix': None,
                     'valueDecimals': None,
                 },
-                'marker': {'fillColor': '#DF5353', 'symbol': 'square'},
+                'marker': {'fillColor': '#7798BF', 'symbol': 'circle'},
+                'stacking': self.stacking,
+                'type': self.chart_type,
+                'yAxis': '1'
+            }, {
                 'name': 'Wins (California)',
+                'color': '#AAEEEE',
+                'dashStyle': 'Solid',
+                'data': [(820454400000, 1),
+                         (946684800000, 1),
+                         (1072915200000, 1),
+                         (1199145600000, 1),
+                         (1325376000000, 1),
+                         (1451606400000, 1)],
+                'tooltip': {
+                    'valuePrefix': None,
+                    'valueSuffix': None,
+                    'valueDecimals': None,
+                },
+                'marker': {'fillColor': '#7798BF', 'symbol': 'square'},
+                'stacking': self.stacking,
+                'type': self.chart_type,
+                'yAxis': '1'
+            }, {
+                'name': 'Wins (Totals)',
+                'color': '#FF0066',
+                'dashStyle': 'Solid',
+                'data': [(820454400000, 2),
+                         (946684800000, 2),
+                         (1072915200000, 2),
+                         (1199145600000, 2),
+                         (1325376000000, 2),
+                         (1451606400000, 2)],
+                'marker': {'fillColor': '#7798BF', 'symbol': 'diamond'},
+                'tooltip': {
+                    'valueDecimals': None,
+                    'valuePrefix': None,
+                    'valueSuffix': None
+                },
                 'stacking': self.stacking,
                 'type': self.chart_type,
                 'yAxis': '1'

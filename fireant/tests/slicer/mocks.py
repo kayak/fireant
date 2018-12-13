@@ -3,6 +3,7 @@ from collections import (
 )
 from unittest.mock import Mock
 
+import numpy as np
 import pandas as pd
 from datetime import (
     datetime,
@@ -11,6 +12,9 @@ from datetime import (
 from fireant import *
 from fireant.slicer.references import ReferenceType
 from fireant.utils import (
+    MAX_NUMBER,
+    MAX_STRING,
+    MAX_TIMESTAMP,
     format_dimension_key as fd,
     format_metric_key as fm,
 )
@@ -336,20 +340,30 @@ _columns = [fm('votes'), fm('wins')]
 cont_uni_dim_ref_df = ref(cont_uni_dim_df, _columns)
 cont_uni_dim_ref_delta_df = ref_delta(cont_uni_dim_ref_df, _columns)
 
+totals_markers = {
+    np.dtype('<M8[ns]'): MAX_TIMESTAMP,
+    np.dtype('int64'): MAX_NUMBER,
+}
+
 
 def totals(data_frame, dimensions, columns):
     """
     Computes the totals across a dimension and adds the total as an extra row.
     """
 
+    def get_totals_marker_for_dtype(dtype):
+        return totals_markers.get(dtype, MAX_STRING)
+
     def _totals(df):
         if isinstance(df, pd.Series):
             return df.sum()
 
+        totals_index_value = get_totals_marker_for_dtype(df.index.levels[-1].dtype)
+
         return pd.DataFrame(
               [df.sum()],
               columns=columns,
-              index=pd.Index([None],
+              index=pd.Index([totals_index_value],
                              name=df.index.names[-1]))
 
     totals_df = None
@@ -359,9 +373,11 @@ def totals(data_frame, dimensions, columns):
         if groupby_levels:
             level_totals_df = data_frame[columns].groupby(level=groupby_levels).apply(_totals)
         else:
+            totals_index_values = [get_totals_marker_for_dtype(level.dtype)
+                                   for level in data_frame.index.levels]
             level_totals_df = pd.DataFrame([data_frame[columns].apply(_totals)],
                                            columns=columns,
-                                           index=pd.MultiIndex.from_tuples([[None] * len(data_frame.index.levels)],
+                                           index=pd.MultiIndex.from_tuples([totals_index_values],
                                                                            names=data_frame.index.names))
 
         totals_df = totals_df.append(level_totals_df) \

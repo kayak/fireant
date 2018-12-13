@@ -1,11 +1,16 @@
+import numpy as np
+import pandas as pd
 from datetime import (
     date,
     datetime,
     time,
 )
 
-import numpy as np
-import pandas as pd
+from fireant.utils import (
+    MAX_NUMBER,
+    MAX_STRING,
+    MAX_TIMESTAMP,
+)
 
 INF_VALUE = "Inf"
 NULL_VALUE = 'null'
@@ -60,8 +65,11 @@ def dimension_value(value):
         When True, dates and datetimes will be converted to ISO strings. The time is omitted for dates. When False, the
         datetime will be converted to a POSIX timestamp (millis-since-epoch).
     """
-    if pd.isnull(value):
+    if value in {MAX_STRING, MAX_NUMBER, MAX_TIMESTAMP}:
         return 'Totals'
+
+    if pd.isnull(value):
+        return NAN_VALUE
 
     if isinstance(value, date):
         if not hasattr(value, 'time') or value.time() == NO_TIME:

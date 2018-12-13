@@ -1,12 +1,22 @@
 import numpy as np
-import pandas as pd
 
 from fireant import utils
 from fireant.formats import (
     INF_VALUE,
     NAN_VALUE,
 )
+from fireant.utils import (
+    MAX_NUMBER,
+    MAX_STRING,
+    MAX_TIMESTAMP,
+)
 from ..references import reference_label
+
+TOTALS_MARKERS = {
+    MAX_NUMBER,
+    MAX_STRING,
+    MAX_TIMESTAMP,
+}
 
 
 def extract_display_values(dimensions, data_frame):
@@ -77,7 +87,7 @@ def dimensional_metric_label(dimensions, dimension_display_values):
         dimension_labels = [utils.getdeepattr(dimension_display_values,
                                               (utils.format_dimension_key(dimension.key), dimension_value),
                                               dimension_value)
-                            if not pd.isnull(dimension_value)
+                            if dimension_value not in TOTALS_MARKERS
                             else 'Totals'
                             for dimension, dimension_value in zip(used_dimensions, dimension_values)]
 

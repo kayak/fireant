@@ -13,7 +13,6 @@ from fireant.formats import (
     metric_value,
 )
 from fireant.utils import (
-    format_dimension_key,
     format_metric_key,
     getdeepattr,
     setdeepattr,
@@ -45,7 +44,15 @@ DATE_FORMATS = {
     quarterly: '%Y-%q',
     annually: '%Y',
 }
+from fireant.utils import (
+    MAX_NUMBER,
+    MAX_STRING,
+    MAX_TIMESTAMP,
+    format_dimension_key,
+    wrap_list,
+)
 
+TOTALS_LABEL = 'Totals'
 metrics = Dimension('metrics', '')
 metrics_dimension_key = format_dimension_key(metrics.key)
 
@@ -64,16 +71,6 @@ def map_index_level(index, level, func):
     return index.map(func)
 
 
-def fillna_index(index, value):
-    if isinstance(index, pd.MultiIndex):
-        return pd.MultiIndex.from_tuples([[value if pd.isnull(x) else x
-                                           for x in row]
-                                          for row in index],
-                                         names=index.names)
-
-    return index.fillna(value)
-
-
 class ReferenceItem:
     def __init__(self, item, reference):
         if reference is None:
@@ -90,7 +87,7 @@ class ReferenceItem:
 
 class TotalsItem:
     key = TOTALS_VALUE
-    label = 'Totals'
+    label = TOTALS_LABEL
     prefix = suffix = precision = None
 
 
@@ -159,7 +156,7 @@ class ReactTable(Pandas):
                 f_display_key = format_dimension_key(dimension.display_key)
 
                 dimension_display_values[f_dimension_key] = \
-                    df[f_display_key].groupby(f_dimension_key).first().fillna('null').to_dict()
+                    df[f_display_key].groupby(f_dimension_key).first().to_dict()
 
                 del df[f_display_key]
 
@@ -233,13 +230,12 @@ class ReactTable(Pandas):
                 date_format = DATE_FORMATS.get(dimension.interval, DATE_FORMATS[daily])
 
                 def format_datetime(dt):
-                    if pd.isnull(dt):
-                        return TOTALS_VALUE
+                    if MAX_TIMESTAMP == dt:
+                        return TOTALS_LABEL
                     return dt.strftime(date_format)
 
                 data_frame.index = map_index_level(data_frame.index, i, format_datetime)
 
-        data_frame.index = fillna_index(data_frame.index, TOTALS_VALUE)
         data_frame.columns.name = metrics_dimension_key
 
     @staticmethod
@@ -343,7 +339,7 @@ class ReactTable(Pandas):
 
             columns = []
             for column_value, group in groups:
-                is_totals = TOTALS_VALUE == column_value
+                is_totals = column_value in {MAX_STRING, MAX_NUMBER, TOTALS_LABEL}
 
                 # All column definitions have a header
                 column = {'Header': get_header(column_value, f_dimension_key, is_totals)}
@@ -399,11 +395,12 @@ class ReactTable(Pandas):
         # Add the values to the row
         row = {}
         for key, value in series.iteritems():
+            key = wrap_list(key)
             value = metric_value(value)
             data = {RAW_VALUE: metric_value(value)}
 
             # Try to find a display value for the item
-            item = item_map.get(key[0] if isinstance(key, tuple) else key)
+            item = item_map.get(key[0])
             display = metric_display(value,
                                      getattr(item, 'prefix', None),
                                      getattr(item, 'suffix', None),
@@ -483,8 +480,10 @@ class ReactTable(Pandas):
                                 for reference in [None] + references])
         df_metric_columns = list(item_map.keys())
 
-        # Add an extra item to map the totals key to it's label
-        item_map[TOTALS_VALUE] = TotalsItem
+        # Add an extra item to map the totals markers to it's label
+        item_map[MAX_NUMBER] = TotalsItem
+        item_map[MAX_STRING] = TotalsItem
+        item_map[TOTALS_LABEL] = TotalsItem
 
         df = data_frame[df_dimension_columns + df_metric_columns].copy()
 
