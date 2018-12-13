@@ -94,7 +94,7 @@ def metric_value(value):
         else:
             return value.strftime('%Y-%m-%dT%H:%M:%S')
 
-    if value is None or pd.isnull(value):
+    if value is None or value is '' or pd.isnull(value):
         return None
 
     if isinstance(value, float):

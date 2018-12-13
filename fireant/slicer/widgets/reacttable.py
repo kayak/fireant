@@ -352,7 +352,7 @@ class ReactTable(Pandas):
                     column['columns'] = _make_columns(next_level_df, levels)
 
                 else:
-                    column['accessor'] = '.'.join(levels)
+                    column['accessor'] = '.'.join(map(str, levels))
 
                 if is_totals:
                     column['className'] = 'fireant-totals'
