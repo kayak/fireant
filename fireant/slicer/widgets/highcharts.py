@@ -102,7 +102,7 @@ class HighCharts(ChartWidget, TransformableWidget):
 
         # Timestamp.max is used as a marker for rolled up dimensions (totals). Filter out the totals value for the
         # dimension used for the x-axis
-        if is_timeseries:
+        if is_timeseries and len(data_frame) > 0:
             data_frame = data_frame.loc[:TS_UPPER_BOUND]
 
         # Group the results by index levels after the 0th, one for each series
@@ -182,7 +182,7 @@ class HighCharts(ChartWidget, TransformableWidget):
         }
 
     def _group_by_series(self, data_frame):
-        if not isinstance(data_frame.index, pd.MultiIndex):
+        if len(data_frame) == 0 or not isinstance(data_frame.index, pd.MultiIndex):
             return [([], data_frame)]
 
         series = data_frame.index.names[1:]
