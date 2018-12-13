@@ -6,7 +6,7 @@ import pandas as pd
 
 from fireant.formats import (
     INF_VALUE,
-    NAN_VALUE,
+    NULL_VALUE,
     RAW_VALUE,
     TOTALS_VALUE,
     metric_display,
@@ -372,7 +372,7 @@ class ReactTable(Pandas):
             if key is None:
                 continue
 
-            data = {RAW_VALUE: value}
+            data = {RAW_VALUE: metric_value(value)}
 
             # Try to find a display value for the item. If this is a metric the raw value is replaced with the
             # display value because there is no raw value for a metric label
@@ -493,7 +493,7 @@ class ReactTable(Pandas):
 
         dimension_keys = [format_dimension_key(dimension.key) for dimension in self.pivot]
         df = self.pivot_data_frame(df, dimension_keys, self.transpose) \
-            .fillna(value=NAN_VALUE) \
+            .fillna(value=NULL_VALUE) \
             .replace([np.inf, -np.inf], INF_VALUE)
 
         dimension_hyperlink_templates = self.map_hyperlink_templates(df, dimensions)

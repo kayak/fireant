@@ -69,7 +69,7 @@ def dimension_value(value):
         return 'Totals'
 
     if pd.isnull(value):
-        return NAN_VALUE
+        return NULL_VALUE
 
     if isinstance(value, date):
         if not hasattr(value, 'time') or value.time() == NO_TIME:
@@ -127,11 +127,11 @@ def metric_display(value, prefix=None, suffix=None, precision=None):
     if pd.isnull(value):
         value = NULL_VALUE
 
-    if value in {np.inf, -np.inf}:
-        value = INF_VALUE
+    if value in {np.inf, -np.inf, INF_VALUE}:
+        return INF_VALUE
 
-    if value in (NAN_VALUE, INF_VALUE, NULL_VALUE):
-        return value
+    if value in (NULL_VALUE, NAN_VALUE):
+        return NULL_VALUE
 
     if isinstance(value, bool):
         value = str(value).lower()

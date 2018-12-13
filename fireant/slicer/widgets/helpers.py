@@ -3,7 +3,7 @@ import numpy as np
 from fireant import utils
 from fireant.formats import (
     INF_VALUE,
-    NAN_VALUE,
+    NULL_VALUE,
 )
 from fireant.utils import (
     MAX_NUMBER,
@@ -49,7 +49,7 @@ def extract_display_values(dimensions, data_frame):
             display_values[key] = data_frame[f_display_key] \
                 .groupby(level=key) \
                 .first() \
-                .fillna(value=NAN_VALUE) \
+                .fillna(value=NULL_VALUE) \
                 .replace([np.inf, -np.inf], INF_VALUE)
 
     return display_values

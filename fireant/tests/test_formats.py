@@ -1,13 +1,13 @@
-from datetime import (
-    date,
-    datetime,
-)
 from unittest import (
     TestCase,
 )
 
 import numpy as np
 import pandas as pd
+from datetime import (
+    date,
+    datetime,
+)
 
 from fireant import formats
 
@@ -153,7 +153,7 @@ class DisplayValueTests(TestCase):
 
     def test_nan_format_no_formatting(self):
         display = formats.metric_display('NaN', prefix='$', suffix='€', precision=2)
-        self.assertEqual('NaN', display)
+        self.assertEqual('null', display)
 
     def test_inf_format_no_formatting(self):
         display = formats.metric_display('Inf', prefix='$', suffix='€', precision=2)
