@@ -33,6 +33,9 @@ def paginate(data_frame, widgets, orders=(), limit=None, offset=None):
         A paginated data frame. If the widget required grouped pagination, then there should be an upperbound
         `limit*(n_index_level_0)`. Otherwise the data frame should have the same length as the limit.
     """
+    if len(data_frame) == 0:
+        return data_frame
+
     start, end = _get_window(limit, offset)
     group_pagination = isinstance(data_frame.index, pd.MultiIndex) \
                        and any([getattr(widget, 'group_pagination', False)

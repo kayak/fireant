@@ -159,6 +159,9 @@ class Pandas(TransformableWidget):
         """
         Replaces the raw values of a (categorical) dimension in the index with their corresponding display values.
         """
+        if len(result) == 0:
+            return result
+
         if isinstance(result.index, pd.MultiIndex):
             df_key = format_dimension_key(dimension.key)
             level = result.index.names.index(df_key)
