@@ -12,6 +12,7 @@ from fireant.slicer.widgets.highcharts import (
 from fireant.tests.slicer.mocks import (
     ElectionOverElection,
     cat_dim_df,
+    cat_dim_totals_df,
     cont_dim_df,
     cont_dim_operation_df,
     cont_uni_dim_all_totals_df,
@@ -1589,6 +1590,43 @@ class HighChartsBarChartTransformerTests(TestCase):
             }],
             "colors": DEFAULT_COLORS,
         }, result)
+
+    def test_cat_dim_with_totals_chart(self):
+        result = HighCharts(title="Categorical Dimension with Totals") \
+            .axis(self.chart_class(slicer.metrics.votes)) \
+            .transform(cat_dim_totals_df, slicer, [slicer.dimensions.political_party.rollup()], [])
+
+        self.assertEqual({
+            'title': {'text': 'Categorical Dimension with Totals'},
+            'xAxis': {
+                'categories': ['Democrat', 'Independent', 'Republican', 'Totals'],
+                'type': 'category',
+                'visible': True
+            },
+            'yAxis': [{
+                'id': '0',
+                'labels': {'style': {'color': None}},
+                'title': {'text': None},
+                'visible': True
+            }],
+            'legend': {'useHTML': True},
+            'series': [{
+                'name': 'Votes',
+                'yAxis': '0',
+                'data': [54551568, 1076384, 56046384, 111674336],
+                'marker': {},
+                'tooltip': {
+                    'valueDecimals': None,
+                    'valuePrefix': None,
+                    'valueSuffix': None
+                },
+                'type': self.chart_type,
+                'stacking': self.stacking,
+            }],
+            'tooltip': {'enabled': True, 'shared': True, 'useHTML': True},
+            "colors": DEFAULT_COLORS,
+        }, result)
+
 
     def test_invisible_y_axis(self):
         result = HighCharts(title="All Votes") \

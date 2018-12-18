@@ -189,8 +189,10 @@ class HighCharts(ChartWidget, TransformableWidget):
             if not isinstance(data_frame.index, pd.MultiIndex) and data_frame.index.name is None \
             else [utils.getdeepattr(dimension_display_values,
                                     (first_level.name, dimension_value),
-                                    dimension_value or 'Totals')
+                                    dimension_value)
                   for dimension_value in first_level]
+        categories = [formats.dimension_value(category)
+                      for category in categories]
 
         return {
             "type": "category",
