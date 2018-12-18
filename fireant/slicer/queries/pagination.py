@@ -68,6 +68,15 @@ def _simple_paginate(data_frame, start=None, end=None, orders=()):
     return data_frame[start:end]
 
 
+def _index_isnull(data_frame):
+    if isinstance(data_frame.index, pd.MultiIndex):
+        return [any(pd.isnull(value)
+                    for value in level)
+                for level in list(data_frame.index)]
+
+    return pd.isnull(data_frame.index)
+
+
 def _group_paginate(data_frame, start=None, end=None, orders=()):
     """
     Applies pagination which limits the number of rows in the data frame grouped by the zeroth index level. This will
@@ -110,9 +119,17 @@ def _group_paginate(data_frame, start=None, end=None, orders=()):
         else pd.MultiIndex.from_tuples(sorted_dimension_values, names=dimension_levels)
 
     def _apply_pagination(df):
+        # This function applies sorting by using the sorted dimension values as an index to select values in the right
+        # order out of the data frame. The index must be filtered to only values that are in this data frame, since
+        # there might be missing combinations of index values.
         dfx = df.reset_index(level=0, drop=True)
-        index_slice = sorted_dimension_values[sorted_dimension_values.isin(dfx.index)]
-        return dfx.loc[index_slice, :]
+        value_in_index = sorted_dimension_values.isin(dfx.index)
+        index_slice = sorted_dimension_values[value_in_index]
+
+        # Need to include nulls so append them to the end of the sorted data frame
+        isnull = _index_isnull(dfx)
+
+        return dfx.loc[index_slice, :].append(dfx[isnull])
 
     return data_frame \
         .sort_values(data_frame.index.names[0], ascending=True) \

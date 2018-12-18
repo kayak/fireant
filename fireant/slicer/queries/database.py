@@ -116,6 +116,10 @@ def _reduce_result_set(results: Iterable[pd.DataFrame], reference_groups, dimens
     # Reduce each group to one data frame per rolled up dimension
     group_data_frames = []
     for i, result_group in enumerate(result_groups):
+        if dimension_keys:
+            result_group = [result.set_index(dimension_keys)
+                            for result in result_group]
+
         base_df = result_group[0]
         reference_dfs = [_make_reference_data_frame(base_df, result, reference)
                          for result, reference_group in zip(result_group[1:], reference_groups)
@@ -131,9 +135,6 @@ def _reduce_result_set(results: Iterable[pd.DataFrame], reference_groups, dimens
         if rollup_dimension_keys[:i]:
             reduced = _replace_nans_for_rollup_values(reduced, rollup_dimension_dtypes[-i:])
 
-        if dimension_keys:
-            reduced = reduced.set_index(dimension_keys)
-
         group_data_frames.append(reduced)
 
     return pd.concat(group_data_frames, sort=False) \
@@ -146,10 +147,15 @@ def _replace_nans_for_rollup_values(data_frame, dtypes):
         np.dtype('int64'): MAX_NUMBER,
     }
 
+    # some things are just easier to do without an index. Reset it temporarily to replaxe NaN values with the rollup
+    # marker values
+    index_names = data_frame.index.names
+    data_frame.reset_index(inplace=True)
+
     for dimension_key, dtype in dtypes.items():
         data_frame[dimension_key] = replace.get(dtype, MAX_STRING)
 
-    return data_frame
+    return data_frame.set_index(index_names)
 
 
 def _make_reference_data_frame(base_df, ref_df, reference):

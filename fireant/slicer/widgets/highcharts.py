@@ -103,7 +103,7 @@ class HighCharts(ChartWidget, TransformableWidget):
         # Timestamp.max is used as a marker for rolled up dimensions (totals). Filter out the totals value for the
         # dimension used for the x-axis
         if is_timeseries and len(data_frame) > 0:
-            data_frame = data_frame.loc[:TS_UPPER_BOUND]
+            data_frame = self._remove_date_totals(data_frame)
 
         # Group the results by index levels after the 0th, one for each series
         # This will result in a series for every combination of dimension values and each series will contain a data set
@@ -148,6 +148,23 @@ class HighCharts(ChartWidget, TransformableWidget):
             "legend": {"useHTML": True},
         }
 
+    def _remove_date_totals(self, data_frame):
+        """
+        This function filters the totals value for the date/time dimension from the result set. There is no way to
+        represent this value on a chart so it is just removed.
+
+        :param data_frame:
+        :return:
+        """
+        if isinstance(data_frame.index, pd.MultiIndex):
+            index_slice = data_frame.index.get_level_values(0) < TS_UPPER_BOUND
+            return data_frame.loc[index_slice, :]
+
+        if isinstance(data_frame.index, pd.DatetimeIndex):
+            return data_frame[data_frame.index < TS_UPPER_BOUND]
+
+        return data_frame
+
     def _render_x_axis(self, data_frame, dimensions, dimension_display_values):
         """
         Renders the xAxis configuration.
@@ -172,8 +189,10 @@ class HighCharts(ChartWidget, TransformableWidget):
             if not isinstance(data_frame.index, pd.MultiIndex) and data_frame.index.name is None \
             else [utils.getdeepattr(dimension_display_values,
                                     (first_level.name, dimension_value),
-                                    dimension_value or 'Totals')
+                                    dimension_value)
                   for dimension_value in first_level]
+        categories = [formats.dimension_value(category)
+                      for category in categories]
 
         return {
             "type": "category",

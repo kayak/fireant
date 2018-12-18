@@ -354,6 +354,14 @@ def totals(data_frame, dimensions, columns):
     def get_totals_marker_for_dtype(dtype):
         return totals_markers.get(dtype, MAX_STRING)
 
+    if not isinstance(data_frame.index, pd.MultiIndex):
+        totals_marker = get_totals_marker_for_dtype(data_frame.index.dtype)
+        totals_df = pd.DataFrame([data_frame.sum()],
+                                 index=pd.Index([totals_marker],
+                                                name=data_frame.index.name))
+
+        return data_frame.append(totals_df)
+
     def _totals(df):
         if isinstance(df, pd.Series):
             return df.sum()
@@ -401,6 +409,7 @@ for l in list(locals().values()):
     elif not isinstance(l.index, (pd.DatetimeIndex, pd.RangeIndex)):
         l.index = l.index.astype('str')
 
+cat_dim_totals_df = totals(cat_dim_df, [fd('political_party')], _columns)
 cont_cat_dim_totals_df = totals(cont_cat_dim_df, [fd('political_party')], _columns)
 cont_uni_dim_totals_df = totals(cont_uni_dim_df, [fd('state')], _columns)
 cont_uni_dim_all_totals_df = totals(cont_uni_dim_df, [fd('timestamp'), fd('state')], _columns)
