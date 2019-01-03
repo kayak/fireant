@@ -18,6 +18,7 @@ from ..exceptions import (
     CircularJoinsException,
     MissingTableJoinException,
 )
+from ..operations import Share
 
 ReferenceGroup = namedtuple('ReferenceGroup', ('dimension', 'time_unit', 'intervals'))
 
@@ -95,6 +96,27 @@ def find_metrics_for_widgets(widgets):
                                           for metric in widget.metrics])
 
 
+def find_share_dimensions(dimensions, operations):
+    """
+    Returns a subset list of dimensions from the list of dimensions that are used as the over-dimension in share
+    operations.
+
+    :param dimensions:
+    :param operations:
+    :return:
+    """
+    share_operations_over_dimensions = [operation.over
+                                        for operation in operations
+                                        if isinstance(operation, Share)
+                                        and operation.over is not None]
+
+    dimension_map = {dimension.key: dimension
+                     for dimension in dimensions}
+    
+    return [dimension_map[dimension.key]
+            for dimension in share_operations_over_dimensions]
+
+
 def find_operations_for_widgets(widgets):
     """
     :return:
@@ -105,10 +127,17 @@ def find_operations_for_widgets(widgets):
                                           for operation in widget.operations])
 
 
-def find_rolled_up_dimensions(dimensions):
+def find_totals_dimensions(dimensions, share_dimensions):
+    """
+    WRITEME
+
+    :param dimensions:
+    :param share_dimensions:
+    :return:
+    """
     return [dimension
             for dimension in dimensions
-            if dimension.is_rollup]
+            if dimension.is_rollup or dimension in share_dimensions]
 
 
 def find_and_replace_reference_dimensions(references, dimensions):

@@ -522,7 +522,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         result = HighCharts(title="Time Series with Unique Dimension and Multiple Metrics, Multi-Axis") \
             .axis(self.chart_class(slicer.metrics.votes)) \
             .axis(self.chart_class(slicer.metrics.wins)) \
-            .transform(cont_uni_dim_totals_df, slicer, [slicer.dimensions.timestamp.rollup(),
+            .transform(cont_uni_dim_totals_df, slicer, [slicer.dimensions.timestamp,
                                                         slicer.dimensions.state.rollup()], [])
 
         self.assertEqual({

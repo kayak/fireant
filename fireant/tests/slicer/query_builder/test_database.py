@@ -8,7 +8,7 @@ from unittest.mock import (
 
 import pandas as pd
 
-from fireant.slicer.queries.database import _do_fetch_data
+from fireant.slicer.queries.execution import _do_fetch_data
 from fireant.tests.slicer.mocks import (
     cat_dim_df,
     cont_uni_dim_df,
@@ -35,7 +35,7 @@ class FetchDataTests(TestCase):
         self.mock_dimensions[1].is_rollup = True
 
     def test_do_fetch_data_calls_database_fetch_data(self, ):
-        with patch('fireant.slicer.queries.database.pd.read_sql', return_value=self.mock_data_frame) as mock_read_sql:
+        with patch('fireant.slicer.queries.execution.pd.read_sql', return_value=self.mock_data_frame) as mock_read_sql:
             _do_fetch_data(self.mock_query, self.mock_database)
 
             mock_read_sql.assert_called_once_with(self.mock_query,
@@ -44,7 +44,7 @@ class FetchDataTests(TestCase):
                                                   parse_dates=True)
 
 
-@patch('fireant.slicer.queries.database.pd.read_sql')
+@patch('fireant.slicer.queries.execution.pd.read_sql')
 class FetchDataLoggingTests(TestCase):
     def setUp(self):
         self.mock_query = 'SELECT *'
@@ -62,21 +62,21 @@ class FetchDataLoggingTests(TestCase):
         self.mock_dimensions[0].is_rollup = False
         self.mock_dimensions[1].is_rollup = False
 
-    @patch('fireant.slicer.queries.database.query_logger')
+    @patch('fireant.slicer.queries.execution.query_logger')
     def test_debug_query_log_called_with_query(self, mock_logger, *mocks):
         _do_fetch_data(self.mock_query, self.mock_database)
 
         mock_logger.debug.assert_called_once_with('SELECT *')
 
     @patch.object(time, 'time', return_value=1520520255.0)
-    @patch('fireant.slicer.queries.database.query_logger')
+    @patch('fireant.slicer.queries.execution.query_logger')
     def test_info_query_log_called_with_query_and_duration(self, mock_logger, *mocks):
         _do_fetch_data(self.mock_query, self.mock_database)
 
         mock_logger.info.assert_called_once_with('[0.0 seconds]: SELECT *')
 
     @patch.object(time, 'time')
-    @patch('fireant.slicer.queries.database.slow_query_logger')
+    @patch('fireant.slicer.queries.execution.slow_query_logger')
     def test_warning_slow_query_logger_called_with_duration_and_query_if_over_slow_query_limit(self,
                                                                                                mock_logger,
                                                                                                mock_time,
@@ -87,7 +87,7 @@ class FetchDataLoggingTests(TestCase):
         mock_logger.warning.assert_called_once_with('[22.0 seconds]: SELECT *')
 
     @patch.object(time, 'time')
-    @patch('fireant.slicer.queries.database.slow_query_logger')
+    @patch('fireant.slicer.queries.execution.slow_query_logger')
     def test_warning_slow_query_logger_not_called_with_duration_and_query_if_not_over_slow_query_limit(self,
                                                                                                        mock_logger,
                                                                                                        mock_time,

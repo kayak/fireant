@@ -76,10 +76,11 @@ class BooleanDimension(Dimension):
         :return:
             A slicer query filter used to filter a slicer query to results where this dimension is True or False.
         """
-        return BooleanFilter(self.definition, value)
+        return BooleanFilter(self.key, self.definition, value)
 
 
 class PatternFilterableMixin:
+    key = None
     definition = None
     pattern_definition_attribute = 'definition'
 
@@ -98,7 +99,7 @@ class PatternFilterableMixin:
             matches the pattern.
         """
         definition = getattr(self, self.pattern_definition_attribute)
-        return PatternFilter(definition, pattern, *patterns)
+        return PatternFilter(self.key, definition, pattern, *patterns)
 
     def not_like(self, pattern, *patterns):
         """
@@ -115,7 +116,7 @@ class PatternFilterableMixin:
             matches the pattern.
         """
         definition = getattr(self, self.pattern_definition_attribute)
-        return AntiPatternFilter(definition, pattern, *patterns)
+        return AntiPatternFilter(self.key, definition, pattern, *patterns)
 
 
 class CategoricalDimension(PatternFilterableMixin, Dimension):
@@ -142,7 +143,7 @@ class CategoricalDimension(PatternFilterableMixin, Dimension):
             A slicer query filter used to filter a slicer query to results where this dimension is one of a set of
             values. Opposite of #notin.
         """
-        return ContainsFilter(self.definition, values)
+        return ContainsFilter(self.key, self.definition, values)
 
     def notin(self, values):
         """
@@ -155,7 +156,7 @@ class CategoricalDimension(PatternFilterableMixin, Dimension):
             A slicer query filter used to filter a slicer query to results where this dimension is *not* one of a set of
             values. Opposite of #isin.
         """
-        return ExcludesFilter(self.definition, values)
+        return ExcludesFilter(self.key, self.definition, values)
 
 
 class _UniqueDimensionBase(PatternFilterableMixin, Dimension):
@@ -170,7 +171,7 @@ class _UniqueDimensionBase(PatternFilterableMixin, Dimension):
             A slicer query filter used to filter a slicer query to results where this dimension is one of a set of
             values. Opposite of #notin.
         """
-        return ContainsFilter(self.definition, values)
+        return ContainsFilter(self.key, self.definition, values)
 
     def notin(self, values):
         """
@@ -183,7 +184,7 @@ class _UniqueDimensionBase(PatternFilterableMixin, Dimension):
             A slicer query filter used to filter a slicer query to results where this dimension is *not* one of a set of
             values. Opposite of #isin.
         """
-        return ExcludesFilter(self.definition, values)
+        return ExcludesFilter(self.key, self.definition, values)
 
 
 class UniqueDimension(_UniqueDimensionBase):
@@ -288,7 +289,7 @@ class DatetimeDimension(ContinuousDimension):
             A slicer query filter used to filter a slicer query to results where this dimension is between the values
             start and stop.
         """
-        return RangeFilter(self.definition, start, stop)
+        return RangeFilter(self.key, self.definition, start, stop)
 
 
 class TotalsDimension(Dimension):

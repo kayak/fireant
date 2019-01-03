@@ -13,24 +13,26 @@ from fireant.utils import (
 )
 from pypika import Order
 from . import special_cases
-from .database import fetch_data
+from .execution import fetch_data
 from .finders import (
     find_and_group_references_for_dimensions,
     find_and_replace_reference_dimensions,
     find_metrics_for_widgets,
     find_operations_for_widgets,
+    find_share_dimensions,
 )
-from .makers import (
+from .pagination import paginate
+from .sql_transformer import (
     make_latest_query,
     make_orders_for_dimensions,
     make_slicer_query,
-    make_slicer_query_with_rollup_and_references,
+    make_slicer_query_with_totals_and_references,
 )
-from .pagination import paginate
 from .. import QueryException
 from ..base import SlicerElement
 from ..dimensions import Dimension
 from ..references import reference_key
+from ..totals import scrub_totals_from_share_results
 
 
 def add_hints(queries, hint=None):
@@ -117,6 +119,13 @@ class SlicerQueryBuilder(QueryBuilder):
         super(SlicerQueryBuilder, self).__init__(slicer, slicer.table)
         self._widgets = []
         self._orders = []
+        self.filter_totals = True
+
+    @immutable
+    def __call__(self, **kwargs):
+        for setting in ('filter_totals', 'exclude_dimensions_from_share'):
+            if setting in kwargs:
+                setattr(self, setting, kwargs[setting])
 
     @immutable
     def widget(self, *widgets):
@@ -165,6 +174,15 @@ class SlicerQueryBuilder(QueryBuilder):
 
         self._orders += [(element.definition.as_(format_key(element.key)), orientation)]
 
+    def _validate(self):
+        for widget in self._widgets:
+            if hasattr(widget, 'validate'):
+                widget.validate(self._dimensions)
+
+    @property
+    def reference_groups(self):
+        return list(find_and_group_references_for_dimensions(self._references).values())
+
     @property
     def queries(self):
         """
@@ -176,19 +194,18 @@ class SlicerQueryBuilder(QueryBuilder):
         a query for each reference is joined based on the referenced dimension shifted.
         """
         # First run validation for the query on all widgets
-        for widget in self._widgets:
-            if hasattr(widget, 'validate'):
-                widget.validate(self._dimensions)
+        self._validate()
 
         # Optionally select all metrics for slicer to better utilize caching
         metrics = list(self.slicer.metrics) \
             if self.slicer.always_query_all_metrics \
             else find_metrics_for_widgets(self._widgets)
         operations = find_operations_for_widgets(self._widgets)
+        share_dimensions = find_share_dimensions(self._dimensions, operations)
         references = find_and_replace_reference_dimensions(self._references, self._dimensions)
         orders = (self._orders or make_orders_for_dimensions(self._dimensions))
 
-        return make_slicer_query_with_rollup_and_references(self.slicer.database,
+        return make_slicer_query_with_totals_and_references(self.slicer.database,
                                                             self.table,
                                                             self.slicer.joins,
                                                             self._dimensions,
@@ -196,7 +213,9 @@ class SlicerQueryBuilder(QueryBuilder):
                                                             operations,
                                                             self._filters,
                                                             references,
-                                                            orders)
+                                                            orders,
+                                                            share_dimensions=share_dimensions,
+                                                            filter_totals=self.filter_totals)
 
     def fetch(self, hint=None) -> Iterable[Dict]:
         """
@@ -209,18 +228,23 @@ class SlicerQueryBuilder(QueryBuilder):
         """
         queries = add_hints(self.queries, hint)
 
-        reference_groups = list(find_and_group_references_for_dimensions(self._references).values())
-        data_frame = fetch_data(self.slicer.database, queries, self._dimensions, reference_groups)
+        operations = find_operations_for_widgets(self._widgets)
+        share_dimensions = find_share_dimensions(self._dimensions, operations)
+
+        data_frame = fetch_data(self.slicer.database,
+                                queries,
+                                self._dimensions,
+                                share_dimensions,
+                                self.reference_groups)
 
         # Apply operations
-        operations = find_operations_for_widgets(self._widgets)
         for operation in operations:
             for reference in [None] + self._references:
                 df_key = format_metric_key(reference_key(operation, reference))
                 data_frame[df_key] = operation.apply(data_frame, reference)
 
+        data_frame = scrub_totals_from_share_results(data_frame, self._dimensions)
         data_frame = special_cases.apply_operations_to_data_frame(operations, data_frame)
-
         data_frame = paginate(data_frame,
                               self._widgets,
                               orders=self._orders,
@@ -356,7 +380,7 @@ class DimensionLatestQueryBuilder(QueryBuilder):
         return [query]
 
     def fetch(self, hint=None):
-        data = super().fetch(hint=hint).reset_index().ix[0]
+        data = super().fetch(hint=hint).reset_index().iloc[0]
         # Remove the row index as the name and trim the special dimension key characters from the dimension key
         data.name = None
         data.index = [key[3:] for key in data.index]

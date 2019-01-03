@@ -1,6 +1,7 @@
 import copy
 from unittest import TestCase
 
+from fireant.slicer.totals import MAX_STRING
 from fireant.slicer.widgets.reacttable import ReactTable
 from fireant.tests.slicer.mocks import (
     CumSum,
@@ -18,10 +19,7 @@ from fireant.tests.slicer.mocks import (
     slicer,
     uni_dim_df,
 )
-from fireant.utils import (
-    MAX_STRING,
-    format_dimension_key as fd,
-)
+from fireant.utils import format_dimension_key as fd
 
 
 class ReactTableTransformerTests(TestCase):

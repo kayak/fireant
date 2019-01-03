@@ -16,7 +16,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .queries
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(2, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -37,7 +37,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .filter(slicer.dimensions.timestamp.between(date(2000, 1, 1), date(2000, 3, 1))) \
             .queries
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(2, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -65,7 +65,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .queries
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(2, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -91,7 +91,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .reference(f.WeekOverWeek(slicer.dimensions.timestamp)) \
             .queries
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(2, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -117,7 +117,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .reference(f.MonthOverMonth(slicer.dimensions.timestamp)) \
             .queries
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(2, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -143,7 +143,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .reference(f.QuarterOverQuarter(slicer.dimensions.timestamp)) \
             .queries
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(2, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -169,7 +169,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
             .reference(f.YearOverYear(slicer.dimensions.timestamp)) \
             .queries
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(2, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -200,7 +200,7 @@ class QueryBuilderDatetimeReferenceWithDeltaTests(TestCase):
             .reference(f.DayOverDay(slicer.dimensions.timestamp, delta=True)) \
             .queries
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(2, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -226,7 +226,7 @@ class QueryBuilderDatetimeReferenceWithDeltaTests(TestCase):
             .reference(f.DayOverDay(slicer.dimensions.timestamp, delta_percent=True)) \
             .queries
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(2, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -258,7 +258,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
             .reference(f.DayOverDay(weekly_timestamp)) \
             .queries
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(2, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -284,7 +284,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
             .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .queries
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(2, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -310,7 +310,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
             .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .queries
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(2, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -336,7 +336,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
             .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .queries
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(2, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -362,7 +362,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
             .reference(f.DayOverDay(slicer.dimensions.timestamp)) \
             .queries
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(2, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -394,7 +394,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
             .reference(f.YearOverYear(slicer.dimensions.timestamp, delta_percent=True)) \
             .queries
 
-        self.assertEqual(len(queries), 3)
+        self.assertEqual(3, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -429,7 +429,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
                        f.DayOverDay(slicer.dimensions.timestamp)) \
             .queries
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(2, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -457,7 +457,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
                        f.DayOverDay(slicer.dimensions.timestamp, delta_percent=True)) \
             .queries
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(2, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -486,7 +486,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
                        f.YearOverYear(slicer.dimensions.timestamp, delta=True)) \
             .queries
 
-        self.assertEqual(len(queries), 3)
+        self.assertEqual(3, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -526,7 +526,7 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
             .reference(f.YearOverYear(slicer.dimensions.timestamp)) \
             .queries
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(2, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -555,7 +555,7 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
             .reference(f.YearOverYear(slicer.dimensions.timestamp)) \
             .queries
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(2, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -587,7 +587,7 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
                     .between(date(2018, 1, 1), date(2018, 1, 31))) \
             .queries
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(2, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -619,7 +619,7 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
                     .isin(['d'])) \
             .queries
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(2, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -654,7 +654,7 @@ class QueryBuilderDatetimeReferenceWithLeapYearTests(TestCase):
             .reference(f.YearOverYear(slicer.dimensions.timestamp)) \
             .queries
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(2, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '
@@ -682,7 +682,7 @@ class QueryBuilderDatetimeReferenceWithLeapYearTests(TestCase):
             .filter(slicer.dimensions.timestamp.between(date(2018, 1, 1), date(2018, 1, 31))) \
             .queries
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(2, len(queries))
 
         with self.subTest('base query is same as without reference'):
             self.assertEqual('SELECT '

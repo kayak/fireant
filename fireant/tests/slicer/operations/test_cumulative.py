@@ -1,21 +1,19 @@
 from unittest import TestCase
 
-import numpy as np
 import pandas as pd
 import pandas.testing
 
 from fireant import (
-    CumMean,
-    CumProd,
     CumSum,
-    RollingMean,
+    CumProd,
+    CumMean,
 )
 from fireant.tests.slicer.mocks import (
-    ElectionOverElection,
+    slicer,
     cont_dim_df,
     cont_uni_dim_df,
     cont_uni_dim_ref_df,
-    slicer,
+    ElectionOverElection,
 )
 
 
@@ -104,34 +102,5 @@ class CumMeanTests(TestCase):
         expected = pd.Series([5574387.0, 9646062.0, 5903886.0, 10037347.0, 6389131.0,
                               10776668.333333334, 6793838.5, 11404064.75, 7010664.2, 11662100.4],
                              name='$m$votes_eoe',
-                             index=cont_uni_dim_ref_df.index)
-        pandas.testing.assert_series_equal(expected, result)
-
-
-class RollingMeanTests(TestCase):
-    def test_apply_to_timeseries(self):
-        rolling_mean = RollingMean(slicer.metrics.wins, 3)
-        result = rolling_mean.apply(cont_dim_df, None)
-
-        expected = pd.Series([np.nan, np.nan, 2.0, 2.0, 2.0, 2.0],
-                             name='$m$wins',
-                             index=cont_dim_df.index)
-        pandas.testing.assert_series_equal(expected, result)
-
-    def test_apply_to_timeseries_with_uni_dim(self):
-        rolling_mean = RollingMean(slicer.metrics.wins, 3)
-        result = rolling_mean.apply(cont_uni_dim_df, None)
-
-        expected = pd.Series([np.nan, np.nan, np.nan, np.nan, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-                             name='$m$wins',
-                             index=cont_uni_dim_df.index)
-        pandas.testing.assert_series_equal(expected, result)
-
-    def test_apply_to_timeseries_with_uni_dim_and_ref(self):
-        rolling_mean = RollingMean(slicer.metrics.wins, 3)
-        result = rolling_mean.apply(cont_uni_dim_ref_df, ElectionOverElection(slicer.dimensions.timestamp))
-
-        expected = pd.Series([np.nan, np.nan, np.nan, np.nan, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-                             name='$m$wins_eoe',
                              index=cont_uni_dim_ref_df.index)
         pandas.testing.assert_series_equal(expected, result)

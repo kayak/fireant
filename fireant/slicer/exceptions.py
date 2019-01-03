@@ -18,6 +18,10 @@ class RollupException(SlicerException):
     pass
 
 
+class MissingTotalsForShareException(Exception):
+    pass
+
+
 class MetricRequiredException(SlicerException):
     pass
 

@@ -45,11 +45,14 @@ DATE_FORMATS = {
     annually: '%Y',
 }
 from fireant.utils import (
+    format_dimension_key,
+    wrap_list,
+)
+from fireant.slicer.totals import TOTALS_MARKERS
+from fireant.slicer.totals import (
     MAX_NUMBER,
     MAX_STRING,
     MAX_TIMESTAMP,
-    format_dimension_key,
-    wrap_list,
 )
 
 TOTALS_LABEL = 'Totals'
@@ -229,6 +232,7 @@ class ReactTable(Pandas):
             if isinstance(dimension, DatetimeDimension):
                 date_format = DATE_FORMATS.get(dimension.interval, DATE_FORMATS[daily])
 
+                # FIXME https://rollbar.com/KAYAK/Dashmore/items/4426/
                 def format_datetime(dt):
                     if MAX_TIMESTAMP == dt:
                         return TOTALS_LABEL
@@ -339,7 +343,7 @@ class ReactTable(Pandas):
 
             columns = []
             for column_value, group in groups:
-                is_totals = column_value in {MAX_STRING, MAX_NUMBER, TOTALS_LABEL}
+                is_totals = column_value in TOTALS_MARKERS | {TOTALS_LABEL}
 
                 # All column definitions have a header
                 column = {'Header': get_header(column_value, f_dimension_key, is_totals)}

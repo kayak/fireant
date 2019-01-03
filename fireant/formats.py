@@ -6,11 +6,7 @@ from datetime import (
     time,
 )
 
-from fireant.utils import (
-    MAX_NUMBER,
-    MAX_STRING,
-    MAX_TIMESTAMP,
-)
+from fireant.slicer.totals import TOTALS_MARKERS
 
 INF_VALUE = "Inf"
 NULL_VALUE = 'null'
@@ -68,7 +64,7 @@ def dimension_value(value):
         When True, dates and datetimes will be converted to ISO strings. The time is omitted for dates. When False, the
         datetime will be converted to a POSIX timestamp (millis-since-epoch).
     """
-    if value in {MAX_STRING, MAX_NUMBER, MAX_TIMESTAMP}:
+    if value in TOTALS_MARKERS:
         return 'Totals'
 
     if pd.isnull(value):

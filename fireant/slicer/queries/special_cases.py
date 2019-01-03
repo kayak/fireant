@@ -98,8 +98,8 @@ def apply_to_query_args(database, table, joins, dimensions, metrics, operations,
 
 def apply_special_cases(f):
     @functools.wraps(f)
-    def wrapper(*args):
-        return f(*apply_to_query_args(*args))
+    def wrapper(*args, **kwargs):
+        return f(*apply_to_query_args(*args), **kwargs)
 
     return wrapper
 

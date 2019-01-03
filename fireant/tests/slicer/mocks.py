@@ -3,7 +3,6 @@ from collections import (
 )
 from unittest.mock import Mock
 
-import numpy as np
 import pandas as pd
 from datetime import (
     datetime,
@@ -11,10 +10,8 @@ from datetime import (
 
 from fireant import *
 from fireant.slicer.references import ReferenceType
+from fireant.slicer.totals import get_totals_marker_for_dtype
 from fireant.utils import (
-    MAX_NUMBER,
-    MAX_STRING,
-    MAX_TIMESTAMP,
     format_dimension_key as fd,
     format_metric_key as fm,
 )
@@ -340,20 +337,11 @@ _columns = [fm('votes'), fm('wins')]
 cont_uni_dim_ref_df = ref(cont_uni_dim_df, _columns)
 cont_uni_dim_ref_delta_df = ref_delta(cont_uni_dim_ref_df, _columns)
 
-totals_markers = {
-    np.dtype('<M8[ns]'): MAX_TIMESTAMP,
-    np.dtype('int64'): MAX_NUMBER,
-}
-
 
 def totals(data_frame, dimensions, columns):
     """
     Computes the totals across a dimension and adds the total as an extra row.
     """
-
-    def get_totals_marker_for_dtype(dtype):
-        return totals_markers.get(dtype, MAX_STRING)
-
     if not isinstance(data_frame.index, pd.MultiIndex):
         totals_marker = get_totals_marker_for_dtype(data_frame.index.dtype)
         totals_df = pd.DataFrame([data_frame.sum()],

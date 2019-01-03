@@ -5,18 +5,8 @@ from fireant.formats import (
     INF_VALUE,
     NULL_VALUE,
 )
-from fireant.utils import (
-    MAX_NUMBER,
-    MAX_STRING,
-    MAX_TIMESTAMP,
-)
+from fireant.slicer.totals import TOTALS_MARKERS
 from ..references import reference_label
-
-TOTALS_MARKERS = {
-    MAX_NUMBER,
-    MAX_STRING,
-    MAX_TIMESTAMP,
-}
 
 
 def extract_display_values(dimensions, data_frame):
