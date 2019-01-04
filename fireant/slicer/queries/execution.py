@@ -11,13 +11,13 @@ from typing import (
 )
 
 import pandas as pd
+
 from fireant.database import Database
 from fireant.slicer.totals import get_totals_marker_for_dtype
 from fireant.utils import (
     chunks,
     format_dimension_key,
 )
-
 from .finders import find_totals_dimensions
 from .slow_query_logger import (
     query_logger,
@@ -151,7 +151,7 @@ def _replace_nans_for_totals_values(data_frame, dtypes):
     data_frame.reset_index(inplace=True)
 
     for dimension_key, dtype in dtypes.items():
-        data_frame[dimension_key] = get_totals_marker_for_dtype(dtype)
+        data_frame[dimension_key] = data_frame[dimension_key].fillna(get_totals_marker_for_dtype(dtype))
 
     return data_frame.set_index(index_names)
 

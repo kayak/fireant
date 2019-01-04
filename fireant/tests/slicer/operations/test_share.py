@@ -1,11 +1,9 @@
 from unittest import TestCase
 
-import numpy as np
 import pandas as pd
 import pandas.testing
 
 from fireant import Share
-from fireant.utils import format_metric_key
 from fireant.tests.slicer.mocks import (
     cat_dim_df,
     cat_dim_totals_df,
@@ -15,6 +13,7 @@ from fireant.tests.slicer.mocks import (
     single_metric_df,
     slicer,
 )
+from fireant.utils import format_metric_key
 
 
 class ShareTests(TestCase):
@@ -24,9 +23,8 @@ class ShareTests(TestCase):
 
         f_metric_key = format_metric_key(slicer.metrics.votes.key)
 
-        expected = pd.Series([100],
-                             name=f_metric_key,
-                             dtype=np.float64)
+        expected = pd.Series([100.],
+                             name=f_metric_key)
         pandas.testing.assert_series_equal(expected, result)
 
     def test_apply_to_one_dim_over_first(self):
@@ -37,8 +35,7 @@ class ShareTests(TestCase):
 
         expected = pd.Series([48.849, 0.964, 50.187, 100.0],
                              name=f_metric_key,
-                             index=cat_dim_totals_df.index,
-                             dtype=np.float64)
+                             index=cat_dim_totals_df.index)
         pandas.testing.assert_series_equal(expected, result, check_less_precise=True)
 
     def test_apply_to_one_dim_over_none(self):
@@ -47,10 +44,9 @@ class ShareTests(TestCase):
 
         f_metric_key = format_metric_key(slicer.metrics.votes.key)
 
-        expected = pd.Series([100] * 3,
+        expected = pd.Series([100.] * 3,
                              name=f_metric_key,
-                             index=cat_dim_df.index,
-                             dtype=np.float64)
+                             index=cat_dim_df.index)
         pandas.testing.assert_series_equal(expected, result, check_less_precise=True)
 
     def test_apply_to_two_dims_over_first(self):
@@ -99,14 +95,14 @@ class ShareTests(TestCase):
         pandas.testing.assert_series_equal(expected, result, check_less_precise=True)
 
     def test_apply_to_two_dims_over_second_with_one_row_per_group(self):
-        raw_df = cont_uni_dim_totals_df.iloc[[0, 2]]
+        raw_df = cont_uni_dim_totals_df.iloc[[0, 2, 3, 5]]
 
         share = Share(slicer.metrics.votes, over=slicer.dimensions.state)
         result = share.apply(raw_df, None)
 
         f_metric_key = format_metric_key(slicer.metrics.votes.key)
 
-        expected = pd.Series([36.624, 100.],
+        expected = pd.Series([36.624, 100., 37.411, 100.],
                              name=f_metric_key,
                              index=raw_df.index)
 
@@ -118,8 +114,7 @@ class ShareTests(TestCase):
 
         f_metric_key = format_metric_key(slicer.metrics.votes.key)
 
-        expected = pd.Series([100] * 12,
+        expected = pd.Series([100.] * 12,
                              name=f_metric_key,
-                             index=cont_uni_dim_df.index,
-                             dtype=np.float64)
+                             index=cont_uni_dim_df.index)
         pandas.testing.assert_series_equal(expected, result, check_less_precise=True)

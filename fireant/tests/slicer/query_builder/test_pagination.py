@@ -1,16 +1,16 @@
 from unittest import TestCase
 from unittest.mock import (
-    patch,
     Mock,
     call,
+    patch,
 )
 
 import fireant as f
 from fireant.tests.slicer.mocks import (
-    slicer,
     ElectionOverElection,
+    slicer,
 )
-from utils import format_metric_key
+from fireant.utils import format_metric_key
 
 
 @patch('fireant.slicer.queries.builder.scrub_totals_from_share_results', side_effect=lambda *args, **kwargs: args[0])

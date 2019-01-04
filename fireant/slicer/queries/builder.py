@@ -123,7 +123,7 @@ class SlicerQueryBuilder(QueryBuilder):
 
     @immutable
     def __call__(self, **kwargs):
-        for setting in ('filter_totals', 'exclude_dimensions_from_share'):
+        for setting in ('filter_totals',):
             if setting in kwargs:
                 setattr(self, setting, kwargs[setting])
 

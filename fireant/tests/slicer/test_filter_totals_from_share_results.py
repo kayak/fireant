@@ -65,15 +65,16 @@ class ScrubTotalsTests(TestCase):
 
         pandas.testing.assert_frame_equal(result, expected)
 
-    def test_do_not_remove_totals_for_rollup_dimensions_with_multiindex_and_multiple_totals(self):
-        result = scrub_totals_from_share_results(cont_uni_dim_all_totals_df, [slicer.dimensions.timestamp,
-                                                                              slicer.dimensions.political_party.rollup()])
+    def test_do_not_remove_totals_for_rollup_dimensions_with_multiindex_and_lower_dimension_totals(self):
+        result = scrub_totals_from_share_results(cont_uni_dim_all_totals_df,
+                                                 [slicer.dimensions.timestamp,
+                                                  slicer.dimensions.political_party.rollup()])
 
         expected = cont_uni_dim_all_totals_df.loc[:TIMESTAMP_UPPERBOUND]
 
         pandas.testing.assert_frame_equal(result, expected)
 
-    def test_do_not_remove_totals_for_rollup_dimensions_with_multiindex_and_multiple_totals_reversed(self):
+    def test_do_not_remove_totals_for_rollup_dimensions_with_multiindex_and_higher_dimension_totals(self):
         result = scrub_totals_from_share_results(cont_uni_dim_all_totals_df, [slicer.dimensions.timestamp.rollup(),
                                                                               slicer.dimensions.political_party])
 
@@ -83,8 +84,9 @@ class ScrubTotalsTests(TestCase):
         pandas.testing.assert_frame_equal(result, expected)
 
     def test_do_not_remove_totals_for_rollup_dimensions_with_multiindex_and_all_rolled_up(self):
-        result = scrub_totals_from_share_results(cont_uni_dim_all_totals_df, [slicer.dimensions.timestamp.rollup(),
-                                                                              slicer.dimensions.political_party.rollup()])
+        result = scrub_totals_from_share_results(cont_uni_dim_all_totals_df,
+                                                 [slicer.dimensions.timestamp.rollup(),
+                                                  slicer.dimensions.political_party.rollup()])
 
         expected = cont_uni_dim_all_totals_df
 
