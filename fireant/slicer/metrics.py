@@ -61,9 +61,3 @@ class Metric(SlicerElement):
     def share(self):
         self._share = True
         return self
-
-    @property
-    @immutable
-    def share(self):
-        self._share = True
-        return self

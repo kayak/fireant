@@ -112,7 +112,7 @@ def find_share_dimensions(dimensions, operations):
 
     dimension_map = {dimension.key: dimension
                      for dimension in dimensions}
-    
+
     return [dimension_map[dimension.key]
             for dimension in share_operations_over_dimensions]
 

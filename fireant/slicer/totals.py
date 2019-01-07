@@ -70,12 +70,12 @@ def _scrub_totals_for_multilevel_index_df(data_frame, dimensions):
                                    index=data_frame.index)
 
     """
-    If a row in the data frame is for totals for one index level, all of the subsequent index levels will also use a 
+    If a row in the data frame is for totals for one index level, all of the subsequent index levels will also use a
     totals marker. In order to avoid filtering the wrong rows, a new data frame is created similar to `is_totals_marker`
-    except a cell is only set to True if that value is a totals marker for the corresponding index level, the leaves of 
+    except a cell is only set to True if that value is a totals marker for the corresponding index level, the leaves of
     the dimension value tree.
-    
-    This is acheived by rolling an XOR function across each index level with the previous level.
+
+    This is achieved by rolling an XOR function across each index level with the previous level.
     """
     first_column = is_total_marker.columns[0]
     is_totals_marker_leaf = pd.DataFrame(is_total_marker[first_column])
