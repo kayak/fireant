@@ -1,3 +1,5 @@
+from typing import Iterable
+
 import pandas as pd
 
 from fireant import (
@@ -20,8 +22,8 @@ HARD_MAX_COLUMNS = 24
 
 
 class Pandas(TransformableWidget):
-    def __init__(self, metric, *metrics: Metric, pivot=(), transpose=False, sort=None, ascending=None,
-                 max_columns=None):
+    def __init__(self, metric: Metric, *metrics: Iterable[Metric],
+                 pivot=(), transpose=False, sort=None, ascending=None, max_columns=None):
         super(Pandas, self).__init__(metric, *metrics)
         self.pivot = pivot
         self.transpose = transpose
