@@ -148,7 +148,8 @@ class HighCharts(ChartWidget, TransformableWidget):
             "legend": {"useHTML": True},
         }
 
-    def _remove_date_totals(self, data_frame):
+    @staticmethod
+    def _remove_date_totals(data_frame):
         """
         This function filters the totals value for the date/time dimension from the result set. There is no way to
         represent this value on a chart so it is just removed.

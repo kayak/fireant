@@ -10,25 +10,26 @@ from typing import (
     Union,
 )
 
-import numpy as np
 import pandas as pd
 
 from fireant.database import Database
+from fireant.slicer.totals import get_totals_marker_for_dtype
 from fireant.utils import (
-    MAX_NUMBER,
-    MAX_STRING,
-    MAX_TIMESTAMP,
     chunks,
     format_dimension_key,
 )
-from .logger import (
+from .finders import find_totals_dimensions
+from .slow_query_logger import (
     query_logger,
     slow_query_logger,
 )
 from ..dimensions import Dimension
 
 
-def fetch_data(database: Database, queries: Union[Sized, Iterable], dimensions: Iterable[Dimension],
+def fetch_data(database: Database,
+               queries: Union[Sized, Iterable],
+               dimensions: Iterable[Dimension],
+               share_dimensions: Iterable[Dimension] = (),
                reference_groups=()):
     iterable = [(str(query.limit(int(database.max_result_set_size))), database)
                 for query in queries]
@@ -37,7 +38,7 @@ def fetch_data(database: Database, queries: Union[Sized, Iterable], dimensions: 
         results = pool.map(_exec, iterable)
         pool.close()
 
-    return _reduce_result_set(results, reference_groups, dimensions)
+    return _reduce_result_set(results, reference_groups, dimensions, share_dimensions)
 
 
 def _exec(args):
@@ -92,7 +93,10 @@ def _do_fetch_data(query: str, database: Database):
         return pd.read_sql(query, connection, coerce_float=True, parse_dates=True)
 
 
-def _reduce_result_set(results: Iterable[pd.DataFrame], reference_groups, dimensions: Iterable[Dimension]):
+def _reduce_result_set(results: Iterable[pd.DataFrame],
+                       reference_groups,
+                       dimensions: Iterable[Dimension],
+                       share_dimensions: Dimension):
     """
     Reduces the result sets from individual queries into a single data frame. This effectively joins sets of references
     and concats the sets of totals.
@@ -108,10 +112,9 @@ def _reduce_result_set(results: Iterable[pd.DataFrame], reference_groups, dimens
 
     dimension_keys = [format_dimension_key(d.key)
                       for d in dimensions]
-    rollup_dimension_keys = [format_dimension_key(d.key)
-                             for d in dimensions
-                             if d.is_rollup]
-    rollup_dimension_dtypes = result_groups[0][0][rollup_dimension_keys].dtypes
+    totals_dimension_keys = [format_dimension_key(d.key)
+                             for d in find_totals_dimensions(dimensions, share_dimensions)]
+    dimension_dtypes = result_groups[0][0][dimension_keys].dtypes
 
     # Reduce each group to one data frame per rolled up dimension
     group_data_frames = []
@@ -132,8 +135,8 @@ def _reduce_result_set(results: Iterable[pd.DataFrame], reference_groups, dimens
         # marker to indicate totals.
         # The data frames will be ordered so that the first group will contain the data without any rolled up
         # dimensions, then followed by the groups with them, ordered by the last rollup dimension first.
-        if rollup_dimension_keys[:i]:
-            reduced = _replace_nans_for_rollup_values(reduced, rollup_dimension_dtypes[-i:])
+        if totals_dimension_keys[:i]:
+            reduced = _replace_nans_for_totals_values(reduced, dimension_dtypes[-i - 1:])
 
         group_data_frames.append(reduced)
 
@@ -141,19 +144,14 @@ def _reduce_result_set(results: Iterable[pd.DataFrame], reference_groups, dimens
         .sort_index(na_position='first')
 
 
-def _replace_nans_for_rollup_values(data_frame, dtypes):
-    replace = {
-        np.dtype('<M8[ns]'): MAX_TIMESTAMP,
-        np.dtype('int64'): MAX_NUMBER,
-    }
-
+def _replace_nans_for_totals_values(data_frame, dtypes):
     # some things are just easier to do without an index. Reset it temporarily to replaxe NaN values with the rollup
     # marker values
     index_names = data_frame.index.names
     data_frame.reset_index(inplace=True)
 
     for dimension_key, dtype in dtypes.items():
-        data_frame[dimension_key] = replace.get(dtype, MAX_STRING)
+        data_frame[dimension_key] = data_frame[dimension_key].fillna(get_totals_marker_for_dtype(dtype))
 
     return data_frame.set_index(index_names)
 

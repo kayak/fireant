@@ -9,13 +9,14 @@ from pypika import (
     Table,
     functions as fn,
 )
+
 from .finders import (
     find_and_group_references_for_dimensions,
     find_joins_for_tables,
     find_required_tables_to_join,
-    find_rolled_up_dimensions,
+    find_totals_dimensions,
 )
-from .references import adapt_for_reference_query
+from .reference_helper import adapt_for_reference_query
 from .special_cases import apply_special_cases
 from ..dimensions import (
     Dimension,
@@ -30,19 +31,30 @@ from ..metrics import Metric
 from ...database import Database
 
 
-def adapt_for_totals_query(totals_dimension, dimensions):
+def adapt_for_totals_query(totals_dimension, dimensions, filters, filter_totals):
+    apply_totals = totals_dimension is not None
+
     # Get an index to split the dimensions before and after the totals dimension
     index = dimensions.index(totals_dimension) \
-        if totals_dimension is not None \
+        if apply_totals \
         else len(dimensions)
 
     grouped_dims, totaled_dims = dimensions[:index], dimensions[index:]
-    return grouped_dims + [TotalsDimension(dimension)
-                           for dimension in totaled_dims]
+    totals_dims = grouped_dims + [TotalsDimension(dimension)
+                                  for dimension in totaled_dims]
+
+    # when filter_totals is False, remove all filters for the totals dimension
+    totals_filters = [f
+                      for f in filters
+                      if getattr(f, 'dimension_key', None) != totals_dimension.key] \
+        if apply_totals and not filter_totals \
+        else filters
+
+    return totals_dims, totals_filters
 
 
 @apply_special_cases
-def make_slicer_query_with_rollup_and_references(database,
+def make_slicer_query_with_totals_and_references(database,
                                                  table,
                                                  joins,
                                                  dimensions,
@@ -50,17 +62,21 @@ def make_slicer_query_with_rollup_and_references(database,
                                                  operations,
                                                  filters,
                                                  references,
-                                                 orders):
+                                                 orders,
+                                                 share_dimensions=(),
+                                                 filter_totals=True):
     """
     :param database:
     :param table:
     :param joins:
     :param dimensions:
     :param metrics:
-    :param filters:
-    :param orders:
-    :param references:
     :param operations:
+    :param filters:
+    :param references:
+    :param orders:
+    :param share_dimensions:
+    :param filter_totals:
     :return:
     """
 
@@ -79,15 +95,19 @@ def make_slicer_query_with_rollup_and_references(database,
         #test_build_query_with_totals_cat_dimension_with_references
     ```
     """
-    rollup_dimensions = find_rolled_up_dimensions(dimensions)
-    rollup_dimensions_and_none = [None] + rollup_dimensions[::-1]
+    totals_dimensions = find_totals_dimensions(dimensions, share_dimensions)
+    totals_dimensions_and_none = [None] + totals_dimensions[::-1]
 
     reference_groups = find_and_group_references_for_dimensions(references)
     reference_groups_and_none = [(None, None)] + list(reference_groups.items())
 
     queries = []
-    for rollup_dimension in rollup_dimensions_and_none:
-        query_dimensions = adapt_for_totals_query(rollup_dimension, dimensions)
+    for totals_dimension in totals_dimensions_and_none:
+        (query_dimensions,
+         query_filters) = adapt_for_totals_query(totals_dimension,
+                                                 dimensions,
+                                                 filters,
+                                                 filter_totals)
 
         for reference_parts, references in reference_groups_and_none:
             (ref_database,
@@ -97,7 +117,7 @@ def make_slicer_query_with_rollup_and_references(database,
                                                       database,
                                                       query_dimensions,
                                                       metrics,
-                                                      filters,
+                                                      query_filters,
                                                       references)
             query = make_slicer_query(ref_database,
                                       table,
@@ -107,8 +127,9 @@ def make_slicer_query_with_rollup_and_references(database,
                                       ref_filters,
                                       orders)
 
-            # Add this to the query instance so when the data frames are joined together, the correct references can be
-            # applied.
+            # Add these to the query instance so when the data frames are joined together, the correct references and
+            # totals can be applied when combining the separate result set from each query.
+            query._totals = totals_dimension
             query._references = references
 
             queries.append(query)
@@ -149,10 +170,10 @@ def make_slicer_query(database: Database,
         A collection of filters to apply to the query.
     :param orders:
         A collection of orders as tuples of the metric/dimension to order by and the direction to order in.
+
     :return:
     """
     query = database.query_cls.from_(base_table)
-
     elements = flatten([metrics, dimensions, filters])
 
     # Add joins
@@ -179,6 +200,7 @@ def make_slicer_query(database: Database,
     if terms:
         query = query.select(*terms)
 
+    # Get the aliases for selected elements so missing ones can be included in the query if they are used for sorting
     select_aliases = {el.alias for el in query._selects}
     for (term, orientation) in orders:
         query = query.orderby(term, order=orientation)

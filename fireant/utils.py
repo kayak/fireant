@@ -1,11 +1,4 @@
-import sys
 from collections import OrderedDict
-
-import pandas as pd
-
-MAX_TIMESTAMP = pd.Timestamp.max
-MAX_NUMBER = sys.maxsize
-MAX_STRING = '~~totals'
 
 
 def wrap_list(value):
@@ -251,3 +244,10 @@ def repr_field_key(key):
     field_key = key[3:]
     field_type = {'m': 'metrics', 'd': 'dimensions'}[field_type_symbol]
     return 'slicer.{}.{}'.format(field_type, field_key)
+
+
+def reduce_data_frame_levels(data_frame, level):
+    reduced = data_frame.reset_index(level=level, drop=True)
+    if reduced.size == 1 and reduced.index.names == [None]:
+        return reduced.iloc[0]
+    return reduced

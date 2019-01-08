@@ -1,3 +1,6 @@
+from fireant.utils import (
+    immutable,
+)
 from .base import SlicerElement
 from .filters import ComparatorFilter
 
@@ -30,24 +33,31 @@ class Metric(SlicerElement):
         self.precision = precision
         self.prefix = prefix
         self.suffix = suffix
+        self._share = False
 
     def __eq__(self, other):
-        return ComparatorFilter(self.definition, ComparatorFilter.Operator.eq, other)
+        return ComparatorFilter(self.key, self.definition, ComparatorFilter.Operator.eq, other)
 
     def __ne__(self, other):
-        return ComparatorFilter(self.definition, ComparatorFilter.Operator.ne, other)
+        return ComparatorFilter(self.key, self.definition, ComparatorFilter.Operator.ne, other)
 
     def __gt__(self, other):
-        return ComparatorFilter(self.definition, ComparatorFilter.Operator.gt, other)
+        return ComparatorFilter(self.key, self.definition, ComparatorFilter.Operator.gt, other)
 
     def __ge__(self, other):
-        return ComparatorFilter(self.definition, ComparatorFilter.Operator.gte, other)
+        return ComparatorFilter(self.key, self.definition, ComparatorFilter.Operator.gte, other)
 
     def __lt__(self, other):
-        return ComparatorFilter(self.definition, ComparatorFilter.Operator.lt, other)
+        return ComparatorFilter(self.key, self.definition, ComparatorFilter.Operator.lt, other)
 
     def __le__(self, other):
-        return ComparatorFilter(self.definition, ComparatorFilter.Operator.lte, other)
+        return ComparatorFilter(self.key, self.definition, ComparatorFilter.Operator.lte, other)
 
     def __repr__(self):
         return "slicer.metrics.{}".format(self.key)
+
+    @property
+    @immutable
+    def share(self):
+        self._share = True
+        return self

@@ -15,11 +15,15 @@ class Filter(object):
 
 
 class DimensionFilter(Filter):
-    pass
+    def __init__(self, dimension_key, definition):
+        super().__init__(definition)
+        self.dimension_key = dimension_key
 
 
 class MetricFilter(Filter):
-    pass
+    def __init__(self, metric_key, definition):
+        super().__init__(definition)
+        self.metric_key = metric_key
 
 
 class ComparatorFilter(MetricFilter):
@@ -31,36 +35,43 @@ class ComparatorFilter(MetricFilter):
         gte = 'gte'
         lte = 'lte'
 
-    def __init__(self, metric_definition, operator, value):
+    def __init__(self, metric_key, metric_definition, operator, value):
         definition = getattr(metric_definition, operator)(value)
-        super(ComparatorFilter, self).__init__(definition)
+        super(ComparatorFilter, self).__init__(metric_key, definition)
 
 
 class BooleanFilter(DimensionFilter):
-    def __init__(self, element_key, value):
-        definition = element_key if value else Not(element_key)
-        super(BooleanFilter, self).__init__(definition)
+    def __init__(self, dimension_key, dimension_definition, value):
+        definition = dimension_definition \
+            if value \
+            else Not(dimension_definition)
+
+        super(BooleanFilter, self).__init__(dimension_key, definition)
 
 
 class ContainsFilter(DimensionFilter):
-    def __init__(self, dimension_definition, values):
+    def __init__(self, dimension_key, dimension_definition, values):
         definition = dimension_definition.isin(values)
-        super(ContainsFilter, self).__init__(definition)
+        super(ContainsFilter, self).__init__(dimension_key, definition)
 
 
 class ExcludesFilter(DimensionFilter):
-    def __init__(self, dimension_definition, values):
+    def __init__(self, dimension_key, dimension_definition, values):
         definition = dimension_definition.notin(values)
-        super(ExcludesFilter, self).__init__(definition)
+        super(ExcludesFilter, self).__init__(dimension_key, definition)
 
 
 class RangeFilter(DimensionFilter):
-    def __init__(self, dimension_definition, start, stop):
+    def __init__(self, dimension_key, dimension_definition, start, stop):
         definition = dimension_definition[start:stop]
-        super(RangeFilter, self).__init__(definition)
+        super(RangeFilter, self).__init__(dimension_key, definition)
 
 
 class PatternFilter(DimensionFilter):
+    def __init__(self, dimension_key, dimension_definition, pattern, *patterns):
+        definition = self._apply(dimension_definition, (pattern,) + patterns)
+        super(PatternFilter, self).__init__(dimension_key, definition)
+
     def _apply(self, dimension_definition, patterns):
         definition = Lower(dimension_definition).like(Lower(patterns[0]))
 
@@ -68,10 +79,6 @@ class PatternFilter(DimensionFilter):
             definition |= Lower(dimension_definition).like(Lower(pattern))
 
         return definition
-
-    def __init__(self, dimension_definition, pattern, *patterns):
-        definition = self._apply(dimension_definition, (pattern,) + patterns)
-        super(PatternFilter, self).__init__(definition)
 
 
 class AntiPatternFilter(PatternFilter):

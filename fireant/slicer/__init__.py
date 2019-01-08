@@ -29,6 +29,7 @@ from .operations import (
     CumSum,
     Operation,
     RollingMean,
+    Share,
 )
 from .references import (
     DayOverDay,

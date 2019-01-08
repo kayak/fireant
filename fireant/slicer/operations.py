@@ -1,8 +1,14 @@
 import numpy as np
 import pandas as pd
 
-from fireant.utils import format_metric_key
 from fireant.slicer.references import reference_key
+from fireant.slicer.totals import get_totals_marker_for_dtype
+from fireant.utils import (
+    format_dimension_key,
+    format_metric_key,
+    reduce_data_frame_levels,
+)
+from .dimensions import Dimension
 from .metrics import Metric
 
 
@@ -194,3 +200,61 @@ class RollingMean(RollingOperation):
                 .apply(self.rolling_mean)
 
         return self.rolling_mean(data_frame[df_key])
+
+
+class Share(_BaseOperation):
+    def __init__(self, metric: Metric, over: Dimension = None, precision=2):
+        super(Share, self).__init__(
+              key='share({},{})'.format(getattr(metric, 'key', metric),
+                                        getattr(over, 'key', over), ),
+              label='Share of {} over {}'.format(getattr(metric, 'label', metric),
+                                                 getattr(over, 'label', over)),
+              prefix=None,
+              suffix='%',
+              precision=precision,
+        )
+
+        self.metric = metric
+        self.over = over
+
+    @property
+    def metrics(self):
+        return [metric
+                for metric in [self.metric]
+                if isinstance(metric, Metric)]
+
+    @property
+    def operations(self):
+        return [op_and_children
+                for operation in [self.metric]
+                if isinstance(operation, Operation)
+                for op_and_children in [operation] + operation.operations]
+
+    def apply(self, data_frame, reference):
+        f_metric_key = format_metric_key(reference_key(self.metric, reference))
+
+        if self.over is None:
+            df = data_frame[f_metric_key]
+            return 100 * df / df
+
+        if not isinstance(data_frame.index, pd.MultiIndex):
+            marker = get_totals_marker_for_dtype(data_frame.index.dtype)
+            totals = data_frame.loc[marker, f_metric_key]
+            return 100 * data_frame[f_metric_key] / totals
+
+        f_over_key = format_dimension_key(self.over.key)
+        idx = data_frame.index.names.index(f_over_key)
+        group_levels = data_frame.index.names[idx:]
+        over_dim_value = get_totals_marker_for_dtype(data_frame.index.levels[idx].dtype)
+        totals_key = (slice(None),) * idx + (slice(over_dim_value, over_dim_value),)
+
+        totals = reduce_data_frame_levels(data_frame.loc[totals_key, f_metric_key], group_levels)
+
+        def apply_totals(df):
+            return 100 * reduce_data_frame_levels(df / totals, group_levels)
+
+        return data_frame[f_metric_key] \
+            .groupby(level=group_levels) \
+            .apply(apply_totals) \
+            .reorder_levels(order=data_frame.index.names) \
+            .sort_index()

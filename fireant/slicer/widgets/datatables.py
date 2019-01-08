@@ -8,10 +8,8 @@ from fireant import (
     utils,
 )
 from fireant.formats import NULL_VALUE
+from fireant.slicer.totals import TOTALS_MARKERS
 from fireant.utils import (
-    MAX_NUMBER,
-    MAX_STRING,
-    MAX_TIMESTAMP,
     format_dimension_key,
     format_metric_key,
 )
@@ -44,7 +42,7 @@ def _render_dimension_cell(dimension_value: str, display_values: dict):
     dimension_cell = {'value': formats.dimension_value(dimension_value)}
 
     if display_values is not None:
-        if dimension_value in {MAX_STRING, MAX_NUMBER, MAX_TIMESTAMP}:
+        if dimension_value in TOTALS_MARKERS:
             dimension_cell['display'] = 'Totals'
         elif pd.isnull(dimension_value):
             dimension_cell['display'] = NULL_VALUE
