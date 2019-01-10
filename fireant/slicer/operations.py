@@ -250,8 +250,15 @@ class Share(_BaseOperation):
 
         totals = reduce_data_frame_levels(data_frame.loc[totals_key, f_metric_key], group_levels)
 
-        def apply_totals(df):
-            return 100 * reduce_data_frame_levels(df / totals, group_levels)
+        def apply_totals(group_df):
+            if not isinstance(totals, pd.Series):
+                return 100 * group_df / totals
+
+            n_index_levels = len(totals.index.names)
+            extra_level_names = group_df.index.names[n_index_levels:]
+            group_df = group_df.reset_index(extra_level_names, drop=True)
+            share = 100 * group_df / totals[group_df.index]
+            return pd.Series(share.values, index=group_df.index)
 
         return data_frame[f_metric_key] \
             .groupby(level=group_levels) \

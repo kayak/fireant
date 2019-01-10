@@ -368,6 +368,16 @@ def totals(data_frame, dimensions, columns):
 
         if groupby_levels:
             level_totals_df = data_frame[columns].groupby(level=groupby_levels).apply(_totals)
+
+            missing_dims = set(data_frame.index.names) - set(level_totals_df.index.names)
+            if missing_dims:
+                for dim in missing_dims:
+                    dtype = data_frame.index.levels[data_frame.index.names.index(dim)].dtype
+                    level_totals_df[dim] = get_totals_marker_for_dtype(dtype)
+                    level_totals_df.set_index(dim, append=True, inplace=True)
+
+                level_totals_df = level_totals_df.reorder_levels(data_frame.index.names)
+
         else:
             totals_index_values = [get_totals_marker_for_dtype(level.dtype)
                                    for level in data_frame.index.levels]
@@ -399,7 +409,10 @@ for l in list(locals().values()):
 
 cat_dim_totals_df = totals(cat_dim_df, [fd('political_party')], _columns)
 cont_cat_dim_totals_df = totals(cont_cat_dim_df, [fd('political_party')], _columns)
+cont_cat_dim_all_totals_df = totals(cont_cat_dim_df, [fd('timestamp'), fd('political_party')], _columns)
 cont_uni_dim_totals_df = totals(cont_uni_dim_df, [fd('state')], _columns)
 cont_uni_dim_all_totals_df = totals(cont_uni_dim_df, [fd('timestamp'), fd('state')], _columns)
+cont_cat_uni_dim_all_totals_df = totals(cont_cat_uni_dim_df, [fd('timestamp'), fd('political_party'), fd('state')],
+                                        _columns)
 
 ElectionOverElection = ReferenceType('eoe', 'EoE', 'year', 4)
