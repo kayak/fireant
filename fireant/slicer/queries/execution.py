@@ -1,4 +1,3 @@
-import time
 from functools import (
     reduce,
     wraps,
@@ -11,6 +10,7 @@ from typing import (
 )
 
 import pandas as pd
+import time
 
 from fireant.database import Database
 from fireant.slicer.totals import get_totals_marker_for_dtype
@@ -38,7 +38,7 @@ def fetch_data(database: Database,
         results = pool.map(_exec, iterable)
         pool.close()
 
-    return _reduce_result_set(results, reference_groups, dimensions, share_dimensions)
+    return reduce_result_set(results, reference_groups, dimensions, share_dimensions)
 
 
 def _exec(args):
@@ -93,10 +93,10 @@ def _do_fetch_data(query: str, database: Database):
         return pd.read_sql(query, connection, coerce_float=True, parse_dates=True)
 
 
-def _reduce_result_set(results: Iterable[pd.DataFrame],
-                       reference_groups,
-                       dimensions: Iterable[Dimension],
-                       share_dimensions: Dimension):
+def reduce_result_set(results: Iterable[pd.DataFrame],
+                      reference_groups,
+                      dimensions: Iterable[Dimension],
+                      share_dimensions: Iterable[Dimension]):
     """
     Reduces the result sets from individual queries into a single data frame. This effectively joins sets of references
     and concats the sets of totals.
@@ -104,6 +104,7 @@ def _reduce_result_set(results: Iterable[pd.DataFrame],
     :param results: A list of data frame
     :param reference_groups: A list of groups of references (grouped by interval such as WoW, etc)
     :param dimensions: A list of dimensions, used for setting the index on the result data frame.
+    :param share_dimensions: A list of dimensions from which the totals are used for calculating share operations.
     :return:
     """
 
@@ -136,7 +137,7 @@ def _reduce_result_set(results: Iterable[pd.DataFrame],
         # The data frames will be ordered so that the first group will contain the data without any rolled up
         # dimensions, then followed by the groups with them, ordered by the last rollup dimension first.
         if totals_dimension_keys[:i]:
-            reduced = _replace_nans_for_totals_values(reduced, dimension_dtypes[-i - 1:])
+            reduced = _replace_nans_for_totals_values(reduced, dimension_dtypes)
 
         group_data_frames.append(reduced)
 
