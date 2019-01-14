@@ -4,5 +4,3 @@ pypika==0.20.1
 toposort==1.5
 typing==3.6.2
 python-dateutil==2.7.3
-
-mock
