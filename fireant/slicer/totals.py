@@ -60,12 +60,13 @@ def _scrub_totals_for_singlelevel_index_df(data_frame, dimensions):
 
 def _scrub_totals_for_multilevel_index_df(data_frame, dimensions):
     # Get the totals marker value for each index level
-    markers = np.array([get_totals_marker_for_dtype(level.dtype)
-                        for level in data_frame.index.levels])
+    markers = [get_totals_marker_for_dtype(level.dtype)
+               for level in data_frame.index.levels]
 
     # Create a boolean data frame indicating whether or not the index value equals the totals marker for the dtype
     # corresponding to each index level
-    is_total_marker = pd.DataFrame([values == markers
+    is_total_marker = pd.DataFrame([[value == marker
+                                     for value, marker in zip(values, markers)]
                                     for values in data_frame.index],
                                    index=data_frame.index)
 
