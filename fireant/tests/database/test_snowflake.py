@@ -23,15 +23,16 @@ class TestSnowflake(TestCase):
         self.assertIsNone(snowflake.region)
         self.assertIsNone(snowflake.warehouse)
 
-    @patch('fireant.database.snowflake.snowflake')
-    def test_connect_with_password(self, mock_snowflake):
-        mock_snowflake.connect.return_value = 'OK'
+    def test_connect_with_password(self):
+        # need to patch this here so it can be imported in the function scope
+        with patch('snowflake.connector') as mock_snowflake:
+            mock_snowflake.connect.return_value = 'OK'
 
-        snowflake = SnowflakeDatabase(user='test_user',
-                                      password='test_pass',
-                                      account='test_account',
-                                      database='test_database')
-        result = snowflake.connect()
+            snowflake = SnowflakeDatabase(user='test_user',
+                                          password='test_pass',
+                                          account='test_account',
+                                          database='test_database')
+            result = snowflake.connect()
 
         self.assertEqual('OK', result)
         mock_snowflake.connect.assert_called_once_with(user='test_user',
@@ -43,18 +44,18 @@ class TestSnowflake(TestCase):
                                                        warehouse=None)
 
     @patch('fireant.database.snowflake.serialization')
-    @patch('fireant.database.snowflake.snowflake')
-    def test_connect_with_pkey(self, mock_snowflake, mock_serialization):
-        mock_pkey = mock_serialization.load_pem_private_key.return_value = Mock(name='pkey')
-        # mock_pkey.private_bytes.return_value = 'MY KEY'
-        mock_snowflake.connect.return_value = 'OK'
+    def test_connect_with_pkey(self, mock_serialization):
+        # need to patch this here so it can be imported in the function scope
+        with patch('snowflake.connector') as mock_snowflake:
+            mock_pkey = mock_serialization.load_pem_private_key.return_value = Mock(name='pkey')
+            mock_snowflake.connect.return_value = 'OK'
 
-        snowflake = SnowflakeDatabase(user='test_user',
-                                      private_key_data='abcdefg',
-                                      private_key_password='1234',
-                                      account='test_account',
-                                      database='test_database')
-        result = snowflake.connect()
+            snowflake = SnowflakeDatabase(user='test_user',
+                                          private_key_data='abcdefg',
+                                          private_key_password='1234',
+                                          account='test_account',
+                                          database='test_database')
+            result = snowflake.connect()
 
         with self.subTest('returns connection'):
             self.assertEqual('OK', result)

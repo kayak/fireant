@@ -62,6 +62,8 @@ class SnowflakeDatabase(Database):
         self.warehouse = warehouse
 
     def connect(self):
+        from snowflake import connector as snowflake
+
         return snowflake.connect(database=self.database,
                                  account=self.account,
                                  user=self.user,
