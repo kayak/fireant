@@ -1,6 +1,7 @@
 from unittest import TestCase
 from unittest.mock import (
     ANY,
+    Mock,
     patch,
 )
 
@@ -44,8 +45,8 @@ class TestSnowflake(TestCase):
     @patch('fireant.database.snowflake.serialization')
     @patch('fireant.database.snowflake.snowflake')
     def test_connect_with_pkey(self, mock_snowflake, mock_serialization):
-        mock_pkey = mock_serialization.load_pem_private_key.return_value
-        mock_pkey.private_bytes.return_value = 'MY KEY'
+        mock_pkey = mock_serialization.load_pem_private_key.return_value = Mock(name='pkey')
+        # mock_pkey.private_bytes.return_value = 'MY KEY'
         mock_snowflake.connect.return_value = 'OK'
 
         snowflake = SnowflakeDatabase(user='test_user',
@@ -63,15 +64,12 @@ class TestSnowflake(TestCase):
                                                                             b'1234',
                                                                             backend=ANY)
 
-        with self.subTest('key with private bytes'):
-            mock_pkey.private_bytes.assert_called_once()
-
         with self.subTest('connects with credentials'):
             mock_snowflake.connect.assert_called_once_with(user='test_user',
                                                            password=None,
                                                            account='test_account',
                                                            database='test_database',
-                                                           private_key='MY KEY',
+                                                           private_key=mock_pkey.private_bytes.return_value,
                                                            region=None,
                                                            warehouse=None)
 
