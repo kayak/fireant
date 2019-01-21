@@ -16,8 +16,9 @@ class TestSnowflake(TestCase):
         self.assertEqual('snowflake', snowflake.account)
         self.assertEqual('snowflake', snowflake.database)
         self.assertEqual('snowflake', snowflake.user)
-        self.assertIsNone(snowflake.private_key)
         self.assertIsNone(snowflake.password)
+        self.assertIsNone(snowflake.private_key_data)
+        self.assertIsNone(snowflake.private_key_password)
         self.assertIsNone(snowflake.region)
         self.assertIsNone(snowflake.warehouse)
 
@@ -48,8 +49,8 @@ class TestSnowflake(TestCase):
         mock_snowflake.connect.return_value = 'OK'
 
         snowflake = SnowflakeDatabase(user='test_user',
-                                      private_key='abcdefg',
-                                      pass_phrase='1234',
+                                      private_key_data='abcdefg',
+                                      private_key_password='1234',
                                       account='test_account',
                                       database='test_database')
         result = snowflake.connect()

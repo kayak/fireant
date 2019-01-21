@@ -47,8 +47,8 @@ class SnowflakeDatabase(Database):
 
     def __init__(self, user='snowflake', password=None,
                  account='snowflake', database='snowflake',
-                 private_key=None, pass_phrase=None,
-                 region=None, warehouse=None, read_timeout=None,
+                 private_key_data=None, private_key_password=None,
+                 region=None, warehouse=None,
                  max_processes=1, cache_middleware=None):
         super(SnowflakeDatabase, self).__init__(database=database,
                                                 max_processes=max_processes,
@@ -56,18 +56,17 @@ class SnowflakeDatabase(Database):
         self.user = user
         self.password = password
         self.account = account
-        self.private_key = private_key
-        self.pass_phrase = pass_phrase
+        self.private_key_data = private_key_data
+        self.private_key_password = private_key_password
         self.region = region
         self.warehouse = warehouse
-        self.read_timeout = read_timeout
 
     def connect(self):
-        return snowflake.connect(user=self.user,
-                                 password=self.password,
+        return snowflake.connect(database=self.database,
                                  account=self.account,
+                                 user=self.user,
+                                 password=self.password,
                                  private_key=self._get_private_key(),
-                                 database=self.database,
                                  region=self.region,
                                  warehouse=self.warehouse)
 
@@ -80,20 +79,20 @@ class SnowflakeDatabase(Database):
 
     def _get_private_key(self):
         if self._private_key is None:
-            self._private_key = self._read_private_key()
+            self._private_key = self._load_private_key_data()
 
         return self._private_key
 
-    def _read_private_key(self):
-        if self.private_key is None:
+    def _load_private_key_data(self):
+        if self.private_key_data is None:
             return None
 
-        pass_phrase = None \
-            if self.pass_phrase is None \
-            else self.pass_phrase.encode()
+        private_key_password = None \
+            if self.private_key_password is None \
+            else self.private_key_password.encode()
 
-        pkey = serialization.load_pem_private_key(self.private_key.encode(),
-                                                  pass_phrase,
+        pkey = serialization.load_pem_private_key(self.private_key_data.encode(),
+                                                  private_key_password,
                                                   backend=default_backend())
 
         return pkey.private_bytes(encoding=serialization.Encoding.DER,
