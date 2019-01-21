@@ -24,9 +24,12 @@ class TestSnowflake(TestCase):
         self.assertIsNone(snowflake.warehouse)
 
     def test_connect_with_password(self):
+        mock_snowflake = Mock(name='mock_snowflake')
+        mock_connector = mock_snowflake.connector
+
         # need to patch this here so it can be imported in the function scope
-        with patch('snowflake.connector') as mock_snowflake:
-            mock_snowflake.connect.return_value = 'OK'
+        with patch.dict('sys.modules', snowflake=mock_snowflake):
+            mock_connector.connect.return_value = 'OK'
 
             snowflake = SnowflakeDatabase(user='test_user',
                                           password='test_pass',
@@ -35,7 +38,7 @@ class TestSnowflake(TestCase):
             result = snowflake.connect()
 
         self.assertEqual('OK', result)
-        mock_snowflake.connect.assert_called_once_with(user='test_user',
+        mock_connector.connect.assert_called_once_with(user='test_user',
                                                        password='test_pass',
                                                        account='test_account',
                                                        database='test_database',
@@ -45,10 +48,13 @@ class TestSnowflake(TestCase):
 
     @patch('fireant.database.snowflake.serialization')
     def test_connect_with_pkey(self, mock_serialization):
+        mock_snowflake = Mock(name='mock_snowflake')
+        mock_connector = mock_snowflake.connector
+        mock_pkey = mock_serialization.load_pem_private_key.return_value = Mock(name='pkey')
+
         # need to patch this here so it can be imported in the function scope
-        with patch('snowflake.connector') as mock_snowflake:
-            mock_pkey = mock_serialization.load_pem_private_key.return_value = Mock(name='pkey')
-            mock_snowflake.connect.return_value = 'OK'
+        with patch.dict('sys.modules', snowflake=mock_snowflake):
+            mock_connector.connect.return_value = 'OK'
 
             snowflake = SnowflakeDatabase(user='test_user',
                                           private_key_data='abcdefg',
@@ -66,7 +72,7 @@ class TestSnowflake(TestCase):
                                                                             backend=ANY)
 
         with self.subTest('connects with credentials'):
-            mock_snowflake.connect.assert_called_once_with(user='test_user',
+            mock_connector.connect.assert_called_once_with(user='test_user',
                                                            password=None,
                                                            account='test_account',
                                                            database='test_database',

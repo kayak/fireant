@@ -62,15 +62,15 @@ class SnowflakeDatabase(Database):
         self.warehouse = warehouse
 
     def connect(self):
-        from snowflake import connector as snowflake
+        import snowflake
 
-        return snowflake.connect(database=self.database,
-                                 account=self.account,
-                                 user=self.user,
-                                 password=self.password,
-                                 private_key=self._get_private_key(),
-                                 region=self.region,
-                                 warehouse=self.warehouse)
+        return snowflake.connector.connect(database=self.database,
+                                           account=self.account,
+                                           user=self.user,
+                                           password=self.password,
+                                           private_key=self._get_private_key(),
+                                           region=self.region,
+                                           warehouse=self.warehouse)
 
     def trunc_date(self, field, interval):
         trunc_date_interval = self.DATETIME_INTERVALS.get(str(interval), 'DD')
