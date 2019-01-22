@@ -59,6 +59,9 @@ def _scrub_totals_for_singlelevel_index_df(data_frame, dimensions):
 
 
 def _scrub_totals_for_multilevel_index_df(data_frame, dimensions):
+    if data_frame.empty:
+        return data_frame
+
     # Get the totals marker value for each index level
     markers = [get_totals_marker_for_dtype(level.dtype)
                for level in data_frame.index.levels]
