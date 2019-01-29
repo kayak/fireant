@@ -288,7 +288,11 @@ class HighCharts(ChartWidget, TransformableWidget):
 
                         "name": render_series_label(dimension_values, series.metric, reference),
 
-                        "data": self._render_data(group_df, metric_key, is_timeseries),
+                        "data": (
+                            self._render_timeseries_data(group_df, metric_key)
+                            if is_timeseries
+                            else self._render_category_data(group_df, metric_key)
+                        ),
 
                         "tooltip": self._render_tooltip(series.metric),
 
@@ -335,10 +339,25 @@ class HighCharts(ChartWidget, TransformableWidget):
             },
         }
 
-    def _render_data(self, group_df, metric_key, is_timeseries):
-        if not is_timeseries:
-            return [formats.metric_value(y) for y in group_df[metric_key].values]
+    @staticmethod
+    def _render_category_data(group_df, metric_key):
+        categories = list(group_df.index.levels[0]) \
+            if isinstance(group_df.index, pd.MultiIndex) \
+            else list(group_df.index)
 
+        series = []
+        for labels, y in group_df[metric_key].iteritems():
+            label = labels[0] if isinstance(labels, tuple) else labels
+
+            series.append({
+                'x': categories.index(label),
+                'y': formats.metric_value(y)
+            })
+
+        return series
+
+    @staticmethod
+    def _render_timeseries_data(group_df, metric_key):
         series = []
         for dimension_values, y in group_df[metric_key].iteritems():
             first_dimension_value = utils.wrap_list(dimension_values)[0]
@@ -349,7 +368,6 @@ class HighCharts(ChartWidget, TransformableWidget):
 
             series.append((formats.date_as_millis(first_dimension_value),
                            formats.metric_value(y)))
-
         return series
 
     def _render_tooltip(self, metric):

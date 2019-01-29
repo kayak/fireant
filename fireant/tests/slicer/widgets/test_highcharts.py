@@ -13,6 +13,7 @@ from fireant.tests.slicer.mocks import (
     ElectionOverElection,
     cat_dim_df,
     cat_dim_totals_df,
+    cat_uni_dim_df,
     cont_dim_df,
     cont_dim_operation_df,
     cont_uni_dim_all_totals_df,
@@ -1198,7 +1199,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                 "type": self.chart_type,
                 "name": "Votes",
                 "yAxis": "0",
-                "data": [111674336],
+                "data": [{'x': 0, 'y': 111674336}],
                 'tooltip': {
                     'valueDecimals': None,
                     'valuePrefix': None,
@@ -1235,7 +1236,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                 "type": self.chart_type,
                 "name": "Votes",
                 "yAxis": "0",
-                "data": [111674336],
+                "data": [{'x': 0, 'y': 111674336}],
                 'tooltip': {
                     'valuePrefix': None,
                     'valueSuffix': None,
@@ -1247,7 +1248,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                 "type": self.chart_type,
                 "name": "Wins",
                 "yAxis": "0",
-                "data": [12],
+                "data": [{'x': 0, 'y': 12}],
                 'tooltip': {
                     'valuePrefix': None,
                     'valueSuffix': None,
@@ -1283,7 +1284,9 @@ class HighChartsBarChartTransformerTests(TestCase):
                 "type": self.chart_type,
                 "name": "Votes",
                 "yAxis": "0",
-                "data": [54551568, 1076384, 56046384],
+                "data": [{'x': 0, 'y': 54551568},
+                         {'x': 1, 'y': 1076384},
+                         {'x': 2, 'y': 56046384}],
                 'tooltip': {
                     'valuePrefix': None,
                     'valueSuffix': None,
@@ -1320,7 +1323,9 @@ class HighChartsBarChartTransformerTests(TestCase):
                 "type": self.chart_type,
                 "name": "Votes",
                 "yAxis": "0",
-                "data": [54551568, 1076384, 56046384],
+                "data": [{'x': 0, 'y': 54551568},
+                         {'x': 1, 'y': 1076384},
+                         {'x': 2, 'y': 56046384}],
                 'tooltip': {
                     'valuePrefix': None,
                     'valueSuffix': None,
@@ -1332,7 +1337,9 @@ class HighChartsBarChartTransformerTests(TestCase):
                 "type": self.chart_type,
                 "name": "Wins",
                 "yAxis": "0",
-                "data": [6, 0, 6],
+                "data": [{'x': 0, 'y': 6},
+                         {'x': 1, 'y': 0},
+                         {'x': 2, 'y': 6}],
                 'tooltip': {
                     'valuePrefix': None,
                     'valueSuffix': None,
@@ -1613,7 +1620,10 @@ class HighChartsBarChartTransformerTests(TestCase):
             'series': [{
                 'name': 'Votes',
                 'yAxis': '0',
-                'data': [54551568, 1076384, 56046384, 111674336],
+                'data': [{'x': 0, 'y': 54551568},
+                         {'x': 1, 'y': 1076384},
+                         {'x': 2, 'y': 56046384},
+                         {'x': 3, 'y': 111674336}],
                 'marker': {},
                 'tooltip': {
                     'valueDecimals': None,
@@ -1627,6 +1637,139 @@ class HighChartsBarChartTransformerTests(TestCase):
             "colors": DEFAULT_COLORS,
         }, result)
 
+    def test_cat_uni_dim_with_missing_categories(self):
+        df = cat_uni_dim_df \
+            .drop(('d', '1')) \
+            .drop(('r', '2')) \
+            .drop(('r', '10'))
+
+        result = HighCharts(title="Categorical Dimension with Totals") \
+            .axis(self.chart_class(slicer.metrics.votes)) \
+            .transform(df, slicer, [slicer.dimensions.political_party, slicer.dimensions.candidate], [])
+
+        self.assertEqual({
+            'title': {'text': 'Categorical Dimension with Totals'},
+            'xAxis': {
+                'categories': ['Democrat', 'Independent', 'Republican'],
+                'type': 'category',
+                'visible': True
+            },
+            'yAxis': [{
+                'id': '0',
+                'labels': {'style': {'color': None}},
+                'title': {'text': None},
+                'visible': True
+            }],
+            'legend': {'useHTML': True},
+            'series': [
+                {
+                    'name': 'Votes (Al Gore)',
+                    'data': [{'x': 0, 'y': 8294949}],
+                    'marker': {},
+                    'stacking': self.stacking,
+                    'tooltip': {
+                        'valueDecimals': None,
+                        'valuePrefix': None,
+                        'valueSuffix': None
+                    },
+                    'type': self.chart_type,
+                    'yAxis': '0'
+                },
+                {
+                    'name': 'Votes (John Kerry)',
+                    'data': [{'x': 0, 'y': 9578189}],
+                    'marker': {},
+                    'stacking': self.stacking,
+                    'tooltip': {
+                        'valueDecimals': None,
+                        'valuePrefix': None,
+                        'valueSuffix': None
+                    },
+                    'type': self.chart_type,
+                    'yAxis': '0'
+                },
+                {
+                    'name': 'Votes (Barrack Obama)',
+                    'data': [{'x': 0, 'y': 24227234}],
+                    'marker': {},
+                    'stacking': self.stacking,
+                    'tooltip': {
+                        'valueDecimals': None,
+                        'valuePrefix': None,
+                        'valueSuffix': None
+                    },
+                    'type': self.chart_type,
+                    'yAxis': '0'
+                },
+                {
+                    'name': 'Votes (Hillary Clinton)',
+                    'data': [{'x': 0, 'y': 4871678}],
+                    'marker': {},
+                    'stacking': self.stacking,
+                    'tooltip': {
+                        'valueDecimals': None,
+                        'valuePrefix': None,
+                        'valueSuffix': None
+                    },
+                    'type': self.chart_type,
+                    'yAxis': '0'
+                },
+                {
+                    'name': 'Votes (Ross Perot)',
+                    'data': [{'x': 1, 'y': 1076384}],
+                    'marker': {},
+                    'stacking': self.stacking,
+                    'tooltip': {
+                        'valueDecimals': None,
+                        'valuePrefix': None,
+                        'valueSuffix': None
+                    },
+                    'type': self.chart_type,
+                    'yAxis': '0'
+                },
+                {
+                    'name': 'Votes (George Bush)',
+                    'data': [{'x': 2, 'y': 18403811}],
+                    'marker': {},
+                    'stacking': self.stacking,
+                    'tooltip': {
+                        'valueDecimals': None,
+                        'valuePrefix': None,
+                        'valueSuffix': None
+                    },
+                    'type': self.chart_type,
+                    'yAxis': '0'
+                },
+                {
+                    'name': 'Votes (John McCain)',
+                    'data': [{'x': 2, 'y': 9491109}],
+                    'marker': {},
+                    'stacking': self.stacking,
+                    'tooltip': {
+                        'valueDecimals': None,
+                        'valuePrefix': None,
+                        'valueSuffix': None
+                    },
+                    'type': self.chart_type,
+                    'yAxis': '0'
+                },
+                {
+                    'name': 'Votes (Mitt Romney)',
+                    'data': [{'x': 2, 'y': 8148082}],
+                    'marker': {},
+                    'stacking': self.stacking,
+                    'tooltip': {
+                        'valueDecimals': None,
+                        'valuePrefix': None,
+                        'valueSuffix': None
+                    },
+                    'type': self.chart_type,
+                    'yAxis': '0'
+                }
+            ],
+            'tooltip': {'enabled': True, 'shared': True, 'useHTML': True},
+            "colors": DEFAULT_COLORS,
+        }, result)
 
     def test_invisible_y_axis(self):
         result = HighCharts(title="All Votes") \
@@ -1653,7 +1796,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                 "type": self.chart_type,
                 "name": "Votes",
                 "yAxis": "0",
-                "data": [111674336],
+                "data": [{'x': 0, 'y': 111674336}],
                 'tooltip': {
                     'valueDecimals': None,
                     'valuePrefix': None,
@@ -1710,7 +1853,6 @@ class HighChartsPieChartTransformerTests(TestCase):
         result = HighCharts(title="All Votes") \
             .axis(self.chart_class(slicer.metrics.votes)) \
             .transform(single_metric_df, slicer, [], [])
-
 
         self.assertEqual({
             "title": {"text": "All Votes"},
