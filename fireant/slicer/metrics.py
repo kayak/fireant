@@ -35,23 +35,23 @@ class Metric(SlicerElement):
         self.suffix = suffix
         self._share = False
 
-    def __eq__(self, other):
-        return ComparatorFilter(self.key, self.definition, ComparatorFilter.Operator.eq, other)
+    def __eq__(self, other, apply_to_totals: bool = True):
+        return ComparatorFilter(self.key, self.definition, ComparatorFilter.Operator.eq, other, apply_to_totals)
 
-    def __ne__(self, other):
-        return ComparatorFilter(self.key, self.definition, ComparatorFilter.Operator.ne, other)
+    def __ne__(self, other, apply_to_totals: bool = True):
+        return ComparatorFilter(self.key, self.definition, ComparatorFilter.Operator.ne, other, apply_to_totals)
 
-    def __gt__(self, other):
-        return ComparatorFilter(self.key, self.definition, ComparatorFilter.Operator.gt, other)
+    def __gt__(self, other, apply_to_totals: bool = True):
+        return ComparatorFilter(self.key, self.definition, ComparatorFilter.Operator.gt, other, apply_to_totals)
 
-    def __ge__(self, other):
-        return ComparatorFilter(self.key, self.definition, ComparatorFilter.Operator.gte, other)
+    def __ge__(self, other, apply_to_totals: bool = True):
+        return ComparatorFilter(self.key, self.definition, ComparatorFilter.Operator.gte, other, apply_to_totals)
 
-    def __lt__(self, other):
-        return ComparatorFilter(self.key, self.definition, ComparatorFilter.Operator.lt, other)
+    def __lt__(self, other, apply_to_totals: bool = True):
+        return ComparatorFilter(self.key, self.definition, ComparatorFilter.Operator.lt, other, apply_to_totals)
 
-    def __le__(self, other):
-        return ComparatorFilter(self.key, self.definition, ComparatorFilter.Operator.lte, other)
+    def __le__(self, other, apply_to_totals: bool = True):
+        return ComparatorFilter(self.key, self.definition, ComparatorFilter.Operator.lte, other, apply_to_totals)
 
     def __repr__(self):
         return "slicer.metrics.{}".format(self.key)

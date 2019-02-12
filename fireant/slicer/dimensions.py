@@ -67,16 +67,18 @@ class BooleanDimension(Dimension):
                                                definition=definition,
                                                hyperlink_template=hyperlink_template)
 
-    def is_(self, value: bool):
+    def is_(self, value: bool, apply_to_totals: bool = True):
         """
         Creates a filter to filter a slicer query.
 
         :param value:
             True or False
+        :param apply_to_totals:
+            True or False
         :return:
             A slicer query filter used to filter a slicer query to results where this dimension is True or False.
         """
-        return BooleanFilter(self.key, self.definition, value)
+        return BooleanFilter(self.key, self.definition, value, apply_to_totals)
 
 
 class PatternFilterableMixin:
@@ -84,7 +86,7 @@ class PatternFilterableMixin:
     definition = None
     pattern_definition_attribute = 'definition'
 
-    def like(self, pattern, *patterns):
+    def like(self, pattern, *patterns, apply_to_totals: bool = True):
         """
         Creates a filter to filter a slicer query.
 
@@ -94,14 +96,16 @@ class PatternFilterableMixin:
         :param patterns:
             Additional patterns. This is the same as the pattern argument. The function signature is intended to
             syntactically require at least one pattern.
+        :param apply_to_totals:
+            True or False
         :return:
             A slicer query filter used to filter a slicer query to results where this dimension's display definition
             matches the pattern.
         """
         definition = getattr(self, self.pattern_definition_attribute)
-        return PatternFilter(self.key, definition, pattern, *patterns)
+        return PatternFilter(self.key, definition, pattern, *patterns, apply_to_totals=apply_to_totals)
 
-    def not_like(self, pattern, *patterns):
+    def not_like(self, pattern, *patterns, apply_to_totals: bool = True):
         """
         Creates a filter to filter a slicer query.
 
@@ -111,12 +115,14 @@ class PatternFilterableMixin:
         :param patterns:
             Additional patterns. This is the same as the pattern argument. The function signature is intended to
             syntactically require at least one pattern.
+        :param apply_to_totals:
+            True or False
         :return:
             A slicer query filter used to filter a slicer query to results where this dimension's display definition
             matches the pattern.
         """
         definition = getattr(self, self.pattern_definition_attribute)
-        return AntiPatternFilter(self.key, definition, pattern, *patterns)
+        return AntiPatternFilter(self.key, definition, pattern, *patterns, apply_to_totals=apply_to_totals)
 
 
 class CategoricalDimension(PatternFilterableMixin, Dimension):
@@ -132,59 +138,67 @@ class CategoricalDimension(PatternFilterableMixin, Dimension):
                                                    hyperlink_template=hyperlink_template)
         self.display_values = dict(display_values)
 
-    def isin(self, values: Iterable):
+    def isin(self, values: Iterable, apply_to_totals: bool = True):
         """
         Creates a filter to filter a slicer query.
 
         :param values:
             An iterable of value to constrain the slicer query results by.
+        :param apply_to_totals:
+            True or False
 
         :return:
             A slicer query filter used to filter a slicer query to results where this dimension is one of a set of
             values. Opposite of #notin.
         """
-        return ContainsFilter(self.key, self.definition, values)
+        return ContainsFilter(self.key, self.definition, values, apply_to_totals)
 
-    def notin(self, values):
+    def notin(self, values, apply_to_totals: bool = True):
         """
         Creates a filter to filter a slicer query.
 
         :param values:
             An iterable of value to constrain the slicer query results by.
+        :param apply_to_totals:
+            True or False
 
         :return:
             A slicer query filter used to filter a slicer query to results where this dimension is *not* one of a set of
             values. Opposite of #isin.
         """
-        return ExcludesFilter(self.key, self.definition, values)
+        return ExcludesFilter(self.key, self.definition, values, apply_to_totals)
 
 
 class _UniqueDimensionBase(PatternFilterableMixin, Dimension):
-    def isin(self, values):
+    def isin(self, values, apply_to_totals: bool = True):
         """
         Creates a filter to filter a slicer query.
 
         :param values:
             An iterable of value to constrain the slicer query results by.
+        :param apply_to_totals:
+            True or False
 
         :return:
             A slicer query filter used to filter a slicer query to results where this dimension is one of a set of
             values. Opposite of #notin.
         """
-        return ContainsFilter(self.key, self.definition, values)
+        return ContainsFilter(self.key, self.definition, values, apply_to_totals)
 
-    def notin(self, values):
+    def notin(self, values, apply_to_totals: bool = True):
         """
         Creates a filter to filter a slicer query.
 
         :param values:
             An iterable of value to constrain the slicer query results by.
+        :param apply_to_totals:
+            True or False
 
         :return:
             A slicer query filter used to filter a slicer query to results where this dimension is *not* one of a set of
             values. Opposite of #isin.
         """
-        return ExcludesFilter(self.key, self.definition, values)
+        return ExcludesFilter(self.key, self.definition, values, apply_to_totals)
 
 
 class UniqueDimension(_UniqueDimensionBase):
@@ -206,15 +220,15 @@ class UniqueDimension(_UniqueDimensionBase):
     def has_display_field(self):
         return hasattr(self, 'display')
 
-    def like(self, pattern, *patterns):
+    def like(self, pattern, *patterns, apply_to_totals: bool = True):
         if not self.has_display_field:
             raise QueryException('No value set for display_definition.')
-        return self.display.like(pattern, *patterns)
+        return self.display.like(pattern, *patterns, apply_to_totals=apply_to_totals)
 
-    def not_like(self, pattern, *patterns):
+    def not_like(self, pattern, *patterns, apply_to_totals: bool = True):
         if not self.has_display_field:
             raise QueryException('No value set for display_definition.')
-        return self.display.not_like(pattern, *patterns)
+        return self.display.not_like(pattern, *patterns, apply_to_totals=apply_to_totals)
 
 
 class DisplayDimension(_UniqueDimensionBase):
@@ -277,7 +291,7 @@ class DatetimeDimension(ContinuousDimension):
         """
         self.interval = interval
 
-    def between(self, start, stop):
+    def between(self, start, stop, apply_to_totals: bool = True):
         """
         Creates a filter to filter a slicer query.
 
@@ -285,11 +299,13 @@ class DatetimeDimension(ContinuousDimension):
             The start time of the filter. This is the beginning of the window for which results should be included.
         :param stop:
             The stop time of the filter. This is the end of the window for which results should be included.
+        :param apply_to_totals:
+            True or False
         :return:
             A slicer query filter used to filter a slicer query to results where this dimension is between the values
             start and stop.
         """
-        return RangeFilter(self.key, self.definition, start, stop)
+        return RangeFilter(self.key, self.definition, start, stop, apply_to_totals)
 
 
 class TotalsDimension(Dimension):

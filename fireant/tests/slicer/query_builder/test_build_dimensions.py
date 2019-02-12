@@ -1,5 +1,4 @@
 from unittest import TestCase
-
 from datetime import date
 
 import fireant as f
@@ -215,7 +214,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
 
         with self.subTest('base query is same as without references or totals'):
             self.assertEqual('SELECT '
-                             '"political_party" "$d$political_party",' 
+                             '"political_party" "$d$political_party",'
                              'SUM("votes") "$m$votes" '
                              'FROM "politics"."politician" '
                              'GROUP BY "$d$political_party" '
@@ -223,7 +222,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
 
         with self.subTest('totals dimension is replaced with NULL'):
             self.assertEqual('SELECT '
-                             'NULL "$d$political_party",' 
+                             'NULL "$d$political_party",'
                              'SUM("votes") "$m$votes" '
                              'FROM "politics"."politician" '
                              'ORDER BY "$d$political_party"', str(queries[1]))
@@ -424,3 +423,102 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                              'WHERE TIMESTAMPADD(\'day\',1,"timestamp") BETWEEN \'2018-01-01\' AND \'2019-01-01\' '
                              'GROUP BY "$d$timestamp" '
                              'ORDER BY "$d$timestamp","$d$political_party"', str(queries[3]))
+
+    def test_build_query_with_totals_dimension_and_total_filter_not_applied(self):
+        queries = slicer.data \
+            .widget(f.DataTablesJS(slicer.metrics.votes)) \
+            .dimension(slicer.dimensions.political_party) \
+            .dimension(slicer.dimensions.timestamp.rollup()) \
+            .filter(slicer.dimensions.timestamp.between(date(2018, 1, 1), date(2019, 1, 1), False)) \
+            .queries
+
+        self.assertEqual(len(queries), 2)
+
+        with self.subTest('base query is same as without totals'):
+            self.assertEqual('SELECT '
+                             '"political_party" "$d$political_party",'
+                             'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                             'SUM("votes") "$m$votes" '
+                             'FROM "politics"."politician" '
+                             'WHERE "timestamp" BETWEEN \'2018-01-01\' AND \'2019-01-01\' '
+                             'GROUP BY "$d$political_party","$d$timestamp" '
+                             'ORDER BY "$d$political_party","$d$timestamp"', str(queries[0]))
+
+        with self.subTest('base totals query is same as base query minus the totals dimension without filter'):
+            self.assertEqual('SELECT '
+                             '"political_party" "$d$political_party",'
+                             'NULL "$d$timestamp",'
+                             'SUM("votes") "$m$votes" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$d$political_party" '
+                             'ORDER BY "$d$political_party","$d$timestamp"', str(queries[1]))
+
+    def test_build_query_with_totals_dimension_and_two_filters_only_one_applied(self):
+        queries = slicer.data \
+            .widget(f.DataTablesJS(slicer.metrics.votes)) \
+            .dimension(slicer.dimensions.political_party) \
+            .dimension(slicer.dimensions.timestamp.rollup()) \
+            .filter(slicer.dimensions.timestamp.between(date(2018, 1, 1), date(2019, 1, 1), False)) \
+            .filter(slicer.dimensions.timestamp.between(date(2018, 3, 1), date(2019, 9, 1), True)) \
+            .queries
+
+        self.assertEqual(len(queries), 2)
+
+        with self.subTest('base query is same as without totals with both filters'):
+            self.assertEqual('SELECT '
+                             '"political_party" "$d$political_party",'
+                             'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                             'SUM("votes") "$m$votes" '
+                             'FROM "politics"."politician" '
+                             'WHERE "timestamp" BETWEEN \'2018-01-01\' AND \'2019-01-01\' '
+                             'AND "timestamp" BETWEEN \'2018-03-01\' AND \'2019-09-01\' '
+                             'GROUP BY "$d$political_party","$d$timestamp" '
+                             'ORDER BY "$d$political_party","$d$timestamp"', str(queries[0]))
+
+        with self.subTest('base totals query is same as base query minus the totals dimension with one filter'):
+            self.assertEqual('SELECT '
+                             '"political_party" "$d$political_party",'
+                             'NULL "$d$timestamp",'
+                             'SUM("votes") "$m$votes" '
+                             'FROM "politics"."politician" '
+                             'WHERE "timestamp" BETWEEN \'2018-03-01\' AND \'2019-09-01\' '
+                             'GROUP BY "$d$political_party" '
+                             'ORDER BY "$d$political_party","$d$timestamp"', str(queries[1]))
+
+    def test_build_query_with_totals_dimensions_and_filter_applied_on_correct_total_dimension(self):
+        queries = slicer.data \
+            .widget(f.DataTablesJS(slicer.metrics.votes)) \
+            .dimension(slicer.dimensions.political_party.rollup()) \
+            .dimension(slicer.dimensions.timestamp.rollup()) \
+            .filter(slicer.dimensions.timestamp.between(date(2018, 1, 1), date(2019, 1, 1), False)) \
+            .queries
+
+        self.assertEqual(len(queries), 3)
+
+        with self.subTest('base query is same as without totals'):
+            self.assertEqual('SELECT '
+                             '"political_party" "$d$political_party",'
+                             'TRUNC("timestamp",\'DD\') "$d$timestamp",'
+                             'SUM("votes") "$m$votes" '
+                             'FROM "politics"."politician" '
+                             'WHERE "timestamp" BETWEEN \'2018-01-01\' AND \'2019-01-01\' '
+                             'GROUP BY "$d$political_party","$d$timestamp" '
+                             'ORDER BY "$d$political_party","$d$timestamp"', str(queries[0]))
+
+        with self.subTest('base totals query is same as base query minus the timestamp totals dimension'):
+            self.assertEqual('SELECT '
+                             '"political_party" "$d$political_party",'
+                             'NULL "$d$timestamp",'
+                             'SUM("votes") "$m$votes" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$d$political_party" '
+                             'ORDER BY "$d$political_party","$d$timestamp"', str(queries[1]))
+
+        with self.subTest('base totals query is same as base query minus the political party totals dimension'):
+            self.assertEqual('SELECT '
+                             'NULL "$d$political_party",'
+                             'NULL "$d$timestamp",'
+                             'SUM("votes") "$m$votes" '
+                             'FROM "politics"."politician" '
+                             'WHERE "timestamp" BETWEEN \'2018-01-01\' AND \'2019-01-01\' '
+                             'ORDER BY "$d$political_party","$d$timestamp"', str(queries[2]))
