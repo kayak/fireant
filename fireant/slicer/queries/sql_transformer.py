@@ -43,12 +43,11 @@ def adapt_for_totals_query(totals_dimension, dimensions, filters, filter_totals)
     totals_dims = grouped_dims + [TotalsDimension(dimension)
                                   for dimension in totaled_dims]
 
-    # when filter_totals is False, remove all filters for the totals dimension
-    totals_filters = [f
-                      for f in filters
-                      if getattr(f, 'dimension_key', None) != totals_dimension.key] \
-        if apply_totals and not filter_totals \
-        else filters
+    # remove all filters for total dimension that should not be applied to totals
+    # but add all filters for dimensions other than the total dimension
+    totals_filters = [f for f in filters if
+                      getattr(f, 'dimension_key', None) != getattr(
+                          totals_dimension, 'key', None) or getattr(f, 'apply_to_totals', True)]
 
     return totals_dims, totals_filters
 
