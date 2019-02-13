@@ -83,8 +83,13 @@ class ReferenceItem:
             self.key = reference_key(item, reference)
             self.label = reference_label(item, reference)
 
-        self.prefix = item.prefix
-        self.suffix = item.suffix
+        if reference is not None and reference.delta_percent:
+            self.prefix = None
+            self.suffix = '%'
+        else:
+            self.prefix = item.prefix
+            self.suffix = item.suffix
+
         self.precision = item.precision
 
 

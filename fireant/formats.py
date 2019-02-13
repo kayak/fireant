@@ -140,11 +140,11 @@ def metric_display(value, prefix=None, suffix=None, precision=None):
         prefix = '-$'
 
     if isinstance(value, float):
-        if precision is not None:
-            value = '{:,.{precision}f}'.format(value, precision=precision)
-
-        elif value.is_integer():
+        if value.is_integer():
             value = '{:,.0f}'.format(value)
+
+        elif precision is not None:
+            value = '{:,.{precision}f}'.format(value, precision=precision)
 
         else:
             # Stripping trailing zeros is necessary because %f can add them if no precision is set
