@@ -2,7 +2,7 @@ import copy
 from unittest import TestCase
 
 from fireant.slicer.totals import MAX_STRING
-from fireant.slicer.widgets.reacttable import ReactTable
+from fireant.slicer.widgets.reacttable import ReactTable, ReferenceItem
 from fireant.tests.slicer.mocks import (
     CumSum,
     ElectionOverElection,
@@ -918,3 +918,44 @@ class ReactTableHyperlinkTransformerTests(TestCase):
                 '$m$wins': {'display': '0', 'raw': 0}
             }]
         }, result)
+
+
+class ReactTableReferenceItemFormatTests(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.ref_item_attrs = ['key', 'label', 'prefix', 'suffix', 'precision']
+
+    def assert_object_dict(self, obj, exp, attributes=[]):
+        for attribute in attributes:
+            with self.subTest('{} should be equal'.format(attribute)):
+                self.assertEqual(getattr(obj, attribute), exp[attribute])
+
+    def test_base_ref_item(self):
+        exp_ref_item = {
+            'key': 'wins_with_suffix_and_prefix_eoe',
+            'label': 'Wins (EoE)',
+            'prefix': '$',
+            'suffix': '€',
+            'precision': None,
+        }
+
+        ref = ElectionOverElection(slicer.dimensions.timestamp)
+        ref_item = ReferenceItem(slicer.metrics.wins_with_suffix_and_prefix, ref)
+
+        self.assert_object_dict(ref_item, exp_ref_item, self.ref_item_attrs)
+
+    def test_ref_item_with_delta_percentage_formats_prefix_suffix(self):
+        exp_ref_item = {
+            'key': 'wins_with_suffix_and_prefix_eoe_delta_percent',
+            'label': 'Wins (EoE Δ%)',
+            'prefix': None,
+            'suffix': '%',
+            'precision': None,
+        }
+
+        ref = ElectionOverElection(slicer.dimensions.timestamp, delta=True, delta_percent=True)
+        ref_item = ReferenceItem(slicer.metrics.wins_with_suffix_and_prefix, ref)
+
+        self.assert_object_dict(ref_item, exp_ref_item, self.ref_item_attrs)
+
