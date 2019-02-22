@@ -13,17 +13,23 @@ from fireant import formats
 
 
 class FormatMetricValueTests(TestCase):
-    def test_that_nan_data_point_is_convered_to_none(self):
+    def test_that_literal_strings_are_not_converted(self):
+        for value in ['NAN', 'INF', 'nan', 'inf']:
+            with self.subTest(value):
+                result = formats.metric_value(value)
+                self.assertEqual(result, value)
+
+    def test_that_nan_data_point_is_converted_to_none(self):
         # np.nan is converted to None
         result = formats.metric_value(np.nan)
         self.assertIsNone(result)
 
-    def test_that_inf_data_point_is_convered_to_none(self):
+    def test_that_inf_data_point_is_converted_to_none(self):
         # np.nan is converted to None
         result = formats.metric_value(np.inf)
         self.assertIsNone(result)
 
-    def test_that_neg_inf_data_point_is_convered_to_none(self):
+    def test_that_neg_inf_data_point_is_converted_to_none(self):
         # np.nan is converted to None
         result = formats.metric_value(-np.inf)
         self.assertIsNone(result)

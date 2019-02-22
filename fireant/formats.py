@@ -33,15 +33,15 @@ def coerce_type(value):
     if isinstance(value, date):
         return value
 
+    # Should never be any real NaNs or INFs at this point, so if that's the value, it's meant to be that.
+    if str.lower(value) in ['nan', 'inf']:
+        return value
+
     for type_cast in (int, float):
         try:
             return type_cast(value)
         except:
             pass
-
-    # Should never be any real NaNs or INFs at this point, so if that's the value, it's meant to be that.
-    if str.lower(value) in ['nan', 'inf']:
-        return value
 
     if NULL_VALUE == value:
         return None
