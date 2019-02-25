@@ -95,6 +95,30 @@ def reference_label(metric, reference):
     return label
 
 
+def reference_prefix(metric, reference):
+    """
+    Return the prefix for a metric displayed for a reference (or no Reference)
+
+    :return:
+        A string that is used as the prefix for a reference metric.
+    """
+    if reference is not None and reference.delta_percent:
+        return None
+    return metric.prefix
+
+
+def reference_suffix(metric, reference):
+    """
+    Return the suffix for a metric displayed for a reference (or no Reference)
+
+    :return:
+        A string that is used as the suffix for a reference metric.
+    """
+    if reference is not None and reference.delta_percent:
+        return '%'
+    return metric.suffix
+
+
 def reference_term(reference: Reference,
                    original_query: QueryBuilder,
                    ref_query: QueryBuilder):
