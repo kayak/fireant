@@ -59,11 +59,12 @@ class Pandas(TransformableWidget):
             for reference in references:
                 df_ref_key = format_metric_key(reference_key(metric, reference))
 
-                result[df_ref_key] = result[df_ref_key].apply(lambda x: formats.metric_display(
-                    x,
-                    reference_prefix(metric, reference),
-                    reference_suffix(metric, reference),
-                    metric.precision))
+                if reference.delta_percent:
+                    result[df_ref_key] = result[df_ref_key].apply(lambda x: formats.metric_display(
+                        x,
+                        reference_prefix(metric, reference),
+                        reference_suffix(metric, reference),
+                        metric.precision))
 
         for dimension in dimensions:
             if dimension.has_display_field:
