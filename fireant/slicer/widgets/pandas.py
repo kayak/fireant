@@ -16,6 +16,8 @@ from .base import (
 from ..references import (
     reference_key,
     reference_label,
+    reference_prefix,
+    reference_suffix
 )
 
 HARD_MAX_COLUMNS = 24
@@ -53,6 +55,15 @@ class Pandas(TransformableWidget):
 
                 result[df_key] = result[df_key] \
                     .apply(lambda x: formats.metric_display(x, metric.prefix, metric.suffix, metric.precision))
+
+            for reference in references:
+                df_ref_key = format_metric_key(reference_key(metric, reference))
+
+                result[df_ref_key] = result[df_ref_key].apply(lambda x: formats.metric_display(
+                    x,
+                    reference_prefix(metric, reference),
+                    reference_suffix(metric, reference),
+                    metric.precision))
 
         for dimension in dimensions:
             if dimension.has_display_field:

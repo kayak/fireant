@@ -2,7 +2,8 @@ import copy
 from unittest import TestCase
 
 from fireant.slicer.totals import MAX_STRING
-from fireant.slicer.widgets.reacttable import ReactTable, ReferenceItem
+from fireant.slicer.widgets.reacttable import ReactTable
+from fireant.slicer.widgets.reacttable import ReferenceItem
 from fireant.tests.slicer.mocks import (
     CumSum,
     ElectionOverElection,
@@ -958,4 +959,3 @@ class ReactTableReferenceItemFormatTests(TestCase):
         ref_item = ReferenceItem(slicer.metrics.wins_with_suffix_and_prefix, ref)
 
         self.assert_object_dict(ref_item, exp_ref_item, self.ref_item_attrs)
-
