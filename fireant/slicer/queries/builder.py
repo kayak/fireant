@@ -53,17 +53,21 @@ class QueryBuilder(object):
         self.table = table
         self._dimensions = []
         self._filters = []
+        self._apply_filter_to_totals = []
         self._references = []
         self._limit = None
         self._offset = None
 
     @immutable
-    def filter(self, *filters):
+    def filter(self, *filters, apply_to_totals=True):
         """
         :param filters:
+        :param apply_to_totals:
         :return:
         """
-        self._filters += filters
+        self._filters += [f for f in filters]
+        self._apply_filter_to_totals += [apply_to_totals] * len(filters)
+
 
     @immutable
     def limit(self, limit):
@@ -119,13 +123,6 @@ class SlicerQueryBuilder(QueryBuilder):
         super(SlicerQueryBuilder, self).__init__(slicer, slicer.table)
         self._widgets = []
         self._orders = []
-        self.filter_totals = True
-
-    @immutable
-    def __call__(self, **kwargs):
-        for setting in ('filter_totals',):
-            if setting in kwargs:
-                setattr(self, setting, kwargs[setting])
 
     @immutable
     def widget(self, *widgets):
@@ -215,7 +212,7 @@ class SlicerQueryBuilder(QueryBuilder):
                                                             references,
                                                             orders,
                                                             share_dimensions=share_dimensions,
-                                                            filter_totals=self.filter_totals)
+                                                            apply_filter_to_totals=self._apply_filter_to_totals)
 
     def fetch(self, hint=None) -> Iterable[Dict]:
         """

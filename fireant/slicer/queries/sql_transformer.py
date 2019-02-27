@@ -1,3 +1,4 @@
+import itertools
 from typing import Iterable
 
 from fireant.utils import (
@@ -25,18 +26,31 @@ from ..dimensions import (
 from ..filters import (
     DimensionFilter,
     Filter,
+    MetricFilter,
 )
 from ..joins import Join
 from ..metrics import Metric
 from ...database import Database
 
 
-def adapt_for_totals_query(totals_dimension, dimensions, filters, filter_totals):
-    apply_totals = totals_dimension is not None
+def adapt_for_totals_query(totals_dimension, dimensions, filters, apply_filter_to_totals):
+    """
+    Adapt filters for totals query. This function will select filters for total dimensions depending on the
+    apply_filter_to_totals values for the filters. A total dimension with value None indicates the base query for
+    which all filters will be applied by default.
+
+    :param totals_dimension:
+    :param dimensions:
+    :param filters:
+    :param apply_filter_to_totals:
+    :return:
+    """
+    assert len(filters) >= len(apply_filter_to_totals)
+    is_totals_query = totals_dimension is not None
 
     # Get an index to split the dimensions before and after the totals dimension
     index = dimensions.index(totals_dimension) \
-        if apply_totals \
+        if is_totals_query \
         else len(dimensions)
 
     grouped_dims, totaled_dims = dimensions[:index], dimensions[index:]
@@ -45,9 +59,11 @@ def adapt_for_totals_query(totals_dimension, dimensions, filters, filter_totals)
 
     # remove all filters for total dimension that should not be applied to totals
     # but add all filters for dimensions other than the total dimension
-    totals_filters = [f for f in filters if
-                      getattr(f, 'dimension_key', None) != getattr(
-                          totals_dimension, 'key', None) or getattr(f, 'apply_to_totals', True)]
+    totals_filters = [f
+                      for f, apply_to_totals in itertools.zip_longest(filters, apply_filter_to_totals, fillvalue=True)
+                      if not is_totals_query
+                      or apply_to_totals
+                      and not isinstance(f, MetricFilter)]
 
     return totals_dims, totals_filters
 
@@ -62,8 +78,8 @@ def make_slicer_query_with_totals_and_references(database,
                                                  filters,
                                                  references,
                                                  orders,
-                                                 share_dimensions=(),
-                                                 filter_totals=True):
+                                                 apply_filter_to_totals=(),
+                                                 share_dimensions=()):
     """
     :param database:
     :param table:
@@ -74,8 +90,8 @@ def make_slicer_query_with_totals_and_references(database,
     :param filters:
     :param references:
     :param orders:
+    :param apply_filter_to_totals:
     :param share_dimensions:
-    :param filter_totals:
     :return:
     """
 
@@ -106,7 +122,7 @@ def make_slicer_query_with_totals_and_references(database,
          query_filters) = adapt_for_totals_query(totals_dimension,
                                                  dimensions,
                                                  filters,
-                                                 filter_totals)
+                                                 apply_filter_to_totals)
 
         for reference_parts, references in reference_groups_and_none:
             (ref_database,

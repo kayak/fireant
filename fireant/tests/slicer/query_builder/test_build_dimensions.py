@@ -429,7 +429,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.political_party) \
             .dimension(slicer.dimensions.timestamp.rollup()) \
-            .filter(slicer.dimensions.timestamp.between(date(2018, 1, 1), date(2019, 1, 1), False)) \
+            .filter(slicer.dimensions.timestamp.between(date(2018, 1, 1), date(2019, 1, 1)), apply_to_totals=False) \
             .queries
 
         self.assertEqual(len(queries), 2)
@@ -458,8 +458,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.political_party) \
             .dimension(slicer.dimensions.timestamp.rollup()) \
-            .filter(slicer.dimensions.timestamp.between(date(2018, 1, 1), date(2019, 1, 1), False)) \
-            .filter(slicer.dimensions.timestamp.between(date(2018, 3, 1), date(2019, 9, 1), True)) \
+            .filter(slicer.dimensions.timestamp.between(date(2018, 1, 1), date(2019, 1, 1)), apply_to_totals=False) \
+            .filter(slicer.dimensions.timestamp.between(date(2018, 3, 1), date(2019, 9, 1)), apply_to_totals=True) \
             .queries
 
         self.assertEqual(len(queries), 2)
@@ -490,7 +490,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
             .widget(f.DataTablesJS(slicer.metrics.votes)) \
             .dimension(slicer.dimensions.political_party.rollup()) \
             .dimension(slicer.dimensions.timestamp.rollup()) \
-            .filter(slicer.dimensions.timestamp.between(date(2018, 1, 1), date(2019, 1, 1), False)) \
+            .filter(slicer.dimensions.timestamp.between(date(2018, 1, 1), date(2019, 1, 1)), apply_to_totals=False) \
             .queries
 
         self.assertEqual(len(queries), 3)
@@ -520,5 +520,4 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                              'NULL "$d$timestamp",'
                              'SUM("votes") "$m$votes" '
                              'FROM "politics"."politician" '
-                             'WHERE "timestamp" BETWEEN \'2018-01-01\' AND \'2019-01-01\' '
                              'ORDER BY "$d$political_party","$d$timestamp"', str(queries[2]))
