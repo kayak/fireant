@@ -34,7 +34,8 @@ from ..metrics import Metric
 from ..references import (
     reference_key,
     reference_label,
-)
+    reference_prefix,
+    reference_suffix)
 
 DATE_FORMATS = {
     hourly: '%Y-%m-%d %h',
@@ -76,15 +77,10 @@ def map_index_level(index, level, func):
 
 class ReferenceItem:
     def __init__(self, item, reference):
-        if reference is None:
-            self.key = item.key
-            self.label = item.label
-        else:
-            self.key = reference_key(item, reference)
-            self.label = reference_label(item, reference)
-
-        self.prefix = item.prefix
-        self.suffix = item.suffix
+        self.key = reference_key(item, reference)
+        self.label = reference_label(item, reference)
+        self.prefix = reference_prefix(item, reference)
+        self.suffix = reference_suffix(item, reference)
         self.precision = item.precision
 
 

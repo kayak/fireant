@@ -20,7 +20,8 @@ from .helpers import (
 from ..references import (
     reference_key,
     reference_label,
-)
+    reference_prefix,
+    reference_suffix)
 
 DEFAULT_COLORS = (
     "#DDDF0D",
@@ -294,7 +295,7 @@ class HighCharts(ChartWidget, TransformableWidget):
                             else self._render_category_data(group_df, metric_key)
                         ),
 
-                        "tooltip": self._render_tooltip(series.metric),
+                        "tooltip": self._render_tooltip(series.metric, reference),
 
                         "yAxis": ("{}_{}".format(axis_idx, reference.key)
                                   if reference is not None and reference.delta
@@ -334,8 +335,8 @@ class HighCharts(ChartWidget, TransformableWidget):
                 'pointFormat': '<span style="color:{point.color}">\u25CF</span> {series.name}: '
                                '<b>{point.y} ({point.percentage:.1f}%)</b><br/>',
                 'valueDecimals': metric.precision,
-                'valuePrefix': metric.prefix,
-                'valueSuffix': metric.suffix,
+                'valuePrefix': reference_prefix(metric, reference),
+                'valueSuffix': reference_suffix(metric, reference),
             },
         }
 
@@ -370,9 +371,9 @@ class HighCharts(ChartWidget, TransformableWidget):
                            formats.metric_value(y)))
         return series
 
-    def _render_tooltip(self, metric):
+    def _render_tooltip(self, metric, reference):
         return {
-            "valuePrefix": metric.prefix,
-            "valueSuffix": metric.suffix,
+            "valuePrefix": reference_prefix(metric, reference),
+            "valueSuffix": reference_suffix(metric, reference),
             "valueDecimals": metric.precision,
         }

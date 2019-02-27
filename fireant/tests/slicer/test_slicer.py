@@ -41,7 +41,7 @@ class SlicerContainerTests(TestCase):
 
     def test_iter_metrics(self):
         metric_keys = [metric.key for metric in slicer.metrics]
-        self.assertListEqual(metric_keys, ['votes', 'wins', 'voters', 'turnout'])
+        self.assertListEqual(metric_keys, ['votes', 'wins', 'voters', 'turnout', 'wins_with_suffix_and_prefix'])
 
     def test_iter_dimensions(self):
         dimension_keys = [dimension.key for dimension in slicer.dimensions]
