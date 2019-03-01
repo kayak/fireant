@@ -34,7 +34,7 @@ def coerce_type(value):
         return value
 
     # Should never be any real NaNs or INFs at this point, so if that's the value, it's meant to be that.
-    if str.lower(value) in ['nan', 'inf']:
+    if isinstance(value, str) and str.lower(value) in ['nan', 'inf']:
         return value
 
     for type_cast in (int, float):
