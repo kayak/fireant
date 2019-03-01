@@ -53,17 +53,20 @@ class QueryBuilder(object):
         self.table = table
         self._dimensions = []
         self._filters = []
+        self._apply_filter_to_totals = []
         self._references = []
         self._limit = None
         self._offset = None
 
     @immutable
-    def filter(self, *filters):
+    def filter(self, *filters, apply_to_totals=True):
         """
         :param filters:
+        :param apply_to_totals:
         :return:
         """
-        self._filters += filters
+        self._filters += [f for f in filters]
+        self._apply_filter_to_totals += [apply_to_totals] * len(filters)
 
     @immutable
     def limit(self, limit):
@@ -119,13 +122,6 @@ class SlicerQueryBuilder(QueryBuilder):
         super(SlicerQueryBuilder, self).__init__(slicer, slicer.table)
         self._widgets = []
         self._orders = []
-        self.filter_totals = True
-
-    @immutable
-    def __call__(self, **kwargs):
-        for setting in ('filter_totals',):
-            if setting in kwargs:
-                setattr(self, setting, kwargs[setting])
 
     @immutable
     def widget(self, *widgets):
@@ -215,7 +211,7 @@ class SlicerQueryBuilder(QueryBuilder):
                                                             references,
                                                             orders,
                                                             share_dimensions=share_dimensions,
-                                                            filter_totals=self.filter_totals)
+                                                            apply_filter_to_totals=self._apply_filter_to_totals)
 
     def fetch(self, hint=None) -> Iterable[Dict]:
         """
@@ -264,8 +260,9 @@ class SlicerQueryBuilder(QueryBuilder):
                            for widget in self._widgets]
                         + ["dimension({})".format(repr(dimension))
                            for dimension in self._dimensions]
-                        + ["filter({})".format(repr(filter))
-                           for filter in self._filters]
+                        + ["filter({}{})".format(repr(f),
+                                                 ', apply_filter_to_totals=True' if apply_filter_to_totals else '')
+                           for f, apply_filter_to_totals in zip(self._filters, self._apply_filter_to_totals)]
                         + ["reference({})".format(repr(reference))
                            for reference in self._references]
                         + ["orderby({}, {})".format(repr_field_key(definition.alias),
@@ -347,6 +344,11 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
             data[display_key] = data.index.tolist()
 
         return data[display_key]
+
+    def __repr__(self):
+        return ".".join(["slicer", self._dimensions[0].key, "choices"]
+                        + ["filter({})".format(repr(f))
+                           for f in self._filters])
 
 
 class DimensionLatestQueryBuilder(QueryBuilder):

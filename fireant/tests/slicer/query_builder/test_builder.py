@@ -36,8 +36,6 @@ class QueryBuilderTests(TestCase):
         self.assertIsNot(query1, query2)
 
 
-
-
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 class QueryBuilderValidationTests(TestCase):
     maxDiff = None
