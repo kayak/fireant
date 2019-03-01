@@ -172,7 +172,6 @@ class DisplayValueTests(TestCase):
         self.assertEqual('-$12', display)
 
 
-
 class CoerceTypeTests(TestCase):
     def allow_literal_nan(self):
         result = formats.coerce_type('nan')

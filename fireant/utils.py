@@ -159,8 +159,14 @@ def immutable(func):
     """
     import copy
 
-    def _copy(self, *args, **kwargs):
-        self_copy = copy.deepcopy(self)
+    def _copy(self, *args, mutate=False, **kwargs):
+        """
+        :param mutate:
+            When True, overrides the immutable behavior of this decorator.
+        """
+        self_copy = self \
+            if mutate \
+            else copy.deepcopy(self)
         result = func(self_copy, *args, **kwargs)
 
         # Return self if the inner function returns None.  This way the inner function can return something
