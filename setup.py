@@ -36,9 +36,9 @@ setup(
 
       packages=['fireant',
                 'fireant.database',
-                'fireant.slicer',
-                'fireant.slicer.queries',
-                'fireant.slicer.widgets'],
+                'fireant.dataset',
+                'fireant.queries',
+                'fireant.widgets'],
 
       # Include additional files into the package
       include_package_data=True,
