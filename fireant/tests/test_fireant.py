@@ -10,7 +10,7 @@ class APITests(TestCase):
 
         for db in ('MySQL', 'Vertica', 'Redshift', 'PostgreSQL', 'Snowflake'):
             with self.subTest(db):
-                self.assertIn(f'{db}Database', vars(fireant))
+                self.assertIn(db + 'Database', vars(fireant))
 
     def test_package_exports_dataset(self):
         self.assertIn('DataSet', vars(fireant))

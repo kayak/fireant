@@ -296,7 +296,7 @@ class HighCharts(ChartWidget, TransformableWidget):
 
             hc_series = ({
                 "type": series.type,
-                "name": f'{metric_label} ({dimension_label})' if dimension_label else metric_label,
+                "name": '{} ({})'.format(metric_label, dimension_label) if dimension_label else metric_label,
 
                 "data": (
                     self._render_timeseries_data(series_df, field_alias, series.metric)

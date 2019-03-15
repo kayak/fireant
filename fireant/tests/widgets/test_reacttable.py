@@ -1099,7 +1099,7 @@ class ReactTableReferenceItemFormatTests(TestCase):
 
     def assert_object_dict(self, obj, exp, attributes=()):
         for attribute in attributes:
-            with self.subTest(f'{attribute} should be equal'):
+            with self.subTest(attribute + ' should be equal'):
                 self.assertEqual(getattr(obj, attribute), exp[attribute])
 
     def test_base_ref_item(self):

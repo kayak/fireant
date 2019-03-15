@@ -39,8 +39,10 @@ def restrict_types(allowed):
         @wraps(func)
         def inner(self, *args, **kwargs):
             if self.data_type not in allowed:
-                raise DataSetFilterException(f'`{func.__name__}` filter can only be used on fields with the '
-                                             f'following data types: {{{", ".join(map(repr, allowed))}}}.')
+                msg = '`{func}` filter can only be used on fields with the following data types: {types}.' \
+                    .format(func=func.__name__,
+                            types=", ".join(map(repr, allowed)))
+                raise DataSetFilterException(msg)
             return func(self, *args, **kwargs)
 
         return inner

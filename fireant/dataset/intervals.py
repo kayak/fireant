@@ -30,7 +30,7 @@ class DatetimeInterval(DimensionModifier):
     def __repr__(self):
         wrapped_key = super().__getattribute__('wrapped_key')
         wrapped = super().__getattribute__(wrapped_key)
-        return f'{self.interval_key}({repr(wrapped)})'
+        return '{}({})'.format(self.interval_key, repr(wrapped))
 
     def __hash__(self):
         return hash(repr(self))

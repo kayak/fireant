@@ -213,7 +213,7 @@ def groupby(items, by):
 def alias_selector(alias):
     if alias is None:
         return alias
-    return f'${alias}'
+    return '$' + alias
 
 
 def alias_for_alias_selector(f_alias):
