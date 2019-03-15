@@ -45,7 +45,7 @@ class SafeRawValueTests(TestCase):
 
     def test_boolean_value_is_returned_as_self_lower_case(self):
         for value in (True, False):
-            with self.subTest('using value=' + value):
+            with self.subTest('using value=' + str(value)):
                 self.assertEqual(str(value).lower(), formats.display_value(value, boolean_field))
 
     def test_decimal_value_is_returned_with_decimal_point_replaced(self):
@@ -55,7 +55,7 @@ class SafeRawValueTests(TestCase):
                  (0.123456789, '0$123456789'),
                  (-0.123456789, '-0$123456789')]
         for value, expected in tests:
-            with self.subTest('using value' + value):
+            with self.subTest('using value' + str(value)):
                 self.assertEqual(expected, formats.safe_value(value))
 
     def test_string_value_is_returned_with_only_safe_characters_replaced(self):
@@ -98,12 +98,12 @@ class FormatRawValueTests(TestCase):
 
     def test_num_value_is_returned_as_self(self):
         for value in (0, -1, 1, 100, 0., -1.1, 1.1, 0.123456789, -0.123456789):
-            with self.subTest('using value' + value):
+            with self.subTest('using value' + str(value)):
                 self.assertEqual(value, formats.raw_value(value, number_field))
 
     def test_boolean_value_is_returned_as_self(self):
         for value in (True, False):
-            with self.subTest('using value' + value):
+            with self.subTest('using value' + str(value)):
                 self.assertEqual(value, formats.raw_value(value, boolean_field))
 
     def test_date_value_is_returned_as_iso_date_string(self):
@@ -140,7 +140,7 @@ class FormatDisplayValueTests(TestCase):
 
     def test_int_value_is_returned_as_string_self(self):
         for value in (0, -1, 1, 100):
-            with self.subTest('using value' + value):
+            with self.subTest('using value' + str(value)):
                 self.assertEqual(str(value), formats.display_value(value, number_field))
 
     def test_decimal_value_is_returned_as_string_self_with_excess_zeroes_stripped_rounded_to_6_places(self):
@@ -150,17 +150,17 @@ class FormatDisplayValueTests(TestCase):
                  (0.123456789, '0.123457'),
                  (-0.123456789, '-0.123457')]
         for value, expected in tests:
-            with self.subTest('using value' + value):
+            with self.subTest('using value' + str(value)):
                 self.assertEqual(expected, formats.display_value(value, number_field))
 
     def test_boolean_value_is_returned_as_self_lower_case(self):
         for value in (True, False):
-            with self.subTest('using value' + value):
+            with self.subTest('using value' + str(value)):
                 self.assertEqual(str(value).lower(), formats.display_value(value, boolean_field))
 
     def test_date_value_with_no_interval_is_returned_as_date_string(self):
         for d in (date(2019, 1, 1), datetime(2019, 1, 1, 12, 30, 2)):
-            with self.subTest('with ' + d.__class__):
+            with self.subTest('with ' + d.__class__.__name__):
                 self.assertEqual('2019-01-01', formats.display_value(d, date_field))
 
     def test_date_value_with_hour_interval_is_returned_as_date_string_to_the_minute_rounded_to_hour(self):
@@ -168,22 +168,22 @@ class FormatDisplayValueTests(TestCase):
 
     def test_date_value_with_day_interval_is_returned_as_date_string_to_the_day(self):
         for d in (date(2019, 1, 1), datetime(2019, 1, 1, 12, 30, 2)):
-            with self.subTest('with ' + d.__class__):
+            with self.subTest('with ' + d.__class__.__name__):
                 self.assertEqual('2019-01-01', formats.display_value(d, day(date_field)))
 
     def test_date_value_with_week_interval_is_returned_as_date_string_to_the_year_and_week_number(self):
         for d in (date(2019, 2, 25), datetime(2019, 2, 25, 12, 30, 2)):
-            with self.subTest('with ' + d.__class__):
+            with self.subTest('with ' + d.__class__.__name__):
                 self.assertEqual('W08 2019-02-25', formats.display_value(d, week(date_field)))
 
     def test_date_value_with_month_interval_is_returned_as_date_string_to_the_month_and_year(self):
         for d in (date(2019, 1, 1), datetime(2019, 1, 1, 12, 30, 2)):
-            with self.subTest('with ' + d.__class__):
+            with self.subTest('with ' + d.__class__.__name__):
                 self.assertEqual('Jan 2019', formats.display_value(d, month(date_field)))
 
     def test_date_value_with_year_interval_is_returned_as_date_string_to_the_year(self):
         for d in (date(2019, 1, 1), datetime(2019, 1, 1, 12, 30, 2)):
-            with self.subTest('with ' + d.__class__):
+            with self.subTest('with ' + d.__class__.__name__):
                 self.assertEqual('2019', formats.display_value(d, year(date_field)))
 
 

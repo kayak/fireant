@@ -336,7 +336,7 @@ class ReactTable(Pandas):
         return row
 
     @staticmethod
-    def transform_row_values(series, fields, dimension_hyperlink_templates, is_transposed):
+    def transform_row_values(series, fields, is_transposed):
         # Add the values to the row
         row = {}
         for key, value in series.iteritems():
@@ -408,7 +408,6 @@ class ReactTable(Pandas):
                                                  dimension_hyperlink_templates),
                 **ReactTable.transform_row_values(series,
                                                   field_map,
-                                                  dimension_hyperlink_templates,
                                                   is_transposed),
             })
 
@@ -431,9 +430,13 @@ class ReactTable(Pandas):
             An dict containing attributes `columns` and `data` which align with the props in ReactTable with the same
             names.
         """
-        metric_map = {alias_selector(reference_alias(i, ref)): ReferenceItem(i, ref) if ref is not None else i
-                      for i in self.items
-                      for ref in [None] + references}
+        metric_map = OrderedDict([
+            (
+                alias_selector(reference_alias(i, ref)),
+                ReferenceItem(i, ref) if ref is not None else i
+            )
+            for i in self.items
+            for ref in [None] + references])
         dimension_map = {alias_selector(dimension.alias): dimension
                          for dimension in dimensions}
         field_map = {

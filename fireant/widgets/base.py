@@ -1,8 +1,8 @@
 from typing import Union
 
-from exceptions import SlicerException
 from fireant.dataset.fields import Field
 from fireant.dataset.operations import Operation
+from fireant.exceptions import SlicerException
 from fireant.utils import immutable
 
 

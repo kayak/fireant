@@ -9,12 +9,12 @@ from toposort import (
     toposort_flatten,
 )
 
-from exceptions import SlicerException
 from fireant.dataset.modifiers import (
     OmitFromRollup,
     Rollup,
 )
 from fireant.dataset.operations import Share
+from fireant.exceptions import SlicerException
 from fireant.utils import (
     groupby,
     ordered_distinct_list,
