@@ -10,6 +10,7 @@ from fireant.dataset.totals import scrub_totals_from_share_results
 from fireant.exceptions import SlicerException
 from fireant.reference_helpers import reference_alias
 from fireant.utils import (
+    alias_for_alias_selector,
     alias_selector,
     immutable,
 )
@@ -378,5 +379,6 @@ class DimensionLatestQueryBuilder(QueryBuilder):
         data = super().fetch(hint=hint).reset_index().iloc[0]
         # Remove the row index as the name and trim the special dimension key characters from the dimension key
         data.name = None
-        data.index = [key[3:] for key in data.index]
+        data.index = [alias_for_alias_selector(alias)
+                      for alias in data.index]
         return data

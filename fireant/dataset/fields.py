@@ -31,7 +31,9 @@ DISCRETE_TYPES = [DataType.text, DataType.boolean]
 
 
 class DataSetFilterException(Exception):
-    pass
+    def __init__(self, msg, allowed):
+        super().__init__(msg)
+        self.allowed = allowed
 
 
 def restrict_types(allowed):
@@ -42,7 +44,7 @@ def restrict_types(allowed):
                 msg = '`{func}` filter can only be used on fields with the following data types: {types}.' \
                     .format(func=func.__name__,
                             types=", ".join(map(repr, allowed)))
-                raise DataSetFilterException(msg)
+                raise DataSetFilterException(msg, allowed)
             return func(self, *args, **kwargs)
 
         return inner

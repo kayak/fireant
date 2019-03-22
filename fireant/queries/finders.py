@@ -177,9 +177,9 @@ def find_and_replace_reference_dimensions(references, dimensions):
 
     reference_copies = []
     for reference in map(copy.deepcopy, references):
-        dimension = dimensions_by_key.get(reference.dimension.alias)
+        dimension = dimensions_by_key.get(reference.field.alias)
         if dimension is not None:
-            reference.dimension = dimension
+            reference.field = dimension
         reference_copies.append(reference)
     return reference_copies
 
@@ -207,7 +207,7 @@ def find_and_group_references_for_dimensions(references):
     """
 
     def get_dimension_time_unit_and_interval(reference):
-        return reference.dimension, reference.time_unit, reference.interval
+        return reference.field, reference.time_unit, reference.interval
 
     distinct_references = ordered_distinct_list(references)
     return groupby(distinct_references, get_dimension_time_unit_and_interval)

@@ -4,8 +4,8 @@ from pypika.queries import QueryBuilder
 
 
 class Reference(object):
-    def __init__(self, dimension, reference_type, delta=False, delta_percent=False):
-        self.dimension = dimension
+    def __init__(self, field, reference_type, delta=False, delta_percent=False):
+        self.field = field
 
         self.reference_type = reference_type
         self.alias = reference_type.alias + '_delta_percent' \
@@ -28,14 +28,14 @@ class Reference(object):
 
     def __eq__(self, other):
         return isinstance(self, Reference) \
-               and self.dimension == other.dimension \
+               and self.field == other.field \
                and self.alias == other.alias
 
     def __hash__(self):
-        return hash('reference{}{}'.format(self.alias, self.dimension))
+        return hash('reference{}{}'.format(self.alias, self.field))
 
     def __repr__(self):
-        return '{}({})'.format(self.alias, self.dimension.alias)
+        return '{}({})'.format(self.alias, self.field.alias)
 
 
 class ReferenceType(object):
