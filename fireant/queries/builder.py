@@ -113,14 +113,14 @@ class QueryBuilder(object):
         return fetch_data(self.dataset.database, queries, self._dimensions)
 
 
-class SlicerQueryBuilder(QueryBuilder):
+class DataSetQueryBuilder(QueryBuilder):
     """
     Slicer queries consist of widgets, dimensions, filters, and references. At least one or more widgets is required.
     All others are optional.
     """
 
     def __init__(self, dataset):
-        super(SlicerQueryBuilder, self).__init__(dataset, dataset.table)
+        super(DataSetQueryBuilder, self).__init__(dataset, dataset.table)
         self._widgets = []
         self._totals_dimensions = set()
         self._orders = []

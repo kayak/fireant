@@ -1,9 +1,9 @@
 import itertools
 
 from fireant.queries import (
+    DataSetQueryBuilder,
     DimensionChoicesQueryBuilder,
     DimensionLatestQueryBuilder,
-    SlicerQueryBuilder,
 )
 
 
@@ -91,7 +91,7 @@ class DataSet(object):
         self.fields = DataSet.Fields(fields)
 
         # add query builder entry points
-        self.query = SlicerQueryBuilder(self)
+        self.query = DataSetQueryBuilder(self)
         self.latest = DimensionLatestQueryBuilder(self)
         for field in fields:
             field.choices = DimensionChoicesQueryBuilder(self, field)

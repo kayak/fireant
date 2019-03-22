@@ -303,9 +303,11 @@ class ReactTable(Pandas):
 
             return columns
 
-        column_frame = data_frame.columns.to_frame()
-        return _make_columns(column_frame)
+        # If the query only has a single metric, that level will be dropped, and set as data_frame.name
+        dropped_metric_level_name = (data_frame.name,) if hasattr(data_frame, 'name') else ()
 
+        return _make_columns(data_frame.columns.to_frame(),
+                             dropped_metric_level_name)
     @staticmethod
     def transform_row_index(index_values, field_map, dimension_hyperlink_templates):
         # Add the index to the row
