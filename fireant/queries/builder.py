@@ -31,6 +31,7 @@ from .sql_transformer import (
     make_slicer_query,
     make_slicer_query_with_totals_and_references,
 )
+from ..formats import display_value
 
 
 class QueryException(SlicerException):
@@ -275,6 +276,11 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
         super(DimensionChoicesQueryBuilder, self).__init__(dataset, dataset.hint_table or dataset.table)
         self._dimensions.append(dimension)
 
+        # TODO remove after 3.0.0
+        display_alias = dimension.alias + '_display'
+        if display_alias in dataset.fields:
+            self._dimensions.append(dataset.fields[display_alias])
+
     @property
     def sql(self):
         """
@@ -326,18 +332,17 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
 
         data = fetch_data(self.dataset.database, [query], self._dimensions)
 
-        df_key = alias_selector(getattr(dimension, 'display_key', None))
-        if df_key is not None:
-            return data[df_key]
+        if len(data.index.names) > 1:
+            display_alias = data.index.names[1]
+            data.reset_index(display_alias, inplace=True)
+            choices = data[display_alias]
 
-        display_key = 'display'
-        if hasattr(dimension, 'display_values'):
-            # Include provided display values
-            data[display_key] = pd.Series(dimension.display_values)
         else:
-            data[display_key] = data.index.tolist()
+            data['display'] = data.index.tolist()
+            choices = data['display']
 
-        return data[display_key]
+        dimension_display = self._dimensions[-1]
+        return choices.map(lambda raw: display_value(raw, dimension_display) or raw)
 
     def __repr__(self):
         return ".".join(["slicer", self._dimensions[0].alias, "choices"]

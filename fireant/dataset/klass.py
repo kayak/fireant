@@ -51,6 +51,7 @@ class DataSet(object):
     """
     WRITEME
     """
+
     class Fields(_Container):
         pass
 
@@ -93,10 +94,12 @@ class DataSet(object):
         # add query builder entry points
         self.query = DataSetQueryBuilder(self)
         self.latest = DimensionLatestQueryBuilder(self)
-        for field in fields:
-            field.choices = DimensionChoicesQueryBuilder(self, field)
 
         self.always_query_all_metrics = always_query_all_metrics
+
+        for field in fields:
+            if not field.definition.is_aggregate:
+                field.choices = DimensionChoicesQueryBuilder(self, field)
 
     def __eq__(self, other):
         return isinstance(other, DataSet) \
