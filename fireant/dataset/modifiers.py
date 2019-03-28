@@ -36,7 +36,7 @@ class Modifier:
     def __repr__(self):
         wrapped_key = super().__getattribute__('wrapped_key')
         wrapped = super().__getattribute__(wrapped_key)
-        return '{}({})'.format(self.__class__.__name__,repr(wrapped))
+        return '{}({})'.format(self.__class__.__name__, repr(wrapped))
 
 
 class DimensionModifier(Modifier):

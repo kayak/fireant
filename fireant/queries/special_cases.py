@@ -5,6 +5,7 @@ from dateutil.relativedelta import relativedelta
 
 from fireant.dataset.fields import DataType
 from fireant.dataset.filters import RangeFilter
+from fireant.dataset.intervals import DatetimeInterval
 from fireant.dataset.operations import RollingOperation
 
 
@@ -48,8 +49,10 @@ def adjust_daterange_filter_for_rolling_window(dimensions, operations, filters):
 
     for filter_ in filters_on_dim0:
         # Monkey patch the update start date on the date filter
-        args = {dim0.interval + 's': max_rolling_period} \
-            if 'quarter' != dim0.interval \
+        print('stop')
+        args = {dim0.interval_key + 's': max_rolling_period} \
+            if isinstance(dim0, DatetimeInterval) \
+               and 'quarter' != dim0.interval_key \
             else {'months': max_rolling_period * 3}
         filter_.definition.start.value -= relativedelta(**args)
 
