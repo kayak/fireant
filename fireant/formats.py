@@ -54,6 +54,9 @@ def return_none(value):
 
 @filter_kwargs
 def _format_decimal(value, thousands=',', precision=None):
+    if not isinstance(value, (int, float)):
+        return value
+
     precision_pattern = '{{:{}.{}f}}'.format(thousands, precision) \
         if precision is not None \
         else '{{:{}f}}'.format(thousands)

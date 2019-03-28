@@ -126,6 +126,10 @@ class FormatDisplayValueTests(TestCase):
         with self.subTest('negative inf'):
             self.assertEqual('Inf', formats.display_value(-np.inf, None))
 
+    def test_wrong_type_passed_to_formatter_returns_value(self):
+        result = formats.display_value('abcdef', number_field)
+        self.assertEqual(result, 'abcdef')
+
     def test_totals_markers_are_returned_as_text_totals_label(self):
         for marker, field in [(TEXT_TOTALS, text_field),
                               (NUMBER_TOTALS, number_field),
