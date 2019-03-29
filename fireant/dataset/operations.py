@@ -212,6 +212,10 @@ class Share(_BaseOperation):
         )
 
     @property
+    def metrics(self):
+        return [self.args[0]]
+
+    @property
     def metric(self):
         return self.args[0]
 

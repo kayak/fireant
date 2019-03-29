@@ -145,9 +145,11 @@ def find_totals_dimensions(dimensions, share_dimensions):
         an list of all dimension field in the list argument `dimensions` which have the `Rollup` modifier applied to
         them or are used as a basis for a share metric.
     """
+    share_dimension_aliases = {d.alias for d in share_dimensions}
     return [dimension
             for dimension in dimensions
-            if isinstance(dimension, Rollup) or dimension in share_dimensions]
+            if isinstance(dimension, Rollup)
+            or dimension.alias in share_dimension_aliases]
 
 
 def find_filters_for_totals(filters):
