@@ -42,8 +42,6 @@ def date_as_string(value, interval_key=None):
 
 @filter_kwargs
 def date_as_millis(value):
-    if not isinstance(value, date):
-        value = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
     return int(1000 * value.timestamp())
 
 
@@ -84,6 +82,19 @@ def _identity(value):
 
 
 UNSAFE_CHARS = re.compile(r'[^\w\d\-:()]')
+
+
+def json_value(value):
+    """
+    This function will return only values safe for JSON
+    """
+    if pd.isnull(value):
+        return None
+    if isinstance(value, float) and np.isinf(value):
+        return 'inf'
+    if value in TOTALS_MARKERS:
+        return TOTALS_VALUE
+    return value
 
 
 def safe_value(value):

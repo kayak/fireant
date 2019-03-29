@@ -18,6 +18,7 @@ from fireant.formats import (
     RAW_VALUE,
     TOTALS_VALUE,
     display_value,
+    json_value,
     raw_value,
     return_none,
     safe_value,
@@ -208,9 +209,10 @@ class ReactTable(Pandas):
 
         for f_dimension_alias in data_frame.index.names:
             dimension = field_map[f_dimension_alias]
+            header = getattr(dimension, 'label', dimension.alias)
 
             columns.append({
-                'Header': getattr(dimension, 'label', dimension.alias),
+                'Header': json_value(header),
                 'accessor': safe_value(f_dimension_alias),
             })
 
@@ -308,6 +310,7 @@ class ReactTable(Pandas):
 
         return _make_columns(data_frame.columns.to_frame(),
                              dropped_metric_level_name)
+
     @staticmethod
     def transform_row_index(index_values, field_map, dimension_hyperlink_templates):
         # Add the index to the row

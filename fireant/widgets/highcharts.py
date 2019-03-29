@@ -13,6 +13,7 @@ from .chart_base import (
     ChartWidget,
     ContinuousAxisSeries,
 )
+from ..dataset.totals import TOTALS_MARKERS
 from ..reference_helpers import (
     reference_alias,
     reference_label,
@@ -349,6 +350,10 @@ class HighCharts(ChartWidget, TransformableWidget):
         for dimension_values, y in group_df[metric_alias].iteritems():
             first_dimension_value = utils.wrap_list(dimension_values)[0]
 
+            # Ignore empty result sets where the only row is totals
+            if first_dimension_value in TOTALS_MARKERS:
+                continue
+
             if pd.isnull(first_dimension_value):
                 # Ignore totals on the x-axis.
                 continue
@@ -418,5 +423,5 @@ class HighCharts(ChartWidget, TransformableWidget):
 
     @staticmethod
     def _format_dimension_values(dimension_fields, dimension_values):
-        return ', '.join(formats.display_value(value, dimension_field) or value
+        return ', '.join(formats.display_value(value, dimension_field) or str(value)
                          for value, dimension_field in zip(dimension_values, dimension_fields))

@@ -45,12 +45,14 @@ class _BaseOperation(Operation):
                  args,
                  prefix: str = None,
                  suffix: str = None,
+                 thousands: str = None,
                  precision: int = None):
         self.alias = alias
         self.label = label
         self.args = args
         self.prefix = prefix
         self.suffix = suffix
+        self.thousands = thousands
         self.precision = precision
 
     def apply(self, data_frame, reference):
@@ -93,6 +95,7 @@ class _Cumulative(_BaseOperation):
               args=[arg],
               prefix=getattr(arg, 'prefix'),
               suffix=getattr(arg, 'suffix'),
+              thousands=getattr(arg, 'thousands'),
               precision=getattr(arg, 'precision'),
         )
 
@@ -161,6 +164,7 @@ class RollingOperation(_BaseOperation):
               args=[arg],
               prefix=getattr(arg, 'prefix'),
               suffix=getattr(arg, 'suffix'),
+              thousands=getattr(arg, 'thousands'),
               precision=getattr(arg, 'precision'),
         )
         self.window = window
