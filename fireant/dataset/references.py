@@ -39,8 +39,8 @@ class Reference(object):
 
 
 class ReferenceType(object):
-    def __init__(self, key, label, time_unit: str, interval: int):
-        self.alias = key
+    def __init__(self, alias, label, time_unit: str, interval: int):
+        self.alias = alias
         self.label = label
 
         self.time_unit = time_unit

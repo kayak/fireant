@@ -18,6 +18,9 @@ class NumericInterval(DimensionModifier):
         return hash(repr(self))
 
 
+DATETIME_INTERVALS = ('hour', 'day', 'week', 'month', 'quarter', 'year')
+
+
 class DatetimeInterval(DimensionModifier):
     def __init__(self, dimension, interval_key):
         super().__init__(dimension)
@@ -37,4 +40,4 @@ class DatetimeInterval(DimensionModifier):
 
 
 hour, day, week, month, quarter, year = [partial(DatetimeInterval, interval_key=key)
-                                         for key in ('hour', 'day', 'week', 'month', 'quarter', 'year')]
+                                         for key in DATETIME_INTERVALS]
