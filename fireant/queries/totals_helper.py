@@ -21,18 +21,16 @@ def adapt_for_totals_query(totals_dimension, dimensions, filters):
 
     # Get an index to split the dimensions before and after the totals dimension
 
-    if is_totals_query:
-        index = [i
-                 for i, dimension in enumerate(dimensions)
-                 if dimension is totals_dimension][0]
-        totals_dims = [Rollup(dimension)
-                       if i >= index
-                       else dimension
-                       for i, dimension in enumerate(raw_dimensions)]
-        totals_filters = find_filters_for_totals(filters)
+    if not is_totals_query:
+        return raw_dimensions, filters
 
-    else:
-        totals_dims = raw_dimensions
-        totals_filters = filters
+    index = [i
+             for i, dimension in enumerate(dimensions)
+             if dimension is totals_dimension][0]
+    totals_dims = [Rollup(dimension)
+                   if i >= index
+                   else dimension
+                   for i, dimension in enumerate(raw_dimensions)]
+    totals_filters = find_filters_for_totals(filters)
 
     return totals_dims, totals_filters
