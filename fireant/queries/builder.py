@@ -17,6 +17,7 @@ from fireant.utils import (
 from pypika import Order
 from . import special_cases
 from .execution import fetch_data
+from .field_helper import make_orders_for_dimensions
 from .finders import (
     find_and_group_references_for_dimensions,
     find_and_replace_reference_dimensions,
@@ -27,7 +28,6 @@ from .finders import (
 from .pagination import paginate
 from .sql_transformer import (
     make_latest_query,
-    make_orders_for_dimensions,
     make_slicer_query,
     make_slicer_query_with_totals_and_references,
 )
@@ -178,7 +178,7 @@ class DataSetQueryBuilder(QueryBuilder):
 
     @property
     def reference_groups(self):
-        return list(find_and_group_references_for_dimensions(self._references).values())
+        return list(find_and_group_references_for_dimensions(self._dimensions, self._references).values())
 
     @property
     def sql(self):

@@ -3,7 +3,6 @@ from typing import Iterable
 from fireant.database import Database
 from fireant.dataset.fields import Field
 from fireant.dataset.filters import Filter
-from fireant.dataset.intervals import DatetimeInterval
 from fireant.dataset.joins import Join
 from fireant.dataset.modifiers import Rollup
 from fireant.utils import (
@@ -14,51 +13,19 @@ from pypika import (
     Table,
     functions as fn,
 )
+from .field_helper import (
+    make_term_for_dimension,
+    make_term_for_metrics,
+)
 from .finders import (
     find_and_group_references_for_dimensions,
-    find_filters_for_totals,
     find_joins_for_tables,
     find_required_tables_to_join,
     find_totals_dimensions,
 )
 from .reference_helper import adapt_for_reference_query
 from .special_cases import apply_special_cases
-
-
-def adapt_for_totals_query(totals_dimension, dimensions, filters):
-    """
-    Adapt filters for totals query. This function will select filters for total dimensions depending on the
-    apply_filter_to_totals values for the filters. A total dimension with value None indicates the base query for
-    which all filters will be applied by default.
-
-    :param totals_dimension:
-    :param dimensions:
-    :param filters:
-    :return:
-    """
-    is_totals_query = totals_dimension is not None
-    raw_dimensions = [dimension.dimension
-                      if isinstance(dimension, Rollup)
-                      else dimension
-                      for dimension in dimensions]
-
-    # Get an index to split the dimensions before and after the totals dimension
-
-    if is_totals_query:
-        index = [i
-                 for i, dimension in enumerate(dimensions)
-                 if dimension is totals_dimension][0]
-        totals_dims = [Rollup(dimension)
-                       if i >= index
-                       else dimension
-                       for i, dimension in enumerate(raw_dimensions)]
-        totals_filters = find_filters_for_totals(filters)
-
-    else:
-        totals_dims = raw_dimensions
-        totals_filters = filters
-
-    return totals_dims, totals_filters
+from .totals_helper import adapt_for_totals_query
 
 
 @apply_special_cases
@@ -105,32 +72,31 @@ def make_slicer_query_with_totals_and_references(database,
     totals_dimensions = find_totals_dimensions(dimensions, share_dimensions)
     totals_dimensions_and_none = [None] + totals_dimensions[::-1]
 
-    reference_groups = find_and_group_references_for_dimensions(references)
+    reference_groups = find_and_group_references_for_dimensions(dimensions, references)
     reference_groups_and_none = [(None, None)] + list(reference_groups.items())
 
     queries = []
     for totals_dimension in totals_dimensions_and_none:
-        (query_dimensions,
-         query_filters) = adapt_for_totals_query(totals_dimension,
-                                                 dimensions,
-                                                 filters)
+        (dimensions_for_totals,
+         filters_for_totals) = adapt_for_totals_query(totals_dimension,
+                                                      dimensions,
+                                                      filters)
 
         for reference_parts, references in reference_groups_and_none:
-            (ref_database,
-             ref_dimensions,
-             ref_metrics,
-             ref_filters) = adapt_for_reference_query(reference_parts,
-                                                      database,
-                                                      query_dimensions,
-                                                      metrics,
-                                                      query_filters,
-                                                      references)
-            query = make_slicer_query(ref_database,
+            (dimensions_for_ref,
+             metrics_for_ref,
+             filters_for_ref) = adapt_for_reference_query(reference_parts,
+                                                          database,
+                                                          dimensions_for_totals,
+                                                          metrics,
+                                                          filters_for_totals,
+                                                          references)
+            query = make_slicer_query(database,
                                       table,
                                       joins,
-                                      ref_dimensions,
-                                      ref_metrics,
-                                      ref_filters,
+                                      dimensions_for_ref,
+                                      metrics_for_ref,
+                                      filters_for_ref,
                                       orders)
 
             # Add these to the query instance so when the data frames are joined together, the correct references and
@@ -189,10 +155,10 @@ def make_slicer_query(database: Database,
 
     # Add dimensions
     for dimension in dimensions:
-        terms = make_terms_for_dimension(dimension, database.trunc_date)
-        query = query.select(*terms)
+        dimension_term = make_term_for_dimension(dimension, database.trunc_date)
+        query = query.select(dimension_term)
         if not isinstance(dimension, Rollup):
-            query = query.groupby(*terms)
+            query = query.groupby(dimension_term)
 
     # Add filters
     for fltr in filters:
@@ -201,18 +167,19 @@ def make_slicer_query(database: Database,
             else query.where(fltr.definition)
 
     # Add metrics
-    term = make_terms_for_metrics(metrics)
-    if term:
-        query = query.select(*term)
+    metric_terms = [make_term_for_metrics(metric)
+                    for metric in metrics]
+    if metric_terms:
+        query = query.select(*metric_terms)
 
     # In the case that the orders are determined by a field that is not selected as a metric or dimension, then it needs
     # to be added to the query.
     select_aliases = {el.alias for el in query._selects}
-    for (term, orientation) in orders:
-        query = query.orderby(term, order=orientation)
+    for (orderby_term, orientation) in orders:
+        query = query.orderby(orderby_term, order=orientation)
 
-        if term.alias not in select_aliases:
-            query = query.select(term)
+        if orderby_term.alias not in select_aliases:
+            query = query.select(orderby_term)
 
     return query
 
@@ -235,48 +202,3 @@ def make_latest_query(database: Database,
     return query
 
 
-def make_terms_for_metrics(metrics):
-    return [metric.definition.as_(alias_selector(metric.alias))
-            for metric in metrics]
-
-
-def make_terms_for_dimension(dimension, window=None):
-    """
-    Makes a list of pypika terms for a given slicer definition.
-
-    :param dimension:
-        A slicer dimension.
-    :param window:
-        A window function to apply to the dimension definition if it is a continuous dimension.
-    :return:
-        a list of terms required to select and group by in a SQL query given a slicer dimension. This list will contain
-        either one or two elements. A second element will be included if the dimension has a definition for its display
-        field.
-    """
-    f_alias = alias_selector(dimension.alias)
-
-    if window and isinstance(dimension, DatetimeInterval):
-        return [window(dimension.definition, dimension.interval_key).as_(f_alias)]
-
-    return [dimension.definition.as_(f_alias)]
-
-
-def make_orders_for_dimensions(dimensions):
-    """
-    Creates a list of ordering for a slicer query based on a list of dimensions. The dimensions's display definition is
-    used preferably as the ordering term but the definition is used for dimensions that do not have a display
-    definition.
-
-    :param dimensions:
-    :return:
-        a list of tuple pairs like (term, orientation) for ordering a SQL query where the first element is the term
-        to order by and the second is the orientation of the ordering, ASC or DESC.
-    """
-
-    # Use the same function to make the definition terms to force it to be consistent.
-    # Always take the last element in order to prefer the display definition.
-    definitions = [make_terms_for_dimension(dimension)[-1]
-                   for dimension in dimensions]
-
-    return [(definition, None)
-            for definition in definitions]

@@ -6,13 +6,15 @@ import fireant as f
 from fireant.tests.dataset.mocks import mock_dataset
 
 timestamp_daily = f.day(mock_dataset.fields.timestamp)
+timestamp_monthly = f.month(mock_dataset.fields.timestamp)
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 class QueryBuilderDatetimeReferenceTests(TestCase):
     maxDiff = None
 
-    def test_single_reference_dod_with_no_dimension_uses_multiple_from_clauses_instead_of_joins(self):
+    def test_reference_with_no_dimensions_or_filters_creates_same_query(self):
+        # TODO reduce this to a single query
         queries = mock_dataset.query \
             .widget(f.HighCharts()
                     .axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))) \
@@ -31,7 +33,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                              'SUM("votes") "$votes_dod" '
                              'FROM "politics"."politician"', str(queries[1]))
 
-    def test_single_reference_dod_with_dimension_but_not_reference_dimension_in_query_using_filter(self):
+    def test_reference_without_selecting_reference_dimension_using_date_range_filter(self):
         queries = mock_dataset.query \
             .widget(f.HighCharts()
                     .axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))) \
@@ -60,7 +62,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                              'GROUP BY "$political_party" '
                              'ORDER BY "$political_party"', str(queries[1]))
 
-    def test_dimension_with_single_reference_dod(self):
+    def test_dod(self):
         queries = mock_dataset.query \
             .widget(f.HighCharts()
                     .axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))) \
@@ -80,13 +82,13 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
         with self.subTest('reference query is same as base query with reference dimension shifted'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'day\',1,"timestamp"),\'DD\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'day\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
                              'SUM("votes") "$votes_dod" '
                              'FROM "politics"."politician" '
                              'GROUP BY "$timestamp" '
                              'ORDER BY "$timestamp"', str(queries[1]))
 
-    def test_dimension_with_single_reference_wow(self):
+    def test_wow(self):
         queries = mock_dataset.query \
             .widget(f.HighCharts()
                     .axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))) \
@@ -106,13 +108,13 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
         with self.subTest('reference query is same as base query with reference dimension shifted'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'week\',1,"timestamp"),\'DD\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'week\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
                              'SUM("votes") "$votes_wow" '
                              'FROM "politics"."politician" '
                              'GROUP BY "$timestamp" '
                              'ORDER BY "$timestamp"', str(queries[1]))
 
-    def test_dimension_with_single_reference_mom(self):
+    def test_mom(self):
         queries = mock_dataset.query \
             .widget(f.HighCharts()
                     .axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))) \
@@ -132,13 +134,13 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
         with self.subTest('reference query is same as base query with reference dimension shifted'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'month\',1,"timestamp"),\'DD\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'week\',4,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
                              'SUM("votes") "$votes_mom" '
                              'FROM "politics"."politician" '
                              'GROUP BY "$timestamp" '
                              'ORDER BY "$timestamp"', str(queries[1]))
 
-    def test_dimension_with_single_reference_qoq(self):
+    def test_qoq(self):
         queries = mock_dataset.query \
             .widget(f.HighCharts()
                     .axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))) \
@@ -158,13 +160,13 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
         with self.subTest('reference query is same as base query with reference dimension shifted'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'quarter\',1,"timestamp"),\'DD\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'week\',12,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
                              'SUM("votes") "$votes_qoq" '
                              'FROM "politics"."politician" '
                              'GROUP BY "$timestamp" '
                              'ORDER BY "$timestamp"', str(queries[1]))
 
-    def test_dimension_with_single_reference_yoy(self):
+    def test_yoy(self):
         queries = mock_dataset.query \
             .widget(f.HighCharts()
                     .axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))) \
@@ -184,7 +186,85 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
         with self.subTest('reference query is same as base query with reference dimension shifted'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'DD\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'week\',52,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
+                             'SUM("votes") "$votes_yoy" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$timestamp" '
+                             'ORDER BY "$timestamp"', str(queries[1]))
+
+    def test_mom_with_monthly_interval(self):
+        queries = mock_dataset.query \
+            .widget(f.HighCharts()
+                    .axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))) \
+            .dimension(timestamp_monthly) \
+            .reference(f.MonthOverMonth(mock_dataset.fields.timestamp)) \
+            .sql
+
+        self.assertEqual(2, len(queries))
+
+        with self.subTest('base query is same as without reference'):
+            self.assertEqual('SELECT '
+                             'TRUNC("timestamp",\'MM\') "$timestamp",'
+                             'SUM("votes") "$votes" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$timestamp" '
+                             'ORDER BY "$timestamp"', str(queries[0]))
+
+        with self.subTest('reference query is same as base query with reference dimension shifted'):
+            self.assertEqual('SELECT '
+                             'TRUNC(TIMESTAMPADD(\'month\',1,TRUNC("timestamp",\'MM\')),\'MM\') "$timestamp",'
+                             'SUM("votes") "$votes_mom" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$timestamp" '
+                             'ORDER BY "$timestamp"', str(queries[1]))
+
+    def test_qoq_with_monthly_interval(self):
+        queries = mock_dataset.query \
+            .widget(f.HighCharts()
+                    .axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))) \
+            .dimension(timestamp_monthly) \
+            .reference(f.QuarterOverQuarter(mock_dataset.fields.timestamp)) \
+            .sql
+
+        self.assertEqual(2, len(queries))
+
+        with self.subTest('base query is same as without reference'):
+            self.assertEqual('SELECT '
+                             'TRUNC("timestamp",\'MM\') "$timestamp",'
+                             'SUM("votes") "$votes" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$timestamp" '
+                             'ORDER BY "$timestamp"', str(queries[0]))
+
+        with self.subTest('reference query is same as base query with reference dimension shifted'):
+            self.assertEqual('SELECT '
+                             'TRUNC(TIMESTAMPADD(\'quarter\',1,TRUNC("timestamp",\'MM\')),\'MM\') "$timestamp",'
+                             'SUM("votes") "$votes_qoq" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$timestamp" '
+                             'ORDER BY "$timestamp"', str(queries[1]))
+
+    def test_yoy_with_monthly_interval(self):
+        queries = mock_dataset.query \
+            .widget(f.HighCharts()
+                    .axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))) \
+            .dimension(timestamp_monthly) \
+            .reference(f.YearOverYear(mock_dataset.fields.timestamp)) \
+            .sql
+
+        self.assertEqual(2, len(queries))
+
+        with self.subTest('base query is same as without reference'):
+            self.assertEqual('SELECT '
+                             'TRUNC("timestamp",\'MM\') "$timestamp",'
+                             'SUM("votes") "$votes" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$timestamp" '
+                             'ORDER BY "$timestamp"', str(queries[0]))
+
+        with self.subTest('reference query is same as base query with reference dimension shifted'):
+            self.assertEqual('SELECT '
+                             'TRUNC(TIMESTAMPADD(\'year\',1,TRUNC("timestamp",\'MM\')),\'MM\') "$timestamp",'
                              'SUM("votes") "$votes_yoy" '
                              'FROM "politics"."politician" '
                              'GROUP BY "$timestamp" '
@@ -195,7 +275,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 class QueryBuilderDatetimeReferenceWithDeltaTests(TestCase):
     maxDiff = None
 
-    def test_dimension_with_single_reference_as_a_delta(self):
+    def test_delta(self):
         queries = mock_dataset.query \
             .widget(f.HighCharts()
                     .axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))) \
@@ -215,13 +295,13 @@ class QueryBuilderDatetimeReferenceWithDeltaTests(TestCase):
 
         with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'day\',1,"timestamp"),\'DD\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'day\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
                              'SUM("votes") "$votes_dod" '
                              'FROM "politics"."politician" '
                              'GROUP BY "$timestamp" '
                              'ORDER BY "$timestamp"', str(queries[1]))
 
-    def test_dimension_with_single_reference_as_a_delta_percentage(self):
+    def test_delta_percentage(self):
         queries = mock_dataset.query \
             .widget(f.HighCharts()
                     .axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))) \
@@ -241,7 +321,7 @@ class QueryBuilderDatetimeReferenceWithDeltaTests(TestCase):
 
         with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'day\',1,"timestamp"),\'DD\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'day\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
                              'SUM("votes") "$votes_dod" '
                              'FROM "politics"."politician" '
                              'GROUP BY "$timestamp" '
@@ -252,7 +332,7 @@ class QueryBuilderDatetimeReferenceWithDeltaTests(TestCase):
 class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
     maxDiff = None
 
-    def test_reference_on_dimension_with_weekly_interval(self):
+    def test_date_dim_with_weekly_interval(self):
         weekly_timestamp = f.week(mock_dataset.fields.timestamp)
         queries = mock_dataset.query \
             .widget(f.HighCharts()
@@ -273,13 +353,13 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
 
         with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'day\',1,"timestamp"),\'IW\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'day\',1,TRUNC("timestamp",\'IW\')),\'IW\') "$timestamp",'
                              'SUM("votes") "$votes_dod" '
                              'FROM "politics"."politician" '
                              'GROUP BY "$timestamp" '
                              'ORDER BY "$timestamp"', str(queries[1]))
 
-    def test_reference_on_dimension_with_weekly_interval_no_interval_on_reference(self):
+    def test_date_dim_with_weekly_interval_no_interval_on_reference(self):
         queries = mock_dataset.query \
             .widget(f.HighCharts()
                     .axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))) \
@@ -299,13 +379,13 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
 
         with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'day\',1,"timestamp"),\'IW\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'day\',1,TRUNC("timestamp",\'IW\')),\'IW\') "$timestamp",'
                              'SUM("votes") "$votes_dod" '
                              'FROM "politics"."politician" '
                              'GROUP BY "$timestamp" '
                              'ORDER BY "$timestamp"', str(queries[1]))
 
-    def test_reference_on_dimension_with_monthly_interval(self):
+    def test_date_dim_with_monthly_interval(self):
         queries = mock_dataset.query \
             .widget(f.HighCharts()
                     .axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))) \
@@ -325,13 +405,13 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
 
         with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'day\',1,"timestamp"),\'MM\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'day\',1,TRUNC("timestamp",\'MM\')),\'MM\') "$timestamp",'
                              'SUM("votes") "$votes_dod" '
                              'FROM "politics"."politician" '
                              'GROUP BY "$timestamp" '
                              'ORDER BY "$timestamp"', str(queries[1]))
 
-    def test_reference_on_dimension_with_quarterly_interval(self):
+    def test_date_dim_with_quarterly_interval(self):
         queries = mock_dataset.query \
             .widget(f.HighCharts()
                     .axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))) \
@@ -351,13 +431,13 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
 
         with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'day\',1,"timestamp"),\'Q\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'day\',1,TRUNC("timestamp",\'Q\')),\'Q\') "$timestamp",'
                              'SUM("votes") "$votes_dod" '
                              'FROM "politics"."politician" '
                              'GROUP BY "$timestamp" '
                              'ORDER BY "$timestamp"', str(queries[1]))
 
-    def test_reference_on_dimension_with_annual_interval(self):
+    def test_date_dim_with_annual_interval(self):
         queries = mock_dataset.query \
             .widget(f.HighCharts()
                     .axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))) \
@@ -377,7 +457,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
 
         with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'day\',1,"timestamp"),\'Y\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'day\',1,TRUNC("timestamp",\'Y\')),\'Y\') "$timestamp",'
                              'SUM("votes") "$votes_dod" '
                              'FROM "politics"."politician" '
                              'GROUP BY "$timestamp" '
@@ -409,7 +489,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
 
         with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'day\',1,"timestamp"),\'DD\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'day\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
                              'SUM("votes") "$votes_dod" '
                              'FROM "politics"."politician" '
                              'GROUP BY "$timestamp" '
@@ -417,7 +497,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
 
         with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'DD\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'week\',52,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
                              'SUM("votes") "$votes_yoy" '
                              'FROM "politics"."politician" '
                              'GROUP BY "$timestamp" '
@@ -444,7 +524,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
 
         with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'day\',1,"timestamp"),\'DD\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'day\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
                              'SUM("votes") "$votes_dod" '
                              'FROM "politics"."politician" '
                              'GROUP BY "$timestamp" '
@@ -472,7 +552,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
 
         with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'day\',1,"timestamp"),\'DD\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'day\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
                              'SUM("votes") "$votes_dod" '
                              'FROM "politics"."politician" '
                              'GROUP BY "$timestamp" '
@@ -499,17 +579,17 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
                              'GROUP BY "$timestamp" '
                              'ORDER BY "$timestamp"', str(queries[0]))
 
-        with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
+        with self.subTest('second query for all DoD references'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'day\',1,"timestamp"),\'DD\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'day\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
                              'SUM("votes") "$votes_dod" '
                              'FROM "politics"."politician" '
                              'GROUP BY "$timestamp" '
                              'ORDER BY "$timestamp"', str(queries[1]))
 
-        with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
+        with self.subTest('third query for all YoY references'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'DD\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'week\',52,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
                              'SUM("votes") "$votes_yoy" '
                              'FROM "politics"."politician" '
                              'GROUP BY "$timestamp" '
@@ -542,7 +622,7 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
 
         with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'DD\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'week\',52,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
                              '"political_party" "$political_party",'
                              'SUM("votes") "$votes_yoy" '
                              'FROM "politics"."politician" '
@@ -571,7 +651,7 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
 
         with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'DD\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'week\',52,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
                              '"candidate_name" "$candidate-name",'
                              'SUM("votes") "$votes_yoy" '
                              'FROM "politics"."politician" '
@@ -601,7 +681,7 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
 
         with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'day\',1,"timestamp"),\'DD\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'day\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
                              'SUM("votes") "$votes_dod" '
                              'FROM "politics"."politician" '
                              'WHERE TIMESTAMPADD(\'day\',1,"timestamp") BETWEEN \'2018-01-01\' AND \'2018-01-31\' '
@@ -634,7 +714,7 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
 
         with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'day\',1,"timestamp"),\'DD\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'day\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
                              'SUM("votes") "$votes_dod" '
                              'FROM "politics"."politician" '
                              'WHERE TIMESTAMPADD(\'day\',1,"timestamp") BETWEEN \'2018-01-01\' AND \'2018-01-31\' '
@@ -642,64 +722,3 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
                              'GROUP BY "$timestamp" '
                              'ORDER BY "$timestamp"', str(queries[1]))
 
-
-# noinspection SqlDialectInspection,SqlNoDataSourceInspection
-class QueryBuilderDatetimeReferenceWithLeapYearTests(TestCase):
-    maxDiff = None
-
-    def test_adapt_dow_for_leap_year_for_yoy_reference(self):
-        queries = mock_dataset.query \
-            .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))) \
-            .dimension(f.week(mock_dataset.fields.timestamp)) \
-            .reference(f.YearOverYear(mock_dataset.fields.timestamp)) \
-            .sql
-
-        self.assertEqual(2, len(queries))
-
-        with self.subTest('base query is same as without reference'):
-            self.assertEqual('SELECT '
-                             'TRUNC("timestamp",\'IW\') "$timestamp",'
-                             'SUM("votes") "$votes" '
-                             'FROM "politics"."politician" '
-                             'GROUP BY "$timestamp" '
-                             'ORDER BY "$timestamp"', str(queries[0]))
-
-        with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
-            self.assertEqual('SELECT '
-                             'TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'IW\')) '
-                             '"$timestamp",'
-                             'SUM("votes") "$votes_yoy" '
-                             'FROM "politics"."politician" '
-                             'GROUP BY "$timestamp" '
-                             'ORDER BY "$timestamp"', str(queries[1]))
-
-    def test_adapt_dow_for_leap_year_for_yoy_reference_with_date_filter(self):
-        queries = mock_dataset.query \
-            .widget(f.HighCharts()
-                    .axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))) \
-            .dimension(f.week(mock_dataset.fields.timestamp)) \
-            .reference(f.YearOverYear(mock_dataset.fields.timestamp)) \
-            .filter(mock_dataset.fields.timestamp.between(date(2018, 1, 1), date(2018, 1, 31))) \
-            .sql
-
-        self.assertEqual(2, len(queries))
-
-        with self.subTest('base query is same as without reference'):
-            self.assertEqual('SELECT '
-                             'TRUNC("timestamp",\'IW\') "$timestamp",'
-                             'SUM("votes") "$votes" '
-                             'FROM "politics"."politician" '
-                             'WHERE "timestamp" BETWEEN \'2018-01-01\' AND \'2018-01-31\' '
-                             'GROUP BY "$timestamp" '
-                             'ORDER BY "$timestamp"', str(queries[0]))
-
-        with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
-            self.assertEqual('SELECT '
-                             'TIMESTAMPADD(\'year\',-1,TRUNC(TIMESTAMPADD(\'year\',1,"timestamp"),\'IW\')) '
-                             '"$timestamp",'
-                             'SUM("votes") "$votes_yoy" '
-                             'FROM "politics"."politician" '
-                             'WHERE TIMESTAMPADD(\'year\',1,"timestamp") BETWEEN \'2018-01-01\' AND \'2018-01-31\' '
-                             'GROUP BY "$timestamp" '
-                             'ORDER BY "$timestamp"', str(queries[1]))

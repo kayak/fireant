@@ -9,6 +9,10 @@ from toposort import (
     toposort_flatten,
 )
 
+from fireant.dataset.intervals import (
+    DATETIME_INTERVALS,
+    DatetimeInterval,
+)
 from fireant.dataset.modifiers import (
     OmitFromRollup,
     Rollup,
@@ -186,13 +190,21 @@ def find_and_replace_reference_dimensions(references, dimensions):
     return reference_copies
 
 
-def find_and_group_references_for_dimensions(references):
+interval_weekdays = {
+    'month': ('week', 4),
+    'quarter': ('week', 4 * 3),
+    'year': ('week', 4 * 13),
+}
+
+
+def find_and_group_references_for_dimensions(dimensions, references):
     """
     Finds all of the references for dimensions and groups them by dimension, interval unit, number of intervals.
 
     This structure reflects how the references need to be joined to the slicer query. References of the same
     type (WoW, WoW.delta, WoW.delta_percent) can share a join query.
 
+    :param dimensions:
     :param references:
 
     :return:
@@ -207,9 +219,17 @@ def find_and_group_references_for_dimensions(references):
                 (Dimension(date_7), 'days', 1): [DoD, DoD.delta_percent],
             }
     """
+    align_weekdays = dimensions \
+                     and isinstance(dimensions[0], DatetimeInterval) \
+                     and -1 < DATETIME_INTERVALS.index(dimensions[0].interval_key) < 3
 
     def get_dimension_time_unit_and_interval(reference):
-        return reference.field, reference.time_unit, reference.interval
+        defaults = (reference.time_unit, 1)
+        time_unit, interval_muliplier = interval_weekdays.get(reference.time_unit, defaults) \
+            if align_weekdays \
+            else defaults
+
+        return reference.field, time_unit, interval_muliplier * reference.interval
 
     distinct_references = ordered_distinct_list(references)
     return groupby(distinct_references, get_dimension_time_unit_and_interval)

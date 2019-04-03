@@ -305,7 +305,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
 
         with self.subTest('reference query is shifted'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'day\',1,"timestamp"),\'DD\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'day\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
                              '"political_party" "$political_party",'
                              'SUM("votes") "$votes_dod" '
                              'FROM "politics"."politician" '
@@ -323,7 +323,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
 
         with self.subTest('reference total query is shifted without the rollup dimension'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'day\',1,"timestamp"),\'DD\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'day\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
                              'NULL "$political_party",'
                              'SUM("votes") "$votes_dod" '
                              'FROM "politics"."politician" '
@@ -353,7 +353,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
 
         with self.subTest('reference query is shifted'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'day\',1,"timestamp"),\'DD\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'day\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
                              '"political_party" "$political_party",'
                              'SUM("votes") "$votes_dod" '
                              'FROM "politics"."politician" '
@@ -373,7 +373,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
 
         with self.subTest('reference total query is shifted without the rollup dimension'):
             self.assertEqual('SELECT '
-                             'TRUNC(TIMESTAMPADD(\'day\',1,"timestamp"),\'DD\') "$timestamp",'
+                             'TRUNC(TIMESTAMPADD(\'day\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
                              'NULL "$political_party",'
                              'SUM("votes") "$votes_dod" '
                              'FROM "politics"."politician" '
