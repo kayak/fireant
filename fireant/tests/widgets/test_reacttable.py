@@ -24,8 +24,8 @@ from fireant.tests.dataset.mocks import (
 )
 from fireant.widgets.reacttable import (
     ReactTable,
-    ReferenceItem,
 )
+from widgets.base import ReferenceItem
 
 
 class ReactTableTransformerTests(TestCase):

@@ -7,7 +7,6 @@ from fireant.dataset.fields import (
     DataType,
     Field,
 )
-from fireant.dataset.references import Reference
 from fireant.dataset.totals import (
     DATE_TOTALS,
     NUMBER_TOTALS,
@@ -23,19 +22,15 @@ from fireant.formats import (
     return_none,
     safe_value,
 )
+from fireant.reference_helpers import reference_alias
 from fireant.utils import (
     alias_for_alias_selector,
     alias_selector,
     setdeepattr,
     wrap_list,
 )
+from .base import ReferenceItem
 from .pandas import Pandas
-from ..reference_helpers import (
-    reference_alias,
-    reference_label,
-    reference_prefix,
-    reference_suffix,
-)
 
 TOTALS_LABEL = 'Totals'
 METRICS_DIMENSION_ALIAS = 'metrics'
@@ -55,18 +50,6 @@ def map_index_level(index, level, func):
     assert level == 0
 
     return index.map(func)
-
-
-class ReferenceItem:
-    def __init__(self, item, reference):
-        assert isinstance(reference, Reference)
-        self.data_type = item.data_type
-        self.alias = reference_alias(item, reference)
-        self.label = reference_label(item, reference)
-        self.prefix = reference_prefix(item, reference)
-        self.suffix = reference_suffix(item, reference)
-        self.thousands = item.thousands
-        self.precision = item.precision
 
 
 class TotalsItem:
@@ -437,10 +420,10 @@ class ReactTable(Pandas):
         """
         metric_map = OrderedDict([
             (
-                alias_selector(reference_alias(i, ref)),
-                ReferenceItem(i, ref) if ref is not None else i
+                alias_selector(reference_alias(item, ref)),
+                ReferenceItem(item, ref) if ref is not None else item
             )
-            for i in self.items
+            for item in self.items
             for ref in [None] + references])
         dimension_map = {alias_selector(dimension.alias): dimension
                          for dimension in dimensions}

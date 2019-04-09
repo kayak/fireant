@@ -8,17 +8,17 @@ from fireant import (
     formats,
     utils,
 )
-from .base import TransformableWidget
-from .chart_base import (
-    ChartWidget,
-    ContinuousAxisSeries,
-)
-from ..dataset.totals import TOTALS_MARKERS
-from ..reference_helpers import (
+from fireant.dataset.totals import TOTALS_MARKERS
+from fireant.reference_helpers import (
     reference_alias,
     reference_label,
     reference_prefix,
     reference_suffix,
+)
+from .base import TransformableWidget
+from .chart_base import (
+    ChartWidget,
+    ContinuousAxisSeries,
 )
 
 DEFAULT_COLORS = (

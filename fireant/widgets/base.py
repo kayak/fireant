@@ -2,7 +2,14 @@ from typing import Union
 
 from fireant.dataset.fields import Field
 from fireant.dataset.operations import Operation
+from fireant.dataset.references import Reference
 from fireant.exceptions import SlicerException
+from fireant.reference_helpers import (
+    reference_alias,
+    reference_label,
+    reference_prefix,
+    reference_suffix,
+)
 from fireant.utils import immutable
 
 
@@ -66,3 +73,15 @@ class TransformableWidget(Widget):
             A dict meant to be dumped as JSON.
         """
         raise NotImplementedError()
+
+
+class ReferenceItem:
+    def __init__(self, item, reference):
+        assert isinstance(reference, Reference)
+        self.data_type = item.data_type
+        self.alias = reference_alias(item, reference)
+        self.label = reference_label(item, reference)
+        self.prefix = reference_prefix(item, reference)
+        self.suffix = reference_suffix(item, reference)
+        self.thousands = item.thousands
+        self.precision = item.precision
