@@ -1,3 +1,4 @@
+from functools import partial
 from typing import Iterable
 
 import pandas as pd
@@ -9,13 +10,8 @@ from fireant.utils import (
     wrap_list,
 )
 from .base import (
+    ReferenceItem,
     TransformableWidget,
-)
-from ..reference_helpers import (
-    reference_alias,
-    reference_label,
-    reference_prefix,
-    reference_suffix,
 )
 
 HARD_MAX_COLUMNS = 24
@@ -45,45 +41,30 @@ class Pandas(TransformableWidget):
         """
         result = data_frame.copy()
 
-        for metric in self.items:
-            if any([metric.precision is not None,
-                    metric.prefix is not None,
-                    metric.suffix is not None]):
-                df_alias = alias_selector(metric.alias)
-
-                result[df_alias] = result[df_alias] \
-                    .apply(lambda x: formats.display_value(x, metric))
-
-            for reference in references:
-                df_ref_alias = alias_selector(reference_alias(metric, reference))
-
-                if reference.delta_percent:
-                    result[df_ref_alias] = result[df_ref_alias].apply(lambda x: formats.display_value(
-                          x,
-                          reference_prefix(metric, reference),
-                          reference_suffix(metric, reference),
-                          metric.precision))
+        items = [item if reference is None else ReferenceItem(item, reference)
+                 for reference in [None] + references
+                 for item in self.items]
 
         if isinstance(data_frame.index, pd.MultiIndex):
             index_levels = [alias_selector(dimension.alias)
                             for dimension in dimensions]
             result = result.reorder_levels(index_levels)
 
-        result = result[[alias_selector(reference_alias(item, reference))
-                         for reference in [None] + references
-                         for item in self.items]]
+        result = result[[alias_selector(item.alias)
+                         for item in items]]
 
         if dimensions:
             result.index.names = [dimension.label or dimension.alias
                                   for dimension in dimensions]
 
-        result.columns = pd.Index([reference_label(item, reference)
-                                   for item in self.items
-                                   for reference in [None] + references],
+        result.columns = pd.Index([item.label
+                                   for item in items],
                                   name='Metrics')
 
         pivot_dimensions = [dimension.label or dimension.alias for dimension in self.pivot]
-        return self.pivot_data_frame(result, pivot_dimensions, self.transpose)
+        pivot_df = self.pivot_data_frame(result, pivot_dimensions, self.transpose)
+
+        return self.add_formatting(dimensions, items, pivot_df).fillna(value=formats.BLANK_VALUE)
 
     def pivot_data_frame(self, data_frame, pivot=(), transpose=False):
         """
@@ -156,3 +137,27 @@ class Pandas(TransformableWidget):
         return unsorted \
             .sort_values(sort_columns, ascending=ascending) \
             .set_index(index_names)
+
+    def add_formatting(self, dimensions, items, pivot_df):
+        format_df = pivot_df.copy()
+
+        def _get_f_display(item):
+            return partial(formats.display_value, field=item)
+
+        if self.transpose or not self.transpose and len(dimensions) == len(self.pivot) > 0:
+            for item in items:
+                f_display = _get_f_display(item)
+                format_df.loc[items[0].label] = format_df.loc[items[0].label].apply(f_display)
+
+            return format_df
+
+        if self.pivot and len(items) == 1:
+            f_display = _get_f_display(items[0])
+            format_df = format_df.applymap(f_display)
+            return format_df
+
+        for item in items:
+            f_display = _get_f_display(item)
+            format_df[item.label] = format_df[item.label].apply(f_display)
+
+        return format_df

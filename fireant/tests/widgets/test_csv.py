@@ -1,3 +1,4 @@
+from _csv import QUOTE_MINIMAL
 from unittest import TestCase
 
 import pandas as pd
@@ -17,9 +18,10 @@ from fireant.tests.dataset.mocks import (
     dimx2_date_str_ref_df,
     mock_dataset,
 )
+from fireant.tests.widgets.test_pandas import _format_float
 from fireant.utils import alias_selector as f
 
-
+csv_options = {'quoting': QUOTE_MINIMAL}
 class CSVWidgetTests(TestCase):
     maxDiff = None
 
@@ -29,8 +31,9 @@ class CSVWidgetTests(TestCase):
 
         expected = dimx0_metricx1_df.copy()[[f('votes')]]
         expected.columns = ['Votes']
+        expected = expected.applymap(_format_float)
 
-        self.assertEqual(expected.to_csv(), result)
+        self.assertEqual(expected.to_csv(**csv_options), result)
 
     def test_multiple_metrics(self):
         result = CSV(mock_dataset.fields.votes, mock_dataset.fields.wins) \
@@ -38,8 +41,9 @@ class CSVWidgetTests(TestCase):
 
         expected = dimx0_metricx2_df.copy()[[f('votes'), f('wins')]]
         expected.columns = ['Votes', 'Wins']
+        expected = expected.applymap(_format_float)
 
-        self.assertEqual(expected.to_csv(), result)
+        self.assertEqual(expected.to_csv(**csv_options), result)
 
     def test_multiple_metrics_reversed(self):
         result = CSV(mock_dataset.fields.wins, mock_dataset.fields.votes) \
@@ -47,8 +51,9 @@ class CSVWidgetTests(TestCase):
 
         expected = dimx0_metricx2_df.copy()[[f('wins'), f('votes')]]
         expected.columns = ['Wins', 'Votes']
+        expected = expected.applymap(_format_float)
 
-        self.assertEqual(expected.to_csv(), result)
+        self.assertEqual(expected.to_csv(**csv_options), result)
 
     def test_time_series_dim(self):
         result = CSV(mock_dataset.fields.wins) \
@@ -57,8 +62,9 @@ class CSVWidgetTests(TestCase):
         expected = dimx1_date_df.copy()[[f('wins')]]
         expected.index.names = ['Timestamp']
         expected.columns = ['Wins']
+        expected = expected.applymap(_format_float)
 
-        self.assertEqual(expected.to_csv(), result)
+        self.assertEqual(expected.to_csv(**csv_options), result)
 
     def test_time_series_dim_with_operation(self):
         query_dimensions = [mock_dataset.fields.timestamp]
@@ -68,8 +74,9 @@ class CSVWidgetTests(TestCase):
         expected = dimx1_date_operation_df.copy()[[f('cumsum(votes)')]]
         expected.index.names = ['Timestamp']
         expected.columns = ['CumSum(Votes)']
+        expected = expected.applymap(_format_float)
 
-        self.assertEqual(expected.to_csv(), result)
+        self.assertEqual(expected.to_csv(**csv_options), result)
 
     def test_str_dim(self):
         result = CSV(mock_dataset.fields.wins) \
@@ -79,7 +86,7 @@ class CSVWidgetTests(TestCase):
         expected.index = pd.Index(['Democrat', 'Independent', 'Republican'], name='Party')
         expected.columns = ['Wins']
 
-        self.assertEqual(expected.to_csv(), result)
+        self.assertEqual(expected.to_csv(**csv_options), result)
 
     def test_int_dim(self):
         result = CSV(mock_dataset.fields.wins) \
@@ -89,7 +96,7 @@ class CSVWidgetTests(TestCase):
         expected.index = pd.Index(list(range(1, 12)), name='Candidate ID')
         expected.columns = ['Wins']
 
-        self.assertEqual(expected.to_csv(), result)
+        self.assertEqual(expected.to_csv(**csv_options), result)
 
     def test_multi_dimx2_date_str(self):
         query_dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
@@ -100,7 +107,7 @@ class CSVWidgetTests(TestCase):
         expected.index.names = ['Timestamp', 'Party']
         expected.columns = ['Wins']
 
-        self.assertEqual(expected.to_csv(), result)
+        self.assertEqual(expected.to_csv(**csv_options), result)
 
     def test_pivoted_single_dimension_transposes_data_frame(self):
         result = CSV(mock_dataset.fields.wins, pivot=[mock_dataset.fields.political_party]) \
@@ -112,7 +119,7 @@ class CSVWidgetTests(TestCase):
         expected.columns.names = ['Metrics']
         expected = expected.transpose()
 
-        self.assertEqual(expected.to_csv(), result)
+        self.assertEqual(expected.to_csv(**csv_options), result)
 
     def test_pivoted_multi_dimx2_date_str(self):
         result = CSV(mock_dataset.fields.wins, pivot=[mock_dataset.fields.political_party]) \
@@ -123,8 +130,9 @@ class CSVWidgetTests(TestCase):
         expected = expected.unstack(level=[1])
         expected.index.names = ['Timestamp']
         expected.columns = ['Democrat', 'Independent', 'Republican']
+        expected = expected.applymap(_format_float)
 
-        self.assertEqual(expected.to_csv(), result)
+        self.assertEqual(expected.to_csv(**csv_options), result)
 
     def test_pivoted_multi_dimx2_date_num(self):
         query_dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields['candidate-id']]
@@ -135,8 +143,9 @@ class CSVWidgetTests(TestCase):
         expected = expected.unstack(level=1)
         expected.index.names = ['Timestamp']
         expected.columns = list(range(1, 12))
+        expected = expected.applymap(_format_float)
 
-        self.assertEqual(expected.to_csv(), result)
+        self.assertEqual(expected.to_csv(**csv_options), result)
 
     def test_time_series_ref(self):
         query_dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
@@ -147,5 +156,6 @@ class CSVWidgetTests(TestCase):
         expected = dimx2_date_str_ref_df.copy()[[f('votes'), f('votes_eoe')]]
         expected.index.names = ['Timestamp', 'Party']
         expected.columns = ['Votes', 'Votes EoE']
+        expected = expected.applymap(_format_float)
 
-        self.assertEqual(expected.to_csv(), result)
+        self.assertEqual(expected.to_csv(**csv_options), result)

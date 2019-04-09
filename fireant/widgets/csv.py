@@ -1,3 +1,4 @@
+from _csv import QUOTE_MINIMAL
 from typing import Iterable
 
 from fireant.dataset.fields import Field
@@ -12,4 +13,4 @@ class CSV(Pandas):
     def transform(self, data_frame, slicer, dimensions, references):
         result_df = super(CSV, self).transform(data_frame, slicer, dimensions, references)
         result_df.columns.names = [None]
-        return result_df.to_csv(na_rep='')
+        return result_df.to_csv(na_rep='', quoting=QUOTE_MINIMAL)

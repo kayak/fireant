@@ -1,12 +1,12 @@
 import itertools
 
 from fireant import utils
-from .base import TransformableWidget
-from .chart_base import ChartWidget
-from ..reference_helpers import (
+from fireant.reference_helpers import (
     reference_alias,
     reference_label,
 )
+from .base import TransformableWidget
+from .chart_base import ChartWidget
 
 MAP_SERIES_TO_PLOT_FUNC = {
     ChartWidget.LineSeries: 'line',

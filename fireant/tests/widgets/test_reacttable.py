@@ -22,10 +22,8 @@ from fireant.tests.dataset.mocks import (
     dimx2_str_num_df,
     mock_dataset,
 )
-from fireant.widgets.reacttable import (
-    ReactTable,
-    ReferenceItem,
-)
+from fireant.widgets.base import ReferenceItem
+from fireant.widgets.reacttable import ReactTable
 
 
 class ReactTableTransformerTests(TestCase):

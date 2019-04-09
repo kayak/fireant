@@ -53,8 +53,7 @@ def find_required_tables_to_join(elements, base_table):
                                   for element in elements
 
                                   # Need extra for-loop to incl. the `display_definition` from `UniqueDimension`
-                                  for attr in [getattr(element, 'definition', None),
-                                               getattr(element, 'display_definition', None)]
+                                  for attr in [getattr(element, 'definition', None)]
 
                                   # ... but then filter Nones since most elements do not have `display_definition`
                                   if attr is not None
