@@ -42,6 +42,8 @@ def date_as_string(value, interval_key=None):
 
 @filter_kwargs
 def date_as_millis(value):
+    if isinstance(value, date) and not isinstance(value, datetime):
+        value = datetime.combine(value, datetime.min.time())
     return int(1000 * value.timestamp())
 
 
