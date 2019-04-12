@@ -234,6 +234,8 @@ class Share(_BaseOperation):
         if not isinstance(data_frame.index, pd.MultiIndex):
             marker = get_totals_marker_for_dtype(data_frame.index.dtype)
             totals = data_frame.loc[marker, f_metric_alias]
+            if totals == 0:
+                return np.nan
             return 100 * data_frame[f_metric_alias] / totals
 
         f_over_alias = alias_selector(over.alias)
