@@ -1,8 +1,7 @@
 import itertools
-
-import pandas as pd
 from datetime import timedelta
 
+import pandas as pd
 from fireant import (
     DataType,
     formats,
@@ -15,6 +14,7 @@ from fireant.reference_helpers import (
     reference_prefix,
     reference_suffix,
 )
+
 from .base import TransformableWidget
 from .chart_base import (
     ChartWidget,
@@ -423,5 +423,5 @@ class HighCharts(ChartWidget, TransformableWidget):
 
     @staticmethod
     def _format_dimension_values(dimension_fields, dimension_values):
-        return ', '.join(formats.display_value(value, dimension_field) or str(value)
+        return ', '.join(str.strip(formats.display_value(value, dimension_field) or str(value))
                          for value, dimension_field in zip(dimension_values, dimension_fields))

@@ -20,7 +20,7 @@ def reference_label(metric, reference):
     :return:
         A string that is used as the display value for a reference metric.
     """
-    label = metric.label or metric.alias
+    label = str.strip(metric.label or metric.alias)
 
     if reference is None:
         return label

@@ -2,7 +2,6 @@ import re
 from collections import OrderedDict
 
 import pandas as pd
-
 from fireant.dataset.fields import (
     DataType,
     Field,
@@ -29,6 +28,7 @@ from fireant.utils import (
     setdeepattr,
     wrap_list,
 )
+
 from .base import ReferenceItem
 from .pandas import Pandas
 
@@ -375,9 +375,10 @@ class ReactTable(Pandas):
         # formatting can be applied.
         if hasattr(data_frame, 'name'):
             metric_alias = data_frame.name
-            data_frame = data_frame.copy()
-            data_frame.columns = pd.MultiIndex.from_product([[metric_alias], data_frame.columns],
-                                                            names=[F_METRICS_DIMENSION_ALIAS, data_frame.columns.name])
+            data_frame = pd.concat([data_frame],
+                                   keys=[metric_alias],
+                                   names=[F_METRICS_DIMENSION_ALIAS],
+                                   axis=1)
 
         rows = []
         for index, series in data_frame.iterrows():
