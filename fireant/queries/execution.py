@@ -1,3 +1,4 @@
+import time
 from functools import (
     reduce,
     wraps,
@@ -9,8 +10,8 @@ from typing import (
     Union,
 )
 
+import numpy as np
 import pandas as pd
-import time
 
 from fireant.database import Database
 from fireant.dataset.fields import Field
@@ -99,7 +100,7 @@ def reduce_result_set(results: Iterable[pd.DataFrame],
                       share_dimensions: Iterable[Field]):
     """
     Reduces the result sets from individual queries into a single data frame. This effectively joins sets of references
-    and concats the sets of totals.
+    and concatenates the sets of totals.
 
     :param results: A list of data frame
     :param reference_groups: A list of groups of references (grouped by interval such as WoW, etc)
@@ -188,5 +189,5 @@ def _make_reference_data_frame(base_df, ref_df, reference):
     ref_delta_df = base_df - ref_df
 
     if reference.delta_percent:
-        return 100. * ref_delta_df / ref_df
+        return 100. * ref_delta_df / ref_df.replace(0, np.nan)  # pandas raises an exception when dividing by zero
     return ref_delta_df

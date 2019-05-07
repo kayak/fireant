@@ -164,8 +164,7 @@ def find_filters_for_totals(filters):
     """
     return [fltr
             for fltr in filters
-            if not isinstance(fltr, OmitFromRollup)
-            and not fltr.is_aggregate]
+            if not isinstance(fltr, OmitFromRollup)]
 
 
 def find_and_replace_reference_dimensions(references, dimensions):
