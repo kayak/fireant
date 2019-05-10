@@ -3,193 +3,215 @@ from unittest import (
 )
 
 import numpy as np
-import pandas as pd
 from datetime import (
     date,
     datetime,
 )
 
-from fireant import formats
+from fireant import (
+    DataType,
+    Field,
+    day,
+    formats,
+    hour,
+    month,
+    week,
+    year,
+)
+from fireant.dataset.totals import (
+    DATE_TOTALS,
+    NUMBER_TOTALS,
+    TEXT_TOTALS,
+)
+
+text_field = Field('text', None, data_type=DataType.text)
+number_field = Field('number', None, data_type=DataType.number)
+boolean_field = Field('boolean', None, data_type=DataType.boolean)
+date_field = Field('date', None, data_type=DataType.date)
 
 
-class FormatMetricValueTests(TestCase):
-    def test_that_literal_strings_are_not_converted(self):
-        for value in ['NAN', 'INF', 'nan', 'inf']:
-            with self.subTest(value):
-                result = formats.metric_value(value)
-                self.assertEqual(result, value)
+class SafeRawValueTests(TestCase):
+    def test_none_returned_as_null_label(self):
+        self.assertEqual('null', formats.safe_value(None))
 
-    def test_that_nan_data_point_is_converted_to_none(self):
-        # np.nan is converted to None
-        result = formats.metric_value(np.nan)
-        self.assertIsNone(result)
+    def test_nan_returned_as_null_label(self):
+        self.assertEqual('null', formats.safe_value(np.nan))
 
-    def test_that_inf_data_point_is_converted_to_none(self):
-        # np.nan is converted to None
-        result = formats.metric_value(np.inf)
-        self.assertIsNone(result)
+    def test_inf_returned_as_inf_label(self):
+        with self.subTest('positive inf'):
+            self.assertEqual('inf', formats.safe_value(np.inf))
+        with self.subTest('negative inf'):
+            self.assertEqual('inf', formats.safe_value(-np.inf))
 
-    def test_that_neg_inf_data_point_is_converted_to_none(self):
-        # np.nan is converted to None
-        result = formats.metric_value(-np.inf)
-        self.assertIsNone(result)
+    def test_boolean_value_is_returned_as_self_lower_case(self):
+        for value in (True, False):
+            with self.subTest('using value=' + str(value)):
+                self.assertEqual(str(value).lower(), formats.display_value(value, boolean_field))
 
-    def test_str_data_point_is_returned_unchanged(self):
-        result = formats.metric_value(u'abc')
-        self.assertEqual('abc', result)
+    def test_decimal_value_is_returned_with_decimal_point_replaced(self):
+        tests = [(0.0, '0$0'),
+                 (-1.1, '-1$1'),
+                 (1.1, '1$1'),
+                 (0.123456789, '0$123456789'),
+                 (-0.123456789, '-0$123456789')]
+        for value, expected in tests:
+            with self.subTest('using value' + str(value)):
+                self.assertEqual(expected, formats.safe_value(value))
 
-    def test_int64_data_point_is_returned_as_py_int(self):
-        # Needs to be cast to python int
-        result = formats.metric_value(np.int64(1))
-        self.assertEqual(int(1), result)
-
-    def test_data_data_point_is_returned_as_string_iso_no_time(self):
-        # Needs to be converted to milliseconds
-        result = formats.metric_value(date(2000, 1, 1))
-        self.assertEqual('2000-01-01', result)
-
-    def test_datatime_data_point_is_returned_as_string_iso_with_time(self):
-        # Needs to be converted to milliseconds
-        result = formats.metric_value(datetime(2000, 1, 1, 1))
-        self.assertEqual('2000-01-01T01:00:00', result)
-
-    def test_timestamp_no_time_data_point_is_returned_as_string_iso_no_time(self):
-        # Needs to be converted to milliseconds
-        result = formats.metric_value(pd.Timestamp(date(2000, 1, 1)))
-        self.assertEqual('2000-01-01', result)
-
-    def test_timestamp_data_point_is_returned_as_string_iso_no_time(self):
-        # Needs to be converted to milliseconds
-        result = formats.metric_value(pd.Timestamp(datetime(2000, 1, 1, 1)))
-        self.assertEqual('2000-01-01T01:00:00', result)
+    def test_string_value_is_returned_with_only_safe_characters_replaced(self):
+        tests = [('abcdefghijklmnopqrstuvwxyz', 'abcdefghijklmnopqrstuvwxyz'),
+                 ('ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'),
+                 (' ', '$'),
+                 ('-0123456789', '-0123456789'),
+                 ('.[]', '$$$'),
+                 ('a.1', 'a$1'),
+                 ('b[0]', 'b$0$')]
+        for value, expected in tests:
+            with self.subTest('using value' + value):
+                self.assertEqual(expected, formats.safe_value(value))
 
 
-class DisplayValueTests(TestCase):
-    def test_str_value_no_formats(self):
-        display = formats.metric_display('abcdef')
-        self.assertEqual('abcdef', display)
+class FormatRawValueTests(TestCase):
+    def test_none_returned_as_none(self):
+        self.assertIsNone(formats.raw_value(None, None))
 
-    def test_bool_true_value_no_formats(self):
-        display = formats.metric_display(True)
-        self.assertEqual('true', display)
+    def test_nan_returned_as_none(self):
+        self.assertIsNone(formats.raw_value(np.nan, None))
 
-    def test_bool_false_value_no_formats(self):
-        display = formats.metric_display(False)
-        self.assertEqual('false', display)
+    def test_inf_returned_as_inf_label(self):
+        with self.subTest('positive inf'):
+            self.assertEqual('Inf', formats.raw_value(np.inf, None))
+        with self.subTest('negative inf'):
+            self.assertEqual('Inf', formats.raw_value(-np.inf, None))
 
-    def test_int_value_no_formats(self):
-        display = formats.metric_display(12345)
-        self.assertEqual('12,345', display)
+    def test_totals_markers_are_returned_as_text_totals_marker(self):
+        for marker, field in [(TEXT_TOTALS, text_field),
+                              (NUMBER_TOTALS, number_field),
+                              (DATE_TOTALS, date_field)]:
+            with self.subTest(field.data_type):
+                self.assertEqual('$totals', formats.raw_value(marker, field))
 
-    def test_decimal_value_no_formats(self):
-        display = formats.metric_display(12345.123456789)
-        self.assertEqual('12,345.123457', display)
+    def test_text_value_is_returned_as_self(self):
+        for value in ('abc', ' dc23d- 0f30fi', ''):
+            with self.subTest('using value' + value):
+                self.assertEqual(value, formats.raw_value(value, text_field))
 
-    def test_str_value_with_prefix(self):
-        display = formats.metric_display('abcdef', prefix='$')
-        self.assertEqual('$abcdef', display)
+    def test_num_value_is_returned_as_self(self):
+        for value in (0, -1, 1, 100, 0., -1.1, 1.1, 0.123456789, -0.123456789):
+            with self.subTest('using value' + str(value)):
+                self.assertEqual(value, formats.raw_value(value, number_field))
 
-    def test_bool_true_value_with_prefix(self):
-        display = formats.metric_display(True, prefix='$')
-        self.assertEqual('$true', display)
+    def test_boolean_value_is_returned_as_self(self):
+        for value in (True, False):
+            with self.subTest('using value' + str(value)):
+                self.assertEqual(value, formats.raw_value(value, boolean_field))
 
-    def test_bool_false_value_with_prefix(self):
-        display = formats.metric_display(False, prefix='$')
-        self.assertEqual('$false', display)
+    def test_date_value_is_returned_as_iso_date_string(self):
+        self.assertEqual('2019-01-01T00:00:00', formats.raw_value(date(2019, 1, 1), date_field))
 
-    def test_int_value_with_prefix(self):
-        display = formats.metric_display(12345, prefix='$')
-        self.assertEqual('$12,345', display)
-
-    def test_decimal_value_with_prefix(self):
-        display = formats.metric_display(12345.123456789, prefix='$')
-        self.assertEqual('$12,345.123457', display)
-
-    def test_str_value_with_suffix(self):
-        display = formats.metric_display('abcdef', suffix='€')
-        self.assertEqual('abcdef€', display)
-
-    def test_bool_true_value_with_suffix(self):
-        display = formats.metric_display(True, suffix='€')
-        self.assertEqual('true€', display)
-
-    def test_bool_false_value_with_suffix(self):
-        display = formats.metric_display(False, suffix='€')
-        self.assertEqual('false€', display)
-
-    def test_int_value_with_suffix(self):
-        display = formats.metric_display(12345, suffix='€')
-        self.assertEqual('12,345€', display)
-
-    def test_decimal_value_with_suffix(self):
-        display = formats.metric_display(12345.123456789, suffix='€')
-        self.assertEqual('12,345.123457€', display)
-
-    def test_str_value_with_precision(self):
-        display = formats.metric_display('abcdef', precision=2)
-        self.assertEqual('abcdef', display)
-
-    def test_bool_true_value_with_precision(self):
-        display = formats.metric_display(True, precision=2)
-        self.assertEqual('true', display)
-
-    def test_bool_false_value_with_precision(self):
-        display = formats.metric_display(False, precision=2)
-        self.assertEqual('false', display)
-
-    def test_int_value_with_precision(self):
-        display = formats.metric_display(12345, precision=2)
-        self.assertEqual('12,345', display)
-
-    def test_decimal_value_with_precision_0(self):
-        display = formats.metric_display(12345.123456789, precision=0)
-        self.assertEqual('12,345', display)
-
-    def test_decimal_value_with_precision_2(self):
-        display = formats.metric_display(12345.123456789, precision=2)
-        self.assertEqual('12,345.12', display)
-
-    def test_decimal_value_with_precision_9(self):
-        display = formats.metric_display(12345.123456789, precision=9)
-        self.assertEqual('12,345.123456789', display)
-
-    def test_decimal_value_with_precision_trim_trailing_zeros(self):
-        result = formats.metric_display(1.01)
-        self.assertEqual('1.01', result)
-
-    def test_nan_format_no_formatting(self):
-        display = formats.metric_display('NaN', prefix='$', suffix='€', precision=2)
-        self.assertEqual('null', display)
-
-    def test_inf_format_no_formatting(self):
-        display = formats.metric_display('Inf', prefix='$', suffix='€', precision=2)
-        self.assertEqual('Inf', display)
-
-    def test_null_format_no_formatting(self):
-        display = formats.metric_display('null', prefix='$', suffix='€', precision=2)
-        self.assertEqual('null', display)
-
-    def test_negative_usd_float_value(self):
-        display = formats.metric_display(-0.12, prefix='$')
-        self.assertEqual('-$0.12', display)
-
-    def test_negative_usd_int_value(self):
-        display = formats.metric_display(-12, prefix='$')
-        self.assertEqual('-$12', display)
+    def test_datetime_value_is_returned_as_iso_date_string(self):
+        self.assertEqual('2019-01-01T12:30:02', formats.raw_value(datetime(2019, 1, 1, 12, 30, 2), date_field))
 
 
-class CoerceTypeTests(TestCase):
-    def allow_literal_nan(self):
-        result = formats.coerce_type('nan')
-        self.assertEqual('nan', result)
+class FormatDisplayValueTests(TestCase):
+    def test_none_returned_as_blank_string(self):
+        self.assertEqual('', formats.display_value(None, None))
 
-    def allow_literal_nan_upper(self):
-        result = formats.coerce_type('NAN')
-        self.assertEqual('NAN', result)
-    def allow_literal_inf(self):
-        result = formats.coerce_type('inf')
-        self.assertEqual('inf', result)
+    def test_nan_returned_as_blank_string(self):
+        self.assertEqual('', formats.display_value(np.nan, None))
 
-    def allow_literal_inf_upper(self):
-        result = formats.coerce_type('INF')
-        self.assertEqual('INF', result)
+    def test_inf_returned_as_inf_label(self):
+        with self.subTest('positive inf'):
+            self.assertEqual('Inf', formats.display_value(np.inf, None))
+        with self.subTest('negative inf'):
+            self.assertEqual('Inf', formats.display_value(-np.inf, None))
+
+    def test_wrong_type_passed_to_formatter_returns_value(self):
+        result = formats.display_value('abcdef', number_field)
+        self.assertEqual(result, 'abcdef')
+
+    def test_totals_markers_are_returned_as_text_totals_label(self):
+        for marker, field in [(TEXT_TOTALS, text_field),
+                              (NUMBER_TOTALS, number_field),
+                              (DATE_TOTALS, date_field)]:
+            with self.subTest(field.data_type):
+                self.assertEqual('Totals', formats.display_value(marker, field))
+
+    def test_text_value_is_returned_as_none(self):
+        for value in ('abc', ' dc23d- 0f30fi', ''):
+            with self.subTest('using value' + value):
+                self.assertIsNone(formats.display_value(value, text_field))
+
+    def test_int_value_is_returned_as_string_self(self):
+        for value in (0, -1, 1, 100):
+            with self.subTest('using value' + str(value)):
+                self.assertEqual(str(value), formats.display_value(value, number_field))
+
+    def test_decimal_value_is_returned_as_string_self_with_excess_zeroes_stripped_rounded_to_6_places(self):
+        tests = [(0., '0'),
+                 (-1.1, '-1.1'),
+                 (1.1, '1.1'),
+                 (0.123456789, '0.123457'),
+                 (-0.123456789, '-0.123457')]
+        for value, expected in tests:
+            with self.subTest('using value' + str(value)):
+                self.assertEqual(expected, formats.display_value(value, number_field))
+
+    def test_boolean_value_is_returned_as_self_lower_case(self):
+        for value in (True, False):
+            with self.subTest('using value' + str(value)):
+                self.assertEqual(str(value).lower(), formats.display_value(value, boolean_field))
+
+    def test_date_value_with_no_interval_is_returned_as_date_string(self):
+        for d in (date(2019, 1, 1), datetime(2019, 1, 1, 12, 30, 2)):
+            with self.subTest('with ' + d.__class__.__name__):
+                self.assertEqual('2019-01-01', formats.display_value(d, date_field))
+
+    def test_date_value_with_hour_interval_is_returned_as_date_string_to_the_minute_rounded_to_hour(self):
+        self.assertEqual('2019-01-01 12:00', formats.display_value(datetime(2019, 1, 1, 12, 30, 2), hour(date_field)))
+
+    def test_date_value_with_day_interval_is_returned_as_date_string_to_the_day(self):
+        for d in (date(2019, 1, 1), datetime(2019, 1, 1, 12, 30, 2)):
+            with self.subTest('with ' + d.__class__.__name__):
+                self.assertEqual('2019-01-01', formats.display_value(d, day(date_field)))
+
+    def test_date_value_with_week_interval_is_returned_as_date_string_to_the_year_and_week_number(self):
+        for d in (date(2019, 2, 25), datetime(2019, 2, 25, 12, 30, 2)):
+            with self.subTest('with ' + d.__class__.__name__):
+                self.assertEqual('W08 2019-02-25', formats.display_value(d, week(date_field)))
+
+    def test_date_value_with_month_interval_is_returned_as_date_string_to_the_month_and_year(self):
+        for d in (date(2019, 1, 1), datetime(2019, 1, 1, 12, 30, 2)):
+            with self.subTest('with ' + d.__class__.__name__):
+                self.assertEqual('Jan 2019', formats.display_value(d, month(date_field)))
+
+    def test_date_value_with_year_interval_is_returned_as_date_string_to_the_year(self):
+        for d in (date(2019, 1, 1), datetime(2019, 1, 1, 12, 30, 2)):
+            with self.subTest('with ' + d.__class__.__name__):
+                self.assertEqual('2019', formats.display_value(d, year(date_field)))
+
+
+class FormatDisplayValueStyleTests(TestCase):
+    def test_style_numbers_with_prefix(self):
+        dollar_field = Field('number', None, data_type=DataType.number, prefix='$')
+        self.assertEqual('$1', formats.display_value(1, dollar_field))
+
+    def test_style_negative_numbers_with_prefix(self):
+        dollar_field = Field('number', None, data_type=DataType.number, prefix='$')
+        self.assertEqual('$-1', formats.display_value(-1, dollar_field))
+
+    def test_style_numbers_with_suffix(self):
+        euro_field = Field('number', None, data_type=DataType.number, suffix='€')
+        self.assertEqual('1€', formats.display_value(1, euro_field))
+
+    def test_style_numbers_with_precision(self):
+        euro_field = Field('number', None, data_type=DataType.number, precision=2)
+        self.assertEqual('1.23', formats.display_value(1.234567, euro_field))
+
+    def test_style_numbers_with_thousands_separator(self):
+        euro_field = Field('number', None, data_type=DataType.number, thousands=',')
+        self.assertEqual('1,000,000', formats.display_value(1000000, euro_field))
+
+    def test_style_numbers_with_mixed(self):
+        euro_field = Field('number', None, data_type=DataType.number, prefix='$', thousands=',', precision=2)
+        self.assertEqual('$-1,000,000.00', formats.display_value(-1000000, euro_field))

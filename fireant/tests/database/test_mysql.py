@@ -5,14 +5,6 @@ from unittest.mock import (
     patch,
 )
 
-from fireant import (
-    annually,
-    daily,
-    hourly,
-    monthly,
-    quarterly,
-    weekly,
-)
 from fireant.database import MySQLDatabase
 from pypika import Field
 
@@ -45,32 +37,32 @@ class TestMySQLDatabase(TestCase):
         )
 
     def test_trunc_hour(self):
-        result = self.mysql.trunc_date(Field('date'), hourly)
+        result = self.mysql.trunc_date(Field('date'), 'hour')
 
         self.assertEqual('dashmore.TRUNC("date",\'hour\')', str(result))
 
     def test_trunc_day(self):
-        result = self.mysql.trunc_date(Field('date'), daily)
+        result = self.mysql.trunc_date(Field('date'), 'day')
 
         self.assertEqual('dashmore.TRUNC("date",\'day\')', str(result))
 
     def test_trunc_week(self):
-        result = self.mysql.trunc_date(Field('date'), weekly)
+        result = self.mysql.trunc_date(Field('date'), 'week')
 
         self.assertEqual('dashmore.TRUNC("date",\'week\')', str(result))
 
     def test_trunc_month(self):
-        result = self.mysql.trunc_date(Field('date'), monthly)
+        result = self.mysql.trunc_date(Field('date'), 'month')
 
         self.assertEqual('dashmore.TRUNC("date",\'month\')', str(result))
 
     def test_trunc_quarter(self):
-        result = self.mysql.trunc_date(Field('date'), quarterly)
+        result = self.mysql.trunc_date(Field('date'), 'quarter')
 
         self.assertEqual('dashmore.TRUNC("date",\'quarter\')', str(result))
 
     def test_trunc_year(self):
-        result = self.mysql.trunc_date(Field('date'), annually)
+        result = self.mysql.trunc_date(Field('date'), 'year')
 
         self.assertEqual('dashmore.TRUNC("date",\'year\')', str(result))
 

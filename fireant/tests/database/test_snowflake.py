@@ -6,7 +6,6 @@ from unittest.mock import (
 )
 
 from fireant.database import SnowflakeDatabase
-from fireant.slicer import *
 from pypika import Field
 
 
@@ -81,27 +80,27 @@ class TestSnowflake(TestCase):
                                                            warehouse=None)
 
     def test_trunc_hour(self):
-        result = SnowflakeDatabase().trunc_date(Field('date'), hourly)
+        result = SnowflakeDatabase().trunc_date(Field('date'), 'hour')
 
         self.assertEqual('TRUNC("date",\'HH\')', str(result))
 
     def test_trunc_day(self):
-        result = SnowflakeDatabase().trunc_date(Field('date'), daily)
+        result = SnowflakeDatabase().trunc_date(Field('date'), 'day')
 
         self.assertEqual('TRUNC("date",\'DD\')', str(result))
 
     def test_trunc_week(self):
-        result = SnowflakeDatabase().trunc_date(Field('date'), weekly)
+        result = SnowflakeDatabase().trunc_date(Field('date'), 'week')
 
         self.assertEqual('TRUNC("date",\'IW\')', str(result))
 
     def test_trunc_quarter(self):
-        result = SnowflakeDatabase().trunc_date(Field('date'), quarterly)
+        result = SnowflakeDatabase().trunc_date(Field('date'), 'quarter')
 
         self.assertEqual('TRUNC("date",\'Q\')', str(result))
 
     def test_trunc_year(self):
-        result = SnowflakeDatabase().trunc_date(Field('date'), annually)
+        result = SnowflakeDatabase().trunc_date(Field('date'), 'year')
 
         self.assertEqual('TRUNC("date",\'Y\')', str(result))
 

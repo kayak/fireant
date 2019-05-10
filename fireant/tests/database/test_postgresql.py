@@ -4,13 +4,6 @@ from unittest.mock import (
     patch,
 )
 
-from fireant import (
-    annually,
-    daily,
-    hourly,
-    quarterly,
-    weekly,
-)
 from fireant.database import PostgreSQLDatabase
 from pypika import Field
 
@@ -42,27 +35,27 @@ class TestPostgreSQL(TestCase):
         )
 
     def test_trunc_hour(self):
-        result = self.database.trunc_date(Field('date'), hourly)
+        result = self.database.trunc_date(Field('date'), 'hour')
 
         self.assertEqual('DATE_TRUNC(\'hour\',"date")', str(result))
 
     def test_trunc_day(self):
-        result = self.database.trunc_date(Field('date'), daily)
+        result = self.database.trunc_date(Field('date'), 'day')
 
         self.assertEqual('DATE_TRUNC(\'day\',"date")', str(result))
 
     def test_trunc_week(self):
-        result = self.database.trunc_date(Field('date'), weekly)
+        result = self.database.trunc_date(Field('date'), 'week')
 
         self.assertEqual('DATE_TRUNC(\'week\',"date")', str(result))
 
     def test_trunc_quarter(self):
-        result = self.database.trunc_date(Field('date'), quarterly)
+        result = self.database.trunc_date(Field('date'), 'quarter')
 
         self.assertEqual('DATE_TRUNC(\'quarter\',"date")', str(result))
 
     def test_trunc_year(self):
-        result = self.database.trunc_date(Field('date'), annually)
+        result = self.database.trunc_date(Field('date'), 'year')
 
         self.assertEqual('DATE_TRUNC(\'year\',"date")', str(result))
 

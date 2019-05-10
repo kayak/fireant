@@ -36,9 +36,9 @@ setup(
 
       packages=['fireant',
                 'fireant.database',
-                'fireant.slicer',
-                'fireant.slicer.queries',
-                'fireant.slicer.widgets'],
+                'fireant.dataset',
+                'fireant.queries',
+                'fireant.widgets'],
 
       # Include additional files into the package
       include_package_data=True,
@@ -90,7 +90,7 @@ setup(
           'mysql': ['pymysql==0.8.0'],
           'redshift': ['psycopg2==2.7.3.2'],
           'postgresql': ['psycopg2==2.7.3.2'],
-          'matplotlib': ['matplotlib'],
+          'ipython': ['matplotlib', 'ipython'],
       },
 
       test_suite='fireant.tests',

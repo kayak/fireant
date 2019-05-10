@@ -1,8 +1,12 @@
+import inspect
 from collections import OrderedDict
+from functools import partial
 
 
-def wrap_list(value):
-    return value if isinstance(value, (tuple, list)) else [value]
+def wrap_list(value, wrapper=list):
+    return value \
+        if isinstance(value, (tuple, list)) \
+        else wrapper([value])
 
 
 def setdeepattr(d, keys, value):
@@ -99,12 +103,31 @@ def getdeepattr(d, keys, default_value=None):
     d_level = d
 
     for key in keys:
-        if key not in d_level:
+        if isinstance(d_level, dict) and key not in d_level \
+              or not hasattr(d_level, key):
             return default_value
 
         d_level = d_level[key]
 
     return d_level
+
+
+def apply_kwargs(f, *args, **kwargs):
+    argspec = inspect.getfullargspec(f)
+    allowed = set(argspec.args[-len(argspec.defaults or ()):])
+    return f(*args, **{key: kwarg
+                       for key, kwarg in kwargs.items()
+                       if argspec.varkw or key in allowed})
+
+
+def filter_kwargs(f):
+    """
+    Removes any kwargs from function call that are not accepted by the called function.
+
+    :param f:
+    :return:
+    """
+    return partial(apply_kwargs, f)
 
 
 def flatten(items):
@@ -115,39 +138,6 @@ def chunks(l, n):
     """Yield successive n-sized chunks from l."""
     return [l[i:i + n]
             for i in range(0, len(l), n)]
-
-
-def slice_first(item):
-    if isinstance(item, (tuple, list)):
-        return item[0]
-    return item
-
-
-def filter_duplicates(iterable):
-    filtered_list, seen = [], set()
-    for item in iterable:
-        key = slice_first(item)
-
-        if key in seen:
-            continue
-
-        seen.add(key)
-        filtered_list.append(item)
-
-    return filtered_list
-
-
-def merge_dicts(*dict_args):
-    """
-    Given any number of dicts, shallow copy and merge into a new dict,
-    precedence goes to key value pairs in latter dicts.
-
-    https://stackoverflow.com/questions/38987/how-to-merge-two-python-dictionaries-in-a-single-expression
-    """
-    result = {}
-    for dictionary in dict_args:
-        result.update(dictionary)
-    return result
 
 
 def immutable(func):
@@ -187,7 +177,7 @@ def ordered_distinct_list(l):
             and not seen.add(x)]
 
 
-def ordered_distinct_list_by_attr(l, attr='key'):
+def ordered_distinct_list_by_attr(l, attr='alias'):
     seen = set()
     return [x
             for x in l
@@ -220,36 +210,16 @@ def groupby(items, by):
     return result
 
 
-def groupby_first_level(index):
-    seen = set()
-    return [x[1:]
-            for x in list(index)
-            if x[1:] not in seen and not seen.add(x[1:])]
+def alias_selector(alias):
+    if alias is None:
+        return alias
+    return '$' + alias
 
 
-def format_key(key, prefix=None):
-    if key is None:
-        return key
-
-    if prefix is not None:
-        return '${}${}'.format(prefix, key)
-
-    return '${}'.format(key)
-
-
-def format_dimension_key(key):
-    return format_key(key, 'd')
-
-
-def format_metric_key(key):
-    return format_key(key, 'm')
-
-
-def repr_field_key(key):
-    field_type_symbol = key[1]
-    field_key = key[3:]
-    field_type = {'m': 'metrics', 'd': 'dimensions'}[field_type_symbol]
-    return 'slicer.{}.{}'.format(field_type, field_key)
+def alias_for_alias_selector(f_alias):
+    if f_alias and f_alias[0] == '$':
+        return f_alias[1:]
+    return f_alias
 
 
 def reduce_data_frame_levels(data_frame, level):

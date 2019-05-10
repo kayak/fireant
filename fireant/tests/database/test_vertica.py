@@ -4,16 +4,8 @@ from unittest.mock import (
     patch,
 )
 
-from pypika import Field
-
-from fireant import (
-    annually,
-    daily,
-    hourly,
-    quarterly,
-    weekly,
-)
 from fireant.database import VerticaDatabase
+from pypika import Field
 
 
 class TestVertica(TestCase):
@@ -45,27 +37,27 @@ class TestVertica(TestCase):
         )
 
     def test_trunc_hour(self):
-        result = VerticaDatabase().trunc_date(Field('date'), hourly)
+        result = VerticaDatabase().trunc_date(Field('date'), 'hour')
 
         self.assertEqual('TRUNC("date",\'HH\')', str(result))
 
     def test_trunc_day(self):
-        result = VerticaDatabase().trunc_date(Field('date'), daily)
+        result = VerticaDatabase().trunc_date(Field('date'), 'day')
 
         self.assertEqual('TRUNC("date",\'DD\')', str(result))
 
     def test_trunc_week(self):
-        result = VerticaDatabase().trunc_date(Field('date'), weekly)
+        result = VerticaDatabase().trunc_date(Field('date'), 'week')
 
         self.assertEqual('TRUNC("date",\'IW\')', str(result))
 
     def test_trunc_quarter(self):
-        result = VerticaDatabase().trunc_date(Field('date'), quarterly)
+        result = VerticaDatabase().trunc_date(Field('date'), 'quarter')
 
         self.assertEqual('TRUNC("date",\'Q\')', str(result))
 
     def test_trunc_year(self):
-        result = VerticaDatabase().trunc_date(Field('date'), annually)
+        result = VerticaDatabase().trunc_date(Field('date'), 'year')
 
         self.assertEqual('TRUNC("date",\'Y\')', str(result))
 

@@ -3,7 +3,7 @@ Connecting to the database
 
 In order for |Brand| to connect to your database, a database connectors must be used. This takes the form of an instance of a concrete subclass of |Brand|'s ``Database`` class. Database connectors are shipped with |Brand| for all of the supported databases, but it is also possible to write your own. See below on how to extend |Brand| to support additional databases.
 
-To configure a database, instantiate a subclass of |ClassDatabase|. You will use this instance to create a |FeatureSlicer|. It is possible to use multiple databases simultaneous, but |FeatureSlicer| can only use a single database, since they inherently model the structure of a table in the database.
+To configure a database, instantiate a subclass of |ClassDatabase|. You will use this instance to create a |FeatureDataSet|. It is possible to use multiple databases simultaneous, but |FeatureDataSet| can only use a single database, since they inherently model the structure of a table in the database.
 
 Vertica
 
@@ -78,9 +78,14 @@ Instead of using one of the built in database connectors, you can provide your o
 .. code-block:: python
 
     import vertica_python
+    from pypika import VerticaQuery
+    from fireant import Database
 
     class MyVertica(Database):
         # Vertica client that uses the vertica_python driver.
+
+        # Override the custom PyPika Query class (Not necessary but perhaps helpful)
+        query_cls = VerticaQuery
 
         def __init__(self, host='localhost', port=5433, database='vertica',
                      user='vertica', password=None,
@@ -105,12 +110,23 @@ Instead of using one of the built in database connectors, you can provide your o
         def date_add(self, date_part, interval, field):
             return DateAdd(...)  # custom DateAdd function
 
-    hostage.settings = MyVertica(
+Once a Database connector has been set up, it can be used when instantiating |ClassDataSet|.
+
+.. code-block:: python
+
+    from fireant import DataSet
+
+    my_vertica = MyVertica(
         host='example.com',
         port=5433,
         database='example',
         user='user',
         password='password123',
+    )
+
+    DataSet(
+        database=my_vertica,
+        ...
     )
 
 In a custom database connector, the ``connect`` function must be overridden to provide a ``connection`` to the database.

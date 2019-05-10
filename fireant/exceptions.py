@@ -1,0 +1,2 @@
+class SlicerException(Exception):
+    pass
