@@ -90,7 +90,7 @@ setup(
           'mysql': ['pymysql==0.8.0'],
           'redshift': ['psycopg2==2.7.3.2'],
           'postgresql': ['psycopg2==2.7.3.2'],
-          'matplotlib': ['matplotlib'],
+          'ipython': ['matplotlib', 'ipython'],
       },
 
       test_suite='fireant.tests',

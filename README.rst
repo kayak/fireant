@@ -31,33 +31,33 @@ Introduction
 
 |Brand| arose out of an environment where several different teams, each working with data sets often with crossover, were individually building their own dashboard platforms. |Brand| was developed as a centralized way of building dashboards without the legwork.
 
-|Brand| is used to create configurations of data sets using |FeatureSlicer| which backs a database table containing analytics and defines sets of |FeatureDimension| and |FeatureMetric|. A |FeatureDimension| is used to group data by properties, such as a timestamp, an account, a device type, etc. A |FeatureMetric| is used to render quanitifiers such as clicks, ROI, conversions into a widget such as a chart or table.
+|Brand| is used to create configurations of data sets using |FeatureDataSet| which backs a database table containing analytics and defines sets of |FeatureDimension| and |FeatureMetric|. A |FeatureDimension| is used to group data by properties, such as a timestamp, an account, a device type, etc. A |FeatureMetric| is used to render quanitifiers such as clicks, ROI, conversions into a widget such as a chart or table.
 
-A |FeatureSlicer| exposes a rich builder API that allows a wide range of queries to be constructed that can be rendered as several widgets. A |FeatureSlicer| can be used directly in a Jupyter_ notebook, eliminating the need to write repetitive custom queries and render the data in visualizations.
+A |FeatureDataSet| exposes a rich builder API that allows a wide range of queries to be constructed that can be rendered as several widgets. A |FeatureDataSet| can be used directly in a Jupyter_ notebook, eliminating the need to write repetitive custom queries and render the data in visualizations.
 
-Slicers
--------
+Data Sets
+---------
 
-|FeatureSlicer| are the core component of |Brand|. A |FeatureSlicer| is a representation of a data set and is used to execute queries and transform result sets into widgets such as charts or tables.
+|FeatureDataSet| are the core component of |Brand|. A |FeatureDataSet| is a representation of a data set and is used to execute queries and transform result sets into widgets such as charts or tables.
 
-A |FeatureSlicer| requires only a couple of definitions in order to use: A database connector, a database table, join tables, and dimensions and metrics. Metrics and Dimension definitions tell |Brand| how to query and use data in widgets. Once a slicer is created, it's query API can be used to build queries with just a few lines of code selecting which dimensions and metrics to use and how to filter the data.
+A |FeatureDataSet| requires only a couple of definitions in order to use: A database connector, a database table, join tables, and dimensions and metrics. Metrics and Dimension definitions tell |Brand| how to query and use data in widgets. Once a slicer is created, it's query API can be used to build queries with just a few lines of code selecting which dimensions and metrics to use and how to filter the data.
 
-.. _slicer_example_start:
+.. _dataset_example_start:
 
-Instantiating a Slicer
-""""""""""""""""""""""
+Instantiating a Data Set
+""""""""""""""""""""""""
 
 .. code-block:: python
 
-    from fireant.slicer import *
+    from fireant.dataset import *
     from fireant.database import VerticaDatabase
     from pypika import Tables, functions as fn
 
     vertica_database = VerticaDatabase(user='myuser', password='mypassword')
     analytics, accounts = Tables('analytics', 'accounts')
 
-    my_slicer = Slicer(
-        # This is the primary database table that our slicer uses
+    my_dataset = dataset(
+        # This is the primary database table that our dataset uses
         table=analytics,
 
         # Define the database connection object
@@ -110,48 +110,48 @@ Instantiating a Slicer
         ],
     )
 
-.. _slicer_example_end:
+.. _dataset_example_end:
 
-.. _slicer_query_example_start:
+.. _dataset_query_example_start:
 
-Building queries with a Slicer
-""""""""""""""""""""""""""""""
+Building queries with a Data Set
+""""""""""""""""""""""""""""""""
 
-Use the ``data`` attribute start building a slicer query. A slicer query allows method calls to be chained together to select what should be included in the result.
+Use the ``query`` property of a data set instance to start building a data set query. A data set query allows method calls to be chained together to select what should be included in the result.
 
-This example uses the slicer defined above
+This example uses the data set defined above
 
 .. code-block:: python
 
-   from fireant import Matplotlib, Pandas, daily
+   from fireant import Matplotlib, Pandas, day
 
-    matplotlib_chart, pandas_df = my_slicer.data \
+    matplotlib_chart, pandas_df = my_dataset.data \
          .dimension(
             # Select the date dimension with a daily interval to group the data by the day applies to
-            # dimensions are referenced by `slicer.dimensions.{alias}`
-            my_slicer.dimensions.date(daily),
+            # dimensions are referenced by `dataset.fields.{alias}`
+            day(my_dataset.fields.date),
 
             # Select the device_type dimension to break the data down further by which device it applies to
-            my_slicer.dimensions.device_type,
+            my_dataset.fields.device_type,
          ) \
          .filter(
             # Filter the result set to data to the year of 2018
-            my_slicer.dimensions.date.between(date(2018, 1, 1), date(2018, 12, 31))
+            my_dataset.fields.date.between(date(2018, 1, 1), date(2018, 12, 31))
          ) \
          # Add a week over week reference to compare data to values from the week prior
-         .reference(WeekOverWeek(slicer.dimension.date))
+         .reference(WeekOverWeek(dataset.fields.date))
          .widget(
             # Add a matpotlib chart widget
             Matplotlib()
                # Add axes with series to the chart
-               .axis(Matplotlib.LineSeries(slicer.metrics.clicks))
+               .axis(Matplotlib.LineSeries(dataset.fields.clicks))
 
-               # metrics are referenced by `slicer.metrics.{alias}`
-               .axis(Matplotlib.ColumnSeries(slicer.metrics.cost, slicer.metrics.revenue))
+               # metrics are referenced by `dataset.metrics.{alias}`
+               .axis(Matplotlib.ColumnSeries(dataset.fields.cost, dataset.fields.revenue))
          ) \
          .widget(
             # Add a pandas data frame table widget
-            Pandas(slicer.metrics.clicks, slicer.metrics.cost, slicer.metrics.revenue)
+            Pandas(dataset.fields.clicks, dataset.fields.cost, dataset.fields.revenue)
          ) \
          .fetch()
 
@@ -161,7 +161,7 @@ This example uses the slicer defined above
     # Display the chart
     print(pandas_df)
 
-.. _slicer_query_example_end:
+.. _dataset_query_example_end:
 
 License
 -------
@@ -207,43 +207,43 @@ Crafted with ♥ in Berlin.
 
 .. |Brand| replace:: *fireant*
 
-.. |FeatureSlicer| replace:: *Slicer*
+.. |FeatureDataSet| replace:: *Data Set*
 .. |FeatureMetric| replace:: *Metric*
 .. |FeatureDimension| replace:: *Dimension*
 .. |FeatureFilter| replace:: *Filter*
 .. |FeatureReference| replace:: *Reference*
 .. |FeatureOperation| replace:: *Operation*
 
-.. |ClassSlicer| replace:: ``fireant.Slicer``
+.. |ClassDataSet| replace:: ``fireant.DataSet``
 .. |ClassDatabase| replace:: ``fireant.database.Database``
-.. |ClassJoin| replace:: ``fireant.slicer.joins.Join``
-.. |ClassMetric| replace:: ``fireant.slicer.metrics.Metric``
+.. |ClassJoin| replace:: ``fireant.dataset.joins.Join``
+.. |ClassMetric| replace:: ``fireant.dataset.fields.Field``
 
-.. |ClassDimension| replace:: ``fireant.slicer.dimensions.Dimension``
-.. |ClassBooleanDimension| replace:: ``fireant.slicer.dimensions.BooleanDimension``
-.. |ClassContDimension| replace:: ``fireant.slicer.dimensions.ContinuousDimension``
-.. |ClassDateDimension| replace:: ``fireant.slicer.dimensions.DatetimeDimension``
-.. |ClassCatDimension| replace:: ``fireant.slicer.dimensions.CategoricalDimension``
-.. |ClassUniqueDimension| replace:: ``fireant.slicer.dimensions.UniqueDimension``
-.. |ClassDisplayDimension| replace:: ``fireant.slicer.dimensions.DisplayDimension``
+.. |ClassDimension| replace:: ``fireant.dataset.fields.Field``
+.. |ClassBooleanDimension| replace:: ``fireant.dataset.dimensions.BooleanDimension``
+.. |ClassContDimension| replace:: ``fireant.dataset.dimensions.ContinuousDimension``
+.. |ClassDateDimension| replace:: ``fireant.dataset.dimensions.DatetimeDimension``
+.. |ClassCatDimension| replace:: ``fireant.dataset.dimensions.CategoricalDimension``
+.. |ClassUniqueDimension| replace:: ``fireant.dataset.dimensions.UniqueDimension``
+.. |ClassDisplayDimension| replace:: ``fireant.dataset.dimensions.DisplayDimension``
 
-.. |ClassFilter| replace:: ``fireant.slicer.filters.Filter``
-.. |ClassComparatorFilter| replace:: ``fireant.slicer.filters.ComparatorFilter``
-.. |ClassBooleanFilter| replace:: ``fireant.slicer.filters.BooleanFilter``
-.. |ClassContainsFilter| replace:: ``fireant.slicer.filters.ContainsFilter``
-.. |ClassExcludesFilter| replace:: ``fireant.slicer.filters.ExcludesFilter``
-.. |ClassRangeFilter| replace:: ``fireant.slicer.filters.RangeFilter``
-.. |ClassPatternFilter| replace:: ``fireant.slicer.filters.PatternFilter``
-.. |ClassAntiPatternFilter| replace:: ``fireant.slicer.filters.AntiPatternFilter``
+.. |ClassFilter| replace:: ``fireant.dataset.filters.Filter``
+.. |ClassComparatorFilter| replace:: ``fireant.dataset.filters.ComparatorFilter``
+.. |ClassBooleanFilter| replace:: ``fireant.dataset.filters.BooleanFilter``
+.. |ClassContainsFilter| replace:: ``fireant.dataset.filters.ContainsFilter``
+.. |ClassExcludesFilter| replace:: ``fireant.dataset.filters.ExcludesFilter``
+.. |ClassRangeFilter| replace:: ``fireant.dataset.filters.RangeFilter``
+.. |ClassPatternFilter| replace:: ``fireant.dataset.filters.PatternFilter``
+.. |ClassAntiPatternFilter| replace:: ``fireant.dataset.filters.AntiPatternFilter``
 
-.. |ClassWidget| replace:: ``fireant.slicer.widgets.base.Widget``
-.. |ClassPandasWidget| replace:: ``fireant.slicer.widgets.pandas.Pandas``
-.. |ClassHighChartsWidget| replace:: ``fireant.slicer.widgets.highcharts.HighCharts``
-.. |ClassHighChartsSeries| replace:: ``fireant.slicer.widgets.highcharts.Series``
+.. |ClassReference| replace:: ``fireant.dataset.references.Reference``
 
-.. |ClassReference| replace:: ``fireant.slicer.references.Reference``
+.. |ClassWidget| replace:: ``fireant.widgets.base.Widget``
+.. |ClassPandasWidget| replace:: ``fireant.widgets.pandas.Pandas``
+.. |ClassHighChartsWidget| replace:: ``fireant.widgets.highcharts.HighCharts``
+.. |ClassHighChartsSeries| replace:: ``fireant.widgets.highcharts.Series``
 
-.. |ClassOperation| replace:: ``fireant.slicer.operations.Operation``
+.. |ClassOperation| replace:: ``fireant.dataset.operations.Operation``
 
 .. |ClassVerticaDatabase| replace:: ``fireant.database.VerticaDatabase``
 .. |ClassMySQLDatabase| replace:: ``fireant.database.MySQLDatabase``
