@@ -53,7 +53,7 @@ class Matplotlib(ChartWidget, TransformableWidget):
 
                     plot = self.get_plot_func_for_series_type(data_frame[f_metric_key], f_metric_label, series)
                     plot(ax=plt_axis,
-                         title=axis.label,
+                         label=axis.label,
                          color=series_color,
                          stacked=series.stacking is not None,
                          linestyle=next(linestyles)) \

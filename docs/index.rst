@@ -14,7 +14,7 @@ Contents
 
     1_setup
     2_database
-    3_slicer
+    3_dataset
     4_queries
     5_extending
     api/modules

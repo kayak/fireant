@@ -1,6 +1,7 @@
 -r requirements.txt
 mock
 matplotlib
+ipython
 pymysql==0.8.0
 vertica-python==0.7.3
 psycopg2==2.7.3.2

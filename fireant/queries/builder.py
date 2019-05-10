@@ -248,6 +248,16 @@ class DataSetQueryBuilder(QueryBuilder):
         return [widget.transform(data_frame, self.dataset, self._dimensions, self._references)
                 for widget in self._widgets]
 
+    def plot(self):
+        try:
+            from IPython.display import display
+        except ImportError:
+            raise QueryException('Optional dependency ipython missing. Please install fireant[ipython] to use plot.')
+
+        widgets = self.fetch()
+        for widget in reversed(widgets):
+            display(widget)
+
     def __str__(self):
         return str(self.sql)
 
