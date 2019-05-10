@@ -1,3 +1,4 @@
+from datetime import date
 from unittest import (
     TestCase,
     skip,
@@ -7,6 +8,7 @@ import numpy as np
 import pandas as pd
 import pandas.testing
 
+from fireant import DayOverDay
 from fireant.dataset.modifiers import Rollup
 from fireant.dataset.totals import get_totals_marker_for_dtype
 from fireant.queries.execution import reduce_result_set
@@ -85,6 +87,27 @@ class ReduceResultSetsTests(TestCase):
 
         dimensions = (mock_dataset.fields.timestamp, mock_dataset.fields.political_party, mock_dataset.fields.state)
         result = reduce_result_set([raw_df], (), dimensions, ())
+        pandas.testing.assert_frame_equal(expected, result)
+
+
+class ReduceResultSetsWithReferencesTests(TestCase):
+    def test_reduce_delta_percent_result_set_with_zeros_in_reference_value(self):
+        raw_df = pd.DataFrame([[date(2019, 1, 2), 1],
+                               [date(2019, 1, 3), 2]],
+                              columns=['$timestamp', '$metric'])
+        ref_df = pd.DataFrame([[date(2019, 1, 2), 2],
+                               [date(2019, 1, 3), 0]],
+                              columns=['$timestamp', '$metric_dod'])
+
+        expected = raw_df.copy()
+        expected['$metric_dod_delta_percent'] = [-50, np.nan]
+        expected.set_index('$timestamp', inplace=True)
+
+        timestamp = mock_dataset.fields.timestamp
+        reference_groups = ([DayOverDay(timestamp, delta_percent=True)],)
+        dimensions = (timestamp,)
+        result = reduce_result_set([raw_df, ref_df], reference_groups, dimensions, ())
+
         pandas.testing.assert_frame_equal(expected, result)
 
 
