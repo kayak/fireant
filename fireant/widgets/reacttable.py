@@ -243,6 +243,9 @@ class ReactTable(Pandas):
                 field = field_map[f_dimension_alias]
                 return display_value(column_value, field) or column_value
 
+            if f_dimension_alias is None:
+                return ''
+
             return column_value
 
         def _make_columns(columns_frame, previous_level_values=()):
@@ -342,9 +345,12 @@ class ReactTable(Pandas):
                 data['display'] = display
 
             accessor_fields = [fields[field_alias]
-                               for field_alias in series.index.names]
+                               for field_alias in series.index.names
+                               if field_alias is not None]
+
             accessor = [safe_value(value)
-                        for value, field in zip(key, accessor_fields)]
+                        for value, field in zip(key, accessor_fields)] or key
+
             setdeepattr(row, accessor, data)
 
         return row
