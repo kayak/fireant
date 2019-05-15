@@ -281,6 +281,9 @@ dimx1_str_df = mock_politics_database[[f('political_party'), f('votes'), f('wins
     .groupby(f('political_party')) \
     .sum()
 
+dimx1_none_df = pd.DataFrame(mock_politics_database[[f('votes'), f('wins')]]
+                             .sum()).T
+
 dimx1_num_df = mock_politics_database[[f('candidate-id'), f('votes'), f('wins')]] \
     .groupby(f('candidate-id')) \
     .sum()

@@ -21,6 +21,7 @@ from fireant.tests.dataset.mocks import (
     dimx2_date_str_totalsx2_df,
     dimx2_str_num_df,
     mock_dataset,
+    dimx1_none_df,
 )
 from fireant.widgets.base import ReferenceItem
 from fireant.widgets.reacttable import ReactTable
@@ -373,6 +374,22 @@ class ReactTableTransformerTests(TestCase):
                 'Democrat': {'display': '6', 'raw': 6.0},
                 'Independent': {'display': '0', 'raw': 0.0},
                 'Republican': {'display': '6', 'raw': 6.0}
+            }]
+        }, result)
+
+    def test_transpose_without_dimension(self):
+        result = ReactTable(mock_dataset.fields.votes, mock_dataset.fields.wins, transpose=True) \
+            .transform(dimx1_none_df, mock_dataset, [], [])
+
+        self.assertEqual({
+            'columns': [{'Header': '', 'accessor': '$metrics'},
+                        {'Header': '', 'accessor': '0'}],
+            'data': [{
+                0: {'display': '111,674,336', 'raw': 111674336},
+                '$metrics': {'raw': 'Votes'}
+            }, {
+                0: {'display': '12', 'raw': 12},
+                '$metrics': {'raw': 'Wins'}
             }]
         }, result)
 
