@@ -1,12 +1,12 @@
+from datetime import (
+    date,
+    datetime,
+)
 from unittest import (
     TestCase,
 )
 
 import numpy as np
-from datetime import (
-    date,
-    datetime,
-)
 
 from fireant import (
     DataType,
@@ -80,9 +80,9 @@ class FormatRawValueTests(TestCase):
 
     def test_inf_returned_as_inf_label(self):
         with self.subTest('positive inf'):
-            self.assertEqual('Inf', formats.raw_value(np.inf, None))
+            self.assertIsNone(formats.raw_value(np.inf, None))
         with self.subTest('negative inf'):
-            self.assertEqual('Inf', formats.raw_value(-np.inf, None))
+            self.assertIsNone(formats.raw_value(-np.inf, None))
 
     def test_totals_markers_are_returned_as_text_totals_marker(self):
         for marker, field in [(TEXT_TOTALS, text_field),

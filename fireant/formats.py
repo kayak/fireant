@@ -6,7 +6,6 @@ from datetime import (
 
 import numpy as np
 import pandas as pd
-
 from fireant.dataset.fields import DataType
 from fireant.dataset.totals import TOTALS_MARKERS
 from fireant.utils import (
@@ -137,7 +136,7 @@ def raw_value(value, field, date_as=date_as_string):
     if value is None or pd.isnull(value):
         return None
     if isinstance(value, float) and np.isinf(value):
-        return INF_VALUE
+        return None
     if value in TOTALS_MARKERS:
         return TOTALS_VALUE
 
