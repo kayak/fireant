@@ -1,0 +1,3 @@
+To generate the sphinx API docs run from this working directory:
+
+>> sphinx-apidoc  -o api/ ..
