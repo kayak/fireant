@@ -2,6 +2,7 @@ import re
 from collections import OrderedDict
 
 import pandas as pd
+
 from fireant.dataset.fields import (
     DataType,
     Field,
@@ -28,7 +29,6 @@ from fireant.utils import (
     setdeepattr,
     wrap_list,
 )
-
 from .base import ReferenceItem
 from .pandas import Pandas
 
@@ -329,6 +329,8 @@ class ReactTable(Pandas):
     @staticmethod
     def transform_row_values(series, fields, is_transposed):
         # Add the values to the row
+        index_names = series.index.names or []
+
         row = {}
         for key, value in series.iteritems():
             key = wrap_list(key)
@@ -345,7 +347,7 @@ class ReactTable(Pandas):
                 data['display'] = display
 
             accessor_fields = [fields[field_alias]
-                               for field_alias in series.index.names
+                               for field_alias in index_names
                                if field_alias is not None]
 
             accessor = [safe_value(value)

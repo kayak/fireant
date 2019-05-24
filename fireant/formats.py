@@ -1,11 +1,11 @@
 import re
-
-import numpy as np
-import pandas as pd
 from datetime import (
     date,
     datetime,
 )
+
+import numpy as np
+import pandas as pd
 
 from fireant.dataset.fields import DataType
 from fireant.dataset.totals import TOTALS_MARKERS
@@ -53,7 +53,7 @@ def return_none(value):
 
 
 @filter_kwargs
-def _format_decimal(value, thousands=',', precision=None):
+def _format_decimal(value, thousands='', precision=None):
     if not isinstance(value, (int, float)):
         return value
 
@@ -186,7 +186,10 @@ def display_value(value, field, date_as=date_as_string):
         return TOTALS_LABEL
 
     format_kwargs = {key: getattr(field, key, None)
-                     for key in ('prefix', 'suffix', 'thouands', 'precision', 'interval_key')}
+                     for key in ('prefix', 'suffix', 'thousands', 'precision', 'interval_key')}
+    format_kwargs = {key: value
+                     for key, value in format_kwargs.items()
+                     if value is not None}
 
     formatter = FIELD_DISPLAY_FORMATTER.get(field.data_type, _identity)
     return formatter(value,
