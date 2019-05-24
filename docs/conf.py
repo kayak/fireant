@@ -271,7 +271,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'fireant', 'fireant Documentation',
-     author, 'fireant', 'Slicer tool for building charts, tables and dashboards.',
+     author, 'fireant', 'Data set tool for building charts, tables and dashboards.',
      'Miscellaneous'),
 ]
 

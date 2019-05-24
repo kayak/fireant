@@ -7,10 +7,20 @@ Subpackages
 .. toctree::
 
     fireant.tests.database
-    fireant.tests.slicer
+    fireant.tests.dataset
+    fireant.tests.queries
+    fireant.tests.widgets
 
 Submodules
 ----------
+
+fireant.tests.test\_fireant module
+----------------------------------
+
+.. automodule:: fireant.tests.test_fireant
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 fireant.tests.test\_formats module
 ----------------------------------

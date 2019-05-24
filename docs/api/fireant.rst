@@ -1,5 +1,5 @@
-API Reference
-=============
+fireant package
+===============
 
 Subpackages
 -----------
@@ -7,16 +7,34 @@ Subpackages
 .. toctree::
 
     fireant.database
-    fireant.slicer
+    fireant.dataset
+    fireant.queries
     fireant.tests
+    fireant.widgets
 
 Submodules
 ----------
+
+fireant.exceptions module
+-------------------------
+
+.. automodule:: fireant.exceptions
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 fireant.formats module
 ----------------------
 
 .. automodule:: fireant.formats
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+fireant.reference\_helpers module
+---------------------------------
+
+.. automodule:: fireant.reference_helpers
     :members:
     :undoc-members:
     :show-inheritance:

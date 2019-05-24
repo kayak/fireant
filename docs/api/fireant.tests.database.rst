@@ -12,10 +12,10 @@ fireant.tests.database.mock\_database module
     :undoc-members:
     :show-inheritance:
 
-fireant.tests.database.test\_databases module
----------------------------------------------
+fireant.tests.database.test\_base\_database module
+--------------------------------------------------
 
-.. automodule:: fireant.tests.database.test_databases
+.. automodule:: fireant.tests.database.test_base_database
     :members:
     :undoc-members:
     :show-inheritance:
@@ -40,6 +40,14 @@ fireant.tests.database.test\_redshift module
 --------------------------------------------
 
 .. automodule:: fireant.tests.database.test_redshift
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+fireant.tests.database.test\_snowflake module
+---------------------------------------------
+
+.. automodule:: fireant.tests.database.test_snowflake
     :members:
     :undoc-members:
     :show-inheritance:

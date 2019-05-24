@@ -36,6 +36,14 @@ fireant.database.redshift module
     :undoc-members:
     :show-inheritance:
 
+fireant.database.snowflake module
+---------------------------------
+
+.. automodule:: fireant.database.snowflake
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 fireant.database.vertica module
 -------------------------------
 
