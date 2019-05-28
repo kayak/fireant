@@ -241,12 +241,12 @@ class ReactTable(Pandas):
 
             if f_dimension_alias in field_map:
                 field = field_map[f_dimension_alias]
-                return display_value(column_value, field) or column_value
+                return display_value(column_value, field) or safe_value(column_value)
 
             if f_dimension_alias is None:
                 return ''
 
-            return column_value
+            return safe_value(column_value)
 
         def _make_columns(columns_frame, previous_level_values=()):
             """
