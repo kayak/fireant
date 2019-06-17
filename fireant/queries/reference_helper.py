@@ -2,6 +2,7 @@ import copy
 from functools import partial
 
 from fireant.dataset.fields import Field
+from fireant.dataset.modifiers import Rollup
 from pypika.terms import (
     ComplexCriterion,
     Criterion,
@@ -15,6 +16,8 @@ def adapt_for_reference_query(reference_parts, database, dimensions, metrics, fi
         return dimensions, metrics, filters
 
     ref_dimension, time_unit, interval = reference_parts
+    # Unpack rolled up dimensions
+    ref_dimension = ref_dimension.dimension if isinstance(ref_dimension, Rollup) else ref_dimension
 
     ref_metrics = _make_reference_metrics(metrics,
                                           references[0].reference_type.alias)

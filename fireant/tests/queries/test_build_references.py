@@ -3,6 +3,7 @@ from unittest import TestCase
 from datetime import date
 
 import fireant as f
+from fireant import Rollup
 from fireant.tests.dataset.mocks import mock_dataset
 
 timestamp_daily = f.day(mock_dataset.fields.timestamp)
@@ -722,3 +723,55 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
                              'GROUP BY "$timestamp" '
                              'ORDER BY "$timestamp"', str(queries[1]))
 
+
+# noinspection SqlDialectInspection,SqlNoDataSourceInspection
+class QueryBuilderReferencesWithRollupTests(TestCase):
+    maxDiff = None
+
+    def test_reference_with_rollup_dimension_and_date_range_filter(self):
+        queries = mock_dataset.query \
+            .widget(f.HighCharts()
+                    .axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))) \
+            .dimension(Rollup(timestamp_daily)) \
+            .reference(f.WeekOverWeek(mock_dataset.fields.timestamp)) \
+            .filter(mock_dataset.fields.timestamp
+                    .between(date(2018, 1, 1), date(2018, 1, 31))) \
+            .sql
+
+        self.assertEqual(4, len(queries))
+
+        base, reference, base_rollup, reference_rollup = queries
+
+        with self.subTest('base query applies dimensions and date range filter'):
+            self.assertEqual('SELECT '
+                             'TRUNC("timestamp",\'DD\') "$timestamp",'
+                             'SUM("votes") "$votes" '
+                             'FROM "politics"."politician" '
+                             'WHERE "timestamp" BETWEEN \'2018-01-01\' AND \'2018-01-31\' '
+                             'GROUP BY "$timestamp" '
+                             'ORDER BY "$timestamp"', str(base))
+
+        with self.subTest('reference query shifts timestamp dimension and date range filter by a week'):
+            self.assertEqual('SELECT '
+                             'TRUNC(TIMESTAMPADD(\'week\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
+                             'SUM("votes") "$votes_wow" '
+                             'FROM "politics"."politician" '
+                             'WHERE TIMESTAMPADD(\'week\',1,"timestamp") BETWEEN \'2018-01-01\' AND \'2018-01-31\' '
+                             'GROUP BY "$timestamp" '
+                             'ORDER BY "$timestamp"', str(reference))
+
+        with self.subTest('totals query selects NULL for timestamp dimension'):
+            self.assertEqual('SELECT '
+                             'NULL "$timestamp",'
+                             'SUM("votes") "$votes" '
+                             'FROM "politics"."politician" '
+                             'WHERE "timestamp" BETWEEN \'2018-01-01\' AND \'2018-01-31\' '
+                             'ORDER BY "$timestamp"', str(base_rollup))
+
+        with self.subTest('reference totals query selects NULL for timestamp dimension and shifts date range filter'):
+            self.assertEqual('SELECT '
+                             'NULL "$timestamp",'
+                             'SUM("votes") "$votes_wow" '
+                             'FROM "politics"."politician" '
+                             'WHERE TIMESTAMPADD(\'week\',1,"timestamp") BETWEEN \'2018-01-01\' AND \'2018-01-31\' '
+                             'ORDER BY "$timestamp"', str(reference_rollup))
