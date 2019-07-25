@@ -305,13 +305,14 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
         """
 
         def in_hint_table(dim):
-            return all(dim_field.name in hint_dimensions for dim_field in dim.definition.fields())
+            return all(dim_field.name in hint_column_names for dim_field in dim.definition.fields())
 
-        # Fetch hint table columns
-        hint_dimensions = self.dataset.database.get_column_definitions(
+        hint_column_definitions = self.dataset.database.get_column_definitions(
               self.dataset.hint_table._schema._name,
               self.dataset.hint_table._table_name
         ) if self.dataset.hint_table else []
+
+        hint_column_names = [hint_column_definition[0] for hint_column_definition in hint_column_definitions]
 
         dimension = self._dimensions[0]
 

@@ -64,11 +64,11 @@ class VerticaDatabase(Database):
 
     def get_column_definitions(self, schema, table):
         """
-        Return schema information including all schema names, table names, column names and their data type
+        Return schema information including column names and their data type
 
         :param schema: the name of the schema if you would like to narrow the results down (String)
         :param table: the name of the table if you would like to narrow the results down (String)
-        :return: List of column names
+        :return: List of column name, column data type pairs
         """
         table_columns = Table('columns')
 
@@ -80,8 +80,5 @@ class VerticaDatabase(Database):
                 .where((table_columns.table_schema == schema) & (table_columns.field('table_name') == table)) \
                 .distinct()
 
-        columns_definitions = self.fetch(str(table_query))
-        column_names = [columns_definition[0] for columns_definition in columns_definitions]
-
-        return column_names
+        return self.fetch(str(table_query))
 

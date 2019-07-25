@@ -29,7 +29,8 @@ class DimensionsChoicesQueryBuilderTests(TestCase):
                          'FROM "politics"."politician" '
                          'GROUP BY "$political_party"', str(query))
 
-    @patch.object(mock_hint_dataset.database, 'get_column_definitions', return_value=['political_party'])
+    @patch.object(mock_hint_dataset.database, 'get_column_definitions',
+                  return_value=[['political_party', 'varchar(128)']])
     def test_query_choices_for_field_with_hint_table(self, mock_get_column_definitions):
         query = mock_hint_dataset.fields.political_party \
             .choices \
@@ -50,7 +51,8 @@ class DimensionsChoicesQueryBuilderTests(TestCase):
                          'FROM "politics"."politician" '
                          'GROUP BY "$political_party"', str(query))
 
-    @patch.object(mock_hint_dataset.database, 'get_column_definitions', return_value=['political_party', 'state_name'])
+    @patch.object(mock_hint_dataset.database, 'get_column_definitions',
+                  return_value=[['political_party', 'varchar(128)'], ['state_name', 'varchar(128)']])
     def test_query_choices_for_case_field_with_complete_hint_table(self, mock_get_column_definition):
         query = mock_hint_dataset.fields.political_party_case \
             .choices \
@@ -64,7 +66,8 @@ class DimensionsChoicesQueryBuilderTests(TestCase):
                          'FROM "politics"."politician_hints" '
                          'GROUP BY "$political_party_case"', str(query))
 
-    @patch.object(mock_hint_dataset.database, 'get_column_definitions', return_value=['political_party'])
+    @patch.object(mock_hint_dataset.database, 'get_column_definitions',
+                  return_value=[['political_party', 'varchar(128)']])
     def test_query_choices_for_case_field_with_incomplete_hint_table(self, mock_get_column_definition):
         query = mock_hint_dataset.fields.political_party_case \
             .choices \
@@ -80,7 +83,8 @@ class DimensionsChoicesQueryBuilderTests(TestCase):
                          'JOIN "locations"."state" ON "district"."state_id"="state"."id" '
                          'GROUP BY "$political_party_case"', str(query))
 
-    @patch.object(mock_hint_dataset.database, 'get_column_definitions', return_value=['political_party', 'candidate_name'])
+    @patch.object(mock_hint_dataset.database, 'get_column_definitions',
+                  return_value=[['political_party', 'varchar(128)'], ['candidate_name', 'varchar(128)']])
     def test_query_choices_for_field_with_hint_table_and_filters(self, mock_get_column_definition):
         query = mock_hint_dataset.fields.political_party \
             .choices \
