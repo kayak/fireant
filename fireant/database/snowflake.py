@@ -105,6 +105,6 @@ class SnowflakeDatabase(Database):
 
     def get_column_definitions(self, schema, table):
         """ Return a list of column name, column data type pairs """
-        columns = self.fetch(f'DESCRIBE TABLE {schema}.{table} TYPE=COLUMNS')
+        columns = self.fetch('DESCRIBE TABLE {}.{} TYPE=COLUMNS'.format(schema, table))
         return [column[0:2] for column in columns]
 

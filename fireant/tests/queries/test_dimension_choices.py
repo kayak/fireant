@@ -41,6 +41,18 @@ class DimensionsChoicesQueryBuilderTests(TestCase):
                          'FROM "politics"."politician_hints" '
                          'GROUP BY "$political_party"', str(query))
 
+    @patch.object(mock_hint_dataset.database, 'get_column_definitions',
+                  return_value=[['candidate_name', 'varchar(128)']])
+    def test_query_choices_for_field_with_display_and_incomplete_hint_table(self, mock_get_column_definitions):
+        query = mock_hint_dataset.fields.candidate_name \
+            .choices \
+            .sql[0]
+
+        self.assertEqual('SELECT '
+                         '"candidate_name" "$candidate_name","candidate_name_display" "$candidate_name_display" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "$candidate_name","$candidate_name_display"', str(query))
+
     def test_query_choices_for_field_with_empty_hint_table(self):
         query = mock_hint_dataset.fields.political_party \
             .choices \
@@ -88,7 +100,7 @@ class DimensionsChoicesQueryBuilderTests(TestCase):
     def test_query_choices_for_field_with_hint_table_and_filters(self, mock_get_column_definition):
         query = mock_hint_dataset.fields.political_party \
             .choices \
-            .filter(mock_hint_dataset.fields['candidate-name'].isin(['Bill Clinton', 'Bob Dole'])) \
+            .filter(mock_hint_dataset.fields.candidate_name.isin(['Bill Clinton', 'Bob Dole'])) \
             .filter(mock_hint_dataset.fields['state'].isin(['Texas', 'California'])) \
             .sql[0]
 

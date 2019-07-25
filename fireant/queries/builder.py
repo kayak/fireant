@@ -314,20 +314,22 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
 
         hint_column_names = [hint_column_definition[0] for hint_column_definition in hint_column_definitions]
 
-        dimension = self._dimensions[0]
+        dimensions = self._dimensions
 
-        # All definitions of dimension have to exist in hint table
-        is_hint_dimension = in_hint_table(dimension)
+        # All definitions of all dimensions have to exist in hint table
+        is_hint_dimension = all(in_hint_table(dim) for dim in self._dimensions)
 
         table = self.dataset.hint_table if is_hint_dimension else self.dataset.table
         joins = () if is_hint_dimension else self.dataset.joins
         filters = self._filters
 
         if is_hint_dimension:
-            dimension = copy.deepcopy(dimension)  # Prevent definition changes to the original dimension
+            # Prevent definition changes to the original dimensions
+            dimensions = [copy.deepcopy(dimension) for dimension in self._dimensions]
 
-            for dimension_field in dimension.definition.fields():
-                dimension_field.table = dimension_field.for_(table).table
+            for dimension in dimensions:
+                for dimension_field in dimension.definition.fields():
+                    dimension_field.table = dimension_field.for_(table).table
 
             filters = [hint_filter
                        for hint_filter in filters
@@ -340,7 +342,7 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
         query = make_slicer_query(database=self.dataset.database,
                                   base_table=table,
                                   joins=joins,
-                                  dimensions=[dimension, *self._dimensions[1:]],
+                                  dimensions=dimensions,
                                   filters=filters) \
             .limit(self._limit) \
             .offset(self._offset)
