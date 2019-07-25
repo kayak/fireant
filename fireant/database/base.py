@@ -31,6 +31,12 @@ class Database(object):
         """
         raise NotImplementedError
 
+    def get_column_definitions(self, schema, table):
+        """
+        This function must return the columns of a given schema and table.
+        """
+        raise NotImplementedError
+
     def trunc_date(self, field, interval):
         """
         This function must create a Pypika function which truncates a Date or DateTime object to a specific interval.
@@ -45,3 +51,9 @@ class Database(object):
 
     def to_char(self, definition):
         return fn.Cast(definition, enums.SqlTypes.VARCHAR)
+
+    def fetch(self, query):
+        with self.connect() as connection:
+            cursor = connection.cursor()
+            cursor.execute(query)
+            return cursor.fetchall()

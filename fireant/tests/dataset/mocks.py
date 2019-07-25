@@ -1,7 +1,10 @@
 from collections import (
     OrderedDict,
 )
-from unittest.mock import Mock
+from unittest.mock import (
+    Mock,
+    MagicMock,
+)
 
 import pandas as pd
 from datetime import datetime
@@ -16,6 +19,7 @@ from pypika import (
     JoinType,
     Table,
     functions as fn,
+    Case,
 )
 
 
@@ -23,6 +27,7 @@ class TestDatabase(VerticaDatabase):
     # Vertica client that uses the vertica_python driver.
 
     connect = Mock()
+    get_column_definitions = MagicMock(return_value=[])
 
     def __eq__(self, other):
         return isinstance(other, TestDatabase)
@@ -30,6 +35,7 @@ class TestDatabase(VerticaDatabase):
 
 test_database = TestDatabase()
 politicians_table = Table('politician', schema='politics')
+politicians_hint_table = Table('politician_hints', schema='politics')
 voters_table = Table('voter', schema='politics')
 state_table = Table('state', schema='locations')
 district_table = Table('district', schema='locations')
@@ -128,6 +134,44 @@ mock_dataset = DataSet(
                 prefix='$',
                 thousands='_',
                 suffix='€'),
+      ),
+)
+
+mock_case = Case() \
+    .when(politicians_table.political_party == "Democrat", "Democrat") \
+    .when(state_table.state_name == "California", "California") \
+    .else_("")
+
+mock_hint_dataset = DataSet(
+      table=politicians_table,
+      hint_table=politicians_hint_table,
+      database=test_database,
+
+      joins=(
+          Join(table=district_table,
+               criterion=politicians_table.district_id == district_table.id,
+               join_type=JoinType.outer),
+          Join(table=state_table,
+               criterion=district_table.state_id == state_table.id),
+      ),
+
+      fields=(
+          Field('political_party',
+                label='Party',
+                definition=politicians_table.political_party,
+                data_type=DataType.text),
+          Field('candidate-name',
+                label='Candidate Name',
+                definition=politicians_table.candidate_name,
+                data_type=DataType.text),
+          Field('state',
+                label='State',
+                definition=state_table.state_name,
+                data_type=DataType.text),
+          Field('political_party_case',
+                label='Party',
+                definition=mock_case,
+                data_type=DataType.text),
       ),
 )
 

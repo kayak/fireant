@@ -26,7 +26,7 @@ class TestVertica(TestCase):
             mock_vertica.connect.return_value = 'OK'
 
             vertica = VerticaDatabase('test_host', 1234, 'test_database',
-                              'test_user', 'password')
+                                      'test_user', 'password')
             result = vertica.connect()
 
         self.assertEqual('OK', result)
@@ -91,3 +91,10 @@ class TestVertica(TestCase):
 
         self.assertEqual('TIMESTAMPADD(\'year\',1,"date")', str(result))
 
+    # noinspection SqlDialectInspection,SqlNoDataSourceInspection
+    @patch.object(VerticaDatabase, 'fetch')
+    def test_get_column_definitions(self, mock_fetch):
+        VerticaDatabase().get_column_definitions('test_schema', 'test_table')
+
+        mock_fetch.assert_called_once_with('SELECT DISTINCT "column_name","data_type" FROM "columns" '
+                                           'WHERE "table_schema"=\'test_schema\' AND "table_name"=\'test_table\'')

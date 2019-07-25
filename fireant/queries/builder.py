@@ -4,6 +4,9 @@ from typing import (
 )
 
 import pandas as pd
+import copy
+
+from pypika import Order
 
 from fireant.dataset.fields import Field
 from fireant.dataset.totals import scrub_totals_from_share_results
@@ -14,7 +17,6 @@ from fireant.utils import (
     alias_selector,
     immutable,
 )
-from pypika import Order
 from . import special_cases
 from .execution import fetch_data
 from .field_helper import make_orders_for_dimensions
@@ -283,7 +285,9 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
     """
 
     def __init__(self, dataset, dimension):
-        super(DimensionChoicesQueryBuilder, self).__init__(dataset, dataset.hint_table or dataset.table)
+
+        super(DimensionChoicesQueryBuilder, self).__init__(dataset, dataset.table)
+
         self._dimensions.append(dimension)
 
         # TODO remove after 3.0.0
@@ -297,16 +301,46 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
         Serializes this query builder as a set of SQL queries.  This method will always return a list of one query since
         only one query is required to retrieve dimension choices.
 
-        This function only handles dimensions (select+group by) and filtering (where/having), which is everything needed
-        for the query to fetch choices for dimensions.
-
         The slicer query extends this with metrics, references, and totals.
         """
+
+        def in_hint_table(dim):
+            return all(dim_field.name in hint_dimensions for dim_field in dim.definition.fields())
+
+        # Fetch hint table columns
+        hint_dimensions = self.dataset.database.get_column_definitions(
+              self.dataset.hint_table._schema._name,
+              self.dataset.hint_table._table_name
+        ) if self.dataset.hint_table else []
+
+        dimension = self._dimensions[0]
+
+        # All definitions of dimension have to exist in hint table
+        is_hint_dimension = in_hint_table(dimension)
+
+        table = self.dataset.hint_table if is_hint_dimension else self.dataset.table
+        joins = () if is_hint_dimension else self.dataset.joins
+        filters = self._filters
+
+        if is_hint_dimension:
+            dimension = copy.deepcopy(dimension)  # Prevent definition changes to the original dimension
+
+            for dimension_field in dimension.definition.fields():
+                dimension_field.table = dimension_field.for_(table).table
+
+            filters = [hint_filter
+                       for hint_filter in filters
+                       if in_hint_table(hint_filter)]
+
+            for hint_filter in filters:
+                for field in hint_filter.definition.fields():
+                    field.table = field.for_(self.dataset.hint_table).table
+
         query = make_slicer_query(database=self.dataset.database,
-                                  base_table=self.table,
-                                  joins=self.dataset.joins,
-                                  dimensions=self._dimensions,
-                                  filters=self._filters) \
+                                  base_table=table,
+                                  joins=joins,
+                                  dimensions=[dimension, *self._dimensions[1:]],
+                                  filters=filters) \
             .limit(self._limit) \
             .offset(self._offset)
 
@@ -362,7 +396,7 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
 
 class DimensionLatestQueryBuilder(QueryBuilder):
     def __init__(self, dataset):
-        super(DimensionLatestQueryBuilder, self).__init__(dataset, dataset.hint_table or dataset.table)
+        super(DimensionLatestQueryBuilder, self).__init__(dataset, dataset.table)
 
     @immutable
     def __call__(self, dimension: Field, *dimensions: Field):

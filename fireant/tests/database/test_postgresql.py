@@ -30,8 +30,8 @@ class TestPostgreSQL(TestCase):
 
         self.assertEqual('OK', result)
         mock_postgresql.connect.assert_called_once_with(
-            host='test_host', port=1234, dbname='test_database',
-            user='test_user', password='password',
+              host='test_host', port=1234, dbname='test_database',
+              user='test_user', password='password',
         )
 
     def test_trunc_hour(self):
@@ -88,3 +88,13 @@ class TestPostgreSQL(TestCase):
         result = self.database.date_add(Field('date'), 'year', 1)
 
         self.assertEqual('DATE_ADD(\'year\',1,"date")', str(result))
+
+    # noinspection SqlDialectInspection,SqlNoDataSourceInspection
+    @patch.object(PostgreSQLDatabase, 'fetch')
+    def test_get_column_definitions(self, mock_fetch):
+        PostgreSQLDatabase().get_column_definitions('test_schema', 'test_table')
+
+        mock_fetch.assert_called_once_with('SELECT DISTINCT "column_name","data_type" ' \
+                                           'FROM "INFORMATION_SCHEMA"."columns" ' \
+                                           'WHERE "table_schema"=\'test_schema\' AND "table_name"=\'test_table\' ' \
+                                           'ORDER BY "column_name"')

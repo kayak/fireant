@@ -16,3 +16,6 @@ class RedshiftDatabase(PostgreSQLDatabase):
         super(RedshiftDatabase, self).__init__(host, port, database, user, password,
                                                max_processes=max_processes,
                                                cache_middleware=cache_middleware)
+
+    def get_column_definitions(self, schema=None, table=None):
+        pass
