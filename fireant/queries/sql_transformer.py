@@ -49,7 +49,6 @@ def make_slicer_query_with_totals_and_references(database,
     :param filters:
     :param references:
     :param orders:
-    :param apply_filter_to_totals:
     :param share_dimensions:
     :return:
     """
@@ -137,7 +136,7 @@ def make_slicer_query(database: Database,
     :param dimensions:
         A collection of dimensions to use in the query.
     :param metrics:
-        A collection of metircs to use in the query.
+        A collection of metrics to use in the query.
     :param filters:
         A collection of filters to apply to the query.
     :param orders:

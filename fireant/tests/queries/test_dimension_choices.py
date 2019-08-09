@@ -29,87 +29,6 @@ class DimensionsChoicesQueryBuilderTests(TestCase):
                          'FROM "politics"."politician" '
                          'GROUP BY "$political_party"', str(query))
 
-    @patch.object(mock_hint_dataset.database, 'get_column_definitions',
-                  return_value=[['political_party', 'varchar(128)']])
-    def test_query_choices_for_field_with_hint_table(self, mock_get_column_definitions):
-        query = mock_hint_dataset.fields.political_party \
-            .choices \
-            .sql[0]
-
-        self.assertEqual('SELECT '
-                         '"political_party" "$political_party" '
-                         'FROM "politics"."politician_hints" '
-                         'GROUP BY "$political_party"', str(query))
-
-    @patch.object(mock_hint_dataset.database, 'get_column_definitions',
-                  return_value=[['candidate_name', 'varchar(128)']])
-    def test_query_choices_for_field_with_display_and_incomplete_hint_table(self, mock_get_column_definitions):
-        query = mock_hint_dataset.fields.candidate_name \
-            .choices \
-            .sql[0]
-
-        self.assertEqual('SELECT '
-                         '"candidate_name" "$candidate_name","candidate_name_display" "$candidate_name_display" '
-                         'FROM "politics"."politician" '
-                         'GROUP BY "$candidate_name","$candidate_name_display"', str(query))
-
-    def test_query_choices_for_field_with_empty_hint_table(self):
-        query = mock_hint_dataset.fields.political_party \
-            .choices \
-            .sql[0]
-
-        self.assertEqual('SELECT '
-                         '"political_party" "$political_party" '
-                         'FROM "politics"."politician" '
-                         'GROUP BY "$political_party"', str(query))
-
-    @patch.object(mock_hint_dataset.database, 'get_column_definitions',
-                  return_value=[['political_party', 'varchar(128)'], ['state_name', 'varchar(128)']])
-    def test_query_choices_for_case_field_with_complete_hint_table(self, mock_get_column_definition):
-        query = mock_hint_dataset.fields.political_party_case \
-            .choices \
-            .sql[0]
-
-        self.assertEqual('SELECT CASE '
-                         'WHEN "political_party"=\'Democrat\' THEN \'Democrat\' '
-                         'WHEN "state_name"=\'California\' THEN \'California\' '
-                         'ELSE \'\' END '
-                         '"$political_party_case" '
-                         'FROM "politics"."politician_hints" '
-                         'GROUP BY "$political_party_case"', str(query))
-
-    @patch.object(mock_hint_dataset.database, 'get_column_definitions',
-                  return_value=[['political_party', 'varchar(128)']])
-    def test_query_choices_for_case_field_with_incomplete_hint_table(self, mock_get_column_definition):
-        query = mock_hint_dataset.fields.political_party_case \
-            .choices \
-            .sql[0]
-
-        self.assertEqual('SELECT CASE '
-                         'WHEN "politician"."political_party"=\'Democrat\' THEN \'Democrat\' '
-                         'WHEN "state"."state_name"=\'California\' THEN \'California\' '
-                         'ELSE \'\' END '
-                         '"$political_party_case" '
-                         'FROM "politics"."politician" '
-                         'FULL OUTER JOIN "locations"."district" ON "politician"."district_id"="district"."id" '
-                         'JOIN "locations"."state" ON "district"."state_id"="state"."id" '
-                         'GROUP BY "$political_party_case"', str(query))
-
-    @patch.object(mock_hint_dataset.database, 'get_column_definitions',
-                  return_value=[['political_party', 'varchar(128)'], ['candidate_name', 'varchar(128)']])
-    def test_query_choices_for_field_with_hint_table_and_filters(self, mock_get_column_definition):
-        query = mock_hint_dataset.fields.political_party \
-            .choices \
-            .filter(mock_hint_dataset.fields.candidate_name.isin(['Bill Clinton', 'Bob Dole'])) \
-            .filter(mock_hint_dataset.fields['state'].isin(['Texas', 'California'])) \
-            .sql[0]
-
-        self.assertEqual('SELECT '
-                         '"political_party" "$political_party" '
-                         'FROM "politics"."politician_hints" '
-                         'WHERE "candidate_name" IN (\'Bill Clinton\',\'Bob Dole\') '
-                         'GROUP BY "$political_party"', str(query))
-
     def test_query_choices_for_field_with_join(self):
         query = mock_dataset.fields['district-name'] \
             .choices \
@@ -134,6 +53,73 @@ class DimensionsChoicesQueryBuilderTests(TestCase):
                          'WHERE "political_party" IN (\'d\',\'r\') '
                          'GROUP BY "$candidate-name"', str(query))
 
+
+class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
+    def test_query_choices_for_dataset_with_hint_table(self):
+        query = mock_hint_dataset.fields.political_party \
+            .choices \
+            .sql[0]
+
+        self.assertEqual('SELECT '
+                         '"political_party" "$political_party" '
+                         'FROM "politics"."hints" '
+                         'GROUP BY "$political_party"', str(query))
+
+    @patch.object(mock_hint_dataset.database, 'get_column_definitions',
+                  return_value=[['candidate_name', 'varchar(128)'], ['candidate_name_display', 'varchar(128)']])
+    def test_query_choices_for_field_with_display_hint_table(self, mock_get_column_definitions):
+        query = mock_hint_dataset.fields.candidate_name \
+            .choices \
+            .sql[0]
+
+        self.assertEqual('SELECT '
+                         '"candidate_name" "$candidate_name","candidate_name_display" "$candidate_name_display" '
+                         'FROM "politics"."hints" '
+                         'GROUP BY "$candidate_name","$candidate_name_display"', str(query))
+
+    @patch.object(mock_hint_dataset.database, 'get_column_definitions',
+                  return_value=[['political_party', 'varchar(128)'], ['state_id', 'varchar(128)']])
+    def test_query_choices_for_filters_from_joins(self, mock_get_column_definition):
+        query = mock_hint_dataset.fields.political_party \
+            .choices \
+            .filter(mock_hint_dataset.fields['district-name'].isin(['Manhattan'])) \
+            .filter(mock_hint_dataset.fields['state'].isin(['Texas'])) \
+            .sql[0]
+
+        self.assertEqual('SELECT '
+                         '"hints"."political_party" "$political_party" '
+                         'FROM "politics"."hints" '
+                         'JOIN "locations"."state" ON "hints"."state_id"="state"."id" '
+                         'WHERE "state"."state_name" IN (\'Texas\') '
+                         'GROUP BY "$political_party"', str(query))
+
+    @patch.object(mock_hint_dataset.database, 'get_column_definitions',
+                  return_value=[['political_party', 'varchar(128)'], ['candidate_name', 'varchar(128)']])
+    def test_query_choices_for_filters_from_base(self, mock_get_column_definition):
+        query = mock_hint_dataset.fields.political_party \
+            .choices \
+            .filter(mock_hint_dataset.fields.candidate_name.isin(['Bill Clinton'])) \
+            .filter(mock_hint_dataset.fields['election-year'].isin([1992])) \
+            .sql[0]
+
+        self.assertEqual('SELECT '
+                         '"political_party" "$political_party" '
+                         'FROM "politics"."hints" '
+                         'WHERE "candidate_name" IN (\'Bill Clinton\') '
+                         'GROUP BY "$political_party"', str(query))
+
+    @patch.object(mock_hint_dataset.database, 'get_column_definitions',
+                  return_value=[['political_party', 'varchar(128)']])
+    def test_query_choices_for_case_filter(self, mock_get_column_definition):
+        query = mock_hint_dataset.fields.political_party \
+            .choices \
+            .filter(mock_hint_dataset.fields.political_party_case.isin(['Democrat', 'Bill Clinton'])) \
+            .sql[0]
+
+        self.assertEqual('SELECT '
+                         '"political_party" "$political_party" '
+                         'FROM "politics"."hints" '
+                         'GROUP BY "$political_party"', str(query))
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 @patch('fireant.queries.builder.fetch_data')

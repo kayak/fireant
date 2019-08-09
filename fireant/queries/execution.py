@@ -32,7 +32,7 @@ def fetch_data(database: Database,
                dimensions: Iterable[Field],
                share_dimensions: Iterable[Field] = (),
                reference_groups=()):
-    iterable = [(str(query.limit(int(database.max_result_set_size))), database)
+    iterable = [(str(query.limit(min(query._limit or float("inf"), database.max_result_set_size))), database)
                 for query in queries]
 
     with ThreadPool(processes=database.max_processes) as pool:

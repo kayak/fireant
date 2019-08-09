@@ -72,13 +72,10 @@ class VerticaDatabase(Database):
         """
         table_columns = Table('columns')
 
-        table_query = VerticaQuery.from_(table_columns)
-
-        if table and schema:
-            table_query = table_query \
-                .select(table_columns.column_name, table_columns.data_type) \
-                .where((table_columns.table_schema == schema) & (table_columns.field('table_name') == table)) \
-                .distinct()
+        table_query = VerticaQuery.from_(table_columns) \
+            .select(table_columns.column_name, table_columns.data_type) \
+            .where((table_columns.table_schema == schema) & (table_columns.field('table_name') == table)) \
+            .distinct()
 
         return self.fetch(str(table_query))
 

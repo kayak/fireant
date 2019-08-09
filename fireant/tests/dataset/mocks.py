@@ -35,7 +35,7 @@ class TestDatabase(VerticaDatabase):
 
 test_database = TestDatabase()
 politicians_table = Table('politician', schema='politics')
-politicians_hint_table = Table('politician_hints', schema='politics')
+politicians_hint_table = Table('hints', schema='politics')
 voters_table = Table('voter', schema='politics')
 state_table = Table('state', schema='locations')
 district_table = Table('district', schema='locations')
@@ -139,7 +139,7 @@ mock_dataset = DataSet(
 
 mock_case = Case() \
     .when(politicians_table.political_party == "Democrat", "Democrat") \
-    .when(state_table.state_name == "California", "California") \
+    .when(politicians_table.candidate_name == "Bill Clinton", "Bill Clinton") \
     .else_("")
 
 mock_hint_dataset = DataSet(
@@ -152,7 +152,7 @@ mock_hint_dataset = DataSet(
                criterion=politicians_table.district_id == district_table.id,
                join_type=JoinType.outer),
           Join(table=state_table,
-               criterion=district_table.state_id == state_table.id),
+               criterion=politicians_table.state_id == state_table.id),
       ),
 
       fields=(
@@ -164,9 +164,13 @@ mock_hint_dataset = DataSet(
                 label='Candidate Name',
                 definition=politicians_table.candidate_name,
                 data_type=DataType.text),
-          Field('state',
-                label='State',
-                definition=state_table.state_name,
+          Field('election-year',
+                label='Election Year',
+                definition=politicians_table.election_year,
+                data_type=DataType.number),
+          Field('district-name',
+                label='District Name',
+                definition=district_table.district_name,
                 data_type=DataType.text),
           Field('candidate_name_display',
                 label='Candidate Name Display',
@@ -175,6 +179,10 @@ mock_hint_dataset = DataSet(
           Field('political_party_case',
                 label='Party',
                 definition=mock_case,
+                data_type=DataType.text),
+          Field('state',
+                label='State',
+                definition=state_table.state_name,
                 data_type=DataType.text),
       ),
 )
