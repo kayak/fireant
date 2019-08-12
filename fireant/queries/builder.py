@@ -18,14 +18,17 @@ from fireant.utils import (
 )
 from . import special_cases
 from .execution import fetch_data
-from .field_helper import make_orders_for_dimensions
+from .field_helper import (
+    make_orders_for_dimensions,
+    make_term_for_dimension,
+)
 from .finders import (
     find_and_group_references_for_dimensions,
     find_and_replace_reference_dimensions,
+    find_joins_for_tables,
     find_metrics_for_widgets,
     find_operations_for_widgets,
     find_share_dimensions,
-    find_joins_for_tables,
 )
 from .pagination import paginate
 from .sql_transformer import (
@@ -338,6 +341,21 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
 
         return filters
 
+    def _make_terms_for_hint_dimensions(self):
+        """
+        Makes a list pypika terms using the hint table instead of their original table.
+
+        :return:
+            A list of pypika terms.
+        """
+        dimension_terms = []
+        for dimension in self._dimensions:
+            dimension_term = make_term_for_dimension(dimension, self.dataset.database.trunc_date)
+            dimension_term = dimension_term.replace_table(dimension_term.table, self.dataset.hint_table)
+            dimension_terms.append(dimension_term)
+
+        return dimension_terms
+
     @property
     def sql(self):
         """
@@ -346,17 +364,27 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
 
         The slicer query extends this with metrics, references, and totals.
         """
-        filters = self._extract_hint_filters() if self.dataset.hint_table else self._filters
+        dimensions = [] \
+            if self.dataset.hint_table \
+            else self._dimensions
+
+        filters = self._extract_hint_filters() \
+            if self.dataset.hint_table \
+            else self._filters
 
         query = make_slicer_query(database=self.dataset.database,
                                   base_table=self.dataset.table,
                                   joins=self.dataset.joins,
-                                  dimensions=self._dimensions,
+                                  dimensions=dimensions,
                                   filters=filters) \
             .limit(self._limit) \
             .offset(self._offset)
 
         if self.dataset.hint_table:
+            hint_dimension_terms = self._make_terms_for_hint_dimensions()
+            query = query \
+                .select(*hint_dimension_terms) \
+                .groupby(*hint_dimension_terms)
             query = query.replace_table(self.dataset.table, self.dataset.hint_table)
 
         return [query]

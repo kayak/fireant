@@ -121,6 +121,48 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
                          'FROM "politics"."hints" '
                          'GROUP BY "$political_party"', str(query))
 
+    @patch.object(mock_hint_dataset.database, 'get_column_definitions',
+                  return_value=[['district_name', 'varchar(128)']])
+    def test_query_choices_for_join_dimension(self, mock_get_column_definition):
+        query = mock_hint_dataset.fields['district-name'] \
+            .choices \
+            .sql[0]
+
+        self.assertEqual('SELECT '
+                         '"district_name" "$district-name" '
+                         'FROM "politics"."hints" '
+                         'GROUP BY "$district-name"', str(query))
+
+    @patch.object(mock_hint_dataset.database, 'get_column_definitions',
+                  return_value=[['district_name', 'varchar(128)'], ['candidate_name', 'varchar(128)']])
+    def test_query_choices_for_join_dimension_with_filter_from_base(self, mock_get_column_definition):
+        query = mock_hint_dataset.fields['district-name'] \
+            .choices \
+            .filter(mock_hint_dataset.fields.candidate_name.isin(['Bill Clinton'])) \
+            .sql[0]
+
+        self.assertEqual('SELECT '
+                         '"district_name" "$district-name" '
+                         'FROM "politics"."hints" '
+                         'WHERE "candidate_name" IN (\'Bill Clinton\') '
+                         'GROUP BY "$district-name"', str(query))
+
+    @patch.object(mock_hint_dataset.database, 'get_column_definitions',
+                  return_value=[['district_name', 'varchar(128)'], ['district_id', 'varchar(128)']])
+    def test_query_choices_for_join_dimension_with_filter_from_join(self, mock_get_column_definition):
+        query = mock_hint_dataset.fields['district-name'] \
+            .choices \
+            .filter(mock_hint_dataset.fields['district-name'].isin(['Manhattan'])) \
+            .sql[0]
+
+        self.assertEqual('SELECT '
+                         '"hints"."district_name" "$district-name" '
+                         'FROM "politics"."hints" '
+                         'FULL OUTER JOIN "locations"."district" ON "hints"."district_id"="district"."id" '
+                         'WHERE "district"."district_name" IN (\'Manhattan\') '
+                         'GROUP BY "$district-name"', str(query))
+
+
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 @patch('fireant.queries.builder.fetch_data')
 class DimensionsChoicesFetchTests(TestCase):
