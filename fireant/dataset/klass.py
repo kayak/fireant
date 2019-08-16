@@ -22,6 +22,7 @@ class _Container(object):
         )
         slicer.dimensions.my_dimension1
     """
+
     def __init__(self, items):
         self._items = items
         for item in items:
@@ -55,9 +56,7 @@ class DataSet(object):
     class Fields(_Container):
         pass
 
-    def __init__(self, table, database, joins=(), fields=(),
-                 hint_table=None,
-                 always_query_all_metrics=False):
+    def __init__(self, table, database, joins=(), fields=(), always_query_all_metrics=False):
         """
         Constructor for a slicer.  Contains all the fields to initialize the slicer.
 
@@ -75,12 +74,6 @@ class DataSet(object):
             A list of join descriptions for joining additional tables.  Joined tables are only used when querying a
             metric or dimension which requires it.
 
-        :param hint_table: (Optional)
-            A hint table used for querying dimension options.  If not present, the table will be used.  The hint_table
-            must have the same definition as the table omitting dimensions which do not have a set of options (such as
-            datetime or boolean dimensions) and the metrics.  This is provided to more efficiently query dimension
-            options.
-
         :param always_query_all_metrics: (Default: False)
             When true, all metrics will be included in database queries in order to increase cache hits.
         """
@@ -88,7 +81,6 @@ class DataSet(object):
         self.database = database
         self.joins = joins
 
-        self.hint_table = hint_table
         self.fields = DataSet.Fields(fields)
 
         # add query builder entry points

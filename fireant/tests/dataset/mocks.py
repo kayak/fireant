@@ -144,7 +144,6 @@ mock_case = Case() \
 
 mock_hint_dataset = DataSet(
       table=politicians_table,
-      hint_table=politicians_hint_table,
       database=test_database,
 
       joins=(
@@ -158,10 +157,12 @@ mock_hint_dataset = DataSet(
       fields=(
           Field('political_party',
                 label='Party',
+                hint_table=politicians_hint_table,
                 definition=politicians_table.political_party,
                 data_type=DataType.text),
           Field('candidate_name',
                 label='Candidate Name',
+                hint_table=politicians_hint_table,
                 definition=politicians_table.candidate_name,
                 data_type=DataType.text),
           Field('election-year',
@@ -170,6 +171,7 @@ mock_hint_dataset = DataSet(
                 data_type=DataType.number),
           Field('district-name',
                 label='District Name',
+                hint_table=politicians_hint_table,
                 definition=district_table.district_name,
                 data_type=DataType.text),
           Field('candidate_name_display',

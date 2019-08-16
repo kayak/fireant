@@ -299,6 +299,7 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
     def __init__(self, dataset, dimension):
         super(DimensionChoicesQueryBuilder, self).__init__(dataset, dataset.table)
 
+        self.hint_table = getattr(dimension, 'hint_table', None)
         self._dimensions.append(dimension)
 
         # TODO remove after 3.0.0
@@ -314,9 +315,7 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
             A list of filters.
         """
         base_table = self.dataset.table
-        hint_table = self.dataset.hint_table
-
-        hint_column_names = get_column_names(self.dataset.database, hint_table)
+        hint_column_names = get_column_names(self.dataset.database, self.hint_table)
 
         filters = []
         for filter_ in self._filters:
@@ -351,7 +350,7 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
         dimension_terms = []
         for dimension in self._dimensions:
             dimension_term = make_term_for_dimension(dimension, self.dataset.database.trunc_date)
-            dimension_term = dimension_term.replace_table(dimension_term.table, self.dataset.hint_table)
+            dimension_term = dimension_term.replace_table(dimension_term.table, self.hint_table)
             dimension_terms.append(dimension_term)
 
         return dimension_terms
@@ -365,11 +364,11 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
         The slicer query extends this with metrics, references, and totals.
         """
         dimensions = [] \
-            if self.dataset.hint_table \
+            if self.hint_table \
             else self._dimensions
 
         filters = self._extract_hint_filters() \
-            if self.dataset.hint_table \
+            if self.hint_table \
             else self._filters
 
         query = make_slicer_query(database=self.dataset.database,
@@ -380,12 +379,12 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
             .limit(self._limit) \
             .offset(self._offset)
 
-        if self.dataset.hint_table:
+        if self.hint_table:
             hint_dimension_terms = self._make_terms_for_hint_dimensions()
             query = query \
                 .select(*hint_dimension_terms) \
                 .groupby(*hint_dimension_terms)
-            query = query.replace_table(self.dataset.table, self.dataset.hint_table)
+            query = query.replace_table(self.dataset.table, self.hint_table)
 
         return [query]
 
@@ -403,14 +402,13 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
             A list of dict (JSON) objects containing the widget configurations.
         """
         query = add_hints(self.sql, hint)[0]
-
         dimension = self._dimensions[0]
         alias_definition = dimension.definition.as_(alias_selector(dimension.alias))
         dimension_definition = dimension.definition
 
-        if self.dataset.hint_table:
-            alias_definition = alias_definition.replace_table(self.dataset.table, self.dataset.hint_table)
-            dimension_definition = dimension.definition.replace_table(self.dataset.table, self.dataset.hint_table)
+        if self.hint_table:
+            alias_definition = alias_definition.replace_table(alias_definition.table, self.hint_table)
+            dimension_definition = dimension.definition.replace_table(dimension_definition.table, self.hint_table)
 
         if force_include:
             include = self.dataset.database.to_char(dimension_definition) \
