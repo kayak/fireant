@@ -1,10 +1,12 @@
 from pypika import (
     Dialects,
     MySQLQuery,
+    Table,
     enums,
     functions as fn,
     terms,
 )
+
 from .base import Database
 
 
@@ -93,3 +95,17 @@ class MySQLDatabase(Database):
         # adding an extra 's' as MySQL's interval doesn't work with 'year', 'week' etc, it expects a plural
         interval_term = terms.Interval(**{'{}s'.format(str(date_part)): interval, 'dialect': Dialects.MYSQL})
         return DateAdd(field, interval_term)
+
+    def get_column_definitions(self, schema, table):
+        """ Return a list of column name, column data type pairs """
+        columns = Table('columns', schema='INFORMATION_SCHEMA')
+
+        columns_query = MySQLQuery \
+            .from_(columns) \
+            .select(columns.column_name, columns.column_type) \
+            .where(columns.table_schema == schema) \
+            .where(columns.field('table_name') == table) \
+            .distinct() \
+            .orderby(columns.column_name)
+
+        return self.fetch(str(columns_query))

@@ -133,3 +133,9 @@ class TestSnowflake(TestCase):
         result = SnowflakeDatabase().date_add(Field('date'), 'year', 1)
 
         self.assertEqual('TIMESTAMPADD(\'year\',1,"date")', str(result))
+
+    @patch.object(SnowflakeDatabase, 'fetch')
+    def test_get_column_definitions(self, mock_fetch):
+        SnowflakeDatabase().get_column_definitions('test_schema', 'test_table')
+
+        mock_fetch.assert_called_once_with('DESCRIBE TABLE test_schema.test_table TYPE=COLUMNS')

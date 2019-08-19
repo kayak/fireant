@@ -71,6 +71,10 @@ class Field:
         A display value used for the metric. This is used for rendering the labels within the visualizations. If not
         set, the alias will be used as the default.
 
+    :param hint_table: (optional)
+        An optional table for fetching field choices. If this table is not set, the base table from the field
+        definition will be used.
+
     :param is_aggregate: (default: False)
         When True, the field's definition should be treated as an aggregate expression.
 
@@ -89,6 +93,7 @@ class Field:
                  definition,
                  data_type: DataType = DataType.number,
                  label=None,
+                 hint_table=None,
                  prefix: str = None,
                  suffix: str = None,
                  thousands: str = None,
@@ -100,6 +105,7 @@ class Field:
         self.label = label \
             if label is not None \
             else alias
+        self.hint_table = hint_table
         self.prefix = prefix
         self.suffix = suffix
         self.thousands = thousands

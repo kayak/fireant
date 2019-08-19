@@ -101,3 +101,13 @@ class TestMySQLDatabase(TestCase):
 
         to_char = db.to_char(Field('field'))
         self.assertEqual(str(to_char), 'CAST("field" AS CHAR)')
+
+    # noinspection SqlDialectInspection,SqlNoDataSourceInspection
+    @patch.object(MySQLDatabase, 'fetch')
+    def test_get_column_definitions(self, mock_fetch):
+        MySQLDatabase().get_column_definitions('test_schema', 'test_table')
+
+        mock_fetch.assert_called_once_with('SELECT DISTINCT `column_name`,`column_type` '
+                                           'FROM `INFORMATION_SCHEMA`.`columns` '
+                                           'WHERE `table_schema`=\'test_schema\' AND `table_name`=\'test_table\' '
+                                           'ORDER BY `column_name`')

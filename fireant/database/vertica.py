@@ -1,4 +1,5 @@
 from pypika import (
+    Table,
     VerticaQuery,
     functions as fn,
     terms,
@@ -60,3 +61,21 @@ class VerticaDatabase(Database):
 
     def date_add(self, field, date_part, interval):
         return fn.TimestampAdd(str(date_part), interval, field)
+
+    def get_column_definitions(self, schema, table):
+        """
+        Return schema information including column names and their data type
+
+        :param schema: the name of the schema if you would like to narrow the results down (String)
+        :param table: the name of the table if you would like to narrow the results down (String)
+        :return: List of column name, column data type pairs
+        """
+        table_columns = Table('columns')
+
+        table_query = VerticaQuery.from_(table_columns) \
+            .select(table_columns.column_name, table_columns.data_type) \
+            .where((table_columns.table_schema == schema) & (table_columns.field('table_name') == table)) \
+            .distinct()
+
+        return self.fetch(str(table_query))
+
