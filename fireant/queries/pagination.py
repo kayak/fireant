@@ -124,7 +124,14 @@ def _group_paginate(data_frame, start=None, end=None, orders=()):
         # there might be missing combinations of index values.
         dfx = df.reset_index(level=0, drop=True)
         value_in_index = sorted_dimension_values.isin(dfx.index)
-        index_slice = sorted_dimension_values[value_in_index]
+        index_slice = sorted_dimension_values[value_in_index].values
+
+        """
+        In the case of bool dimensions, convert index_slice to an array of literal `True`, because pandas `.loc` handles
+        lists of bool as a mask.
+        """
+        if bool in {type(x) for x in sorted_dimension_values}:
+            index_slice |= True
 
         # Need to include nulls so append them to the end of the sorted data frame
         isnull = _index_isnull(dfx)

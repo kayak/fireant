@@ -355,6 +355,10 @@ dimx2_date_str_df = mock_politics_database[[f('timestamp'), f('political_party')
     .groupby([f('timestamp'), f('political_party')]) \
     .sum()
 
+dimx2_date_bool_df = mock_politics_database[[f('timestamp'), f('winner'), f('votes')]] \
+    .groupby([f('timestamp'), f('winner')]) \
+    .sum()
+
 dimx2_date_num_df = mock_politics_database[[f('timestamp'), f('candidate-id'), f('votes'), f('wins')]] \
     .groupby([f('timestamp'), f('candidate-id')]) \
     .sum()
