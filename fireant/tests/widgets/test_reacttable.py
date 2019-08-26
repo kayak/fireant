@@ -13,6 +13,7 @@ from fireant.tests.dataset.mocks import (
     dimx0_metricx2_df,
     dimx1_date_df,
     dimx1_date_operation_df,
+    dimx1_none_df,
     dimx1_num_df,
     dimx1_str_df,
     dimx2_date_str_df,
@@ -21,7 +22,6 @@ from fireant.tests.dataset.mocks import (
     dimx2_date_str_totalsx2_df,
     dimx2_str_num_df,
     mock_dataset,
-    dimx1_none_df,
 )
 from fireant.widgets.base import ReferenceItem
 from fireant.widgets.reacttable import ReactTable
@@ -410,17 +410,18 @@ class ReactTableTransformerTests(TestCase):
                         {'Header': '2008-01-01', 'accessor': '$wins.2008-01-01T00:00:00'},
                         {'Header': '2012-01-01', 'accessor': '$wins.2012-01-01T00:00:00'},
                         {'Header': '2016-01-01', 'accessor': '$wins.2016-01-01T00:00:00'}],
-            'data': [{
-                '$political_party': {'raw': 'Democrat'},
-                '$wins': {
-                    '1996-01-01T00:00:00': {'display': '2', 'raw': 2.0},
-                    '2000-01-01T00:00:00': {'display': '0', 'raw': 0.0},
-                    '2004-01-01T00:00:00': {'display': '0', 'raw': 0.0},
-                    '2008-01-01T00:00:00': {'display': '2', 'raw': 2.0},
-                    '2012-01-01T00:00:00': {'display': '2', 'raw': 2.0},
-                    '2016-01-01T00:00:00': {'display': '0', 'raw': 0.0}
-                }
-            },
+            'data': [
+                {
+                    '$political_party': {'raw': 'Democrat'},
+                    '$wins': {
+                        '1996-01-01T00:00:00': {'display': '2', 'raw': 2.0},
+                        '2000-01-01T00:00:00': {'display': '0', 'raw': 0.0},
+                        '2004-01-01T00:00:00': {'display': '0', 'raw': 0.0},
+                        '2008-01-01T00:00:00': {'display': '2', 'raw': 2.0},
+                        '2012-01-01T00:00:00': {'display': '2', 'raw': 2.0},
+                        '2016-01-01T00:00:00': {'display': '0', 'raw': 0.0}
+                    }
+                },
                 {
                     '$political_party': {'raw': 'Independent'},
                     '$wins': {
@@ -431,7 +432,52 @@ class ReactTableTransformerTests(TestCase):
                         '2012-01-01T00:00:00': {'display': '', 'raw': None},
                         '2016-01-01T00:00:00': {'display': '', 'raw': None}
                     }
-                }]
+                }
+            ]
+        }, result)
+
+    def test_dimx2_pivot_dim1_with_sorting(self):
+        dimensions = [day(mock_dataset.fields.timestamp), mock_dataset.fields.political_party]
+        result = ReactTable(mock_dataset.fields.wins,
+                            pivot=[mock_dataset.fields.timestamp],
+                            sort=[0]) \
+            .transform(dimx2_date_str_df, mock_dataset, dimensions, [])
+
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
+
+        self.assertEqual({
+            'columns': [{'Header': 'Party', 'accessor': '$political_party'},
+                        {'Header': '1996-01-01', 'accessor': '$wins.1996-01-01T00:00:00'},
+                        {'Header': '2000-01-01', 'accessor': '$wins.2000-01-01T00:00:00'},
+                        {'Header': '2004-01-01', 'accessor': '$wins.2004-01-01T00:00:00'},
+                        {'Header': '2008-01-01', 'accessor': '$wins.2008-01-01T00:00:00'},
+                        {'Header': '2012-01-01', 'accessor': '$wins.2012-01-01T00:00:00'},
+                        {'Header': '2016-01-01', 'accessor': '$wins.2016-01-01T00:00:00'}],
+            'data': [
+                {
+                    '$political_party': {'raw': 'Democrat'},
+                    '$wins': {
+                        '1996-01-01T00:00:00': {'display': '2', 'raw': 2.0},
+                        '2000-01-01T00:00:00': {'display': '0', 'raw': 0.0},
+                        '2004-01-01T00:00:00': {'display': '0', 'raw': 0.0},
+                        '2008-01-01T00:00:00': {'display': '2', 'raw': 2.0},
+                        '2012-01-01T00:00:00': {'display': '2', 'raw': 2.0},
+                        '2016-01-01T00:00:00': {'display': '0', 'raw': 0.0}
+                    }
+                },
+                {
+                    '$political_party': {'raw': 'Independent'},
+                    '$wins': {
+                        '1996-01-01T00:00:00': {'display': '0', 'raw': 0.0},
+                        '2000-01-01T00:00:00': {'display': '', 'raw': None},
+                        '2004-01-01T00:00:00': {'display': '', 'raw': None},
+                        '2008-01-01T00:00:00': {'display': '', 'raw': None},
+                        '2012-01-01T00:00:00': {'display': '', 'raw': None},
+                        '2016-01-01T00:00:00': {'display': '', 'raw': None}
+                    }
+                }
+            ]
         }, result)
 
     def test_dimx2_pivot_dim2(self):
