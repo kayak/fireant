@@ -1,83 +1,211 @@
 from unittest import TestCase
+
+import numpy as np
+import pandas as pd
+from pandas.testing import assert_frame_equal
 from unittest.mock import (
+    ANY,
     Mock,
-    call,
     patch,
 )
 
-import fireant as f
+from fireant.queries.pagination import paginate
 from fireant.tests.dataset.mocks import (
-    ElectionOverElection,
-    mock_dataset,
+    dimx2_date_bool_df,
+    dimx2_date_str_df,
+    dimx2_str_num_df,
+    dimx3_date_str_str_df,
 )
-from fireant.utils import alias_selector
+from pypika import Order
+
+TS = '$timestamp'
+
+mock_table_widget = Mock()
+mock_table_widget.group_pagination = False
+
+mock_chart_widget = Mock()
+mock_chart_widget.group_pagination = True
+
+mock_dimension_definition = Mock()
+mock_dimension_definition.alias = '$political_party'
+
+mock_metric_definition = Mock()
+mock_metric_definition.alias = '$votes'
 
 
-@patch('fireant.queries.builder.scrub_totals_from_share_results', side_effect=lambda *args, **kwargs: args[0])
-@patch('fireant.queries.builder.paginate', side_effect=lambda *args, **kwargs: args[0])
-@patch('fireant.queries.builder.fetch_data')
-class QueryBuilderOperationsTests(TestCase):
-    def test_operations_evaluated(self, mock_fetch_data: Mock, *mocks):
-        mock_operation = Mock(name='mock_operation ', spec=f.Operation)
-        mock_operation.alias, mock_operation.definition = 'mock_operation', mock_dataset.table.abc
-        mock_operation.metrics = []
+class SimplePaginationTests(TestCase):
+    @patch('fireant.queries.pagination._simple_paginate')
+    def test_that_with_no_widgets_using_group_pagination_that_simple_pagination_is_applied(self, mock_paginate):
+        paginate(dimx2_date_str_df, [mock_table_widget])
 
-        mock_widget = f.Widget(mock_operation)
-        mock_widget.transform = Mock()
+        mock_paginate.assert_called_once_with(ANY, ANY, ANY, ANY)
 
-        mock_df = {}
-        mock_fetch_data.return_value = mock_df
+    @patch('fireant.queries.pagination._simple_paginate')
+    def test_that_with_group_pagination_and_one_dimension_that_simple_pagination_is_applied(self, mock_paginate):
+        paginate(dimx2_str_num_df, [mock_table_widget])
 
-        # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
-        mock_dataset.query \
-            .dimension(mock_dataset.fields.timestamp) \
-            .widget(mock_widget) \
-            .fetch()
+        mock_paginate.assert_called_once_with(ANY, ANY, ANY, ANY)
 
-        mock_operation.apply.assert_called_once_with(mock_df, None)
+    def test_paginate_with_limit_slice_data_frame_to_limit(self):
+        paginated = paginate(dimx2_date_str_df, [mock_table_widget], limit=5)
 
-    def test_operations_evaluated_for_each_reference(self, mock_fetch_data: Mock, *mocks):
-        eoe = ElectionOverElection(mock_dataset.fields.timestamp)
+        expected = dimx2_date_str_df[:5]
+        assert_frame_equal(expected, paginated)
 
-        mock_operation = Mock(name='mock_operation ', spec=f.Operation)
-        mock_operation.alias, mock_operation.definition = 'mock_operation', mock_dataset.table.abc
-        mock_operation.metrics = []
+    def test_paginate_with_offset_slice_data_frame_from_offset(self):
+        paginated = paginate(dimx2_date_str_df, [mock_table_widget], offset=5)
 
-        mock_widget = f.Widget(mock_operation)
-        mock_widget.transform = Mock()
+        expected = dimx2_date_str_df[5:]
+        assert_frame_equal(expected, paginated)
 
-        mock_df = {}
-        mock_fetch_data.return_value = mock_df
+    def test_paginate_with_limit_and_offset_slice_data_frame_from_offset_to_offset_plus_limit(self):
+        paginated = paginate(dimx2_date_str_df, [mock_table_widget], limit=5, offset=5)
 
-        # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
-        mock_dataset.query \
-            .dimension(mock_dataset.fields.timestamp) \
-            .reference(eoe) \
-            .widget(mock_widget) \
-            .fetch()
+        expected = dimx2_date_str_df[5:10]
+        assert_frame_equal(expected, paginated)
 
-        mock_operation.apply.assert_has_calls([
-            call(mock_df, None),
-            call(mock_df, eoe),
-        ])
+    def test_apply_sort_with_one_order_dimension_asc(self):
+        paginated = paginate(dimx2_date_str_df, [mock_table_widget], orders=[(mock_dimension_definition, Order.asc)])
 
-    def test_operations_results_stored_in_data_frame(self, mock_fetch_data: Mock, *mocks):
-        mock_operation = Mock(name='mock_operation ', spec=f.Operation)
-        mock_operation.alias, mock_operation.definition = 'mock_operation', mock_dataset.table.abc
-        mock_operation.metrics = []
+        expected = dimx2_date_str_df.sort_values(by=[mock_dimension_definition.alias], ascending=True)
+        assert_frame_equal(expected, paginated)
 
-        mock_widget = f.Widget(mock_operation)
-        mock_widget.transform = Mock()
+    def test_apply_sort_with_one_order_dimension_desc(self):
+        paginated = paginate(dimx2_date_str_df, [mock_table_widget], orders=[(mock_dimension_definition, Order.desc)])
 
-        mock_df = {}
-        mock_fetch_data.return_value = mock_df
+        expected = dimx2_date_str_df.sort_values(by=[mock_dimension_definition.alias], ascending=False)
+        assert_frame_equal(expected, paginated)
 
-        # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
-        mock_dataset.query \
-            .dimension(mock_dataset.fields.timestamp) \
-            .widget(mock_widget) \
-            .fetch()
+    def test_apply_sort_with_one_order_metric_asc(self):
+        paginated = paginate(dimx2_date_str_df, [mock_table_widget], orders=[(mock_metric_definition, Order.asc)])
 
-        f_op_key = alias_selector(mock_operation.alias)
-        self.assertIn(f_op_key, mock_df)
-        self.assertEqual(mock_df[f_op_key], mock_operation.apply.return_value)
+        expected = dimx2_date_str_df.sort_values(by=[mock_metric_definition.alias], ascending=True)
+        assert_frame_equal(expected, paginated)
+
+    def test_apply_sort_with_one_order_metric_desc(self):
+        paginated = paginate(dimx2_date_str_df, [mock_table_widget], orders=[(mock_metric_definition, Order.desc)])
+
+        expected = dimx2_date_str_df.sort_values(by=[mock_metric_definition.alias], ascending=False)
+        assert_frame_equal(expected, paginated)
+
+    def test_apply_sort_with_multiple_orders(self):
+        paginated = paginate(dimx2_date_str_df, [mock_table_widget], orders=[(mock_dimension_definition, Order.asc),
+                                                                             (mock_metric_definition, Order.desc)])
+
+        expected = dimx2_date_str_df.sort_values(by=[mock_dimension_definition.alias, mock_metric_definition.alias],
+                                                 ascending=[True, False])
+        assert_frame_equal(expected, paginated)
+
+    def test_apply_sort_before_slice(self):
+        paginated = paginate(dimx2_date_str_df, [mock_table_widget],
+                             orders=[(mock_metric_definition, Order.asc)],
+                             limit=5, offset=5)
+
+        expected = dimx2_date_str_df.sort_values(by=[mock_metric_definition.alias], ascending=True)[5:10]
+        assert_frame_equal(expected, paginated)
+
+
+class GroupPaginationTests(TestCase):
+    @patch('fireant.queries.pagination._group_paginate')
+    def test_with_one_widget_using_group_pagination_that_group_pagination_is_applied(self, mock_paginate):
+        paginate(dimx2_date_str_df, [mock_chart_widget, mock_table_widget])
+
+        mock_paginate.assert_called_once_with(ANY, ANY, ANY, ANY)
+
+    def test_paginate_with_limit_slice_data_frame_to_limit_in_each_group(self):
+        paginated = paginate(dimx2_date_str_df, [mock_chart_widget], limit=2)
+
+        index = dimx2_date_str_df.index
+        reindex = pd.MultiIndex.from_product([index.levels[0],
+                                              index.levels[1][:2]],
+                                             names=index.names)
+        expected = dimx2_date_str_df.reindex(reindex) \
+            .dropna() \
+            .astype(np.int64)
+        assert_frame_equal(expected, paginated)
+
+    def test_paginate_with_offset_slice_data_frame_from_offset_in_each_group(self):
+        paginated = paginate(dimx2_date_str_df, [mock_chart_widget], offset=2)
+
+        index = dimx2_date_str_df.index
+        reindex = pd.MultiIndex.from_product([index.levels[0],
+                                              index.levels[1][2:]],
+                                             names=index.names)
+        expected = dimx2_date_str_df.reindex(reindex)
+        assert_frame_equal(expected, paginated)
+
+    def test_paginate_with_limit_and_offset_slice_data_frame_from_offset_to_offset_plus_limit_in_each_group(self):
+        paginated = paginate(dimx2_date_str_df, [mock_chart_widget], limit=1, offset=1)
+
+        index = dimx2_date_str_df.index
+        reindex = pd.MultiIndex.from_product([index.levels[0],
+                                              index.levels[1][1:2]],
+                                             names=index.names)
+        expected = dimx2_date_str_df.reindex(reindex) \
+            .dropna() \
+            .astype(np.int64)
+        assert_frame_equal(expected, paginated)
+
+    def test_apply_sort_with_one_order_dimension_asc(self):
+        paginated = paginate(dimx2_date_str_df, [mock_chart_widget], orders=[(mock_dimension_definition, Order.asc)])
+
+        expected = dimx2_date_str_df.sort_values(by=[TS, mock_dimension_definition.alias],
+                                                 ascending=True)
+        assert_frame_equal(expected, paginated)
+
+    def test_apply_sort_with_one_order_dimension_desc(self):
+        paginated = paginate(dimx2_date_str_df, [mock_chart_widget], orders=[(mock_dimension_definition, Order.desc)])
+
+        expected = dimx2_date_str_df.sort_values(by=[TS, mock_dimension_definition.alias],
+                                                 ascending=(True, False))
+        assert_frame_equal(expected, paginated)
+
+    def test_apply_sort_with_one_order_metric_asc(self):
+        paginated = paginate(dimx2_date_str_df, [mock_chart_widget], orders=[(mock_metric_definition, Order.asc)])
+
+        expected = dimx2_date_str_df.iloc[[1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]]
+        assert_frame_equal(expected, paginated)
+
+    def test_apply_sort_with_one_order_metric_desc(self):
+        paginated = paginate(dimx2_date_str_df, [mock_chart_widget], orders=[(mock_metric_definition, Order.desc)])
+
+        expected = dimx2_date_str_df.iloc[[2, 0, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11]]
+        assert_frame_equal(expected, paginated)
+
+    def test_apply_sort_multiple_levels_df(self):
+        paginated = paginate(dimx3_date_str_str_df, [mock_chart_widget], orders=[(mock_metric_definition, Order.asc)])
+
+        sorted_groups = dimx3_date_str_str_df.groupby(level=[1, 2]).sum().sort_values(by='$votes', ascending=True).index
+        expected = dimx3_date_str_str_df \
+            .groupby(level=0) \
+            .apply(lambda df: df.reset_index(level=0, drop=True).reindex(sorted_groups)) \
+            .dropna()
+        expected[['$votes', '$wins']] = expected[['$votes', '$wins']].astype(np.int64)
+        assert_frame_equal(expected, paginated)
+
+    def test_apply_sort_with_multiple_orders(self):
+        paginated = paginate(dimx2_date_str_df, [mock_chart_widget], orders=[(mock_dimension_definition, Order.asc),
+                                                                             (mock_metric_definition, Order.desc)])
+
+        expected = dimx2_date_str_df.sort_values(by=[TS, mock_dimension_definition.alias, mock_metric_definition.alias],
+                                                 ascending=[True, True, False])
+        assert_frame_equal(expected, paginated)
+
+    def test_apply_sort_before_slice(self):
+        paginated = paginate(dimx2_date_str_df, [mock_chart_widget],
+                             limit=1, offset=1, orders=[(mock_metric_definition, Order.asc)])
+
+        expected = dimx2_date_str_df.iloc[[0, 3, 5, 7, 9, 11]]
+        assert_frame_equal(expected, paginated)
+
+    def test_group_paginate_with_bool_dims__no_pagination(self):
+        # This test does not apply any pagination but checks that none of the dimension values get lost
+        expected = dimx2_date_bool_df
+        paginated = paginate(dimx2_date_bool_df, [mock_chart_widget])
+        assert_frame_equal(expected, paginated)
+
+    def test_group_paginate_with_bool_dims__paginate_single_value(self):
+        # This test does not apply any pagination but checks that none of the dimension values get lost
+        paginated = paginate(dimx2_date_bool_df, [mock_chart_widget], limit=1)
+        expected = dimx2_date_bool_df.loc[(slice(None), False), :]
+        assert_frame_equal(expected, paginated)
