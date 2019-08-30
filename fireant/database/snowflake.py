@@ -2,10 +2,10 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 
 from pypika import (
-    VerticaQuery,
     functions as fn,
     terms,
 )
+from pypika.dialects import SnowflakeQuery
 from .base import Database
 
 try:
@@ -18,7 +18,7 @@ IGNORED_SCHEMAS = {'INFORMATION_SCHEMA'}
 
 class Trunc(terms.Function):
     """
-    Wrapper for Vertica TRUNC function for truncating dates.
+    Wrapper for TRUNC function for truncating dates.
     """
 
     def __init__(self, field, date_format, alias=None):
@@ -31,11 +31,11 @@ class Trunc(terms.Function):
 
 class SnowflakeDatabase(Database):
     """
-    Vertica client that uses the vertica_python driver.
+    Snowflake client.
     """
 
     # The pypika query class to use for constructing queries
-    query_cls = VerticaQuery
+    query_cls = SnowflakeQuery
 
     DATETIME_INTERVALS = {
         'hour': 'HH',
