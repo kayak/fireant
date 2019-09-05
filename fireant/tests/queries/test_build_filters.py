@@ -198,6 +198,43 @@ class FilterDateFieldTests(TestCase):
         with self.assertRaises(DataSetFilterException):
             ds.fields.date.is_(True)
 
+    def test_void_filter_with_no_other_filters(self):
+        queries = ds.query \
+            .widget(f.Pandas(ds.fields.aggr_number)) \
+            .filter(ds.fields.date.void()) \
+            .sql
+
+        self.assertEqual(len(queries), 1)
+        self.assertEqual('SELECT '
+                         'SUM("number") "$aggr_number" '
+                         'FROM "test"', str(queries[0]))
+
+    def test_void_filter_with_a_dimension_filter(self):
+        queries = ds.query \
+            .widget(f.Pandas(ds.fields.aggr_number)) \
+            .filter(ds.fields.date == '2019-03-06') \
+            .filter(ds.fields.date.void()) \
+            .sql
+
+        self.assertEqual(len(queries), 1)
+        self.assertEqual('SELECT '
+                         'SUM("number") "$aggr_number" '
+                         'FROM "test" '
+                         'WHERE "date"=\'2019-03-06\'', str(queries[0]))
+
+    def test_void_filter_with_a_metric_filter(self):
+        queries = ds.query \
+            .widget(f.Pandas(ds.fields.aggr_number)) \
+            .filter(ds.fields.aggr_number > 10) \
+            .filter(ds.fields.date.void()) \
+            .sql
+
+        self.assertEqual(len(queries), 1)
+        self.assertEqual('SELECT '
+                         'SUM("number") "$aggr_number" '
+                         'FROM "test" '
+                         'HAVING SUM("number")>10', str(queries[0]))
+
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 class FilterNumberFieldTests(TestCase):

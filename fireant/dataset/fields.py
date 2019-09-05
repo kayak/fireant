@@ -1,5 +1,6 @@
 from collections import Iterable
 from enum import Enum
+
 from functools import wraps
 
 from fireant.utils import (
@@ -13,6 +14,7 @@ from .filters import (
     ExcludesFilter,
     PatternFilter,
     RangeFilter,
+    VoidFilter,
 )
 
 
@@ -194,6 +196,9 @@ class Field:
             A slicer query filter used to filter a slicer query to results where this dimension is True or False.
         """
         return BooleanFilter(self.alias, self.definition, value)
+
+    def void(self):
+        return VoidFilter(self.alias)
 
     def __eq__(self, other):
         return self.eq(other)
