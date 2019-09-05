@@ -1,4 +1,7 @@
-from pypika import Not
+from pypika import (
+    EmptyCriterion,
+    Not,
+)
 from pypika.functions import Lower
 
 
@@ -77,3 +80,8 @@ class PatternFilter(Filter):
 class AntiPatternFilter(PatternFilter):
     def _apply(self, dimension_definition, pattern):
         return super(AntiPatternFilter, self)._apply(dimension_definition, pattern).negate()
+
+
+class VoidFilter(Filter):
+    def __init__(self, field_alias):
+        super(VoidFilter, self).__init__(field_alias, EmptyCriterion())
