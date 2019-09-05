@@ -85,3 +85,6 @@ class AntiPatternFilter(PatternFilter):
 class VoidFilter(Filter):
     def __init__(self, field_alias):
         super(VoidFilter, self).__init__(field_alias, EmptyCriterion())
+
+    def __repr__(self):
+        return 'VoidFilter()'
