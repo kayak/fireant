@@ -1,7 +1,7 @@
 import codecs
 import os
-import re
 
+import re
 from setuptools import setup
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -87,7 +87,7 @@ setup(
           'vertica': ['vertica-python==0.7.3'],
           'snowflake': ['snowflake-connector-python==1.7.2',
                         'cryptography==2.4.2'],
-          'mysql': ['pymysql==0.8.0'],
+          'mysql': ['mysqlclient==1.4.2'],
           'redshift': ['psycopg2==2.7.3.2'],
           'postgresql': ['psycopg2==2.7.3.2'],
           'ipython': ['matplotlib', 'ipython'],

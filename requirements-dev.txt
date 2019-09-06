@@ -2,7 +2,7 @@
 mock
 matplotlib
 ipython
-pymysql==0.8.0
+mysqlclient==1.4.2
 vertica-python==0.7.3
 psycopg2==2.7.3.2
 snowflake-connector-python==1.7.2
