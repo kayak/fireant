@@ -82,7 +82,7 @@ def _identity(value):
     return value
 
 
-UNSAFE_CHARS = re.compile(r'[^\w\d\-:()]')
+UNSAFE_CHARS = re.compile(r'[^\w\d\s\-:()]')
 
 
 def json_value(value):

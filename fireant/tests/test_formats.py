@@ -61,7 +61,7 @@ class SafeRawValueTests(TestCase):
     def test_string_value_is_returned_with_only_safe_characters_replaced(self):
         tests = [('abcdefghijklmnopqrstuvwxyz', 'abcdefghijklmnopqrstuvwxyz'),
                  ('ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'),
-                 (' ', '$'),
+                 (' ', ' '),
                  ('-0123456789', '-0123456789'),
                  ('.[]', '$$$'),
                  ('a.1', 'a$1'),
