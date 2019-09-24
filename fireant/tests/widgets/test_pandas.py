@@ -30,6 +30,9 @@ def _format_float(x):
     return '{:,.0f}'.format(x)
 
 
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.width', 1000)
+
 
 class PandasTransformerTests(TestCase):
     maxDiff = None
@@ -429,6 +432,31 @@ class PandasTransformerSortTests(TestCase):
         expected = expected.reset_index() \
             .sort_values(['Democrat'], ascending=True) \
             .set_index('Timestamp')
+        expected = expected.applymap(_format_float)
+
+        pandas.testing.assert_frame_equal(expected, result)
+
+    def test_pivoted_dimx1_metricx2(self):
+        result = Pandas(mock_dataset.fields.votes, mock_dataset.fields.wins, pivot=[mock_dataset.fields.timestamp]) \
+            .transform(dimx2_date_str_df, mock_dataset,
+                       [mock_dataset.fields.timestamp, mock_dataset.fields.political_party], [])
+
+        expected = dimx2_date_str_df.copy()[[f('votes'), f('wins')]]
+        expected = expected.unstack(level=0)
+        expected.index.names = ['Party']
+        expected.columns = pd.MultiIndex.from_product(
+              [
+                  ['Votes', 'Wins'],
+                  pd.DatetimeIndex(['1996-01-01',
+                                    '2000-01-01',
+                                    '2004-01-01',
+                                    '2008-01-01',
+                                    '2012-01-01',
+                                    '2016-01-01']),
+              ],
+              names=['Metrics', 'Timestamp'],
+        )
+
         expected = expected.applymap(_format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
