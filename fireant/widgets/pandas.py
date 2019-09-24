@@ -1,14 +1,13 @@
+import pandas as pd
 from functools import partial
 from typing import Iterable
 
-import pandas as pd
 from fireant import formats
 from fireant.dataset.fields import Field
 from fireant.utils import (
     alias_selector,
     wrap_list,
 )
-
 from .base import (
     ReferenceItem,
     TransformableWidget,
@@ -163,7 +162,10 @@ class Pandas(TransformableWidget):
             return format_df
 
         for item in items:
+            key = item.label
             f_display = _get_f_display(item)
-            format_df[item.label] = format_df[item.label].apply(f_display)
+            format_df[key] = format_df[key].apply(f_display) \
+                if isinstance(format_df[key], pd.Series) \
+                else format_df[key].applymap(f_display)
 
         return format_df
