@@ -39,10 +39,8 @@ class VerticaDatabase(Database):
     }
 
     def __init__(self, host='localhost', port=5433, database='vertica', user='vertica', password=None,
-                 read_timeout=None, max_processes=1, cache_middleware=None):
-        super(VerticaDatabase, self).__init__(host, port, database,
-                                              max_processes=max_processes,
-                                              cache_middleware=cache_middleware)
+                 read_timeout=None, **kwags):
+        super(VerticaDatabase, self).__init__(host, port, database, **kwags)
         self.user = user
         self.password = password
         self.read_timeout = read_timeout

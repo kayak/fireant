@@ -53,7 +53,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'fireant'
-copyright = '2016, KAYAK Germany GmbH'
+copyright = '2019, KAYAK Germany GmbH'
 author = 'Timothy Heys, Mourad Mourafiq, Arturas Tutkus, Remi Koenig, Michael England, Lucas Lira Gomes'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -80,7 +80,7 @@ language = None
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = []
+exclude_patterns = ['_build', 'api/fireant.tests*']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.

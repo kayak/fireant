@@ -30,10 +30,8 @@ class PostgreSQLDatabase(Database):
     query_cls = PostgreSQLQuery
 
     def __init__(self, host='localhost', port=5432, database=None,
-                 user=None, password=None, max_processes=1, cache_middleware=None):
-        super(PostgreSQLDatabase, self).__init__(host, port, database,
-                                                 max_processes=max_processes,
-                                                 cache_middleware=cache_middleware)
+                 user=None, password=None, **kwags):
+        super(PostgreSQLDatabase, self).__init__(host, port, database, **kwags)
         self.user = user
         self.password = password
 

@@ -1,9 +1,10 @@
-Connecting to the database
-==========================
+Database Configuration
+======================
+Database Connector
+------------------
+In order for |Brand| to connect to your database, a database connector must be used. This takes the form of an instance of a concrete subclass of |Brand|'s |ClassDatabase| class. Database connectors are shipped with |Brand| for all of the supported databases, but it is also possible to write your own. See below on how to extend |Brand| to support additional databases.
 
-In order for |Brand| to connect to your database, a database connectors must be used. This takes the form of an instance of a concrete subclass of |Brand|'s ``Database`` class. Database connectors are shipped with |Brand| for all of the supported databases, but it is also possible to write your own. See below on how to extend |Brand| to support additional databases.
-
-To configure a database, instantiate a subclass of |ClassDatabase|. You will use this instance to create a |FeatureDataSet|. It is possible to use multiple databases simultaneous, but |FeatureDataSet| can only use a single database, since they inherently model the structure of a table in the database.
+To configure a database, instantiate a subclass of |ClassDatabase|. You will use this instance to create a |FeatureDataSet|. It is possible to use multiple databases simultaneous, but |ClassDataSet| can only use a single database, since they inherently model the structure of a table in the database.
 
 Vertica
 
@@ -131,6 +132,35 @@ Once a Database connector has been set up, it can be used when instantiating |Cl
 
 In a custom database connector, the ``connect`` function must be overridden to provide a ``connection`` to the database.
 The ``trunc_date`` and ``date_add`` functions must also be overridden since are no common ways to truncate/add dates in SQL databases.
+
+
+Middleware
+----------
+
+In order to provide extra functionality as well as flexibility the database connectors allow the setup of middleware.
+Default configurable middleware implementations are provided by fireant but it's also
+possible to extend the middleware classes for custom functionality.
+
+Concurrency Middleware
+""""""""""""""""""""""
+
+When executing queries on the database the operations are tunneled through a concurrency middleware. By default the
+|ClassThreadPoolConcurrencyMiddleware| is used when no custom middleware is configured in the database connector.
+This middleware implementation will parallelize multiple queries using a :class:`ThreadPool`.
+The maximum amount of simultaneously active threads is then defined by the ``max_processes`` parameter of the database
+connector.
+
+A custom middleware can easily be created by implementing |ClassBaseConcurrencyMiddleware|. For example a
+concurrency middleware that would simply execute a group of queries synchronously would look like this:
+
+.. code-block:: python
+
+    from fireant.middleware import BaseConcurrencyMiddleware
+    from fireant.queries import fetch_as_dataframe
+
+    class HueyConcurrencyMiddleware(BaseConcurrencyMiddleware):
+        def fetch_queries_as_dataframe(self, queries, database):
+            return [fetch_as_dataframe(query, database) for query in queries]
 
 
 .. include:: ../README.rst

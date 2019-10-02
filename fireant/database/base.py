@@ -5,6 +5,8 @@ from pypika import (
     terms,
 )
 
+from fireant.middleware.concurrency import ThreadPoolConcurrencyMiddleware
+
 
 class Database(object):
     """
@@ -16,14 +18,14 @@ class Database(object):
 
     slow_query_log_min_seconds = 15
 
-    def __init__(self, host=None, port=None, database=None, max_processes=2, max_result_set_size=200000,
-                 cache_middleware=None):
+    def __init__(self, host=None, port=None, database=None, max_processes=1, max_result_set_size=200000,
+                 cache_middleware=None, concurrency_middleware=None):
         self.host = host
         self.port = port
         self.database = database
-        self.max_processes = max_processes
         self.max_result_set_size = max_result_set_size
         self.cache_middleware = cache_middleware
+        self.concurrency_middleware = concurrency_middleware or ThreadPoolConcurrencyMiddleware(max_processes)
 
     def connect(self):
         """

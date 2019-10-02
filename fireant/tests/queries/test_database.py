@@ -8,7 +8,7 @@ from unittest.mock import (
 import pandas as pd
 import time
 
-from fireant.queries.execution import _do_fetch_data
+from fireant.queries.execution import fetch_as_dataframe
 from fireant.tests.dataset.mocks import (
     dimx1_str_df,
     dimx2_date_str_df,
@@ -35,7 +35,7 @@ class FetchDataTests(TestCase):
 
     def test_do_fetch_data_calls_database_fetch_data(self, ):
         with patch('fireant.queries.execution.pd.read_sql', return_value=self.mock_data_frame) as mock_read_sql:
-            _do_fetch_data(self.mock_query, self.mock_database)
+            fetch_as_dataframe(self.mock_query, self.mock_database)
 
             mock_read_sql.assert_called_once_with(self.mock_query,
                                                   self.mock_connection,
@@ -63,14 +63,14 @@ class FetchDataLoggingTests(TestCase):
 
     @patch('fireant.queries.execution.query_logger')
     def test_debug_query_log_called_with_query(self, mock_logger, *mocks):
-        _do_fetch_data(self.mock_query, self.mock_database)
+        fetch_as_dataframe(self.mock_query, self.mock_database)
 
         mock_logger.debug.assert_called_once_with('SELECT *')
 
     @patch.object(time, 'time', return_value=1520520255.0)
     @patch('fireant.queries.execution.query_logger')
     def test_info_query_log_called_with_query_and_duration(self, mock_logger, *mocks):
-        _do_fetch_data(self.mock_query, self.mock_database)
+        fetch_as_dataframe(self.mock_query, self.mock_database)
 
         mock_logger.info.assert_called_once_with('[0.0 seconds]: SELECT *')
 
@@ -81,7 +81,7 @@ class FetchDataLoggingTests(TestCase):
                                                                                                mock_time,
                                                                                                *mocks):
         mock_time.side_effect = [1520520255.0, 1520520277.0]
-        _do_fetch_data(self.mock_query, self.mock_database)
+        fetch_as_dataframe(self.mock_query, self.mock_database)
 
         mock_logger.warning.assert_called_once_with('[22.0 seconds]: SELECT *')
 
@@ -92,7 +92,7 @@ class FetchDataLoggingTests(TestCase):
                                                                                                        mock_time,
                                                                                                        *mocks):
         mock_time.side_effect = [1520520763.0, 1520520764.0]
-        _do_fetch_data(self.mock_query, self.mock_database)
+        fetch_as_dataframe(self.mock_query, self.mock_database)
 
         mock_logger.warning.assert_not_called()
 

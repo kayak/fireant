@@ -9,7 +9,7 @@ Installation and Setup
 Database Connector add-ons
 --------------------------
 
-By default, |Brand| does not include any database drivers. You can optionally include one or provide your own. The following extra installations will set up |Brand| with the recommended drivers. |Brand| may work with additional drivrers, but is untested and requires a custom extension of the ``fireant.database.Database`` class (see below).
+By default, |Brand| does not include any database drivers. You can optionally include one or provide your own. The following extra installations will set up |Brand| with the recommended drivers. |Brand| may work with additional drivrers, but is untested and requires a custom extension of the |ClassDatabase| class (see below).
 
 
 .. code-block:: bash

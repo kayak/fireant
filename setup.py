@@ -37,6 +37,7 @@ setup(
       packages=['fireant',
                 'fireant.database',
                 'fireant.dataset',
+                'fireant.middleware',
                 'fireant.queries',
                 'fireant.widgets'],
 

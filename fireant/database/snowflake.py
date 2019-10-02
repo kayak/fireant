@@ -50,11 +50,8 @@ class SnowflakeDatabase(Database):
     def __init__(self, user='snowflake', password=None,
                  account='snowflake', database='snowflake',
                  private_key_data=None, private_key_password=None,
-                 region=None, warehouse=None,
-                 max_processes=1, cache_middleware=None):
-        super(SnowflakeDatabase, self).__init__(database=database,
-                                                max_processes=max_processes,
-                                                cache_middleware=cache_middleware)
+                 region=None, warehouse=None, **kwags):
+        super(SnowflakeDatabase, self).__init__(database=database, **kwags)
         self.user = user
         self.password = password
         self.account = account
