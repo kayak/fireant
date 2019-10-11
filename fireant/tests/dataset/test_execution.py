@@ -3,15 +3,17 @@ from unittest import (
     TestCase,
     skip,
 )
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd
 import pandas.testing
+from pypika import Query
 
-from fireant import DayOverDay
+from fireant import DayOverDay, VerticaDatabase
 from fireant.dataset.modifiers import Rollup
 from fireant.dataset.totals import get_totals_marker_for_dtype
-from fireant.queries.execution import reduce_result_set
+from fireant.queries.execution import reduce_result_set, fetch_data
 from .mocks import (
     dimx0_metricx1_df,
     dimx1_date_df,
@@ -24,6 +26,8 @@ from .mocks import (
     dimx3_date_str_str_df,
     dimx3_date_str_str_totalsx3_df,
     mock_dataset,
+    politicians_table,
+    politicians_hint_table,
 )
 
 pd.set_option('display.expand_frame_repr', False)
@@ -38,6 +42,34 @@ def replace_totals(data_frame):
         raw[name].replace(marker, np.nan, inplace=True)
 
     return raw
+
+
+class TestFetchData(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        query_a = Query.from_(politicians_table).select('*')
+        query_b = Query.from_(politicians_hint_table).select('*')
+
+        cls.test_dimensions = ()
+        cls.test_queries = [query_a, query_b]
+
+        cls.test_result_a = pd.DataFrame([{"a": 1.0}])
+        cls.test_result_b = pd.DataFrame([{"b": 2.0}])
+
+    @patch("fireant.queries.execution.reduce_result_set")
+    def test_fetch_data_with_concurrency_middleware_specified(self, reduce_mock):
+        middleware_mock = MagicMock()
+        database = VerticaDatabase(concurrency_middleware=middleware_mock)
+        middleware_mock_return_value = [self.test_result_a, self.test_result_b]
+        middleware_mock.fetch_queries_as_dataframe.return_value = middleware_mock_return_value
+        mocked_result = pd.DataFrame([{"a": 1.0}])
+        reduce_mock.return_value = mocked_result
+
+        result = fetch_data(database, self.test_queries, self.test_dimensions)
+
+        pandas.testing.assert_frame_equal(mocked_result, result)
+        reduce_mock.assert_called_once_with(middleware_mock_return_value, (), self.test_dimensions, ())
 
 
 class ReduceResultSetsTests(TestCase):

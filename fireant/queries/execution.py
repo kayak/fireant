@@ -3,7 +3,6 @@ from functools import (
     reduce,
     wraps,
 )
-from multiprocessing.pool import ThreadPool
 from typing import (
     Iterable,
     Sized,
@@ -16,6 +15,7 @@ import pandas as pd
 from fireant.database import Database
 from fireant.dataset.fields import Field
 from fireant.dataset.totals import get_totals_marker_for_dtype
+
 from fireant.utils import (
     alias_selector,
     chunks,
@@ -32,18 +32,14 @@ def fetch_data(database: Database,
                dimensions: Iterable[Field],
                share_dimensions: Iterable[Field] = (),
                reference_groups=()):
-    iterable = [(str(query.limit(min(query._limit or float("inf"), database.max_result_set_size))), database)
-                for query in queries]
+    queries = [
+        str(query.limit(min(query._limit or float("inf"), database.max_result_set_size)))
+        for query in queries
+    ]
 
-    with ThreadPool(processes=database.max_processes) as pool:
-        results = pool.map(_exec, iterable)
-        pool.close()
+    results = database.concurrency_middleware.fetch_queries_as_dataframe(queries, database)
 
     return reduce_result_set(results, reference_groups, dimensions, share_dimensions)
-
-
-def _exec(args):
-    return _do_fetch_data(*args)
 
 
 def db_cache(func):
@@ -79,7 +75,7 @@ def log(func):
 
 @db_cache
 @log
-def _do_fetch_data(query: str, database: Database):
+def fetch_as_dataframe(query: str, database: Database):
     """
     Executes a query to fetch data from database middleware and builds/cleans the data as a data frame. The query
     execution is logged with its duration.

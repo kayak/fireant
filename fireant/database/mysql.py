@@ -41,10 +41,8 @@ class MySQLDatabase(Database):
     query_cls = MySQLQuery
 
     def __init__(self, host='localhost', port=3306, database=None,
-                 user=None, password=None, charset='utf8mb4', max_processes=1, cache_middleware=None):
-        super(MySQLDatabase, self).__init__(host, port, database,
-                                            max_processes=max_processes,
-                                            cache_middleware=cache_middleware)
+                 user=None, password=None, charset='utf8mb4', **kwags):
+        super(MySQLDatabase, self).__init__(host, port, database, **kwags)
         self.user = user
         self.password = password
         self.charset = charset

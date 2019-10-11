@@ -207,50 +207,51 @@ Crafted with ♥ in Berlin.
 
 .. |Brand| replace:: *fireant*
 
-.. |FeatureDataSet| replace:: *Data Set*
+.. |FeatureDataSet| replace:: *DataSet*
 .. |FeatureMetric| replace:: *Metric*
 .. |FeatureDimension| replace:: *Dimension*
 .. |FeatureFilter| replace:: *Filter*
 .. |FeatureReference| replace:: *Reference*
 .. |FeatureOperation| replace:: *Operation*
 
-.. |ClassDataSet| replace:: ``fireant.DataSet``
-.. |ClassDatabase| replace:: ``fireant.database.Database``
-.. |ClassJoin| replace:: ``fireant.dataset.joins.Join``
-.. |ClassMetric| replace:: ``fireant.dataset.fields.Field``
+.. |ClassDataSet| replace:: :class:`fireant.DataSet <fireant.dataset.klass.DataSet>`
+.. |ClassDatabase| replace:: :class:`fireant.database.Database <fireant.database.base.Database>`
+.. |ClassJoin| replace:: :class:`fireant.Join <fireant.dataset.joins.Join>`
+.. |ClassMetric| replace:: :class:`fireant.Field <fireant.dataset.fields.Field>`
+.. |ClassThreadPoolConcurrencyMiddleware| replace:: :class:`fireant.middleware.ThreadPoolConcurrencyMiddleware <fireant.middleware.concurrency.ThreadPoolConcurrencyMiddleware>`
+.. |ClassBaseConcurrencyMiddleware| replace:: :class:`fireant.middleware.BaseConcurrencyMiddleware <fireant.middleware.concurrency.BaseConcurrencyMiddleware>`
 
-.. |ClassDimension| replace:: ``fireant.dataset.fields.Field``
-.. |ClassBooleanDimension| replace:: ``fireant.dataset.dimensions.BooleanDimension``
-.. |ClassContDimension| replace:: ``fireant.dataset.dimensions.ContinuousDimension``
-.. |ClassDateDimension| replace:: ``fireant.dataset.dimensions.DatetimeDimension``
-.. |ClassCatDimension| replace:: ``fireant.dataset.dimensions.CategoricalDimension``
-.. |ClassUniqueDimension| replace:: ``fireant.dataset.dimensions.UniqueDimension``
-.. |ClassDisplayDimension| replace:: ``fireant.dataset.dimensions.DisplayDimension``
+.. |ClassBooleanDimension| replace:: :class:`fireant.dataset.dimensions.BooleanDimension`
+.. |ClassContDimension| replace:: :class:`fireant.dataset.dimensions.ContinuousDimension`
+.. |ClassDateDimension| replace:: :class:`fireant.dataset.dimensions.DatetimeDimension`
+.. |ClassCatDimension| replace:: :class:`fireant.dataset.dimensions.CategoricalDimension`
+.. |ClassUniqueDimension| replace:: :class:`fireant.dataset.dimensions.UniqueDimension`
+.. |ClassDisplayDimension| replace:: :class:`fireant.dataset.dimensions.DisplayDimension`
 
-.. |ClassFilter| replace:: ``fireant.dataset.filters.Filter``
-.. |ClassComparatorFilter| replace:: ``fireant.dataset.filters.ComparatorFilter``
-.. |ClassBooleanFilter| replace:: ``fireant.dataset.filters.BooleanFilter``
-.. |ClassContainsFilter| replace:: ``fireant.dataset.filters.ContainsFilter``
-.. |ClassExcludesFilter| replace:: ``fireant.dataset.filters.ExcludesFilter``
-.. |ClassRangeFilter| replace:: ``fireant.dataset.filters.RangeFilter``
-.. |ClassPatternFilter| replace:: ``fireant.dataset.filters.PatternFilter``
-.. |ClassAntiPatternFilter| replace:: ``fireant.dataset.filters.AntiPatternFilter``
+.. |ClassFilter| replace:: :class:`fireant.dataset.filters.Filter`
+.. |ClassComparatorFilter| replace:: :class:`fireant.dataset.filters.ComparatorFilter`
+.. |ClassBooleanFilter| replace:: :class:`fireant.dataset.filters.BooleanFilter`
+.. |ClassContainsFilter| replace:: :class:`fireant.dataset.filters.ContainsFilter`
+.. |ClassExcludesFilter| replace:: :class:`fireant.dataset.filters.ExcludesFilter`
+.. |ClassRangeFilter| replace:: :class:`fireant.dataset.filters.RangeFilter`
+.. |ClassPatternFilter| replace:: :class:`fireant.dataset.filters.PatternFilter`
+.. |ClassAntiPatternFilter| replace:: :class:`fireant.dataset.filters.AntiPatternFilter`
 
-.. |ClassReference| replace:: ``fireant.dataset.references.Reference``
+.. |ClassReference| replace:: :class:`fireant.dataset.references.Reference`
 
-.. |ClassWidget| replace:: ``fireant.widgets.base.Widget``
-.. |ClassPandasWidget| replace:: ``fireant.widgets.pandas.Pandas``
-.. |ClassHighChartsWidget| replace:: ``fireant.widgets.highcharts.HighCharts``
-.. |ClassHighChartsSeries| replace:: ``fireant.widgets.highcharts.Series``
+.. |ClassWidget| replace:: :class:`fireant.widgets.base.Widget`
+.. |ClassPandasWidget| replace:: :class:`fireant.widgets.pandas.Pandas`
+.. |ClassHighChartsWidget| replace:: :class:`fireant.widgets.highcharts.HighCharts <fireant.widgets.highcharts.HighCharts>`
+.. |ClassHighChartsSeries| replace:: :class:`fireant.widgets.highcharts.Series <fireant.widgets.chart_base.Series>`
 
-.. |ClassOperation| replace:: ``fireant.dataset.operations.Operation``
+.. |ClassOperation| replace:: :class:`fireant.dataset.operations.Operation`
 
-.. |ClassVerticaDatabase| replace:: ``fireant.database.VerticaDatabase``
-.. |ClassMySQLDatabase| replace:: ``fireant.database.MySQLDatabase``
-.. |ClassPostgreSQLDatabase| replace:: ``fireant.database.PostgreSQLDatabase``
-.. |ClassRedshiftDatabase| replace:: ``fireant.database.RedshiftDatabase``
+.. |ClassVerticaDatabase| replace:: :class:`fireant.database.VerticaDatabase`
+.. |ClassMySQLDatabase| replace:: :class:`fireant.database.MySQLDatabase`
+.. |ClassPostgreSQLDatabase| replace:: :class:`fireant.database.PostgreSQLDatabase`
+.. |ClassRedshiftDatabase| replace:: :class:`fireant.database.RedshiftDatabase`
 
-.. |ClassDatetimeInterval| replace:: ``fireant.DatetimeInterval``
+.. |ClassDatetimeInterval| replace:: :class:`fireant.DatetimeInterval <fireant.dataset.intervals.DatetimeInterval>`
 
 .. |ClassTable| replace:: ``pypika.Table``
 .. |ClassTables| replace:: ``pypika.Tables``

@@ -1,7 +1,7 @@
 Querying with a |FeatureDataSet|
 ================================
 
-After configuring an instance of Data Set, you'll have access to its powerful query API. This follows the builder design pattern, allowing for function calls to be chains to build up a context.
+After configuring an instance of |ClassDataSet|, you'll have access to its powerful query API. This follows the builder design pattern, allowing for function calls to be chained to build up a context.
 The result of a query is one or more widgets, which the query defines as well. Furthermore, data rendered in widgets can be grouped by setting dimensions, filtered, compared over time intervals using references, and sorted and limited using pagination.
 
 Widget
