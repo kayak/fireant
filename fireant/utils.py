@@ -1,4 +1,7 @@
 import inspect
+import csv
+import tempfile
+
 from collections import OrderedDict
 from functools import partial
 
@@ -227,3 +230,34 @@ def reduce_data_frame_levels(data_frame, level):
     if reduced.size == 1 and reduced.index.names == [None]:
         return reduced.iloc[0]
     return reduced
+
+
+def read_csv(fp):
+    """
+    Read a csv file and return its content.
+
+    :param fp: Path of the file.
+    :return: List of rows.
+    """
+    rows = []
+    with open(fp, 'r') as f:
+        csv_reader = csv.reader(f, delimiter=',')
+        for row in csv_reader:
+            rows.append(row)
+
+    return rows
+
+
+def write_named_temp_csv(rows):
+    """
+    Write the provided rows to a named temporary file.
+
+    :param rows: List of lists to be written.
+    :return: A named temporary file containing the rows.
+    """
+    ntf = tempfile.NamedTemporaryFile(suffix='.csv')
+    with open(ntf.name, 'w') as f:
+        ntf_writer = csv.writer(f, delimiter=',')
+        ntf_writer.writerows(rows)
+
+    return ntf

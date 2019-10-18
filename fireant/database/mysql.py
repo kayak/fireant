@@ -107,3 +107,21 @@ class MySQLDatabase(Database):
             .orderby(columns.column_name)
 
         return self.fetch(str(columns_query))
+
+    @staticmethod
+    def import_csv(connection, table_name, file_path):
+        """
+        Execute a query to import a file into a table using the provided connection.
+
+        :param connection: The connection for mysql.
+        :param table_name: The name of a table to import data into.
+        :param file_path: The path of the file to be imported.
+        """
+        query = MySQLQuery \
+            .load(file_path) \
+            .into(table_name)
+
+        cursor = connection.cursor()
+        cursor.execute(str(query))
+
+        connection.commit()

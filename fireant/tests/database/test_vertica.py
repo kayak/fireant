@@ -4,8 +4,9 @@ from unittest.mock import (
     patch,
 )
 
-from fireant.database import VerticaDatabase
 from pypika import Field
+
+from fireant.database import VerticaDatabase
 
 
 class TestVertica(TestCase):
@@ -98,3 +99,23 @@ class TestVertica(TestCase):
 
         mock_fetch.assert_called_once_with('SELECT DISTINCT "column_name","data_type" FROM "columns" '
                                            'WHERE "table_schema"=\'test_schema\' AND "table_name"=\'test_table\'')
+
+
+class TestVerticaCopy(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.vertica = VerticaDatabase()
+
+    def test_import_csv(self):
+        mock_cursor = Mock()
+        mock_cursor.execute = Mock()
+
+        mock_connection = Mock()
+        mock_connection.cursor.return_value = mock_cursor
+        mock_connection.commit = Mock()
+
+        self.vertica.import_csv(mock_connection, 'abc', '/path/to/file')
+
+        mock_connection.commit.assert_called_once()
+        mock_cursor.execute.assert_called_once_with('COPY "abc" FROM "/path/to/file" PARSER fcsvparser()')
+

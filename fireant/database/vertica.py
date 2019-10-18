@@ -77,3 +77,20 @@ class VerticaDatabase(Database):
 
         return self.fetch(str(table_query))
 
+    @staticmethod
+    def import_csv(connection, table_name, file_path):
+        """
+        Execute a query to import a file into a table using the provided connection.
+
+        :param connection: The connection for vertica.
+        :param table_name: The name of a table to import data into.
+        :param file_path: The path of the file to be imported.
+        """
+        query = VerticaQuery \
+            .from_file(file_path) \
+            .copy_(table_name)
+
+        cursor = connection.cursor()
+        cursor.execute(str(query))
+
+        connection.commit()

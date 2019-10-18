@@ -5,8 +5,9 @@ from unittest.mock import (
     patch,
 )
 
-from fireant.database import MySQLDatabase
 from pypika import Field
+
+from fireant.database import MySQLDatabase
 
 
 class TestMySQLDatabase(TestCase):
@@ -32,8 +33,8 @@ class TestMySQLDatabase(TestCase):
             mysql.connect()
 
         mock_connection_class.return_value.assert_called_once_with(
-            host='test_host', port=1234, db='test_database', charset='utf8mb4',
-            user='test_user', password='password', cursorclass=ANY
+              host='test_host', port=1234, db='test_database', charset='utf8mb4',
+              user='test_user', password='password', cursorclass=ANY
         )
 
     def test_trunc_hour(self):
@@ -111,3 +112,24 @@ class TestMySQLDatabase(TestCase):
                                            'FROM `INFORMATION_SCHEMA`.`columns` '
                                            'WHERE `table_schema`=\'test_schema\' AND `table_name`=\'test_table\' '
                                            'ORDER BY `column_name`')
+
+
+class TestMySQLLoad(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.mysql = MySQLDatabase()
+
+    def test_import_csv(self):
+        mock_cursor = Mock()
+        mock_cursor.execute = Mock()
+
+        mock_connection = Mock()
+        mock_connection.cursor.return_value = mock_cursor
+        mock_connection.commit = Mock()
+
+        self.mysql.import_csv(mock_connection, 'abc', '/path/to/file')
+
+        mock_connection.commit.assert_called_once()
+        mock_cursor.execute.assert_called_once_with(
+            'LOAD DATA LOCAL INFILE \'/path/to/file\' INTO TABLE `abc` FIELDS TERMINATED BY \',\''
+        )
