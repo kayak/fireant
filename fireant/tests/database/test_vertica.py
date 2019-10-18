@@ -116,6 +116,6 @@ class TestVerticaCopy(TestCase):
 
         self.vertica.import_csv(mock_connection, 'abc', '/path/to/file')
 
-        mock_connection.commit.assert_called_once()
+        self.assertEqual(1, mock_connection.commit.call_count)
         mock_cursor.execute.assert_called_once_with('COPY "abc" FROM "/path/to/file" PARSER fcsvparser()')
 

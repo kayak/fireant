@@ -101,7 +101,7 @@ class TestMySQLDatabase(TestCase):
         db = MySQLDatabase()
 
         to_char = db.to_char(Field('field'))
-        self.assertEqual(str(to_char), 'CAST("field" AS CHAR)')
+        self.assertEqual('CAST("field" AS CHAR)', str(to_char))
 
     # noinspection SqlDialectInspection,SqlNoDataSourceInspection
     @patch.object(MySQLDatabase, 'fetch')
@@ -129,7 +129,7 @@ class TestMySQLLoad(TestCase):
 
         self.mysql.import_csv(mock_connection, 'abc', '/path/to/file')
 
-        mock_connection.commit.assert_called_once()
+        self.assertEqual(1, mock_connection.commit.call_count)
         mock_cursor.execute.assert_called_once_with(
             'LOAD DATA LOCAL INFILE \'/path/to/file\' INTO TABLE `abc` FIELDS TERMINATED BY \',\''
         )
