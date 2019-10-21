@@ -5,7 +5,7 @@ ipython
 pymysql==0.8.0
 vertica-python==0.7.3
 psycopg2==2.7.3.2
-snowflake-connector-python==1.7.2
+snowflake-connector-python==1.9.1
 bumpversion==0.5.3
 wheel==0.30.0
 watchdog==0.8.3
