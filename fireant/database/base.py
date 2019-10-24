@@ -1,11 +1,16 @@
+import pandas as pd
+
+from fireant.middleware.concurrency import ThreadPoolConcurrencyMiddleware
+from fireant.middleware.decorators import (
+    db_cache,
+    log,
+)
 from pypika import (
     Query,
     enums,
     functions as fn,
     terms,
 )
-
-from fireant.middleware.concurrency import ThreadPoolConcurrencyMiddleware
 
 
 class Database(object):
@@ -54,8 +59,16 @@ class Database(object):
     def to_char(self, definition):
         return fn.Cast(definition, enums.SqlTypes.VARCHAR)
 
+    @db_cache
+    @log
     def fetch(self, query):
         with self.connect() as connection:
             cursor = connection.cursor()
             cursor.execute(query)
             return cursor.fetchall()
+
+    @db_cache
+    @log
+    def fetch_dataframe(self, query):
+        with self.connect() as connection:
+            return pd.read_sql(query, connection, coerce_float=True, parse_dates=True)

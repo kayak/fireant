@@ -1,39 +1,46 @@
 from unittest import TestCase
-from unittest.mock import patch, MagicMock, ANY
 
-from fireant.middleware.concurrency import ThreadPoolConcurrencyMiddleware, BaseConcurrencyMiddleware
+from unittest.mock import (
+    MagicMock,
+    call,
+    patch,
+)
+
+from fireant.middleware.concurrency import (
+    BaseConcurrencyMiddleware,
+    ThreadPoolConcurrencyMiddleware,
+)
 
 
 class TestThreadPoolConcurrencyMiddleware(TestCase):
-
-    @patch('fireant.middleware.concurrency.ThreadPool', autospec=True)
-    def test_fetch_queries_as_dataframe(self, mock_threadpool_manager):
-        queries = ['query_a', 'query_b']
-        database = 'database'
-        pool_mock = MagicMock()
-        pool_mock.map.return_value = ['result_a', 'result_b']
-        mock_threadpool_manager.return_value.__enter__.return_value = pool_mock
-
-        middleware = ThreadPoolConcurrencyMiddleware()
-
-        results = middleware.fetch_queries_as_dataframe(queries, database)
-
-        self.assertEqual(results, ['result_a', 'result_b'])
-        pool_mock.map.assert_called_with(ANY, [('query_a', 'database'), ('query_b', 'database')])
-
-
-class TestBaseConcurrencyMiddleware(TestCase):
-
     @patch.object(BaseConcurrencyMiddleware, '__abstractmethods__', set())
-    def test_fetch_query(self):
+    def test_single_query_executes_synchronously(self):
         query = 'query'
         mock_database = MagicMock()
         mock_database.fetch.return_value = 'result'
 
-        concurrency_middleware = BaseConcurrencyMiddleware()
+        concurrency_middleware = ThreadPoolConcurrencyMiddleware()
 
         result = concurrency_middleware.fetch_query(query, mock_database)
 
         self.assertEqual(result, 'result')
         mock_database.fetch.assert_called_with(query)
 
+    @patch('fireant.middleware.concurrency.ThreadPool', autospec=True)
+    def test_multiple_queries_execute_in_threadpool(self, mock_threadpool_manager):
+        queries = ['query_a', 'query_b']
+        mock_database = MagicMock()
+        mock_database.fetch_dataframe.side_effect = ['result_a', 'result_b']
+
+        def mock_map(func, iterable):
+            return [func(args) for args in iterable]
+
+        pool_mock = mock_threadpool_manager.return_value.__enter__.return_value = MagicMock()
+        pool_mock.map = mock_map
+
+        middleware = ThreadPoolConcurrencyMiddleware()
+
+        results = middleware.fetch_queries_as_dataframe(queries, mock_database)
+
+        self.assertEqual(results, ['result_a', 'result_b'])
+        mock_database.fetch_dataframe.assert_has_calls([call('query_a'), call('query_b')])
