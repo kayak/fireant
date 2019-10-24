@@ -43,7 +43,7 @@ class ThreadPoolConcurrencyMiddleware(BaseConcurrencyMiddleware):
         """
         Executes the different queries in separate threads.
         """
-        iterable = [(query, database) for query in queries]
+        iterable = [(query, ) for query in queries]
 
         with ThreadPool(processes=self.max_processes) as pool:
             results = pool.map(lambda args: database.fetch_dataframe(*args), iterable)
