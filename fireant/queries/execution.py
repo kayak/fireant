@@ -1,7 +1,5 @@
-import time
 from functools import (
     reduce,
-    wraps,
 )
 from typing import (
     Iterable,
@@ -21,10 +19,6 @@ from fireant.utils import (
     chunks,
 )
 from .finders import find_totals_dimensions
-from .slow_query_logger import (
-    query_logger,
-    slow_query_logger,
-)
 
 
 def fetch_data(database: Database,
@@ -40,54 +34,6 @@ def fetch_data(database: Database,
     results = database.concurrency_middleware.fetch_queries_as_dataframe(queries, database)
 
     return reduce_result_set(results, reference_groups, dimensions, share_dimensions)
-
-
-def db_cache(func):
-    @wraps(func)
-    def wrapper(query, database, *args):
-        if database.cache_middleware is not None:
-            return database.cache_middleware(func)(query, database, *args)
-        return func(query, database, *args)
-
-    return wrapper
-
-
-def log(func):
-    @wraps(func)
-    def wrapper(query, database, *args):
-        start_time = time.time()
-        query_logger.debug(query)
-
-        result = func(query, database, *args)
-
-        duration = round(time.time() - start_time, 4)
-        query_log_msg = '[{duration} seconds]: {query}'.format(duration=duration,
-                                                               query=query)
-        query_logger.info(query_log_msg)
-
-        if database.slow_query_log_min_seconds is not None and duration >= database.slow_query_log_min_seconds:
-            slow_query_logger.warning(query_log_msg)
-
-        return result
-
-    return wrapper
-
-
-@db_cache
-@log
-def fetch_as_dataframe(query: str, database: Database):
-    """
-    Executes a query to fetch data from database middleware and builds/cleans the data as a data frame. The query
-    execution is logged with its duration.
-
-    :param database:
-        instance of `fireant.Database`, database middleware
-    :param query: Query string
-
-    :return: `pd.DataFrame` constructed from the result of the query
-    """
-    with database.connect() as connection:
-        return pd.read_sql(query, connection, coerce_float=True, parse_dates=True)
 
 
 def reduce_result_set(results: Iterable[pd.DataFrame],

@@ -156,11 +156,11 @@ concurrency middleware that would simply execute a group of queries synchronousl
 .. code-block:: python
 
     from fireant.middleware import BaseConcurrencyMiddleware
-    from fireant.queries import fetch_as_dataframe
 
-    class HueyConcurrencyMiddleware(BaseConcurrencyMiddleware):
-        def fetch_queries_as_dataframe(self, queries, database):
-            return [fetch_as_dataframe(query, database) for query in queries]
+    class SingleThreadMiddleware(BaseConcurrencyMiddleware):
+        def fetch_queries_dataframe(self, queries, database):
+            return pd.concat([database.fetch_dataframe(query, database)
+                              for query in queries])
 
 
 .. include:: ../README.rst

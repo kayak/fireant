@@ -3,4 +3,3 @@ from .builder import (
     DimensionChoicesQueryBuilder,
     DimensionLatestQueryBuilder,
 )
-from .execution import fetch_as_dataframe
