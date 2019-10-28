@@ -1,9 +1,8 @@
 from unittest import TestCase
 
 from fireant.database import Database
-from pypika import Field
-
 from fireant.middleware.concurrency import ThreadPoolConcurrencyMiddleware
+from pypika import Field
 
 
 class DatabaseTests(TestCase):
