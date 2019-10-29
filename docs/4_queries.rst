@@ -71,7 +71,7 @@ widget
 
     from fireant import Pandas
 
-    dataset.data \
+    dataset.query \
         ...
        .widget( Pandas(dataset.fields.clicks, dataset.fields.cost, dataset.fields.revenue) )
 
@@ -82,7 +82,7 @@ dimension
 
 .. code-block:: python
 
-    dataset.data \
+    dataset.query \
         ...
        .dimension( dataset.fields.device, dataset.fields.account )
 
@@ -93,7 +93,7 @@ filter
 
 .. code-block:: python
 
-    dataset.data \
+    dataset.query \
         ...
        .filter( dataset.fields.date.between(date(2000, 1, 1), date(2009, 12, 31)) ) \
        .filter( dataset.fields.device.isin(['m', 't']) ) \
@@ -106,7 +106,7 @@ reference
 
     from fireant import WeekOverWeek
 
-    dataset.data \
+    dataset.query \
         ...
        .reference( WeekOverWeek() )
 
@@ -118,7 +118,7 @@ orderby
 
     from pypika import Order
 
-    dataset.data \
+    dataset.query \
         ...
        .orderby( dataset.fields.clicks, Order.asc )
 
@@ -129,7 +129,7 @@ fetch
 
     from pypika import Order
 
-    dataset.data \
+    dataset.query \
         ...
        .fetch()
 
@@ -161,7 +161,7 @@ The order of the dimensions is important. The dimensions are grouped in the orde
 
 .. code-block:: python
 
-    dataset.data \
+    dataset.query \
         ...
        .dimension( dataset.fields.device, dataset.fields.account )
 
@@ -175,7 +175,7 @@ All continuous dimensions require an interval to group into. For a Date/Time dim
 
     from fireant import monthly
 
-    dataset.data \
+    dataset.query \
         ...
        .dimension( dataset.fields.date(monthly) )
 
@@ -197,7 +197,7 @@ Rolling up a dimension allows the totals across a dimension to be displayed in a
 
 .. code-block:: python
 
-    dataset.data \
+    dataset.query \
         ...
        .dimension( dataset.fields.date(hourly).rollup() ) \
        .dimension( dataset.fields.device.rollup() )
@@ -225,7 +225,7 @@ Comparator filters are created using standard operators:
 
 .. code-block:: python
 
-    dataset.data \
+    dataset.query \
         ...
        .filter( dataset.fields.clicks >= 100 ) \
        .filter( dataset.fields.conversions == 1 )
@@ -238,7 +238,7 @@ Boolean filters only apply to boolean dimensions and filter whether the value of
 
 .. code-block:: python
 
-    dataset.data \
+    dataset.query \
         ...
        .filter( dataset.fields.is_member.is_(True) )
 
@@ -249,7 +249,7 @@ Range filters apply to |ClassDateDimension| dimensions using the `.between( star
 
 .. code-block:: python
 
-    dataset.data \
+    dataset.query \
         ...
        .filter( dataset.fields.date.between( datetime(2018, 8, 21), datetime(2019, 8, 20) ) )
 
@@ -262,7 +262,7 @@ Combining multiple include filters makes it possible to use both ``AND`` and ``O
 
 .. code-block:: python
 
-    dataset.data \
+    dataset.query \
         ...
        .filter( dataset.fields.accounts.isin([1, 2, 3]) )
 
@@ -273,7 +273,7 @@ Excludes filters are equivalent to Includes filters with negative logic. The sam
 
 .. code-block:: python
 
-    dataset.data \
+    dataset.query \
         ...
        .filter( dataset.fields.accounts.notin([1, 2, 3]) )
 
@@ -286,7 +286,7 @@ Combining multiple pattern filters makes it possible to use both ``AND`` and ``O
 
 .. code-block:: python
 
-    dataset.data \
+    dataset.query \
         ...
        .filter( dataset.fields.device.like('desk%', 'mob%') )
 
@@ -307,7 +307,7 @@ Anti-Pattern filters are equivalent to Pattern filters with negative logic. The 
         ...
     )
 
-    dataset.data \
+    dataset.query \
         ...
        .filter( dataset.fields.device.not_like('desk%', 'mob%') )
 
@@ -328,7 +328,7 @@ Metrics are selected for each widget. Widgets can use the same metrics or differ
 
 .. code-block:: python
 
-    dataset.data \
+    dataset.query \
         ...
        .widget( ... )
 
@@ -363,7 +363,7 @@ sort : list[int]
 
 .. code-block:: python
 
-    dataset.data \
+    dataset.query \
         ...
        .dimension( dataset.dimension.date, dataset.dimension.device )
        .widget( Pandas(dataset.fields.clicks, dataset.fields.cost, dataset.fields.revenue,
@@ -399,7 +399,7 @@ The React Table widget's instance API is identical to the Pandas widget, althoug
 
     from fireant import ReactTable
 
-    dataset.data \
+    dataset.query \
         ...
        .dimension( dataset.dimension.date, dataset.dimension.device )
        .widget( ReactTable(dataset.fields.clicks, dataset.fields.cost, dataset.fields.revenue,
@@ -436,17 +436,17 @@ A Date/Time dimension is required.
     from fireant.dataset.references import WeekOverWeek
 
     # Use a Week-over-Week reference
-    dataset.data \
+    dataset.query \
         ...
        .reference( WeekOverWeek(dataset.fields.date) )
 
     # Compare Week-over-Week change (delta)
-    dataset.data \
+    dataset.query \
         ...
        .reference( WeekOverWeek(dataset.fields.date, delta=True) )
 
     # Compare Week-over-Week change as a percentage (delta percentage)
-    dataset.data \
+    dataset.query \
         ...
        .reference( WeekOverWeek(dataset.fields.date, delta=True, percent=True) )
 
