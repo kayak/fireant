@@ -75,6 +75,33 @@ class QueryBuilder(object):
         self._limit = None
         self._offset = None
 
+    @property
+    def dimensions(self):
+        """
+        Returns the dimensions.
+
+        :return: a list of dimensions.
+        """
+        return self._dimensions
+
+    @property
+    def filters(self):
+        """
+        Returns the filters.
+
+        :return: a list of filters.
+        """
+        return self._filters
+
+    @property
+    def references(self):
+        """
+        Returns the widgets.
+
+        :return: a list of references.
+        """
+        return self._references
+
     @immutable
     def filter(self, *filters, apply_to_totals=True):
         """
@@ -140,6 +167,24 @@ class DataSetQueryBuilder(QueryBuilder):
         self._widgets = []
         self._totals_dimensions = set()
         self._orders = []
+
+    @property
+    def widgets(self):
+        """
+        Returns the widgets.
+
+        :return: a list of widgets.
+        """
+        return self._widgets
+
+    @property
+    def ordersby(self):
+        """
+        Returns the orders by.
+
+        :return: a list of orders by.
+        """
+        return self._orders
 
     @immutable
     def widget(self, *widgets):

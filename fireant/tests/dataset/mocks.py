@@ -1,25 +1,26 @@
 from collections import (
     OrderedDict,
 )
+from datetime import datetime
 from unittest.mock import (
-    Mock,
     MagicMock,
+    Mock,
 )
 
 import pandas as pd
-from datetime import datetime
+from pypika import (
+    Case,
+    JoinType,
+    Table,
+    functions as fn,
+)
 
 from fireant import *
+from fireant.dataset.joins import QueryJoin
 from fireant.dataset.references import ReferenceType
 from fireant.dataset.totals import get_totals_marker_for_dtype
 from fireant.utils import (
     alias_selector as f,
-)
-from pypika import (
-    JoinType,
-    Table,
-    functions as fn,
-    Case,
 )
 
 
@@ -35,11 +36,38 @@ class TestDatabase(VerticaDatabase):
 
 test_database = TestDatabase()
 politicians_table = Table('politician', schema='politics')
+politicians_spend_table = Table('politician_spend', schema='politics')
 politicians_hint_table = Table('hints', schema='politics')
 voters_table = Table('voter', schema='politics')
 state_table = Table('state', schema='locations')
 district_table = Table('district', schema='locations')
 deep_join_table = Table('deep', schema='test')
+
+mock_spend_dataset = DataSet(
+    table=politicians_spend_table,
+    database=test_database,
+
+    fields=(
+        Field('timestamp',
+              label='Timestamp',
+              definition=politicians_spend_table.timestamp,
+              data_type=DataType.date),
+        Field('candidate_id',
+            label='Candidate ID',
+            definition=politicians_spend_table.candidate_id,
+            data_type=DataType.number),
+        Field('candidate_spend',
+            label='Candidate Spend',
+            definition=politicians_spend_table.candidate_spend,
+            data_type=DataType.number),
+    ),
+)
+
+mock_spend_join_query = QueryJoin.query(
+    mock_spend_dataset.query \
+        .dimension(mock_spend_dataset.fields['candidate_id']) \
+        .dimension(mock_spend_dataset.fields['candidate_spend'])
+)
 
 mock_dataset = DataSet(
       table=politicians_table,
@@ -58,6 +86,9 @@ mock_dataset = DataSet(
                criterion=politicians_table.id == voters_table.politician_id),
           Join(table=deep_join_table,
                criterion=deep_join_table.id == state_table.ref_id),
+          QueryJoin(query=mock_spend_join_query,
+                    criterion=politicians_table.id == mock_spend_join_query.candidate_id,
+                    join_type=JoinType.left),
       ),
 
       fields=(
@@ -85,6 +116,10 @@ mock_dataset = DataSet(
                 label='Candidate Name',
                 definition=politicians_table.candidate_name,
                 data_type=DataType.text),
+          Field('candidate-spend',
+                label='Candidate Spend',
+                definition=mock_spend_join_query.candidate_spend,
+                data_type=DataType.number),
           Field('election-id',
                 label='Election ID',
                 definition=politicians_table.election_id,

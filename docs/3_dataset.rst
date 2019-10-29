@@ -29,11 +29,22 @@ Code Example
     vertica_database = VerticaDatabase(user='jane_doe', password='strongpassword123')
     analytics, customers = Tables('analytics', 'customers')
 
+    spend_dataset = Dataset(...)
+
+    spend_join_query = QueryJoin.query(
+        spend_dataset.query \
+            .dimension(mock_spend_dataset.fields['customer_id']) \
+            .dimension(mock_spend_dataset.fields['customer_spend'])
+    )
+
     dataset = DataSet(
         database=vertica_database,
         table=analytics,
         joins=[
             Join(customers, analytics.customer_id == customers.id),
+            QueryJoin(query=spend_join_query,
+                      criterion=politicians_table.id == spend_join_query.customer_id,
+                      join_type=JoinType.left),
         ],
         fields=[
             # Non-aggregate definition
@@ -46,10 +57,14 @@ Code Example
                   type=DataType.date,
                   label='Date'),
 
-            # Aggregate definition (The SUM function aggregates a group of values into a single value)
+            # Aggregate definitions (The SUM function aggregates a group of values into a single value)
             Field(alias='clicks',
                   definition=fn.Sum(analytics.clicks),
                   label='Clicks'),
+            Field(alias='customer-spend',
+                  definition=fn.Sum(spend_join_query.customer_spend),
+                  type=DataType.number,
+                  label='Spend'),
         ],
     )
 

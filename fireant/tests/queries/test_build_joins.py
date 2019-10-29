@@ -1,7 +1,10 @@
 from unittest import TestCase
 
 import fireant as f
-from fireant.tests.dataset.mocks import mock_dataset
+from fireant.tests.dataset.mocks import (
+    mock_dataset,
+    mock_spend_dataset,
+)
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -26,6 +29,39 @@ class QueryBuilderJoinTests(TestCase):
                          'ON "politician"."district_id"="district"."id" '
                          'GROUP BY "$timestamp","$district-name" '
                          'ORDER BY "$timestamp","$district-name"', str(queries[0]))
+
+    def test_dimension_with_dataset_join_includes_a_sub_query_join_in_query(self):
+        queries = mock_dataset.query \
+            .widget(f.ReactTable(mock_dataset.fields.votes)) \
+            .dimension(f.day(mock_dataset.fields.timestamp)) \
+            .dimension(mock_dataset.fields['candidate-id']) \
+            .dimension(mock_dataset.fields['district-name']) \
+            .dimension(mock_dataset.fields['candidate-spend']) \
+            .sql
+
+        self.assertEqual(len(queries), 1)
+
+        self.assertEqual('SELECT '
+                         'TRUNC("politician"."timestamp",\'DD\') "$timestamp",'
+                         '"politician"."candidate_id" "$candidate-id",'
+                         '"district"."district_name" "$district-name",'
+                         '"politician_spend"."candidate_spend" "$candidate-spend",'
+                         'SUM("politician"."votes") "$votes" '
+                         'FROM "politics"."politician" '
+                         'LEFT JOIN ('
+                         'SELECT '
+                         '"candidate_id" "$candidate_id",'
+                         '"candidate_spend" "$candidate_spend" '
+                         'FROM "politics"."politician_spend" '
+                         'GROUP BY "$candidate_id","$candidate_spend" '
+                         'ORDER BY "$candidate_id","$candidate_spend"'
+                         ') "politician_spend" '
+                         'ON "politician"."id"="politician_spend"."candidate_id" '
+                         'FULL OUTER JOIN "locations"."district" '
+                         'ON "politician"."district_id"="district"."id" '
+                         'GROUP BY "$timestamp","$candidate-id","$district-name","$candidate-spend" '
+                         'ORDER BY "$timestamp","$candidate-id","$district-name","$candidate-spend"'
+        , str(queries[0]))
 
     def test_dimension_with_multiple_joins_includes_joins_ordered__in_query(self):
         queries = mock_dataset.query \

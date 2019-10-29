@@ -1,5 +1,7 @@
 from unittest import TestCase
 
+from pypika import Table
+
 from fireant import Field
 from .mocks import mock_dataset
 
@@ -30,7 +32,7 @@ class SlicerContainerTests(TestCase):
         self.assertSetEqual(field_aliases, {'votes', 'wins', 'voters', 'turnout', 'wins_with_style',
                                             'timestamp', 'timestamp2', 'join_timestamp',
                                             'political_party',
-                                            'candidate-id', 'candidate-name',
+                                            'candidate-id', 'candidate-name', 'candidate-spend',
                                             'election-id', 'election-year',
                                             'district-id', 'district-name',
                                             'state', 'winner', 'deepjoin'})
