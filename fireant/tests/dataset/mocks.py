@@ -16,7 +16,6 @@ from pypika import (
 )
 
 from fireant import *
-from fireant.dataset.joins import QueryJoin
 from fireant.dataset.references import ReferenceType
 from fireant.dataset.totals import get_totals_marker_for_dtype
 from fireant.utils import (
@@ -63,11 +62,10 @@ mock_spend_dataset = DataSet(
     ),
 )
 
-mock_spend_join_query = QueryJoin.query(
-    mock_spend_dataset.query \
-        .dimension(mock_spend_dataset.fields['candidate_id']) \
-        .dimension(mock_spend_dataset.fields['candidate_spend'])
-)
+mock_spend_join_query = mock_spend_dataset.query \
+    .dimension(mock_spend_dataset.fields['candidate_id']) \
+    .dimension(mock_spend_dataset.fields['candidate_spend']) \
+    .sub_query_sql
 
 mock_dataset = DataSet(
       table=politicians_table,
@@ -86,9 +84,9 @@ mock_dataset = DataSet(
                criterion=politicians_table.id == voters_table.politician_id),
           Join(table=deep_join_table,
                criterion=deep_join_table.id == state_table.ref_id),
-          QueryJoin(query=mock_spend_join_query,
-                    criterion=politicians_table.id == mock_spend_join_query.candidate_id,
-                    join_type=JoinType.left),
+          Join(table=mock_spend_join_query,
+               criterion=politicians_table.id == mock_spend_join_query.candidate_id,
+               join_type=JoinType.left),
       ),
 
       fields=(
@@ -116,9 +114,9 @@ mock_dataset = DataSet(
                 label='Candidate Name',
                 definition=politicians_table.candidate_name,
                 data_type=DataType.text),
-          Field('candidate-spend',
-                label='Candidate Spend',
-                definition=mock_spend_join_query.candidate_spend,
+          Field('average-candidate-spend-per-candidacy',
+                label='Average Candidate Spend per Candidacy',
+                definition=mock_spend_join_query.candidate_spend / politicians_table.num_candidacies,
                 data_type=DataType.number),
           Field('election-id',
                 label='Election ID',

@@ -35,8 +35,7 @@ class QueryBuilderJoinTests(TestCase):
             .widget(f.ReactTable(mock_dataset.fields.votes)) \
             .dimension(f.day(mock_dataset.fields.timestamp)) \
             .dimension(mock_dataset.fields['candidate-id']) \
-            .dimension(mock_dataset.fields['district-name']) \
-            .dimension(mock_dataset.fields['candidate-spend']) \
+            .dimension(mock_dataset.fields['average-candidate-spend-per-candidacy']) \
             .sql
 
         self.assertEqual(len(queries), 1)
@@ -44,8 +43,7 @@ class QueryBuilderJoinTests(TestCase):
         self.assertEqual('SELECT '
                          'TRUNC("politician"."timestamp",\'DD\') "$timestamp",'
                          '"politician"."candidate_id" "$candidate-id",'
-                         '"district"."district_name" "$district-name",'
-                         '"politician_spend"."candidate_spend" "$candidate-spend",'
+                         '"politician_spend"."candidate_spend"/"politician"."num_candidacies" "$average-candidate-spend-per-candidacy",'
                          'SUM("politician"."votes") "$votes" '
                          'FROM "politics"."politician" '
                          'LEFT JOIN ('
@@ -57,10 +55,8 @@ class QueryBuilderJoinTests(TestCase):
                          'ORDER BY "$candidate_id","$candidate_spend"'
                          ') "politician_spend" '
                          'ON "politician"."id"="politician_spend"."candidate_id" '
-                         'FULL OUTER JOIN "locations"."district" '
-                         'ON "politician"."district_id"="district"."id" '
-                         'GROUP BY "$timestamp","$candidate-id","$district-name","$candidate-spend" '
-                         'ORDER BY "$timestamp","$candidate-id","$district-name","$candidate-spend"'
+                         'GROUP BY "$timestamp","$candidate-id","$average-candidate-spend-per-candidacy" '
+                         'ORDER BY "$timestamp","$candidate-id","$average-candidate-spend-per-candidacy"'
         , str(queries[0]))
 
     def test_dimension_with_multiple_joins_includes_joins_ordered__in_query(self):

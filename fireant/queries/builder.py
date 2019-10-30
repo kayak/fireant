@@ -248,6 +248,8 @@ class DataSetQueryBuilder(QueryBuilder):
         This collects all of the metrics in each widget, dimensions, and filters and builds a corresponding pypika query
         to fetch the data.  When references are used, the base query normally produced is wrapped in an outer query and
         a query for each reference is joined based on the referenced dimension shifted.
+
+        :return: a list of Pypika's Query subclass instances.
         """
         # First run validation for the query on all widgets
         self._validate()
@@ -268,6 +270,21 @@ class DataSetQueryBuilder(QueryBuilder):
                                                             references,
                                                             orders,
                                                             share_dimensions=share_dimensions)
+
+    @property
+    def sub_query_sql(self, alias=None):
+        """
+        Serialize this query builder to a Pypika/SQL query that is meant to be used as a sub-query.
+
+        :param alias: an alias. Defaults to the query builder's table name.
+        :return: a Pypika's Query subclass instance.
+        """
+        if self.references or self.widgets:
+            raise SlicerException(
+                'This instance cannot have references and/or widgets when generating sub-queries'
+            )
+
+        return self.sql[0].as_(alias or self.table._table_name)
 
     def fetch(self, hint=None) -> Iterable[Dict]:
         """
