@@ -1,16 +1,19 @@
 import pandas as pd
 
-from fireant.middleware.concurrency import ThreadPoolConcurrencyMiddleware
-from fireant.middleware.decorators import (
-    db_cache,
-    log,
-)
 from pypika import (
     Query,
     enums,
     functions as fn,
     terms,
 )
+
+from fireant.middleware.decorators import (
+    db_cache,
+    log,
+)
+
+from fireant.middleware.concurrency import ThreadPoolConcurrencyMiddleware
+from fireant.utils import write_named_temp_csv
 
 
 class Database(object):
@@ -72,3 +75,19 @@ class Database(object):
     def fetch_dataframe(self, query):
         with self.connect() as connection:
             return pd.read_sql(query, connection, coerce_float=True, parse_dates=True)
+
+    @staticmethod
+    def export_csv(connection, query):
+        """
+        Export result of query to temporary csv file.
+
+        :param connection: The database connection.
+        :param query: The pypika query to be executed.
+        :return: A named temporary file containing the query result.
+        """
+        cursor = connection.cursor()
+        cursor.execute(str(query))
+
+        result = cursor.fetchall()
+
+        return write_named_temp_csv(result)
