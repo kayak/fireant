@@ -62,10 +62,10 @@ mock_spend_dataset = DataSet(
     ),
 )
 
-mock_spend_join_query = mock_spend_dataset.query \
+mock_spend_join_query = mock_spend_dataset.sub_query \
     .dimension(mock_spend_dataset.fields['candidate_id']) \
     .dimension(mock_spend_dataset.fields['candidate_spend']) \
-    .sub_query_sql
+    .sql
 
 mock_dataset = DataSet(
       table=politicians_table,

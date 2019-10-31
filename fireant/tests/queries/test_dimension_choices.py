@@ -56,7 +56,7 @@ class DimensionsChoicesQueryBuilderTests(TestCase):
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
-    @patch('fireant.queries.builder.fetch_data')
+    @patch('fireant.queries.builder.dimension_choices_query_builder.fetch_data')
     def test_query_choices_for_dataset_with_hint_table(self, mock_fetch_data: Mock):
         mock_hint_dataset.fields.political_party \
             .choices \
@@ -70,7 +70,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
                                                                     'ORDER BY "$political_party"')],
                                                 FieldMatcher(mock_hint_dataset.fields.political_party))
 
-    @patch('fireant.queries.builder.fetch_data')
+    @patch('fireant.queries.builder.dimension_choices_query_builder.fetch_data')
     @patch.object(mock_hint_dataset.database, 'get_column_definitions',
                   return_value=[['candidate_name', 'varchar(128)'], ['candidate_name_display', 'varchar(128)']])
     def test_query_choices_for_field_with_display_hint_table(self,
@@ -91,7 +91,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
                                                                     'ORDER BY "$candidate_name"')],
                                                 FieldMatcher(mock_hint_dataset.fields.candidate_name))
 
-    @patch('fireant.queries.builder.fetch_data')
+    @patch('fireant.queries.builder.dimension_choices_query_builder.fetch_data')
     @patch.object(mock_hint_dataset.database, 'get_column_definitions',
                   return_value=[['political_party', 'varchar(128)'], ['state_id', 'varchar(128)']])
     def test_query_choices_for_filters_from_joins(self,
@@ -114,7 +114,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
                                                                     'ORDER BY "$political_party"')],
                                                 FieldMatcher(mock_hint_dataset.fields.political_party))
 
-    @patch('fireant.queries.builder.fetch_data')
+    @patch('fireant.queries.builder.dimension_choices_query_builder.fetch_data')
     @patch.object(mock_hint_dataset.database, 'get_column_definitions',
                   return_value=[['political_party', 'varchar(128)'], ['candidate_name', 'varchar(128)']])
     def test_query_choices_for_filters_from_base(self,
@@ -135,7 +135,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
                                                                     'ORDER BY "$political_party"')],
                                                 FieldMatcher(mock_hint_dataset.fields.political_party))
 
-    @patch('fireant.queries.builder.fetch_data')
+    @patch('fireant.queries.builder.dimension_choices_query_builder.fetch_data')
     @patch.object(mock_hint_dataset.database, 'get_column_definitions',
                   return_value=[['political_party', 'varchar(128)']])
     def test_query_choices_for_case_filter(self,
@@ -154,7 +154,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
                                                                     'ORDER BY "$political_party"')],
                                                 FieldMatcher(mock_hint_dataset.fields.political_party))
 
-    @patch('fireant.queries.builder.fetch_data')
+    @patch('fireant.queries.builder.dimension_choices_query_builder.fetch_data')
     @patch.object(mock_hint_dataset.database, 'get_column_definitions',
                   return_value=[['district_name', 'varchar(128)']])
     def test_query_choices_for_join_dimension(self,
@@ -172,7 +172,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
                                                                     'ORDER BY "$district-name"')],
                                                 FieldMatcher(mock_hint_dataset.fields['district-name']))
 
-    @patch('fireant.queries.builder.fetch_data')
+    @patch('fireant.queries.builder.dimension_choices_query_builder.fetch_data')
     @patch.object(mock_hint_dataset.database, 'get_column_definitions',
                   return_value=[['district_name', 'varchar(128)'], ['candidate_name', 'varchar(128)']])
     def test_query_choices_for_join_dimension_with_filter_from_base(self,
@@ -192,7 +192,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
                                                                     'ORDER BY "$district-name"')],
                                                 FieldMatcher(mock_hint_dataset.fields['district-name']))
 
-    @patch('fireant.queries.builder.fetch_data')
+    @patch('fireant.queries.builder.dimension_choices_query_builder.fetch_data')
     @patch.object(mock_hint_dataset.database, 'get_column_definitions',
                   return_value=[['district_name', 'varchar(128)'], ['district_id', 'varchar(128)']])
     def test_query_choices_for_join_dimension_with_filter_from_join(self,
@@ -217,7 +217,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
-@patch('fireant.queries.builder.fetch_data')
+@patch('fireant.queries.builder.dimension_choices_query_builder.fetch_data')
 class DimensionsChoicesFetchTests(TestCase):
     def test_query_choices_for_field(self, mock_fetch_data: Mock):
         mock_dataset.fields.political_party \

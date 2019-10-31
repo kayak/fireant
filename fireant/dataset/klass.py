@@ -1,11 +1,8 @@
 import itertools
 
-from pypika.queries import (
-    Table,
-)
-
 from fireant.queries import (
     DataSetQueryBuilder,
+    DataSetSubQueryBuilder,
     DimensionChoicesQueryBuilder,
     DimensionLatestQueryBuilder,
 )
@@ -92,6 +89,7 @@ class DataSet(object):
 
         # add query builder entry points
         self.query = DataSetQueryBuilder(self)
+        self.sub_query = DataSetSubQueryBuilder(self)
         self.latest = DimensionLatestQueryBuilder(self)
         self.always_query_all_metrics = always_query_all_metrics
 

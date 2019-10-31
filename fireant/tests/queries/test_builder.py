@@ -35,31 +35,6 @@ class QueryBuilderTests(TestCase):
 
         self.assertIsNot(query1, query2)
 
-    def test_widgets_returns_the_widgets(self):
-        query = mock_dataset.query
-
-        self.assertIs(query.widgets, query._widgets)
-
-    def test_filters_returns_the_filters(self):
-        query = mock_dataset.query
-
-        self.assertIs(query.widgets, query._widgets)
-
-    def test_dimensions_returns_the_dimensions(self):
-        query = mock_dataset.query
-
-        self.assertIs(query.dimensions, query._dimensions)
-
-    def test_dimensions_returns_the_references(self):
-        query = mock_dataset.query
-
-        self.assertIs(query.references, query._references)
-
-    def test_ordersby_returns_the_orders_by(self):
-        query = mock_dataset.query
-
-        self.assertIs(query.ordersby, query._orders)
-
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 class QueryBuilderValidationTests(TestCase):

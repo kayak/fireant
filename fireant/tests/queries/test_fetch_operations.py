@@ -14,9 +14,9 @@ from fireant.tests.dataset.mocks import (
 from fireant.utils import alias_selector
 
 
-@patch('fireant.queries.builder.scrub_totals_from_share_results', side_effect=lambda *args, **kwargs: args[0])
-@patch('fireant.queries.builder.paginate', side_effect=lambda *args, **kwargs: args[0])
-@patch('fireant.queries.builder.fetch_data')
+@patch('fireant.queries.builder.dataset_query_builder.scrub_totals_from_share_results', side_effect=lambda *args, **kwargs: args[0])
+@patch('fireant.queries.builder.dataset_query_builder.paginate', side_effect=lambda *args, **kwargs: args[0])
+@patch('fireant.queries.builder.dataset_query_builder.fetch_data')
 class QueryBuilderOperationsTests(TestCase):
     def test_operations_evaluated(self, mock_fetch_data: Mock, *mocks):
         mock_operation = Mock(name='mock_operation ', spec=f.Operation)

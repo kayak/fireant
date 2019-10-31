@@ -19,8 +19,8 @@ from pypika import (
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
-@patch('fireant.queries.builder.paginate')
-@patch('fireant.queries.builder.fetch_data')
+@patch('fireant.queries.builder.dataset_query_builder.paginate')
+@patch('fireant.queries.builder.dataset_query_builder.fetch_data')
 class FindShareDimensionsTests(TestCase):
     def test_find_no_share_dimensions_with_no_share_operation(self, mock_fetch_data: Mock, mock_paginate: Mock):
         mock_widget = f.Widget(mock_dataset.fields.votes)
@@ -81,8 +81,8 @@ class FindShareDimensionsTests(TestCase):
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
-@patch('fireant.queries.builder.paginate')
-@patch('fireant.queries.builder.fetch_data')
+@patch('fireant.queries.builder.dataset_query_builder.paginate')
+@patch('fireant.queries.builder.dataset_query_builder.fetch_data')
 class QueryBuilderFetchDataTests(TestCase):
     def test_pass_slicer_database_as_arg(self, mock_fetch_data: Mock, mock_paginate: Mock):
         mock_widget = f.Widget(mock_dataset.fields.votes)
@@ -173,9 +173,9 @@ class QueryBuilderFetchDataTests(TestCase):
         self.assertListEqual(result, [mock_widget.transform.return_value])
 
 
-@patch('fireant.queries.builder.scrub_totals_from_share_results', side_effect=lambda *args: args[0])
-@patch('fireant.queries.builder.paginate')
-@patch('fireant.queries.builder.fetch_data')
+@patch('fireant.queries.builder.dataset_query_builder.scrub_totals_from_share_results', side_effect=lambda *args: args[0])
+@patch('fireant.queries.builder.dataset_query_builder.paginate')
+@patch('fireant.queries.builder.dataset_query_builder.fetch_data')
 class QueryBuilderPaginationTests(TestCase):
     def test_paginate_is_called(self, mock_fetch_data: Mock, mock_paginate: Mock, *mocks):
         mock_widget = f.Widget(mock_dataset.fields.votes)

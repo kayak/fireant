@@ -31,20 +31,19 @@ Code Example
 
     spend_dataset = Dataset(...)
 
-    spend_join_query = QueryJoin.query(
-        spend_dataset.query \
+    spend_join_query = spend_dataset.sub_query \
             .dimension(mock_spend_dataset.fields['customer_id']) \
-            .dimension(mock_spend_dataset.fields['customer_spend'])
-    )
+            .dimension(mock_spend_dataset.fields['customer_spend']) \
+            .sql
 
     dataset = DataSet(
         database=vertica_database,
         table=analytics,
         joins=[
             Join(customers, analytics.customer_id == customers.id),
-            QueryJoin(query=spend_join_query,
-                      criterion=politicians_table.id == spend_join_query.customer_id,
-                      join_type=JoinType.left),
+            Join(table=spend_join_query,
+                 criterion=politicians_table.id == spend_join_query.customer_id,
+                 join_type=JoinType.left),
         ],
         fields=[
             # Non-aggregate definition
