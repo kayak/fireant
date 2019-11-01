@@ -22,7 +22,7 @@ def _get_pypika_field_name_or_alias(pypika_field):
     return pypika_field.alias if pypika_field.alias else pypika_field.name
 
 
-def normalize_join(join, dimensions, metrics):
+def normalize_join(join, dimensions, metrics, filters):
     """
     Converts and returns a standard Join instance, whenever a specialised Join class is provided.
 
@@ -32,10 +32,12 @@ def normalize_join(join, dimensions, metrics):
         A list of Field instances.
     :param metrics:
         A list of Field instances that aggregate data.
+    :param filters:
+        A list of Filter instances.
     :return: a Join instance.
     """
     if isinstance(join, DataSetJoin):
-        join = join.join_for_sub_query(dimensions, metrics)
+        join = join.join_for_sub_query(dimensions, metrics, filters)
 
     return join
 
@@ -119,7 +121,7 @@ class DataSetJoin(Join):
         self.criterion = criterion
         self.join_type = join_type
 
-    def join_for_sub_query(self, dimensions, metrics):
+    def join_for_sub_query(self, dimensions, metrics, filters):
         """
         Returns a Join instance that a PyPika Query can use to join a subquery, composed of the dimensions and
         metrics that apply to the secondary dataset.
@@ -128,13 +130,15 @@ class DataSetJoin(Join):
             A list of Field instances.
         :param metrics:
             A list of Field instances that aggregate data.
+        :param filters:
+            A list of Filter instances.
         :return: a Join instance.
         """
-        sub_query = self.__sub_query(dimensions, metrics)
+        sub_query = self.__sub_query(dimensions, metrics, filters)
         sub_query_criterion = self.__criterion_for_sub_query(sub_query, dimensions)
         return Join(sub_query, join_type=self.join_type, criterion=sub_query_criterion)
 
-    def __sub_query(self, dimensions, metrics):
+    def __sub_query(self, dimensions, metrics, filters):
         """
         Returns a sub-query that can be used when joining the secondary dataset.
 
@@ -142,6 +146,8 @@ class DataSetJoin(Join):
             A list of Field instances.
         :param metrics:
             A list of Field instances that aggregate data.
+        :param filters:
+            A list of Filter instances.
         :return: a PyPika Query instance.
         """
         sub_query = self.secondary_dataset.sub_query
@@ -155,9 +161,9 @@ class DataSetJoin(Join):
 
             if primary_field in self.field_mapping:
                 if isinstance(dimension, DimensionModifier):
-                    new_dimesion = copy.deepcopy(dimension)
-                    new_dimesion.dimension = self.field_mapping[primary_field]
-                    sub_query = sub_query.dimension(new_dimesion)
+                    new_dimension = copy.deepcopy(dimension)
+                    new_dimension.dimension = self.field_mapping[primary_field]
+                    sub_query = sub_query.dimension(new_dimension)
                 else:
                     sub_query = sub_query.dimension(self.field_mapping[primary_field])
 
@@ -181,7 +187,25 @@ class DataSetJoin(Join):
                     )
                     sub_query = sub_query.dimension(secondary_dataset_fields[nested_field_alias])
 
-        return sub_query.sql.as_(self.table._table_name)
+        pypika_query = sub_query.sql.as_(self.table._table_name)
+
+        for primary_filter in filters:
+            new_filter = copy.deepcopy(primary_filter)
+            nested_field_alias = alias_selector(new_filter.field_alias)
+
+            if nested_field_alias not in secondary_dataset_fields:
+                continue
+
+            new_criterion = copy.deepcopy(primary_filter.definition)
+            new_criterion.term = secondary_dataset_fields[nested_field_alias].definition
+            new_filter.definition = new_criterion
+
+            if new_filter.definition.term.table != self.primary_dataset.table:
+                pypika_query = pypika_query.having(new_filter.definition) \
+                    if new_filter.is_aggregate \
+                    else pypika_query.where(new_filter.definition)
+
+        return pypika_query
 
     def __criterion_for_sub_query(self, sub_query, dimensions):
         """

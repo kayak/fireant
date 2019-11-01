@@ -30,7 +30,8 @@ class SlicerContainerTests(TestCase):
         self.assertSetEqual(field_aliases, {'votes', 'wins', 'voters', 'turnout', 'wins_with_style',
                                             'timestamp', 'timestamp2', 'join_timestamp',
                                             'political_party',
-                                            'candidate-id', 'candidate-name', 'average-candidate-spend-per-candidacy',
+                                            'candidate-id', 'candidate-name',
+                                            'average-candidate-spend-per-candidacy', 'candidate-spend',
                                             'election-id', 'election-year',
                                             'district-id', 'district-name',
                                             'state', 'winner', 'deepjoin'})

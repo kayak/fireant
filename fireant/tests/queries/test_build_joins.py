@@ -39,6 +39,8 @@ class QueryBuilderJoinTests(TestCase):
             )) \
             .dimension(f.day(mock_dataset.fields.timestamp)) \
             .dimension(mock_dataset.fields['candidate-id']) \
+            .filter(mock_dataset.fields['candidate-id'].isin([1])) \
+            .filter(mock_dataset.fields['average-candidate-spend-per-candidacy'].gt(500)) \
             .sql
 
         self.assertEqual(len(queries), 1)
@@ -56,12 +58,15 @@ class QueryBuilderJoinTests(TestCase):
                          '"candidate_id" "$candidate-id",'
                          'SUM("candidate_spend") "$candidate-spend" '
                          'FROM "politics"."politician_spend" '
+                         'WHERE "candidate_id" IN (1) '
                          'GROUP BY "$timestamp","$candidate-id","$candidate-spend"'
                          ') "blend_politician_spend" '
                          'ON '
                          '"politician"."timestamp"="blend_politician_spend"."$timestamp" AND '
                          '"politician"."candidate_id"="blend_politician_spend"."$candidate-id" '
+                         'WHERE "politician"."candidate_id" IN (1) '
                          'GROUP BY "$timestamp","$candidate-id" '
+                         'HAVING AVG("blend_politician_spend"."$candidate-spend"/"politician"."num_candidacies")>500 '
                          'ORDER BY "$timestamp","$candidate-id"'
         , str(queries[0]))
 

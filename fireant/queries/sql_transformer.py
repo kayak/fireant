@@ -159,7 +159,7 @@ def make_slicer_query(database: Database,
 
     for join in find_joins_for_tables(joins, base_table, join_tables_needed_for_query):
         # Converts any specialised Join classes into the standard Join
-        base_join = normalize_join(join, dimensions, metrics)
+        base_join = normalize_join(join, dimensions, metrics, filters)
         query = query.join(base_join.table, how=base_join.join_type).on(base_join.criterion)
 
     # Add dimensions
