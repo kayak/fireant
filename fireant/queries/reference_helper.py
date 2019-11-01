@@ -11,7 +11,7 @@ from pypika.terms import (
 from .field_helper import make_term_for_dimension
 
 
-def adapt_for_reference_query(reference_parts, database, dimensions, metrics, filters, references):
+def adapt_for_reference_query(dataset, reference_parts, database, dimensions, metrics, filters, references):
     if reference_parts is None:
         return dimensions, metrics, filters
 
@@ -19,7 +19,7 @@ def adapt_for_reference_query(reference_parts, database, dimensions, metrics, fi
     # Unpack rolled up dimensions
     ref_dimension = ref_dimension.dimension if isinstance(ref_dimension, Rollup) else ref_dimension
 
-    ref_metrics = _make_reference_metrics(metrics,
+    ref_metrics = _make_reference_metrics(dataset, metrics,
                                           references[0].reference_type.alias)
     offset_func = partial(database.date_add,
                           date_part=time_unit,
@@ -50,8 +50,10 @@ def _make_reference_dimensions(database, dimensions, ref_dimension, offset_func)
             for dimension in dimensions]
 
 
-def _make_reference_metrics(metrics, ref_key):
-    return [Field(metric.alias + '_' + ref_key,
+def _make_reference_metrics(dataset, metrics, ref_key):
+    return [Field(
+                  dataset,
+                  metric.alias + '_' + ref_key,
                   metric.definition,
                   label=metric.label,
                   prefix=metric.prefix,

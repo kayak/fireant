@@ -1,9 +1,14 @@
 from collections import Iterable
 from enum import Enum
-
 from functools import wraps
 
+from pypika import (
+    Field as PypikaField,
+    Table,
+)
+
 from fireant.utils import (
+    alias_selector,
     immutable,
 )
 from .filters import (
@@ -91,6 +96,7 @@ class Field:
     """
 
     def __init__(self,
+                 dataset,
                  alias,
                  definition,
                  data_type: DataType = DataType.number,
@@ -101,6 +107,11 @@ class Field:
                  thousands: str = None,
                  precision: int = None,
                  hyperlink_template: str = None):
+        self._dataset = dataset
+        self._dataset_table = Table('blend_{}'.format(dataset.table._table_name))
+        if isinstance(definition, PypikaField):
+            # This allows fields to be referenced in other field expressions, when blending data
+            self._pypika_field_for_referencing_sub_queries = self._dataset_table[alias_selector(alias)]
         self.alias = alias
         self.data_type = data_type
         self.definition = definition
@@ -218,12 +229,72 @@ class Field:
     def __le__(self, other):
         return self.le(other)
 
+    def __add__(self, other):
+        return self._pypika_field_for_referencing_sub_queries + other
+
+    def __sub__(self, other):
+        return self._pypika_field_for_referencing_sub_queries - other
+
+    def __mul__(self, other):
+        return self._pypika_field_for_referencing_sub_queries * other
+
+    def __truediv__(self, other):
+        return self._pypika_field_for_referencing_sub_queries / other
+
+    def __pow__(self, other):
+        return self._pypika_field_for_referencing_sub_queries ** other
+
+    def __mod__(self, other):
+        return self._pypika_field_for_referencing_sub_queries % other
+
+    def __radd__(self, other):
+        return  other + self._pypika_field_for_referencing_sub_queries
+
+    def __rsub__(self, other):
+        return  other - self._pypika_field_for_referencing_sub_queries
+
+    def __rmul__(self, other):
+        return  other * self._pypika_field_for_referencing_sub_queries
+
+    def __rtruediv__(self, other):
+        return  other / self._pypika_field_for_referencing_sub_queries
+
     def __repr__(self):
         return "{alias}[{data_type}]".format(alias=self.alias,
                                              data_type=self.data_type)
 
     def __hash__(self):
-        return hash(repr(self))
+        if not hasattr(self, 'alias'):
+            """
+            Python's deep copy built-in are a problem when:
+                Have classes that must be hashed and contain reference cycles, and
+                Don't ensure hash-related (and equality related) invariants are established at object
+                construction, not just initialization
+            Since that's our case, we do this simple check to avoid exceptions during deep copy. Note that any
+            of the variables in this class would amount to the same. That said it's best to use a non nullable
+            positional argument.
+            """
+            return hash(None)
+
+        return hash((
+            self.alias, self.data_type, self.definition, self.label, self.prefix, self.suffix,
+            self.thousands, self.precision,
+        ))
+
+    def aggregate_by(self, aggregate_function, *args, **kwargs):
+        """
+        This allows fields to be referenced in other field expressions, when blending data. It's only necessary
+        when there is no arithmetic/boolean expression involved.
+
+        :param aggregate_function:
+            A PyPika aggregation function (e.g. Sum, Avg).
+        :param args:
+            Any other args that you need to pass to the provided aggregation function.
+        :param kwargs:
+            Any other kwargs that you need to pass to the provided aggregation function.
+        :return: an aggregation function instance wrapping this field.
+        """
+        return aggregate_function(self._pypika_field_for_referencing_sub_queries, *args, **kwargs)
 
     @property
     @immutable

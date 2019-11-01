@@ -1,7 +1,5 @@
 from unittest import TestCase
 
-from pypika import Table
-
 from fireant import Field
 from .mocks import mock_dataset
 

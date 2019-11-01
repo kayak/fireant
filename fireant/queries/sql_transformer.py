@@ -3,7 +3,11 @@ from typing import Iterable
 from fireant.database import Database
 from fireant.dataset.fields import Field
 from fireant.dataset.filters import Filter
-from fireant.dataset.joins import Join
+from fireant.dataset.joins import (
+    Join,
+    DataSetJoin,
+    normalize_join,
+)
 from fireant.dataset.modifiers import Rollup
 from fireant.utils import (
     alias_selector,
@@ -29,7 +33,8 @@ from .totals_helper import adapt_for_totals_query
 
 
 @apply_special_cases
-def make_slicer_query_with_totals_and_references(database,
+def make_slicer_query_with_totals_and_references(dataset,
+                                                 database,
                                                  table,
                                                  joins,
                                                  dimensions,
@@ -40,6 +45,7 @@ def make_slicer_query_with_totals_and_references(database,
                                                  orders,
                                                  share_dimensions=()):
     """
+    :param dataset:
     :param database:
     :param table:
     :param joins:
@@ -84,7 +90,8 @@ def make_slicer_query_with_totals_and_references(database,
         for reference_parts, references in reference_groups_and_none:
             (dimensions_for_ref,
              metrics_for_ref,
-             filters_for_ref) = adapt_for_reference_query(reference_parts,
+             filters_for_ref) = adapt_for_reference_query(dataset,
+                                                          reference_parts,
                                                           database,
                                                           dimensions_for_totals,
                                                           metrics,
@@ -149,8 +156,11 @@ def make_slicer_query(database: Database,
 
     # Add joins
     join_tables_needed_for_query = find_required_tables_to_join(elements, base_table)
+
     for join in find_joins_for_tables(joins, base_table, join_tables_needed_for_query):
-        query = query.join(join.table, how=join.join_type).on(join.criterion)
+        # Converts any specialised Join classes into the standard Join
+        base_join = normalize_join(join, dimensions, metrics)
+        query = query.join(base_join.table, how=base_join.join_type).on(base_join.criterion)
 
     # Add dimensions
     for dimension in dimensions:
@@ -192,7 +202,9 @@ def make_latest_query(database: Database,
     # Add joins
     join_tables_needed_for_query = find_required_tables_to_join(dimensions, base_table)
     for join in find_joins_for_tables(joins, base_table, join_tables_needed_for_query):
-        query = query.join(join.table, how=join.join_type).on(join.criterion)
+        # Converts any specialised Join classes into the standard Join
+        base_join = normalize_join(join, dimensions, metrics=[])
+        query = query.join(base_join.table, how=base_join.join_type).on(base_join.criterion)
 
     for dimension in dimensions:
         f_dimension_key = alias_selector(dimension.alias)

@@ -31,7 +31,7 @@ Introduction
 
 |Brand| arose out of an environment where several different teams, each working with data sets often with crossover, were individually building their own dashboard platforms. |Brand| was developed as a centralized way of building dashboards without the legwork.
 
-|Brand| is used to create configurations of data sets using |FeatureDataSet| which backs a database table containing analytics and defines sets of |FeatureDimension| and |FeatureMetric|. A |FeatureDimension| is used to group data by properties, such as a timestamp, an account, a device type, etc. A |FeatureMetric| is used to render quanitifiers such as clicks, ROI, conversions into a widget such as a chart or table.
+|Brand| is used to create configurations of data sets using |FeatureDataSet| which backs a database table containing analytics and defines sets of |FeatureField|. A |FeatureField| can be used to group data by properties, such as a timestamp, an account, a device type, etc, or to render quantifiers such as clicks, ROI, conversions into a widget such as a chart or table.
 
 A |FeatureDataSet| exposes a rich builder API that allows a wide range of queries to be constructed that can be rendered as several widgets. A |FeatureDataSet| can be used directly in a Jupyter_ notebook, eliminating the need to write repetitive custom queries and render the data in visualizations.
 
@@ -56,58 +56,44 @@ Instantiating a Data Set
     vertica_database = VerticaDatabase(user='myuser', password='mypassword')
     analytics, accounts = Tables('analytics', 'accounts')
 
-    my_dataset = dataset(
-        # This is the primary database table that our dataset uses
-        table=analytics,
+    spend_dataset = Dataset(...)
 
-        # Define the database connection object
+    my_dataset = DataSet(
         database=vertica_database,
-
-        joins=[
-            # Metrics and dimensions can use columns from joined tables by
-            # configuring the join here. Joins will only be used when necessary.
-            Join('accounts', accounts, analytics.account_id == accounts.id),
-        ],
-
-        metrics=[
-            # A unique key is required for each metric
-            Metric('impressions'),
-            Metric('clicks'),
-            Metric('conversions'),
-            Metric('cost'),
-            Metric('revenue'),
-
-            # By default, a metric maps one-to-one with a column in the database
-            # but it can also be given a more complex definition.
-            Metric('cpc', label='CPC',
-                   definition=fn.Sum(analytics.cost) / fn.Sum(analytics.clicks)),
-            Metric('rpc', label='RPC',
-                   definition=fn.Sum(analytics.revenue) / fn.Sum(analytics.clicks)),
-            Metric('roi', label='ROI',
-                   definition=fn.Sum(analytics.revenue) / fn.Sum(analytics.cost)),
-        ],
-
-        dimensions=[
-            # Datetime Dimensions are continuous and must be truncated to an interval
-            # like hour, day, week. Day is the default.
-            DatetimeDimension('date', definition=analytics.dt),
-
-            # Categorical dimensions are ones with a fixed number of options.
-            CategoricalDimension('device', display_options=[DimensionValue('desktop'),
-                                                    DimensionValue('tablet'),
-                                                    DimensionValue('mobile')]),
-
-            # Unique dimensions are used for entities that have a unique ID and
-            # a display name field
-            UniqueDimension('account', label='Account Name', definition=analytics.account_id,
-
-                            # The accounts table is joined to get more data about the
-                            # account.
-                            display_field=accounts.name,
-
-                            # Just a list of keys of the required joins is needed.
-                            joins=['accounts']),
-        ],
+        table=analytics,
+    ).field(
+        # Non-aggregate definition
+        alias='customer',
+        definition=customers.id,
+        label='Customer'
+    ).field(
+        # Date/Time type, also non-aggregate
+        alias='date',
+        definition=analytics.timestamp,
+        type=DataType.date,
+        label='Date'
+    ).field(
+        # Aggregate definition (The SUM function aggregates a group of values into a single value)
+        alias='clicks',
+        definition=fn.Sum(analytics.clicks),
+        label='Clicks'
+    ).field(
+        # Aggregate definition (The SUM function aggregates a group of values into a single value)
+        alias='customer-spend',
+        # We use aggregate_by here since there is no arithmetic/boolean expression involved
+        definition=spend_dataset.fields['customer-spend'].aggregate_by(fn.Sum),
+        type=DataType.number,
+        label='Spend'
+    ).field(
+        # Aggregate definition (The SUM function aggregates a group of values into a single value)
+        alias='customer-spend-per-clicks',
+        definition=fn.Sum(spend_dataset.fields['customer-spend'] / analytics.clicks),
+        type=DataType.number,
+        label='Spend / Clicks'
+    ).join(
+        customers, analytics.customer_id == customers.id
+    ).dataset_join(
+        secondary_dataset=spend_dataset, join_type=JoinType.left
     )
 
 .. _dataset_example_end:
@@ -147,11 +133,18 @@ This example uses the data set defined above
                .axis(Matplotlib.LineSeries(dataset.fields.clicks))
 
                # metrics are referenced by `dataset.metrics.{alias}`
-               .axis(Matplotlib.ColumnSeries(dataset.fields.cost, dataset.fields.revenue))
+               .axis(Matplotlib.ColumnSeries(
+                   my_dataset.fields['customer-spend'],
+                   my_dataset.fields['customer-spend-per-clicks']
+               ))
          ) \
          .widget(
             # Add a pandas data frame table widget
-            Pandas(dataset.fields.clicks, dataset.fields.cost, dataset.fields.revenue)
+            Pandas(
+                my_dataset.fields.clicks,
+                my_dataset.fields['customer-spend'],
+                my_dataset.fields['customer-spend-per-clicks']
+            )
          ) \
          .fetch()
 
@@ -208,8 +201,7 @@ Crafted with ♥ in Berlin.
 .. |Brand| replace:: *fireant*
 
 .. |FeatureDataSet| replace:: *DataSet*
-.. |FeatureMetric| replace:: *Metric*
-.. |FeatureDimension| replace:: *Dimension*
+.. |FeatureField| replace:: *Field*
 .. |FeatureFilter| replace:: *Filter*
 .. |FeatureReference| replace:: *Reference*
 .. |FeatureOperation| replace:: *Operation*

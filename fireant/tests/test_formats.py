@@ -23,11 +23,12 @@ from fireant.dataset.totals import (
     NUMBER_TOTALS,
     TEXT_TOTALS,
 )
+from fireant.tests.dataset.mocks import mock_dataset
 
-text_field = Field('text', None, data_type=DataType.text)
-number_field = Field('number', None, data_type=DataType.number)
-boolean_field = Field('boolean', None, data_type=DataType.boolean)
-date_field = Field('date', None, data_type=DataType.date)
+text_field = Field(mock_dataset, 'text', None, data_type=DataType.text)
+number_field = Field(mock_dataset, 'number', None, data_type=DataType.number)
+boolean_field = Field(mock_dataset, 'boolean', None, data_type=DataType.boolean)
+date_field = Field(mock_dataset, 'date', None, data_type=DataType.date)
 
 
 class SafeRawValueTests(TestCase):
@@ -193,25 +194,25 @@ class FormatDisplayValueTests(TestCase):
 
 class FormatDisplayValueStyleTests(TestCase):
     def test_style_numbers_with_prefix(self):
-        dollar_field = Field('number', None, data_type=DataType.number, prefix='$')
+        dollar_field = Field(mock_dataset, 'number', None, data_type=DataType.number, prefix='$')
         self.assertEqual('$1', formats.display_value(1, dollar_field))
 
     def test_style_negative_numbers_with_prefix(self):
-        dollar_field = Field('number', None, data_type=DataType.number, prefix='$')
+        dollar_field = Field(mock_dataset, 'number', None, data_type=DataType.number, prefix='$')
         self.assertEqual('$-1', formats.display_value(-1, dollar_field))
 
     def test_style_numbers_with_suffix(self):
-        euro_field = Field('number', None, data_type=DataType.number, suffix='€')
+        euro_field = Field(mock_dataset, 'number', None, data_type=DataType.number, suffix='€')
         self.assertEqual('1€', formats.display_value(1, euro_field))
 
     def test_style_numbers_with_precision(self):
-        euro_field = Field('number', None, data_type=DataType.number, precision=2)
+        euro_field = Field(mock_dataset, 'number', None, data_type=DataType.number, precision=2)
         self.assertEqual('1.23', formats.display_value(1.234567, euro_field))
 
     def test_style_numbers_with_thousands_separator(self):
-        euro_field = Field('number', None, data_type=DataType.number, thousands=',')
+        euro_field = Field(mock_dataset, 'number', None, data_type=DataType.number, thousands=',')
         self.assertEqual('1,000,000', formats.display_value(1000000, euro_field))
 
     def test_style_numbers_with_mixed(self):
-        euro_field = Field('number', None, data_type=DataType.number, prefix='$', thousands=',', precision=2)
+        euro_field = Field(mock_dataset, 'number', None, data_type=DataType.number, prefix='$', thousands=',', precision=2)
         self.assertEqual('$-1,000,000.00', formats.display_value(-1000000, euro_field))

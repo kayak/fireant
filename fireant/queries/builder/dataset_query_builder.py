@@ -85,7 +85,8 @@ class DataSetQueryBuilder(ReferenceQueryBuilderMixin, WidgetQueryBuilderMixin, Q
         references = find_and_replace_reference_dimensions(self._references, self._dimensions)
         orders = (self._orders or make_orders_for_dimensions(self._dimensions))
 
-        return make_slicer_query_with_totals_and_references(self.dataset.database,
+        return make_slicer_query_with_totals_and_references(self.dataset,
+                                                            self.dataset.database,
                                                             self.table,
                                                             self.dataset.joins,
                                                             self._dimensions,

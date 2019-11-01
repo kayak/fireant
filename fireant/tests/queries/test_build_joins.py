@@ -32,10 +32,13 @@ class QueryBuilderJoinTests(TestCase):
 
     def test_dimension_with_dataset_join_includes_a_sub_query_join_in_query(self):
         queries = mock_dataset.query \
-            .widget(f.ReactTable(mock_dataset.fields.votes)) \
+            .widget(f.ReactTable(
+                mock_dataset.fields.votes,
+                mock_dataset.fields['average-candidate-spend-per-candidacy'],
+                mock_dataset.fields['candidate-spend'],
+            )) \
             .dimension(f.day(mock_dataset.fields.timestamp)) \
             .dimension(mock_dataset.fields['candidate-id']) \
-            .dimension(mock_dataset.fields['average-candidate-spend-per-candidacy']) \
             .sql
 
         self.assertEqual(len(queries), 1)
@@ -43,19 +46,23 @@ class QueryBuilderJoinTests(TestCase):
         self.assertEqual('SELECT '
                          'TRUNC("politician"."timestamp",\'DD\') "$timestamp",'
                          '"politician"."candidate_id" "$candidate-id",'
-                         '"politician_spend"."candidate_spend"/"politician"."num_candidacies" "$average-candidate-spend-per-candidacy",'
-                         'SUM("politician"."votes") "$votes" '
+                         'SUM("politician"."votes") "$votes",'
+                         'AVG("blend_politician_spend"."$candidate-spend"/"politician"."num_candidacies") "$average-candidate-spend-per-candidacy",'
+                         'SUM("blend_politician_spend"."$candidate-spend") "$candidate-spend" '
                          'FROM "politics"."politician" '
                          'LEFT JOIN ('
                          'SELECT '
-                         '"candidate_id" "$candidate_id",'
-                         '"candidate_spend" "$candidate_spend" '
+                         'TRUNC("timestamp",\'DD\') "$timestamp",'
+                         '"candidate_id" "$candidate-id",'
+                         'SUM("candidate_spend") "$candidate-spend" '
                          'FROM "politics"."politician_spend" '
-                         'GROUP BY "$candidate_id","$candidate_spend"'
-                         ') "politician_spend" '
-                         'ON "politician"."id"="politician_spend"."candidate_id" '
-                         'GROUP BY "$timestamp","$candidate-id","$average-candidate-spend-per-candidacy" '
-                         'ORDER BY "$timestamp","$candidate-id","$average-candidate-spend-per-candidacy"'
+                         'GROUP BY "$timestamp","$candidate-id","$candidate-spend"'
+                         ') "blend_politician_spend" '
+                         'ON '
+                         '"politician"."timestamp"="blend_politician_spend"."$timestamp" AND '
+                         '"politician"."candidate_id"="blend_politician_spend"."$candidate-id" '
+                         'GROUP BY "$timestamp","$candidate-id" '
+                         'ORDER BY "$timestamp","$candidate-id"'
         , str(queries[0]))
 
     def test_dimension_with_multiple_joins_includes_joins_ordered__in_query(self):

@@ -31,40 +31,42 @@ Code Example
 
     spend_dataset = Dataset(...)
 
-    spend_join_query = spend_dataset.sub_query \
-            .dimension(mock_spend_dataset.fields['customer_id']) \
-            .dimension(mock_spend_dataset.fields['customer_spend']) \
-            .sql
-
-    dataset = DataSet(
+    my_dataset = DataSet(
         database=vertica_database,
         table=analytics,
-        joins=[
-            Join(customers, analytics.customer_id == customers.id),
-            Join(table=spend_join_query,
-                 criterion=politicians_table.id == spend_join_query.customer_id,
-                 join_type=JoinType.left),
-        ],
-        fields=[
-            # Non-aggregate definition
-            Field(alias='customer',
-                  definition=customers.id,
-                  label='Customer'),
-            # Date/Time type, also non-aggregate
-            Field(alias='date',
-                  definition=analytics.timestamp,
-                  type=DataType.date,
-                  label='Date'),
-
-            # Aggregate definitions (The SUM function aggregates a group of values into a single value)
-            Field(alias='clicks',
-                  definition=fn.Sum(analytics.clicks),
-                  label='Clicks'),
-            Field(alias='customer-spend',
-                  definition=fn.Sum(spend_join_query.customer_spend),
-                  type=DataType.number,
-                  label='Spend'),
-        ],
+    ).field(
+        # Non-aggregate definition
+        alias='customer',
+        definition=customers.id,
+        label='Customer'
+    ).field(
+        # Date/Time type, also non-aggregate
+        alias='date',
+        definition=analytics.timestamp,
+        type=DataType.date,
+        label='Date'
+    ).field(
+        # Aggregate definition (The SUM function aggregates a group of values into a single value)
+        alias='clicks',
+        definition=fn.Sum(analytics.clicks),
+        label='Clicks'
+    ).field(
+        # Aggregate definition (The SUM function aggregates a group of values into a single value)
+        alias='customer-spend',
+        # We use aggregate_by here since there is no arithmetic/boolean expression involved
+        definition=spend_dataset.fields['customer-spend'].aggregate_by(fn.Sum),
+        type=DataType.number,
+        label='Spend'
+    ).field(
+        # Aggregate definition (The SUM function aggregates a group of values into a single value)
+        alias='customer-spend-per-clicks',
+        definition=fn.Sum(spend_dataset.fields['customer-spend'] / analytics.clicks),
+        type=DataType.number,
+        label='Spend / Clicks'
+    ).join(
+        customers, analytics.customer_id == customers.id
+    ).dataset_join(
+        secondary_dataset=spend_dataset, join_type=JoinType.left
     )
 
 .. include:: ../README.rst
