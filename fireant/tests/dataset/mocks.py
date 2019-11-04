@@ -210,6 +210,11 @@ mock_hint_dataset = DataSet(
     definition=politicians_table.political_party,
     data_type=DataType.text
 ).field(
+    'candidate_name_display',
+    label='Candidate Name Display',
+    definition=politicians_table.candidate_name_display,
+    data_type=DataType.text
+).field(
     'candidate_name',
     label='Candidate Name',
     hint_table=politicians_hint_table,
@@ -225,11 +230,6 @@ mock_hint_dataset = DataSet(
     label='District Name',
     hint_table=politicians_hint_table,
     definition=district_table.district_name,
-    data_type=DataType.text
-).field(
-    'candidate_name_display',
-    label='Candidate Name Display',
-    definition=politicians_table.candidate_name_display,
     data_type=DataType.text
 ).field(
     'political_party_case',
