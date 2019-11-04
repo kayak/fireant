@@ -9,6 +9,25 @@ from pypika import (
 
 from .base import Database
 
+from .sql_types import (
+    TypeEngine,
+    Char,
+    VarChar,
+    Text,
+    Boolean,
+    Integer,
+    SmallInt,
+    BigInt,
+    Decimal,
+    Numeric,
+    Float,
+    DoublePrecision,
+    Date,
+    Time,
+    DateTime,
+    Timestamp,
+)
+
 
 class Trunc(terms.Function):
     """
@@ -95,7 +114,9 @@ class MySQLDatabase(Database):
         return DateAdd(field, interval_term)
 
     def get_column_definitions(self, schema, table):
-        """ Return a list of column name, column data type pairs """
+        """
+        Return a list of column name, column data type pairs.
+        """
         columns = Table('columns', schema='INFORMATION_SCHEMA')
 
         columns_query = MySQLQuery \
@@ -125,3 +146,52 @@ class MySQLDatabase(Database):
         cursor.execute(str(query))
 
         connection.commit()
+
+
+class MySQLTypeEngine(TypeEngine):
+    mysql_to_ansi_mapper = {
+        'bit': Char,
+        'char': Char,
+        'nchar': Char,
+        'varchar': VarChar,
+        'nvarchar': VarChar,
+        'text': Text,
+        'boolean': Boolean,
+        'int': Integer,
+        'integer': Integer,
+        'year': Integer,
+        'smallint': SmallInt,
+        'tinyint': SmallInt,
+        'bigint': BigInt,
+        'decimal': Decimal,
+        'fixed': Decimal,
+        'numeric': Numeric,
+        'float': Float,
+        'real': DoublePrecision,
+        'double': DoublePrecision,
+        'date': Date,
+        'time': Time,
+        'datetime': DateTime,
+        'timestamp': Timestamp,
+    }
+
+    ansi_to_mysql_mapper = {
+        'CHAR': 'char',
+        'VARCHAR': 'varchar',
+        'TEXT': 'text',
+        'BOOLEAN': 'boolean',
+        'INTEGER': 'integer',
+        'SMALLINT': 'smallint',
+        'BIGINT': 'bigint',
+        'DECIMAL': 'decimal',
+        'NUMERIC': 'numeric',
+        'FLOAT': 'float',
+        'REAL': 'real',
+        'DOUBLEPRECISION': 'real',
+        'DATE': 'date',
+        'TIME': 'time',
+        'TIMESTAMP': 'timestamp',
+    }
+
+    def __init__(self):
+        super(MySQLTypeEngine, self).__init__(self.mysql_to_ansi_mapper, self.ansi_to_mysql_mapper)

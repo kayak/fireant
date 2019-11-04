@@ -8,6 +8,8 @@ from unittest.mock import (
 from pypika import Field
 
 from fireant.database import MySQLDatabase
+from fireant.database.mysql import MySQLTypeEngine
+from fireant.database.sql_types import VarChar
 
 
 class TestMySQLDatabase(TestCase):
@@ -133,3 +135,23 @@ class TestMySQLLoad(TestCase):
         mock_cursor.execute.assert_called_once_with(
             'LOAD DATA LOCAL INFILE \'/path/to/file\' INTO TABLE `abc` FIELDS TERMINATED BY \',\''
         )
+
+
+class TestMySQLTypeEngine(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.mysql_type_engine = MySQLTypeEngine()
+
+    def test_to_ansi(self):
+        db_type = 'nvarchar'
+
+        ansi_type = self.mysql_type_engine.to_ansi(db_type)
+
+        self.assertTrue(isinstance(ansi_type, VarChar))
+
+    def test_from_ansi(self):
+        ansi_type = VarChar()
+
+        db_type = self.mysql_type_engine.from_ansi(ansi_type)
+
+        self.assertEqual('varchar', db_type)

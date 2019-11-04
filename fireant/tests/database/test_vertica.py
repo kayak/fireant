@@ -7,6 +7,8 @@ from unittest.mock import (
 from pypika import Field
 
 from fireant.database import VerticaDatabase
+from fireant.database.vertica import VerticaTypeEngine
+from fireant.database.sql_types import VarChar
 
 
 class TestVertica(TestCase):
@@ -121,3 +123,22 @@ class TestVerticaCopy(TestCase):
               'COPY "abc" FROM LOCAL \'/path/to/file\' PARSER fcsvparser(header=false)'
         )
 
+
+class TestVerticaTypeEngine(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.vertica_type_engine = VerticaTypeEngine()
+
+    def test_to_ansi(self):
+        db_type = 'varchar2'
+
+        ansi_type = self.vertica_type_engine.to_ansi(db_type)
+
+        self.assertTrue(isinstance(ansi_type, VarChar))
+
+    def test_from_ansi(self):
+        ansi_type = VarChar()
+
+        db_type = self.vertica_type_engine.from_ansi(ansi_type)
+
+        self.assertEqual('varchar', db_type)
