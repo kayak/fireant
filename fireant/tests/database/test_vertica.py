@@ -6,8 +6,11 @@ from unittest.mock import (
 
 from pypika import Field
 
-from fireant.database import VerticaDatabase
-from fireant.database.vertica import VerticaTypeEngine
+from fireant.database import (
+    VerticaDatabase,
+    VerticaTypeEngine,
+)
+
 from fireant.database.sql_types import VarChar
 
 

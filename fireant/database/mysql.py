@@ -8,9 +8,8 @@ from pypika import (
 )
 
 from .base import Database
-
+from .type_engine import TypeEngine
 from .sql_types import (
-    TypeEngine,
     Char,
     VarChar,
     Text,

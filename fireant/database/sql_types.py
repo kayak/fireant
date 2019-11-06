@@ -1,277 +1,223 @@
-import re
-
-from pypika.queries import Column as PypikaColumn
-
-
-class Column:
-    """
-    Represents an abstract database column.
-    """
-    def __init__(self, column_name, column_type):
-        self.name = column_name
-        self.type = column_type
-
-    def __repr__(self):
-        return self.__str__()
-
-    def __str__(self):
-        return '{name} {type}'.format(
-              name=self.name,
-              type=str(self.type),
-        )
-
-    def as_database_column(self, type_engine):
-        """
-        Returns a database specific column representation. The provided type engine is used to match the columns type
-        to its database specific representation.
-
-        :param type_engine: The type engine for converting the column's type.
-        :return: A database specific representation of the column.
-        """
-        return '{name} {type}'.format(
-              name=self.name,
-              type=type_engine.from_ansi(self.type),
-        )
-
-    def as_pypika_column(self, type_engine):
-        """
-        Returns the column as a Pypika Column instance.
-
-        :param type_engine: The type engine for converting the column's type.
-        :return: A Pypika Column instance.
-        """
-        return PypikaColumn(
-              self.name,
-              type_engine.from_ansi(self.type),
-        )
-
-
-def make_columns(db_columns, db_type_engine):
-    """
-    Creates a list of Column instances with ANSI types from db columns. The function expects
-    that the provided type engine is able match the provided db column types.
-
-    :param db_columns: A list of column definitions.
-    :param db_type_engine: A type engine to convert column types to ansi types.
-    :return: A list of Column instances with ANSI types.
-    """
-    columns = []
-    for column_definition in db_columns:
-        column_name = column_definition[0]
-        column_type = db_type_engine.to_ansi(column_definition[1])
-        columns.append(Column(column_name, column_type))
-
-    return columns
-
-
-class TypeEngine:
-    """
-    Base class for database type conversions.
-    """
-    def __init__(self, db_to_ansi_mapper, ansi_to_db_mapper):
-        self.db_to_ansi_mapper = db_to_ansi_mapper
-        self.ansi_to_db_mapper = ansi_to_db_mapper
-
-    def to_ansi(self, data_type):
-        """
-        Translates the provided data type string into an ANSI data type instance.
-
-        :param data_type: The data type string to be translated.
-        :return: An instance of an ANSI data type.
-        """
-        raw_data_type, raw_arguments = self.split_data_type(data_type.lower())
-
-        if raw_data_type not in self.db_to_ansi_mapper:
-            raise ValueError('Could not find matching ANSI type for {}.'.format(raw_data_type))
-
-        ansi_data_type = self.db_to_ansi_mapper[raw_data_type]
-
-        return ansi_data_type(*raw_arguments)
-
-    def from_ansi(self, data_type):
-        """
-        Translates an ANSI data type instance to a database specific representation.
-
-        :param data_type: The data type to be translated.
-        :return: A string representation of the database specific data type.
-        """
-        if data_type not in self.ansi_to_db_mapper:
-            raise ValueError('Could not find matching database type for {}.'.format(data_type))
-
-        return self.ansi_to_db_mapper[data_type]
-
-    @staticmethod
-    def split_data_type(data_type):
-        """
-        Splits up a data type string into type name and type arguments.
-
-        :param data_type: The data type string to be split up.
-        :return: The raw data type and raw arguments.
-        """
-        split_data_type = re.findall('\w+', data_type)
-
-        raw_data_type = split_data_type[0] if split_data_type else ''
-        raw_arguments = split_data_type[1:] if len(split_data_type) > 1 else []
-
-        return raw_data_type, raw_arguments
-
-
 class ANSIType:
     """
-    Represents an ansi data type.
+    Represents an ANSI data type.
     """
+    def __init__(self, name):
+        self.name = name
+
     def __repr__(self):
         return self.__str__()
 
     def __hash__(self):
-        return hash(str(self))
+        return hash(self.name)
 
     def __eq__(self, other):
-        return str(self) == str(other)
+        if isinstance(other, ANSIType):
+            return str(self) == str(other)
+        return self.name == str(other)
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def params(self):
+        return ''
 
 
 class Char(ANSIType):
     """
     Represents the ANSI type CHAR.
     """
-    def __init__(self, size=None):
-        self.size = size
+    def __init__(self, length=None):
+        super(Char, self).__init__(name='CHAR')
+        self.length = length
 
     def __str__(self):
-        return 'CHAR'
+        return '{name}{params}'.format(
+              name=self.name,
+              params=self.params
+        )
+
+    @property
+    def params(self):
+        return '({length})'.format(length=self.length) if self.length else ''
 
 
 class VarChar(ANSIType):
     """
     Represents the ANSI type VARCHAR.
     """
-    def __init__(self, size=None):
-        self.size = size
+    def __init__(self, length=None):
+        super(VarChar, self).__init__(name='VARCHAR')
+        self.length = length
 
     def __str__(self):
-        return 'VARCHAR'
+        return '{name}{params}'.format(
+              name=self.name,
+              params=self.params
+        )
+
+    @property
+    def params(self):
+        return '({length})'.format(length=self.length) if self.length else ''
 
 
 class Text(ANSIType):
     """
     Represents the ANSI type TEXT.
     """
-    def __str__(self):
-        return 'TEXT'
+    def __init__(self):
+        super(Text, self).__init__(name='TEXT')
 
 
 class Boolean(ANSIType):
     """
     Represents the ANSI type BOOLEAN.
     """
-    def __str__(self):
-        return 'BOOLEAN'
+    def __init__(self):
+        super(Boolean, self).__init__(name='BOOLEAN')
 
 
 class Integer(ANSIType):
     """
     Represents the ANSI type INTEGER.
     """
-    def __str__(self):
-        return 'INTEGER'
+    def __init__(self):
+        super(Integer, self).__init__(name='INTEGER')
 
 
 class SmallInt(ANSIType):
     """
     Represents the ANSI type SMALLINT.
     """
-    def __str__(self):
-        return 'SMALLINT'
+    def __init__(self):
+        super(SmallInt, self).__init__(name='SMALLINT')
 
 
 class BigInt(ANSIType):
     """
     Represents the ANSI type BIGINT.
     """
-    def __str__(self):
-        return 'BIGINT'
+    def __init__(self):
+        super(BigInt, self).__init__(name='BIGINT')
 
 
 class Decimal(ANSIType):
     """
     Represents the ANSI type DECIMAL.
     """
-    def __init__(self, p, s):
-        self.p = p
-        self.s = s
+    def __init__(self, precision=None, scale=None):
+        super(Decimal, self).__init__(name='DECIMAL')
+        self.precision = precision
+        self.scale = scale
 
     def __str__(self):
-        return 'DECIMAL'
+        return '{name}{params}'.format(
+              name=self.name,
+              params=self.params
+        )
+
+    @property
+    def params(self):
+        if not self.precision or not self.scale:
+            return ''
+
+        return '({precision},{scale})'.format(
+              precision=self.precision,
+              scale=self.scale,
+        )
 
 
 class Numeric(ANSIType):
     """
     Represents the ANSI type NUMERIC.
     """
-    def __init__(self, p, s):
-        self.p = p
-        self.s = s
+    def __init__(self, precision, scale):
+        super(Numeric, self).__init__(name='NUMERIC')
+        self.precision = precision
+        self.scale = scale
 
     def __str__(self):
-        return 'NUMERIC'
+        return '{name}{params}'.format(
+              name=self.name,
+              params=self.params
+        )
+
+    @property
+    def params(self):
+        if not self.precision or not self.scale:
+            return ''
+
+        return '({precision},{scale})'.format(
+              precision=self.precision,
+              scale=self.scale,
+        )
 
 
 class Float(ANSIType):
     """
     Represents the ANSI type FLOAT.
     """
-    def __init__(self, p):
-        self.p = p
+    def __init__(self, precision):
+        super(Float, self).__init__(name='FLOAT')
+        self.precision = precision
 
     def __str__(self):
-        return 'FLOAT'
+        return '{name}{params}'.format(
+              name=self.name,
+              params=self.params
+        )
+
+    @property
+    def params(self):
+        return '({precision})'.format(precision=self.precision) if self.precision else ''
 
 
 class Real(ANSIType):
     """
     Represents the ANSI type REAL.
     """
-    def __str__(self):
-        return 'REAL'
+    def __init__(self):
+        super(Real, self).__init__(name='REAL')
 
 
 class DoublePrecision(ANSIType):
     """
     Represents the ANSI type DOUBLEPRECISION.
     """
-    def __str__(self):
-        return 'DOUBLEPRECISION'
+    def __init__(self):
+        super(DoublePrecision, self).__init__(name='DOUBLEPRECISION')
 
 
 class Date(ANSIType):
     """
     Represents the ANSI type DATE.
     """
-    def __str__(self):
-        return 'DATE'
+    def __init__(self):
+        super(Date, self).__init__(name='DATE')
 
 
 class Time(ANSIType):
     """
     Represents the ANSI type TIME.
     """
-    def __str__(self):
-        return 'TIME'
+    def __init__(self):
+        super(Time, self).__init__(name='TIME')
 
 
 class DateTime(ANSIType):
     """
     Represents the ANSI type DATETIME.
     """
-    def __str__(self):
-        return 'DATETIME'
+    def __init__(self):
+        super(DateTime, self).__init__(name='DATETIME')
 
 
 class Timestamp(ANSIType):
     """
     Represents the ANSI type TIMESTAMP.
     """
-    def __str__(self):
-        return 'TIMESTAMP'
+    def __init__(self):
+        super(Timestamp, self).__init__(name='TIMESTAMP')
 
 
