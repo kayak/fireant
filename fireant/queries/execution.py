@@ -128,7 +128,7 @@ def _make_reference_data_frame(base_df, ref_df, reference):
     base_df.columns = ref_df.columns = [column.replace(reference.reference_type.alias, reference.alias)
                                         for column in ref_columns]
 
-    ref_delta_df = base_df - ref_df
+    ref_delta_df = base_df.subtract(ref_df, fill_value=0)
 
     if reference.delta_percent:
         return 100. * ref_delta_df / ref_df.replace(0, np.nan)  # pandas raises an exception when dividing by zero
