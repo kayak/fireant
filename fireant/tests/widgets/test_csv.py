@@ -22,6 +22,8 @@ from fireant.tests.widgets.test_pandas import _format_float
 from fireant.utils import alias_selector as f
 
 csv_options = {'quoting': QUOTE_MINIMAL}
+
+
 class CSVWidgetTests(TestCase):
     maxDiff = None
 
@@ -156,6 +158,19 @@ class CSVWidgetTests(TestCase):
         expected = dimx2_date_str_ref_df.copy()[[f('votes'), f('votes_eoe')]]
         expected.index.names = ['Timestamp', 'Party']
         expected.columns = ['Votes', 'Votes EoE']
+        expected = expected.applymap(_format_float)
+
+        self.assertEqual(expected.to_csv(**csv_options), result)
+
+    def test_time_series_multi_ref(self):
+        query_dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
+        query_references = [ElectionOverElection(mock_dataset.fields.timestamp)]
+        result = CSV(mock_dataset.fields.votes, mock_dataset.fields.wins) \
+            .transform(dimx2_date_str_ref_df, mock_dataset, query_dimensions, query_references)
+
+        expected = dimx2_date_str_ref_df.copy()[[f('votes'), f('votes_eoe'), f('wins'), f('wins_eoe')]]
+        expected.index.names = ['Timestamp', 'Party']
+        expected.columns = ['Votes', 'Votes EoE', 'Wins', 'Wins EoE']
         expected = expected.applymap(_format_float)
 
         self.assertEqual(expected.to_csv(**csv_options), result)

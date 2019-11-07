@@ -41,8 +41,8 @@ class Pandas(TransformableWidget):
         result = data_frame.copy()
 
         items = [item if reference is None else ReferenceItem(item, reference)
-                 for reference in [None] + references
-                 for item in self.items]
+                 for item in self.items
+                 for reference in [None] + references]
 
         if isinstance(data_frame.index, pd.MultiIndex):
             index_levels = [alias_selector(dimension.alias)
