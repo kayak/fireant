@@ -3,17 +3,26 @@ from unittest import (
     TestCase,
     skip,
 )
-from unittest.mock import MagicMock, patch
+from unittest.mock import (
+    MagicMock,
+    patch,
+)
 
 import numpy as np
 import pandas as pd
 import pandas.testing
-from pypika import Query
 
-from fireant import DayOverDay, VerticaDatabase
+from fireant import (
+    DayOverDay,
+    VerticaDatabase,
+)
 from fireant.dataset.modifiers import Rollup
 from fireant.dataset.totals import get_totals_marker_for_dtype
-from fireant.queries.execution import reduce_result_set, fetch_data
+from fireant.queries.execution import (
+    fetch_data,
+    reduce_result_set,
+)
+from pypika import Query
 from .mocks import (
     dimx0_metricx1_df,
     dimx1_date_df,
@@ -26,8 +35,8 @@ from .mocks import (
     dimx3_date_str_str_df,
     dimx3_date_str_str_totalsx3_df,
     mock_dataset,
-    politicians_table,
     politicians_hint_table,
+    politicians_table,
 )
 
 pd.set_option('display.expand_frame_repr', False)
@@ -137,6 +146,24 @@ class ReduceResultSetsWithReferencesTests(TestCase):
 
         timestamp = mock_dataset.fields.timestamp
         reference_groups = ([DayOverDay(timestamp, delta_percent=True)],)
+        dimensions = (timestamp,)
+        result = reduce_result_set([raw_df, ref_df], reference_groups, dimensions, ())
+
+        pandas.testing.assert_frame_equal(expected, result)
+
+    def test_reduce_delta_result_with_non_aligned_index(self):
+        raw_df = pd.DataFrame([[date(2019, 1, 2), 1],
+                               [date(2019, 1, 3), 2]],
+                              columns=['$timestamp', '$metric'])
+        ref_df = pd.DataFrame([[date(2019, 1, 2), 2]],
+                              columns=['$timestamp', '$metric_dod'])
+
+        expected = raw_df.copy()
+        expected['$metric_dod_delta'] = [-1., 2.]
+        expected.set_index('$timestamp', inplace=True)
+
+        timestamp = mock_dataset.fields.timestamp
+        reference_groups = ([DayOverDay(timestamp, delta=True)],)
         dimensions = (timestamp,)
         result = reduce_result_set([raw_df, ref_df], reference_groups, dimensions, ())
 
