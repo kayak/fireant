@@ -64,6 +64,7 @@ class VerticaDatabase(Database):
         self.user = user
         self.password = password
         self.read_timeout = read_timeout
+        self.type_engine = VerticaTypeEngine()
 
     def connect(self):
         import vertica_python

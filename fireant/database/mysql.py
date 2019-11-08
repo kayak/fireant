@@ -64,6 +64,7 @@ class MySQLDatabase(Database):
         self.user = user
         self.password = password
         self.charset = charset
+        self.type_engine = MySQLTypeEngine()
 
     def _get_connection_class(self):
         # Nesting inside a function so the import does not cause issues if users have not installed the 'mysql' extra

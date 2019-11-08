@@ -1,13 +1,7 @@
 from unittest import TestCase
 from unittest.mock import patch
 
-from pypika.queries import Column as PypikaColumn
-
-from fireant.database import (
-    TypeEngine,
-    Column,
-    make_columns,
-)
+from fireant.database import TypeEngine
 
 from fireant.database.sql_types import (
     ANSIType,
@@ -100,61 +94,3 @@ class TestBaseTypeEngine(TestCase):
         db_type = self.type_engine.from_ansi(ansi_type)
 
         self.assertEqual('integer', db_type)
-
-
-class TestColumns(TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.type_engine = TypeEngine(
-              db_to_ansi_mapper={
-                  'char': Char,
-                  'int': Integer,
-              },
-              ansi_to_db_mapper={
-                  'CHAR': 'char',
-                  'INTEGER': 'integer',
-              }
-        )
-
-    def test_column_representation(self):
-        col_a, col_b = Column('a', Char()), Column('b', Char(100))
-
-        with self.subTest('without argument'):
-            self.assertEqual('a CHAR', str(col_a))
-
-        with self.subTest('with argument'):
-            self.assertEqual('b CHAR(100)', str(col_b))
-
-    def test_as_database_column(self):
-        col_a, col_b = Column('a', Char()), Column('b', Char(100))
-
-        with self.subTest('without argument'):
-            self.assertEqual('a char', col_a.as_database_column(self.type_engine))
-
-        with self.subTest('with argument'):
-            self.assertEqual('b char(100)', col_b.as_database_column(self.type_engine))
-
-    def test_as_pypika_column(self):
-        col_a, col_b = Column('a', Char()), Column('b', Char(100))
-
-        pypika_col_a, pypika_col_b = col_a.as_pypika_column(self.type_engine), col_b.as_pypika_column(self.type_engine)
-
-        with self.subTest('without argument'):
-            self.assertTrue(isinstance(pypika_col_a, PypikaColumn))
-            self.assertEqual('"a" char', str(pypika_col_a))
-
-        with self.subTest('with argument'):
-            self.assertTrue(isinstance(pypika_col_b, PypikaColumn))
-            self.assertEqual('"b" char(100)', str(pypika_col_b))
-
-    def test_make_columns(self):
-        db_cols = [['a', 'char'], ['b', 'int']]
-
-        cols = make_columns(db_cols, self.type_engine)
-
-        self.assertEqual(len(cols), 2)
-
-        for col in cols:
-            with self.subTest('test return types'):
-                self.assertTrue(isinstance(col, Column))
-                self.assertTrue(isinstance(col.type, ANSIType))

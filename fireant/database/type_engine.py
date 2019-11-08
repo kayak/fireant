@@ -1,7 +1,5 @@
 import re
 
-from pypika.queries import Column as PypikaColumn
-
 
 class TypeEngine:
     """
@@ -53,59 +51,3 @@ class TypeEngine:
         raw_arguments = split_data_type[1:] if len(split_data_type) > 1 else []
 
         return raw_data_type, raw_arguments
-
-
-class Column:
-    """
-    Represents an abstract database column.
-    """
-    def __init__(self, column_name, column_type):
-        self.name = column_name
-        self.type = column_type
-
-    def __eq__(self, other):
-        return str(self) == str(other)
-
-    def __repr__(self):
-        return self.__str__()
-
-    def __str__(self):
-        return '{name} {type}'.format(
-              name=self.name,
-              type=str(self.type),
-        )
-
-    def as_database_column(self, type_engine):
-        """
-        Returns a database specific column representation. The provided type engine is used to match the columns type
-        to its database specific representation.
-
-        :param type_engine: The type engine for converting the column's type.
-        :return: A database specific representation of the column.
-        """
-        return '{name} {type}'.format(
-              name=self.name,
-              type=type_engine.from_ansi(self.type),
-        )
-
-    def as_pypika_column(self, type_engine):
-        """
-        Returns the column as a Pypika Column instance.
-
-        :param type_engine: The type engine for converting the column's type.
-        :return: A Pypika Column instance.
-        """
-        return PypikaColumn(
-              column_name=self.name,
-              column_type=type_engine.from_ansi(self.type),
-        )
-
-
-def make_columns(db_columns, db_type_engine):
-    columns = []
-    for column_definition in db_columns:
-        column_name = column_definition[0]
-        column_type = db_type_engine.to_ansi(column_definition[1])
-        columns.append(Column(column_name, column_type))
-
-    return columns

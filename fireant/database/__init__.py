@@ -10,9 +10,9 @@ from .vertica import (
     VerticaDatabase,
     VerticaTypeEngine,
 )
-from .data_blending import DataBlender
-from .type_engine import (
-    TypeEngine,
+from .type_engine import TypeEngine
+from .column import (
     Column,
+    ColumnsTransformer,
     make_columns,
 )
