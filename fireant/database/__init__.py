@@ -10,6 +10,7 @@ from .vertica import (
     VerticaDatabase,
     VerticaTypeEngine,
 )
+from .data_blending import DataBlender
 from .type_engine import (
     TypeEngine,
     Column,

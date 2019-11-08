@@ -35,7 +35,7 @@ class TypeEngine:
         :return: A string representation of the database specific data type.
         """
         if data_type not in self.ansi_to_db_mapper:
-            raise ValueError('Could not find matching database type for {}.'.format(data_type))
+            raise ValueError('Could not find matching database type for {}.'.format(str(data_type)))
 
         return self.ansi_to_db_mapper[data_type] + data_type.params
 
@@ -62,6 +62,9 @@ class Column:
     def __init__(self, column_name, column_type):
         self.name = column_name
         self.type = column_type
+
+    def __eq__(self, other):
+        return str(self) == str(other)
 
     def __repr__(self):
         return self.__str__()
@@ -99,14 +102,6 @@ class Column:
 
 
 def make_columns(db_columns, db_type_engine):
-    """
-    Creates a list of Column instances with ANSI types from db columns. The function expects
-    that the provided type engine is able match the provided db column types.
-
-    :param db_columns: A list of column definitions.
-    :param db_type_engine: A type engine to convert column types to ansi types.
-    :return: A list of Column instances with ANSI types.
-    """
     columns = []
     for column_definition in db_columns:
         column_name = column_definition[0]
