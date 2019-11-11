@@ -21,8 +21,19 @@ def find_version(*file_paths):
     raise RuntimeError("Unable to find version string.")
 
 
-with open('requirements.txt') as f:
-    required = f.read().splitlines()
+with open('requirements.txt') as file:
+    install_requires = file.read().splitlines()
+
+extras_requires = {}
+extras_requires_patterns = re.compile(r'requirements-extras-(\w+)\.txt')
+for file_name in os.listdir('.'):
+    match = extras_requires_patterns.search(file_name)
+    if not match:
+        continue
+
+    with open(file_name) as file:
+        extras_name = match.group(1)
+        extras_requires[extras_name] = file.read().splitlines()
 
 setup(
       name='fireant',
@@ -80,21 +91,8 @@ setup(
       keywords=('fireant python query builder querybuilder sql mysql postgres psql oracle vertica aggregated '
                 'relational database rdbms business analytics bi data science analysis pandas'),
 
-      install_requires=required,
-      tests_require=[
-          'mock'
-      ],
-      extras_require={
-          'vertica': ['vertica-python==0.7.3'],
-          'snowflake': [
-              'snowflake-connector-python==2.0.3',
-              'cryptography==2.4.2',
-          ],
-          'mysql': ['pymysql==0.8.0'],
-          'redshift': ['psycopg2==2.7.3.2'],
-          'postgresql': ['psycopg2==2.7.3.2'],
-          'ipython': ['matplotlib', 'ipython'],
-      },
-
+      install_requires=install_requires,
+      extras_require=extras_requires,
+      tests_require=['mock'],
       test_suite='fireant.tests',
 )

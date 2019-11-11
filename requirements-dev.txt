@@ -1,11 +1,11 @@
 -r requirements.txt
+-r requirements-db-vertica.txt
+-r requirements-db-snowflake.txt
+-r requirements-db-mysql.txt
+-r requirements-db-redshift.txt
+-r requirements-db-postgresql.txt
+-r requirements-db-ipython.txt
 mock
-matplotlib
-ipython
-pymysql==0.8.0
-vertica-python==0.7.3
-psycopg2==2.7.3.2
-snowflake-connector-python==1.9.1
 bumpversion==0.5.3
 wheel==0.30.0
 watchdog==0.8.3
