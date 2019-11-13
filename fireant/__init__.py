@@ -48,4 +48,4 @@ from .exceptions import SlicerException
 # noinspection PyUnresolvedReferences
 from .widgets import *
 
-__version__ = '3.1.6'
+__version__ = '3.1.7'
