@@ -1,10 +1,10 @@
 -r requirements.txt
--r requirements-db-vertica.txt
--r requirements-db-snowflake.txt
--r requirements-db-mysql.txt
--r requirements-db-redshift.txt
--r requirements-db-postgresql.txt
--r requirements-db-ipython.txt
+-r requirements-extras-vertica.txt
+-r requirements-extras-snowflake.txt
+-r requirements-extras-mysql.txt
+-r requirements-extras-redshift.txt
+-r requirements-extras-postgresql.txt
+-r requirements-extras-ipython.txt
 mock
 bumpversion==0.5.3
 wheel==0.30.0
