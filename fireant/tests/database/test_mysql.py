@@ -5,7 +5,10 @@ from unittest.mock import (
     patch,
 )
 
-from pypika import Field
+from pypika import (
+    Field,
+    Column as PypikaColumn,
+)
 
 from fireant.database import MySQLDatabase
 from fireant.database.mysql import MySQLTypeEngine
@@ -115,11 +118,22 @@ class TestMySQLDatabase(TestCase):
                                            'WHERE `table_schema`=\'test_schema\' AND `table_name`=\'test_table\' '
                                            'ORDER BY `column_name`')
 
+    def test_create_temporary_class(self):
+        mock_cursor = Mock()
+        mock_cursor.execute = Mock()
 
-class TestMySQLLoad(TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.mysql = MySQLDatabase()
+        mock_connection = Mock()
+        mock_connection.cursor.return_value = mock_cursor
+        mock_connection.commit = Mock()
+
+        columns = PypikaColumn('a', 'varchar'), PypikaColumn('b', 'varchar(100)')
+
+        MySQLDatabase().create_temporary_table(mock_connection, 'abc', columns)
+
+        self.assertEqual(1, mock_connection.commit.call_count)
+        mock_cursor.execute.assert_called_once_with(
+              'CREATE TEMPORARY TABLE "abc" ("a" varchar,"b" varchar(100))'
+        )
 
     def test_import_csv(self):
         mock_cursor = Mock()
@@ -129,7 +143,7 @@ class TestMySQLLoad(TestCase):
         mock_connection.cursor.return_value = mock_cursor
         mock_connection.commit = Mock()
 
-        self.mysql.import_csv(mock_connection, 'abc', '/path/to/file')
+        MySQLDatabase().import_csv(mock_connection, 'abc', '/path/to/file')
 
         self.assertEqual(1, mock_connection.commit.call_count)
         mock_cursor.execute.assert_called_once_with(

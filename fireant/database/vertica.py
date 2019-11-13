@@ -116,6 +116,27 @@ class VerticaDatabase(Database):
 
         connection.commit()
 
+    @staticmethod
+    def create_temporary_table(connection, table_name, columns):
+        """
+        Create a temporary table from a list of columns.
+
+        :param connection: The connection for vertica.
+        :param table_name: The name of the new temporary table.
+        :param columns: The columns of the new temporary table.
+        """
+        create_query = VerticaQuery \
+            .create_table(table_name) \
+            .temporary() \
+            .local() \
+            .preserve_rows() \
+            .columns(*columns)
+
+        cursor = connection.cursor()
+        cursor.execute(str(create_query))
+
+        connection.commit()
+
 
 class VerticaTypeEngine(TypeEngine):
     vertica_to_ansi_mapper = {
