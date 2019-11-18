@@ -117,7 +117,7 @@ class VerticaDatabase(Database):
         connection.commit()
 
     @staticmethod
-    def create_temporary_table(connection, table_name, columns):
+    def create_temporary_table_from_columns(connection, table_name, columns):
         """
         Create a temporary table from a list of columns.
 
@@ -131,6 +131,28 @@ class VerticaDatabase(Database):
             .local() \
             .preserve_rows() \
             .columns(*columns)
+
+        cursor = connection.cursor()
+        cursor.execute(str(create_query))
+
+        connection.commit()
+
+    @staticmethod
+    def create_temporary_table_from_select(connection, table_name, select_query):
+        """
+        Create a temporary table from a SELECT query.
+
+        :param connection: The connection for vertica.
+        :param table_name: The name of the new temporary table.
+        :param select_query: The query to be used for selecting data of an existing table for the new temporary table.
+        :return:
+        """
+        create_query = VerticaQuery \
+            .create_table(table_name) \
+            .temporary() \
+            .local() \
+            .preserve_rows() \
+            .as_select(select_query)
 
         cursor = connection.cursor()
         cursor.execute(str(create_query))

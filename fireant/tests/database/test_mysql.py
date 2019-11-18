@@ -8,6 +8,7 @@ from unittest.mock import (
 from pypika import (
     Field,
     Column as PypikaColumn,
+    MySQLQuery,
 )
 
 from fireant.database import MySQLDatabase
@@ -118,7 +119,7 @@ class TestMySQLDatabase(TestCase):
                                            'WHERE `table_schema`=\'test_schema\' AND `table_name`=\'test_table\' '
                                            'ORDER BY `column_name`')
 
-    def test_create_temporary_class(self):
+    def test_create_temporary_table_from_columns(self):
         mock_cursor = Mock()
         mock_cursor.execute = Mock()
 
@@ -128,11 +129,28 @@ class TestMySQLDatabase(TestCase):
 
         columns = PypikaColumn('a', 'varchar'), PypikaColumn('b', 'varchar(100)')
 
-        MySQLDatabase().create_temporary_table(mock_connection, 'abc', columns)
+        MySQLDatabase().create_temporary_table_from_columns(mock_connection, 'abc', columns)
 
         self.assertEqual(1, mock_connection.commit.call_count)
         mock_cursor.execute.assert_called_once_with(
               'CREATE TEMPORARY TABLE "abc" ("a" varchar,"b" varchar(100))'
+        )
+
+    def test_create_temporary_table_from_select(self):
+        mock_cursor = Mock()
+        mock_cursor.execute = Mock()
+
+        mock_connection = Mock()
+        mock_connection.cursor.return_value = mock_cursor
+        mock_connection.commit = Mock()
+
+        query = MySQLQuery.from_('abc').select('*')
+
+        MySQLDatabase().create_temporary_table_from_select(mock_connection, 'def', query)
+
+        self.assertEqual(1, mock_connection.commit.call_count)
+        mock_cursor.execute.assert_called_once_with(
+              'CREATE TEMPORARY TABLE "def" AS (SELECT * FROM "abc")'
         )
 
     def test_import_csv(self):

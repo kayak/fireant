@@ -148,11 +148,11 @@ class MySQLDatabase(Database):
         connection.commit()
 
     @staticmethod
-    def create_temporary_table(connection, table_name, columns):
+    def create_temporary_table_from_columns(connection, table_name, columns):
         """
-        Create a temporary table from a list of columns.
+        Creates a temporary table from a list of columns.
 
-        :param connection: The connection for vertica.
+        :param connection: The connection for mysql.
         :param table_name: The name of the new temporary table.
         :param columns: The columns of the new temporary table.
         """
@@ -160,6 +160,25 @@ class MySQLDatabase(Database):
             .create_table(table_name) \
             .temporary() \
             .columns(*columns)
+
+        cursor = connection.cursor()
+        cursor.execute(str(create_query))
+
+        connection.commit()
+
+    @staticmethod
+    def create_temporary_table_from_select(connection, table_name, select_query):
+        """
+        Creates a temporary table from a SELECT query.
+
+        :param connection: The connection for mysql.
+        :param table_name: The name of the new temporary table.
+        :param select_query: The query to be used for selecting data of an existing table for the new temporary table.
+        """
+        create_query = MySQLQuery \
+            .create_table(table_name) \
+            .temporary() \
+            .as_select(select_query)
 
         cursor = connection.cursor()
         cursor.execute(str(create_query))
