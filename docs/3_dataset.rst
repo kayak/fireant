@@ -65,8 +65,6 @@ Code Example
         label='Spend / Clicks'
     ).join(
         customers, analytics.customer_id == customers.id
-    ).dataset_join(
-        secondary_dataset=spend_dataset, join_type=JoinType.left
     )
 
 .. include:: ../README.rst

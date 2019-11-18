@@ -211,7 +211,7 @@ def groupby(items, by):
 
 
 def alias_selector(alias):
-    if alias is None:
+    if alias is None or alias.startswith('$'):
         return alias
     return '${}'.format(alias)
 

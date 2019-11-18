@@ -39,9 +39,8 @@ class DataSetSubQueryBuilder(QueryBuilder):
         return ".".join(["slicer", "data"]
                         + ["dimension({})".format(repr(dimension))
                            for dimension in self._dimensions]
-                        + ["filter({}{})".format(repr(f),
-                                                 ', apply_filter_to_totals=True' if apply_filter_to_totals else '')
-                           for f, apply_filter_to_totals in zip(self._filters, self._apply_filter_to_totals)]
+                        + ["filter({})".format(repr(f))
+                           for f in self._filters]
                         + ["orderby({}, {})".format(definition.alias,
                                                     orientation)
                            for (definition, orientation) in self._orders])

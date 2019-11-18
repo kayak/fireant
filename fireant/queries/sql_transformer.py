@@ -1,21 +1,20 @@
 from typing import Iterable
 
+from pypika import (
+    Table,
+    functions as fn,
+)
+
 from fireant.database import Database
 from fireant.dataset.fields import Field
 from fireant.dataset.filters import Filter
 from fireant.dataset.joins import (
     Join,
-    DataSetJoin,
-    normalize_join,
 )
 from fireant.dataset.modifiers import Rollup
 from fireant.utils import (
     alias_selector,
     flatten,
-)
-from pypika import (
-    Table,
-    functions as fn,
 )
 from .field_helper import (
     make_term_for_dimension,
@@ -158,9 +157,7 @@ def make_slicer_query(database: Database,
     join_tables_needed_for_query = find_required_tables_to_join(elements, base_table)
 
     for join in find_joins_for_tables(joins, base_table, join_tables_needed_for_query):
-        # Converts any specialised Join classes into the standard Join
-        base_join = normalize_join(join, dimensions, metrics, filters)
-        query = query.join(base_join.table, how=base_join.join_type).on(base_join.criterion)
+        query = query.join(join.table, how=join.join_type).on(join.criterion)
 
     # Add dimensions
     for dimension in dimensions:
@@ -202,9 +199,7 @@ def make_latest_query(database: Database,
     # Add joins
     join_tables_needed_for_query = find_required_tables_to_join(dimensions, base_table)
     for join in find_joins_for_tables(joins, base_table, join_tables_needed_for_query):
-        # Converts any specialised Join classes into the standard Join
-        base_join = normalize_join(join, dimensions, metrics=[], filters=[])
-        query = query.join(base_join.table, how=base_join.join_type).on(base_join.criterion)
+        query = query.join(join.table, how=join.join_type).on(join.criterion)
 
     for dimension in dimensions:
         f_dimension_key = alias_selector(dimension.alias)

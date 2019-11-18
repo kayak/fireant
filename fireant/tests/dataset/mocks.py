@@ -56,6 +56,11 @@ mock_spend_dataset = DataSet(
     definition=politicians_spend_table.candidate_id,
     data_type=DataType.number
 ).field(
+    'election-year',
+    label='Election Year',
+    definition=politicians_spend_table.election_year,
+    data_type=DataType.number
+).field(
     'candidate-spend',
     label='Candidate Spend',
     definition=politicians_spend_table.candidate_spend,
@@ -95,16 +100,6 @@ mock_dataset = DataSet(
     label='Candidate Name',
     definition=politicians_table.candidate_name,
     data_type=DataType.text
-).field(
-    'average-candidate-spend-per-candidacy',
-    label='Average Candidate Spend per Candidacy',
-    definition=fn.Avg(mock_spend_dataset.fields['candidate-spend'] / politicians_table.num_candidacies),
-    data_type=DataType.number
-).field(
-    'candidate-spend',
-    label='Candidate Spend',
-    definition=mock_spend_dataset.fields['candidate-spend'].aggregate_by(fn.Sum),
-    data_type=DataType.number
 ).field(
     'election-id',
     label='Election ID',
@@ -183,9 +178,18 @@ mock_dataset = DataSet(
 ).join(
     table=deep_join_table,
     criterion=deep_join_table.id == state_table.ref_id
-).dataset_join(
-    secondary_dataset=mock_spend_dataset,
-    join_type=JoinType.left
+)
+
+mock_dataset_blender = DataSetBlender(mock_dataset).join(mock_spend_dataset).field(
+    'candidate-spend',
+    label='Candidate Spend',
+    definition=mock_spend_dataset.fields['candidate-spend'].aggregate_by(fn.Sum),
+    data_type=DataType.number
+).field(
+    'average-candidate-spend-per-candidacy',
+    label='Average Candidate Spend per Candidacy',
+    definition=fn.Avg(mock_spend_dataset.fields['candidate-spend'] / mock_dataset.fields['votes']),
+    data_type=DataType.number
 )
 
 mock_case = Case() \

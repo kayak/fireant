@@ -4,7 +4,6 @@ from fireant import (
     Field,
     Join,
 )
-from fireant.dataset.joins import DataSetJoin
 from fireant.queries import (
     DataSetQueryBuilder,
     DataSetSubQueryBuilder,
@@ -103,7 +102,7 @@ class DataSet(object):
                               for f in self.fields]))
 
     def __hash__(self):
-        return hash((self.table, self.database.database, self.joins, self.fields, self.always_query_all_metrics))
+        return hash((self.table, self.database.database, tuple(self.joins), self.fields, self.always_query_all_metrics))
 
     @immutable
     def join(self, *args, **kwargs):
@@ -113,21 +112,9 @@ class DataSet(object):
         :return:
             A copy of the query with the join added.
         """
+
         self.joins.append(
             Join(*args, **kwargs)
-        )
-
-    @immutable
-    def dataset_join(self, *args, **kwargs):
-        """
-        Adds a dataset join when building a slicer query. Dataset joins enable cross-dataset queries by the means
-        of sub-queries in the query result set.
-
-        :return:
-            A copy of the query with the dataset join added.
-        """
-        self.joins.append(
-            DataSetJoin(self, *args, **kwargs)
         )
 
     @immutable

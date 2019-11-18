@@ -31,7 +31,6 @@ class SlicerContainerTests(TestCase):
                                             'timestamp', 'timestamp2', 'join_timestamp',
                                             'political_party',
                                             'candidate-id', 'candidate-name',
-                                            'average-candidate-spend-per-candidacy', 'candidate-spend',
                                             'election-id', 'election-year',
                                             'district-id', 'district-name',
                                             'state', 'winner', 'deepjoin'})
