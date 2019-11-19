@@ -109,31 +109,49 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
             for pypika_field in metric.definition.fields():
                 sub_query = sub_query_tables[pypika_field.table]
                 pypika_field.table = sub_query
+                if len(metric.definition.fields()) == 1 and not pypika_field.name.startswith('$'):
+                    pypika_field.name = alias_selector(metric.alias)
 
-        for filter in self._filters:
+        # Filtering dimensions is not necessary since mapping dimensions are present in all datasets
+        filters_for_metrics_only = []
+
+        metric_names_from_blender_dataset = set(metric.alias for metric in metrics)
+
+        # WARNING: Filters need to be deep copied, since they are raw pypika instances changed in place
+        for filter in (copy.deepcopy(filter) for filter in self._filters):
+            # We only filter in the blended query when it is a metric filter, otherwise a filtering metrics in a
+            # secondary dataset would still return filtered rows
+            if filter.field_alias not in metric_names_from_blender_dataset:
+                continue
+
             for pypika_field in filter.definition.fields():
                 sub_query = sub_query_tables[pypika_field.table]
                 pypika_field.table = sub_query
+                if len(filter.definition.fields()) == 1 and not pypika_field.name.startswith('$'):
+                    pypika_field.name = alias_selector(filter.field_alias)
+
+            filters_for_metrics_only.append(filter)
 
         # Unwrap dimension modifiers on wrapper query level, since modifiers were already applied on sub-queries
-        dimensions = []
+        dimensions_without_modifiers = []
 
         for dimension in self._dimensions:
-            new_dimension = dimension
             if isinstance(dimension, DimensionModifier):
                 # We only need to apply dimension modifiers in the from and join levels
-                new_dimension = new_dimension.dimension
+                dimension = dimension.dimension
 
-            dimensions.append(new_dimension)
+            dimension.alias = alias_selector(dimension.alias)
+            dimension.definition.name = alias_selector(dimension.alias)
+            dimensions_without_modifiers.append(dimension)
 
         return make_slicer_query_with_totals_and_references(self.dataset,
                                                             self.dataset.primary_dataset.database,
                                                             primary_table,
                                                             [join for join in sub_query_joins],
-                                                            dimensions,
+                                                            dimensions_without_modifiers,
                                                             metrics,
                                                             operations,
-                                                            self._filters,
+                                                            filters_for_metrics_only,
                                                             references,
                                                             orders,
                                                             share_dimensions=share_dimensions)
@@ -216,7 +234,6 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
 
         for dimension in dimensions:
             primary_field = dimension if isinstance(dimension, Field) else dimension.dimension
-
             if primary_field in field_mapping:
                 if isinstance(dimension, DimensionModifier):
                     new_dimension = dimension
@@ -241,17 +258,18 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
                 nested_field_alias = alias_selector(_get_pypika_field_name_or_alias(pypika_field))
 
                 if nested_field_alias not in secondary_dataset_fields:
-                    continue
+                    nested_field_alias = nested_field_alias.replace('_', '-')
+                    if nested_field_alias not in secondary_dataset_fields:
+                        continue
 
                 aggregator_func = self.aggregation_func_mapping.get(primary_field, fn.Sum)
-                new_definition = copy.deepcopy(secondary_dataset_fields[nested_field_alias].definition)
-
+                new_definition = secondary_dataset_fields[nested_field_alias].definition
                 if isinstance(new_definition, AggregateFunction):
                     for definition_pypika_field in new_definition.fields():
-                        definition_pypika_field.table = copy.deepcopy(definition_pypika_field.table)
+                        definition_pypika_field.table = definition_pypika_field.table
                     secondary_dataset_fields[nested_field_alias].definition = new_definition
                 else:
-                    new_definition.table = copy.deepcopy(new_definition.table)
+                    new_definition.table = new_definition.table
                     secondary_dataset_fields[nested_field_alias].definition = (
                         aggregator_func(new_definition)
                     )
@@ -260,12 +278,14 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         pypika_query = sub_query.sql
 
         for primary_filter in filters:
+            # WARNING: Filters need to be deep copied, since they are raw pypika instances changed in place
             new_filter = copy.deepcopy(primary_filter)
             nested_field_alias = alias_selector(new_filter.field_alias)
 
             if nested_field_alias not in secondary_dataset_fields:
                 continue
 
+            # WARNING: Filter definitions need to be deep copied, since they are raw pypika instances changed in place
             new_criterion = copy.deepcopy(primary_filter.definition)
             new_criterion.term = secondary_dataset_fields[nested_field_alias].definition
             new_filter.definition = new_criterion

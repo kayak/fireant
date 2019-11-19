@@ -30,12 +30,13 @@ class DataSetBlender(object):
         self.fields = DataSet.Fields()
 
         self.field_mapping = {}
-        field_mapping = {}
+
+        primary_dataset_field_mapping = {}
 
         for primary_field in self.primary_dataset.fields:
-            field_mapping[primary_field] = primary_field
+            primary_dataset_field_mapping[primary_field] = primary_field
 
-        self.field_mapping[primary_dataset.table._table_name] = field_mapping
+        self.field_mapping[primary_dataset.table._table_name] = primary_dataset_field_mapping
 
         for primary_field in self.primary_dataset.fields:
             if primary_field.alias not in self.fields:
