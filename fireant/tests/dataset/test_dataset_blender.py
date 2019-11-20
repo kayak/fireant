@@ -20,9 +20,9 @@ class BlendedSlicerContainerTests(TestCase):
         self.assertEqual(candidate_spend.alias, 'candidate-spend')
 
     def test_access_blended_metric_via_item(self):
-        average_candidate_spend_per_candidacy = mock_dataset_blender.fields['average-candidate-spend-per-candidacy']
-        self.assertIsInstance(average_candidate_spend_per_candidacy, Field)
-        self.assertEqual(average_candidate_spend_per_candidacy.alias, 'average-candidate-spend-per-candidacy')
+        average_candidate_spend_per_voters = mock_dataset_blender.fields['average-candidate-spend-per-voters']
+        self.assertIsInstance(average_candidate_spend_per_voters, Field)
+        self.assertEqual(average_candidate_spend_per_voters.alias, 'average-candidate-spend-per-voters')
 
     def test_access_dimension_via_attr(self):
         timestamp = mock_dataset_blender.fields.timestamp
@@ -35,7 +35,8 @@ class BlendedSlicerContainerTests(TestCase):
                                             'timestamp', 'timestamp2', 'join_timestamp',
                                             'political_party',
                                             'candidate-id', 'candidate-name', 'candidate-spend',
-                                            'average-candidate-spend-per-candidacy', 'average-candidate-spend',
+                                            'average-candidate-spend-per-voters', 'average-candidate-spend-per-wins',
+                                            'average-candidate-spend',
                                             'election-id', 'election-year',
                                             'district-id', 'district-name',
                                             'state', 'winner', 'deepjoin'})

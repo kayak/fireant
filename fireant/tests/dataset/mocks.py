@@ -187,9 +187,14 @@ mock_dataset_blender = DataSetBlender(mock_dataset).join(mock_spend_dataset).fie
     definition=mock_spend_dataset.fields['candidate-spend'].aggregate_by(fn.Avg),
     data_type=DataType.number
 ).field(
-    'average-candidate-spend-per-candidacy',
-    label='Average Candidate Spend per Candidacy',
-    definition=fn.Avg(mock_spend_dataset.fields['candidate-spend'] / mock_dataset.fields['votes']),
+    'average-candidate-spend-per-voters',
+    label='Average Candidate Spend per Voters',
+    definition=fn.Avg(mock_spend_dataset.fields['candidate-spend'] / mock_dataset.fields['voters']),
+    data_type=DataType.number
+).field(
+    'average-candidate-spend-per-wins',
+    label='Average Candidate Spend per Wins',
+    definition=fn.Avg(mock_spend_dataset.fields['candidate-spend'] / mock_dataset.fields['wins']),
     data_type=DataType.number
 )
 

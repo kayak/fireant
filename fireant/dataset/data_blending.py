@@ -72,7 +72,7 @@ class DataSetBlender(object):
             If not provided, fields with the same name will be matched by default.
 
         :return:
-            A copy of the query with the join added.
+            A copy of this DataSetBlender instance with the join added.
         """
         if field_mapping is None:
             field_mapping = {}
@@ -96,7 +96,7 @@ class DataSetBlender(object):
         Adds a field when building a slicer query. Fields are similar to a column in a database query result set.
 
         :return:
-            A copy of the query with the field added.
+            A copy of this DataSetBlender instance with the field added.
         """
         field = Field(self, *args, **kwargs)
 

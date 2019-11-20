@@ -110,7 +110,7 @@ class DataSet(object):
         Adds a join when building a slicer query.
 
         :return:
-            A copy of the query with the join added.
+            A copy of this DataSet instance with the join added.
         """
 
         self.joins.append(
@@ -123,7 +123,7 @@ class DataSet(object):
         Adds a field when building a slicer query. Fields are similar to a column in a database query result set.
 
         :return:
-            A copy of the query with the field added.
+            A copy of this DataSet instance with the field added.
         """
         field = Field(self, *args, **kwargs)
 

@@ -22,10 +22,20 @@ class DataSetSubQueryBuilder(QueryBuilder):
         :param alias: an alias. Defaults to the query builder's table name.
         :return: a Pypika's Query subclass instance.
         """
+        dimensions = []
+        metrics = []
+
+        for metric_or_dimension in self._dimensions:
+            if metric_or_dimension.definition.is_aggregate:
+                metrics.append(metric_or_dimension)
+            else:
+                dimensions.append(metric_or_dimension)
+
         query = make_slicer_query(database=self.dataset.database,
                                   base_table=self.table,
                                   joins=self.dataset.joins,
-                                  dimensions=self._dimensions,
+                                  dimensions=dimensions,
+                                  metrics=metrics,
                                   filters=self._filters) \
             .limit(self._limit) \
             .offset(self._offset)
