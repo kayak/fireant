@@ -226,7 +226,7 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         :return: a PyPika Query instance.
         """
         sub_query = dataset.sub_query
-        field_mapping = self.dataset.field_mapping[dataset.table._table_name]
+        field_mapping = self.dataset.field_mapping[dataset.table]
 
         secondary_dataset_fields = {
             alias_selector(field.alias): field for ds in [dataset] for field in ds.fields
@@ -313,7 +313,7 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         """
         criterion = None
         dimensions_without_mapping = []
-        field_mapping = self.dataset.field_mapping[dataset.table._table_name]
+        field_mapping = self.dataset.field_mapping[dataset.table]
 
         for dimension in dimensions:
             primary_field = dimension if isinstance(dimension, Field) else dimension.dimension

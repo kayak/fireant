@@ -61,7 +61,8 @@ class _Container(object):
 
 class DataSet(object):
     """
-    WRITEME
+    The DataSet class abstracts the query generation, given the fields and what not that were provided, and the
+    fetching of the aforementioned query's data.
     """
 
     class Fields(_Container):

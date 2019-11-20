@@ -1,9 +1,5 @@
-from .query_builder import (
-    QueryBuilder,
-)
-from ..sql_transformer import (
-    make_slicer_query,
-)
+from .query_builder import QueryBuilder
+from ..sql_transformer import make_slicer_query
 
 
 class DataSetSubQueryBuilder(QueryBuilder):

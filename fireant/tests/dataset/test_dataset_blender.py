@@ -42,20 +42,20 @@ class BlendedSlicerContainerTests(TestCase):
                                             'state', 'winner', 'deepjoin'})
 
     def test_has_a_field_mapping_entry_for_the_primary_dataset(self):
-        self.assertIn(mock_dataset.table._table_name, mock_dataset_blender.field_mapping)
+        self.assertIn(mock_dataset.table, mock_dataset_blender.field_mapping)
 
     def test_has_a_field_mapping_entry_for_the_only_secondary_dataset(self):
-        self.assertIn(mock_spend_dataset.table._table_name, mock_dataset_blender.field_mapping)
+        self.assertIn(mock_spend_dataset.table, mock_dataset_blender.field_mapping)
 
     def test_maps_all_fields_from_the_primary_dataset_into_themselves(self):
         self.assertDictEqual(
-            mock_dataset_blender.field_mapping[mock_dataset.table._table_name],
+            mock_dataset_blender.field_mapping[mock_dataset.table],
             {field: field for field in mock_dataset.fields}
         )
 
     def test_maps_all_fields_across_secondary_datasets_that_have_the_same_alias_when_a_mapping_is_not_provided(self):
         self.assertDictEqual(
-            mock_dataset_blender.field_mapping[mock_spend_dataset.table._table_name],
+            mock_dataset_blender.field_mapping[mock_spend_dataset.table],
             {
                 mock_dataset.fields['timestamp']: mock_spend_dataset.fields['timestamp'],
                 mock_dataset.fields['candidate-id']: mock_spend_dataset.fields['candidate-id'],
