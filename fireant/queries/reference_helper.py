@@ -51,15 +51,24 @@ def _make_reference_dimensions(database, dimensions, ref_dimension, offset_func)
 
 
 def _make_reference_metrics(dataset, metrics, ref_key):
+    metric_copies = []
+
+    for metric in [copy.deepcopy(metric) for metric in metrics]:
+        for pypika_field in metric.definition.fields():
+            if pypika_field.name.startswith('$'):
+                pypika_field.name = '{}_{}'.format(pypika_field.name, ref_key)
+
+        metric_copies.append(metric)
+
     return [Field(
                   dataset,
-                  metric.alias + '_' + ref_key,
+                  '{}_{}'.format(metric.alias, ref_key),
                   metric.definition,
                   label=metric.label,
                   prefix=metric.prefix,
                   suffix=metric.suffix,
                   precision=metric.precision)
-            for metric in metrics]
+            for metric in metric_copies]
 
 
 def _make_reference_filters(filters, ref_dimension, offset_func):

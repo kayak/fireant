@@ -22,23 +22,16 @@ class DataSetBlenderQueryBuilderTests(TestCase):
 
         self.assertEqual(
                          'SELECT '
-                         '"politician_spend"."$timestamp" "$timestamp",'
-                         'SUM("politician"."$votes") "$votes" '
+                         '"sq0"."$timestamp" "$timestamp",'
+                         'SUM("sq0"."$votes") "$votes" '
                          'FROM ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
-                         ') "politician" '
-                         'LEFT JOIN ('
-                         'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp" '
-                         'FROM "politics"."politician_spend" '
-                         'GROUP BY "$timestamp"'
-                         ') "politician_spend" '
-                         'ON '
-                         '"politician"."timestamp"="politician_spend"."$timestamp" '
+                         'GROUP BY "$timestamp" '
+                         'ORDER BY "$timestamp"'
+                         ') "sq0" '
                          'GROUP BY "$timestamp" '
                          'ORDER BY "$timestamp"'
         , str(queries[0]))
@@ -55,23 +48,25 @@ class DataSetBlenderQueryBuilderTests(TestCase):
 
         self.assertEqual(
                          'SELECT '
-                         '"politician_spend"."$timestamp" "$timestamp",'
-                         'SUM("politician_spend"."$candidate-spend") "$candidate-spend" '
+                         '"sq0"."$timestamp" "$timestamp",'
+                         'SUM("sq1"."$candidate-spend") "$candidate-spend" '
                          'FROM ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
-                         ') "politician" '
+                         'GROUP BY "$timestamp" '
+                         'ORDER BY "$timestamp"'
+                         ') "sq0" '
                          'LEFT JOIN ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
                          'SUM("candidate_spend") "$candidate-spend" '
                          'FROM "politics"."politician_spend" '
-                         'GROUP BY "$timestamp"'
-                         ') "politician_spend" '
+                         'GROUP BY "$timestamp" '
+                         'ORDER BY "$timestamp"'
+                         ') "sq1" '
                          'ON '
-                         '"politician"."timestamp"="politician_spend"."$timestamp" '
+                         '"sq0"."timestamp"="sq1"."$timestamp" '
                          'GROUP BY "$timestamp" '
                          'ORDER BY "$timestamp"'
         , str(queries[0]))
@@ -88,29 +83,29 @@ class DataSetBlenderQueryBuilderTests(TestCase):
 
         self.assertEqual(
                          'SELECT '
-                         '"politician_spend"."$timestamp" "$timestamp",'
-                         'AVG("politician_spend"."$candidate-spend"/"politician"."$wins") "$average-candidate-spend-per-wins" '
+                         '"sq0"."$timestamp" "$timestamp",'
+                         'AVG("sq1"."$candidate-spend"/"sq0"."$wins") "$average-candidate-spend-per-wins" '
                          'FROM ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
                          'SUM("is_winner") "$wins" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
-                         ') "politician" '
+                         'GROUP BY "$timestamp" '
+                         'ORDER BY "$timestamp"'
+                         ') "sq0" '
                          'LEFT JOIN ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
                          'SUM("candidate_spend") "$candidate-spend" '
                          'FROM "politics"."politician_spend" '
-                         'GROUP BY "$timestamp"'
-                         ') "politician_spend" '
+                         'GROUP BY "$timestamp" '
+                         'ORDER BY "$timestamp"'
+                         ') "sq1" '
                          'ON '
-                         '"politician"."timestamp"="politician_spend"."$timestamp" '
+                         '"sq0"."timestamp"="sq1"."$timestamp" '
                          'GROUP BY "$timestamp" '
                          'ORDER BY "$timestamp"'
         , str(queries[0]))
-
-
 
     def test_dimension_with_multiple_field_metric_from_join_in_primary_dataset_in_query(self):
         queries = mock_dataset_blender.query \
@@ -124,8 +119,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
 
         self.assertEqual(
                          'SELECT '
-                         '"politician_spend"."$timestamp" "$timestamp",'
-                         'AVG("politician_spend"."$candidate-spend"/"politician"."$voters") "$average-candidate-spend-per-voters" '
+                         '"sq0"."$timestamp" "$timestamp",'
+                         'AVG("sq1"."$candidate-spend"/"sq0"."$voters") "$average-candidate-spend-per-voters" '
                          'FROM ('
                          'SELECT '
                          'TRUNC("politician"."timestamp",\'DD\') "$timestamp",'
@@ -133,17 +128,19 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                          'FROM "politics"."politician" '
                          'JOIN "politics"."voter" '
                          'ON "politician"."id"="voter"."politician_id" '
-                         'GROUP BY "$timestamp"'
-                         ') "politician" '
+                         'GROUP BY "$timestamp" '
+                         'ORDER BY "$timestamp"'
+                         ') "sq0" '
                          'LEFT JOIN ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
                          'SUM("candidate_spend") "$candidate-spend" '
                          'FROM "politics"."politician_spend" '
-                         'GROUP BY "$timestamp"'
-                         ') "politician_spend" '
+                         'GROUP BY "$timestamp" '
+                         'ORDER BY "$timestamp"'
+                         ') "sq1" '
                          'ON '
-                         '"politician"."timestamp"="politician_spend"."$timestamp" '
+                         '"sq0"."timestamp"="sq1"."$timestamp" '
                          'GROUP BY "$timestamp" '
                          'ORDER BY "$timestamp"'
         , str(queries[0]))
@@ -160,23 +157,25 @@ class DataSetBlenderQueryBuilderTests(TestCase):
 
         self.assertEqual(
                          'SELECT '
-                         '"politician_spend"."$timestamp" "$timestamp",'
-                         'AVG("politician_spend"."$candidate-spend") "$average-candidate-spend" '
+                         '"sq0"."$timestamp" "$timestamp",'
+                         'AVG("sq1"."$candidate-spend") "$average-candidate-spend" '
                          'FROM ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
-                         ') "politician" '
+                         'GROUP BY "$timestamp" '
+                         'ORDER BY "$timestamp"'
+                         ') "sq0" '
                          'LEFT JOIN ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
                          'SUM("candidate_spend") "$candidate-spend" '
                          'FROM "politics"."politician_spend" '
-                         'GROUP BY "$timestamp"'
-                         ') "politician_spend" '
+                         'GROUP BY "$timestamp" '
+                         'ORDER BY "$timestamp"'
+                         ') "sq1" '
                          'ON '
-                         '"politician"."timestamp"="politician_spend"."$timestamp" '
+                         '"sq0"."timestamp"="sq1"."$timestamp" '
                          'GROUP BY "$timestamp" '
                          'ORDER BY "$timestamp"'
         , str(queries[0]))
@@ -194,26 +193,19 @@ class DataSetBlenderQueryBuilderTests(TestCase):
 
         self.assertEqual(
                          'SELECT '
-                         '"politician_spend"."$timestamp" "$timestamp",'
-                         'SUM("politician"."$votes") "$votes" '
+                         '"sq0"."$timestamp" "$timestamp",'
+                         'SUM("sq0"."$votes") "$votes" '
                          'FROM ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "$timestamp" '
-                         'HAVING SUM("votes")>10'
-                         ') "politician" '
-                         'LEFT JOIN ('
-                         'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp" '
-                         'FROM "politics"."politician_spend" '
-                         'GROUP BY "$timestamp"'
-                         ') "politician_spend" '
-                         'ON '
-                         '"politician"."timestamp"="politician_spend"."$timestamp" '
+                         'HAVING SUM("votes")>10 '
+                         'ORDER BY "$timestamp"'
+                         ') "sq0" '
                          'GROUP BY "$timestamp" '
-                         'HAVING SUM("politician"."$votes")>10 '
+                         'HAVING SUM("sq0"."$votes")>10 '
                          'ORDER BY "$timestamp"'
         , str(queries[0]))
 
@@ -230,26 +222,28 @@ class DataSetBlenderQueryBuilderTests(TestCase):
 
         self.assertEqual(
                          'SELECT '
-                         '"politician_spend"."$timestamp" "$timestamp",'
-                         'SUM("politician_spend"."$candidate-spend") "$candidate-spend" '
+                         '"sq0"."$timestamp" "$timestamp",'
+                         'SUM("sq1"."$candidate-spend") "$candidate-spend" '
                          'FROM ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
-                         ') "politician" '
+                         'GROUP BY "$timestamp" '
+                         'ORDER BY "$timestamp"'
+                         ') "sq0" '
                          'LEFT JOIN ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
                          'SUM("candidate_spend") "$candidate-spend" '
                          'FROM "politics"."politician_spend" '
                          'GROUP BY "$timestamp" '
-                         'HAVING SUM("candidate_spend")>500'
-                         ') "politician_spend" '
+                         'HAVING SUM("candidate_spend")>500 '
+                         'ORDER BY "$timestamp"'
+                         ') "sq1" '
                          'ON '
-                         '"politician"."timestamp"="politician_spend"."$timestamp" '
+                         '"sq0"."timestamp"="sq1"."$timestamp" '
                          'GROUP BY "$timestamp" '
-                         'HAVING SUM("politician_spend"."$candidate-spend")>500 '
+                         'HAVING SUM("sq1"."$candidate-spend")>500 '
                          'ORDER BY "$timestamp"'
         , str(queries[0]))
 
@@ -267,27 +261,29 @@ class DataSetBlenderQueryBuilderTests(TestCase):
 
         self.assertEqual(
                          'SELECT '
-                         '"politician_spend"."$timestamp" "$timestamp",'
-                         'SUM("politician"."$votes") "$votes",'
-                         'SUM("politician_spend"."$candidate-spend") "$candidate-spend" '
+                         '"sq0"."$timestamp" "$timestamp",'
+                         'SUM("sq0"."$votes") "$votes",'
+                         'SUM("sq1"."$candidate-spend") "$candidate-spend" '
                          'FROM ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "candidate_id" IN (1) '
-                         'GROUP BY "$timestamp"'
-                         ') "politician" '
+                         'GROUP BY "$timestamp" '
+                         'ORDER BY "$timestamp"'
+                         ') "sq0" '
                          'LEFT JOIN ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
                          'SUM("candidate_spend") "$candidate-spend" '
                          'FROM "politics"."politician_spend" '
                          'WHERE "candidate_id" IN (1) '
-                         'GROUP BY "$timestamp"'
-                         ') "politician_spend" '
+                         'GROUP BY "$timestamp" '
+                         'ORDER BY "$timestamp"'
+                         ') "sq1" '
                          'ON '
-                         '"politician"."timestamp"="politician_spend"."$timestamp" '
+                         '"sq0"."timestamp"="sq1"."$timestamp" '
                          'GROUP BY "$timestamp" '
                          'ORDER BY "$timestamp"'
         , str(queries[0]))
@@ -306,29 +302,70 @@ class DataSetBlenderQueryBuilderTests(TestCase):
 
         self.assertEqual(
                          'SELECT '
-                         '"politician_spend"."$timestamp" "$timestamp",'
-                         'SUM("politician"."$votes") "$votes",'
-                         'SUM("politician_spend"."$candidate-spend") "$candidate-spend" '
+                         '"sq0"."$timestamp" "$timestamp",'
+                         'SUM("sq0"."$votes") "$votes",'
+                         'SUM("sq1"."$candidate-spend") "$candidate-spend" '
                          'FROM ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "$timestamp" '
-                         'HAVING SUM("votes")>10'
-                         ') "politician" '
+                         'HAVING SUM("votes")>10 '
+                         'ORDER BY "$timestamp"'
+                         ') "sq0" '
                          'LEFT JOIN ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
                          'SUM("candidate_spend") "$candidate-spend" '
                          'FROM "politics"."politician_spend" '
-                         'GROUP BY "$timestamp"'
-                         ') "politician_spend" '
-                         'ON '
-                         '"politician"."timestamp"="politician_spend"."$timestamp" '
                          'GROUP BY "$timestamp" '
-                         'HAVING SUM("politician"."$votes")>10 '
                          'ORDER BY "$timestamp"'
+                         ') "sq1" '
+                         'ON '
+                         '"sq0"."timestamp"="sq1"."$timestamp" '
+                         'GROUP BY "$timestamp" '
+                         'HAVING SUM("sq0"."$votes")>10 '
+                         'ORDER BY "$timestamp"'
+        , str(queries[0]))
+
+    def test_multiple_metrics_with_an_order_by_in_query(self):
+        queries = mock_dataset_blender.query \
+            .widget(f.ReactTable(
+                mock_dataset_blender.fields['votes'],
+                mock_dataset_blender.fields['candidate-spend'],
+            )) \
+            .dimension(f.day(mock_dataset_blender.fields.timestamp)) \
+            .orderby(mock_dataset_blender.fields['votes']) \
+            .sql
+
+        self.assertEqual(len(queries), 1)
+
+        self.assertEqual(
+                         'SELECT '
+                         '"sq0"."$timestamp" "$timestamp",'
+                         'SUM("sq0"."$votes") "$votes",'
+                         'SUM("sq1"."$candidate-spend") "$candidate-spend" '
+                         'FROM ('
+                         'SELECT '
+                         'TRUNC("timestamp",\'DD\') "$timestamp",'
+                         'SUM("votes") "$votes" '
+                         'FROM "politics"."politician" '
+                         'GROUP BY "$timestamp" '
+                         'ORDER BY "$timestamp"'
+                         ') "sq0" '
+                         'LEFT JOIN ('
+                         'SELECT '
+                         'TRUNC("timestamp",\'DD\') "$timestamp",'
+                         'SUM("candidate_spend") "$candidate-spend" '
+                         'FROM "politics"."politician_spend" '
+                         'GROUP BY "$timestamp" '
+                         'ORDER BY "$timestamp"'
+                         ') "sq1" '
+                         'ON '
+                         '"sq0"."timestamp"="sq1"."$timestamp" '
+                         'GROUP BY "$timestamp" '
+                         'ORDER BY "$votes"'
         , str(queries[0]))
 
     def test_multiple_dimensions_with_a_filter_operating_in_a_secondary_dataset_metric_in_query(self):
@@ -345,30 +382,208 @@ class DataSetBlenderQueryBuilderTests(TestCase):
 
         self.assertEqual(
                          'SELECT '
-                         '"politician_spend"."$timestamp" "$timestamp",'
-                         'SUM("politician"."$votes") "$votes",'
-                         'SUM("politician_spend"."$candidate-spend") "$candidate-spend" '
+                         '"sq0"."$timestamp" "$timestamp",'
+                         'SUM("sq0"."$votes") "$votes",'
+                         'SUM("sq1"."$candidate-spend") "$candidate-spend" '
                          'FROM ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp"'
-                         ') "politician" '
+                         'GROUP BY "$timestamp" '
+                         'ORDER BY "$timestamp"'
+                         ') "sq0" '
                          'LEFT JOIN ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
                          'SUM("candidate_spend") "$candidate-spend" '
                          'FROM "politics"."politician_spend" '
                          'GROUP BY "$timestamp" '
-                         'HAVING SUM("candidate_spend")>500'
-                         ') "politician_spend" '
+                         'HAVING SUM("candidate_spend")>500 '
+                         'ORDER BY "$timestamp"'
+                         ') "sq1" '
                          'ON '
-                         '"politician"."timestamp"="politician_spend"."$timestamp" '
+                         '"sq0"."timestamp"="sq1"."$timestamp" '
                          'GROUP BY "$timestamp" '
-                         'HAVING SUM("politician_spend"."$candidate-spend")>500 '
+                         'HAVING SUM("sq1"."$candidate-spend")>500 '
                          'ORDER BY "$timestamp"'
         , str(queries[0]))
+
+    def test_multiple_dimensions_with_a_reference_in_primary_dataset_in_query(self):
+        queries = mock_dataset_blender.query \
+            .widget(f.ReactTable(
+                mock_dataset_blender.fields['votes'],
+            )) \
+            .dimension(f.day(mock_dataset_blender.fields.timestamp)) \
+            .reference(f.WeekOverWeek(mock_dataset_blender.fields.timestamp)) \
+            .sql
+
+        self.assertEqual(len(queries), 2)
+
+        with self.subTest('base query is same as without reference'):
+            self.assertEqual(
+                             'SELECT '
+                             '"sq0"."$timestamp" "$timestamp",'
+                             'SUM("sq0"."$votes") "$votes" '
+                             'FROM ('
+                             'SELECT '
+                             'TRUNC("timestamp",\'DD\') "$timestamp",'
+                             'SUM("votes") "$votes" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$timestamp" '
+                             'ORDER BY "$timestamp"'
+                             ') "sq0" '
+                             'GROUP BY "$timestamp" '
+                             'ORDER BY "$timestamp"'
+            , str(queries[0]))
+
+        with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
+            self.assertEqual(
+                             'SELECT '
+                             '"sq0"."$timestamp" "$timestamp",'
+                             'SUM("sq0"."$votes_wow") "$votes_wow" '
+                             'FROM ('
+                             'SELECT '
+                             'TRUNC(TIMESTAMPADD(\'week\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
+                             'SUM("votes") "$votes_wow" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$timestamp" '
+                             'ORDER BY "$timestamp"'
+                             ') "sq0" '
+                             'GROUP BY "$timestamp" '
+                             'ORDER BY "$timestamp"'
+            , str(queries[1]))
+
+    def test_multiple_dimensions_with_a_reference_in_secondary_dataset_in_query(self):
+        queries = mock_dataset_blender.query \
+            .widget(f.ReactTable(
+                mock_dataset_blender.fields['candidate-spend'],
+            )) \
+            .dimension(f.day(mock_dataset_blender.fields.timestamp)) \
+            .reference(f.WeekOverWeek(mock_dataset_blender.fields.timestamp)) \
+            .sql
+
+        self.assertEqual(len(queries), 2)
+
+        with self.subTest('base query is same as without reference'):
+            self.assertEqual(
+                             'SELECT '
+                             '"sq0"."$timestamp" "$timestamp",'
+                             'SUM("sq1"."$candidate-spend") "$candidate-spend" '
+                             'FROM ('
+                             'SELECT '
+                             'TRUNC("timestamp",\'DD\') "$timestamp" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$timestamp" '
+                             'ORDER BY "$timestamp"'
+                             ') "sq0" '
+                             'LEFT JOIN ('
+                             'SELECT '
+                             'TRUNC("timestamp",\'DD\') "$timestamp",'
+                             'SUM("candidate_spend") "$candidate-spend" '
+                             'FROM "politics"."politician_spend" '
+                             'GROUP BY "$timestamp" '
+                             'ORDER BY "$timestamp"'
+                             ') "sq1" '
+                             'ON '
+                             '"sq0"."timestamp"="sq1"."$timestamp" '
+                             'GROUP BY "$timestamp" '
+                             'ORDER BY "$timestamp"'
+            , str(queries[0]))
+
+        with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
+            self.assertEqual(
+                        'SELECT '
+                        '"sq0"."$timestamp" "$timestamp",'
+                        'SUM("sq1"."$candidate-spend_wow") "$candidate-spend_wow" '
+                        'FROM ('
+                        'SELECT '
+                         'TRUNC(TIMESTAMPADD(\'week\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp" '
+                        'FROM "politics"."politician" '
+                        'GROUP BY "$timestamp" '
+                        'ORDER BY "$timestamp"'
+                        ') "sq0" '
+                        'LEFT JOIN ('
+                        'SELECT '
+                         'TRUNC(TIMESTAMPADD(\'week\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
+                        'SUM("candidate_spend") "$candidate-spend_wow" '
+                        'FROM "politics"."politician_spend" '
+                        'GROUP BY "$timestamp" '
+                        'ORDER BY "$timestamp"'
+                        ') "sq1" '
+                        'ON '
+                        '"sq0"."timestamp"="sq1"."$timestamp" '
+                        'GROUP BY "$timestamp" '
+                        'ORDER BY "$timestamp"'
+            , str(queries[1]))
+
+    def test_multiple_dimensions_with_a_refrence_in_both_datasets_in_query(self):
+        queries = mock_dataset_blender.query \
+            .widget(f.ReactTable(
+                mock_dataset_blender.fields['votes'],
+                mock_dataset_blender.fields['candidate-spend'],
+            )) \
+            .dimension(f.day(mock_dataset_blender.fields.timestamp)) \
+            .reference(f.WeekOverWeek(mock_dataset_blender.fields.timestamp)) \
+            .sql
+
+        self.assertEqual(len(queries), 2)
+
+        with self.subTest('base query is same as without reference'):
+            self.assertEqual(
+                             'SELECT '
+                             '"sq0"."$timestamp" "$timestamp",'
+                             'SUM("sq0"."$votes") "$votes",'
+                             'SUM("sq1"."$candidate-spend") "$candidate-spend" '
+                             'FROM ('
+                             'SELECT '
+                             'TRUNC("timestamp",\'DD\') "$timestamp",'
+                             'SUM("votes") "$votes" '
+                             'FROM "politics"."politician" '
+                             'GROUP BY "$timestamp" '
+                             'ORDER BY "$timestamp"'
+                             ') "sq0" '
+                             'LEFT JOIN ('
+                             'SELECT '
+                             'TRUNC("timestamp",\'DD\') "$timestamp",'
+                             'SUM("candidate_spend") "$candidate-spend" '
+                             'FROM "politics"."politician_spend" '
+                             'GROUP BY "$timestamp" '
+                             'ORDER BY "$timestamp"'
+                             ') "sq1" '
+                             'ON '
+                             '"sq0"."timestamp"="sq1"."$timestamp" '
+                             'GROUP BY "$timestamp" '
+                             'ORDER BY "$timestamp"'
+            , str(queries[0]))
+
+        with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
+            self.assertEqual(
+                        'SELECT '
+                        '"sq0"."$timestamp" "$timestamp",'
+                        'SUM("sq0"."$votes_wow") "$votes_wow",'
+                        'SUM("sq1"."$candidate-spend_wow") "$candidate-spend_wow" '
+                        'FROM ('
+                        'SELECT '
+                         'TRUNC(TIMESTAMPADD(\'week\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
+                        'SUM("votes") "$votes_wow" '
+                        'FROM "politics"."politician" '
+                        'GROUP BY "$timestamp" '
+                        'ORDER BY "$timestamp"'
+                        ') "sq0" '
+                        'LEFT JOIN ('
+                        'SELECT '
+                         'TRUNC(TIMESTAMPADD(\'week\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
+                        'SUM("candidate_spend") "$candidate-spend_wow" '
+                        'FROM "politics"."politician_spend" '
+                        'GROUP BY "$timestamp" '
+                        'ORDER BY "$timestamp"'
+                        ') "sq1" '
+                        'ON '
+                        '"sq0"."timestamp"="sq1"."$timestamp" '
+                        'GROUP BY "$timestamp" '
+                        'ORDER BY "$timestamp"'
+            , str(queries[1]))
 
     def test_multiple_dimensions_with_two_filters_on_different_levels_in_query(self):
         queries = mock_dataset_blender.query \
@@ -387,11 +602,11 @@ class DataSetBlenderQueryBuilderTests(TestCase):
 
         self.assertEqual(
                          'SELECT '
-                         '"politician"."$candidate-id" "$candidate-id",'
-                         '"politician"."$election-year" "$election-year",'
-                         'SUM("politician"."$votes") "$votes",'
-                         'AVG("politician_spend"."$candidate-spend"/"politician"."$wins") "$average-candidate-spend-per-wins",'
-                         'SUM("politician_spend"."$candidate-spend") "$candidate-spend" '
+                         '"sq0"."$candidate-id" "$candidate-id",'
+                         '"sq0"."$election-year" "$election-year",'
+                         'SUM("sq0"."$votes") "$votes",'
+                         'AVG("sq1"."$candidate-spend"/"sq0"."$wins") "$average-candidate-spend-per-wins",'
+                         'SUM("sq1"."$candidate-spend") "$candidate-spend" '
                          'FROM ('
                          'SELECT '
                          '"candidate_id" "$candidate-id",'
@@ -400,8 +615,9 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                          'SUM("is_winner") "$wins" '
                          'FROM "politics"."politician" '
                          'WHERE "candidate_id" IN (1) '
-                         'GROUP BY "$candidate-id","$election-year"'
-                         ') "politician" '
+                         'GROUP BY "$candidate-id","$election-year" '
+                         'ORDER BY "$candidate-id","$election-year"'
+                         ') "sq0" '
                          'LEFT JOIN ('
                          'SELECT '
                          '"candidate_id" "$candidate-id",'
@@ -409,12 +625,13 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                          'SUM("candidate_spend") "$candidate-spend" '
                          'FROM "politics"."politician_spend" '
                          'WHERE "candidate_id" IN (1) '
-                         'GROUP BY "$candidate-id","$election-year"'
-                         ') "politician_spend" '
-                         'ON '
-                         '"politician"."candidate_id"="politician_spend"."$candidate-id" AND '
-                         '"politician"."election_year"="politician_spend"."$election-year" '
                          'GROUP BY "$candidate-id","$election-year" '
-                         'HAVING AVG("politician_spend"."$candidate-spend"/"politician"."$wins")>500 '
+                         'ORDER BY "$candidate-id","$election-year"'
+                         ') "sq1" '
+                         'ON '
+                         '"sq0"."candidate_id"="sq1"."$candidate-id" AND '
+                         '"sq0"."election_year"="sq1"."$election-year" '
+                         'GROUP BY "$candidate-id","$election-year" '
+                         'HAVING AVG("sq1"."$candidate-spend"/"sq0"."$wins")>500 '
                          'ORDER BY "$candidate-id","$election-year"'
         , str(queries[0]))
