@@ -6,6 +6,7 @@ from pypika import (
     terms,
 )
 from pypika.dialects import SnowflakeQuery
+
 from .base import Database
 
 try:

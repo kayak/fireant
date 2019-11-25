@@ -82,7 +82,7 @@ class Database(object):
         Export result of query to temporary csv file.
 
         :param connection: The database connection.
-        :param query: The pypika query to be executed.
+        :param query: The Pypika query to be executed.
         :return: A named temporary file containing the query result.
         """
         cursor = connection.cursor()

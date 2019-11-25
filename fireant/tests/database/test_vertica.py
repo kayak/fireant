@@ -4,9 +4,18 @@ from unittest.mock import (
     patch,
 )
 
-from pypika import Field
+from pypika import (
+    Field,
+    Column as PypikaColumn,
+    VerticaQuery,
+)
 
-from fireant.database import VerticaDatabase
+from fireant.database import (
+    VerticaDatabase,
+    VerticaTypeEngine,
+)
+
+from fireant.database.sql_types import VarChar
 
 
 class TestVertica(TestCase):
@@ -100,11 +109,39 @@ class TestVertica(TestCase):
         mock_fetch.assert_called_once_with('SELECT DISTINCT "column_name","data_type" FROM "columns" '
                                            'WHERE "table_schema"=\'test_schema\' AND "table_name"=\'test_table\'')
 
+    def test_create_temporary_table_from_columns(self):
+        mock_cursor = Mock()
+        mock_cursor.execute = Mock()
 
-class TestVerticaCopy(TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.vertica = VerticaDatabase()
+        mock_connection = Mock()
+        mock_connection.cursor.return_value = mock_cursor
+        mock_connection.commit = Mock()
+
+        columns = PypikaColumn('a', 'varchar'), PypikaColumn('b', 'varchar(100)')
+
+        VerticaDatabase().create_temporary_table_from_columns(mock_connection, 'abc', columns)
+
+        self.assertEqual(1, mock_connection.commit.call_count)
+        mock_cursor.execute.assert_called_once_with(
+              'CREATE LOCAL TEMPORARY TABLE "abc" ("a" varchar,"b" varchar(100)) ON COMMIT PRESERVE ROWS'
+        )
+
+    def test_create_temporary_table_from_select(self):
+        mock_cursor = Mock()
+        mock_cursor.execute = Mock()
+
+        mock_connection = Mock()
+        mock_connection.cursor.return_value = mock_cursor
+        mock_connection.commit = Mock()
+
+        query = VerticaQuery.from_('abc').select('*')
+
+        VerticaDatabase().create_temporary_table_from_select(mock_connection, 'def', query)
+
+        self.assertEqual(1, mock_connection.commit.call_count)
+        mock_cursor.execute.assert_called_once_with(
+              'CREATE LOCAL TEMPORARY TABLE "def" ON COMMIT PRESERVE ROWS AS (SELECT * FROM "abc")'
+        )
 
     def test_import_csv(self):
         mock_cursor = Mock()
@@ -114,10 +151,29 @@ class TestVerticaCopy(TestCase):
         mock_connection.cursor.return_value = mock_cursor
         mock_connection.commit = Mock()
 
-        self.vertica.import_csv(mock_connection, 'abc', '/path/to/file')
+        VerticaDatabase().import_csv(mock_connection, 'abc', '/path/to/file')
 
         self.assertEqual(1, mock_connection.commit.call_count)
         mock_cursor.execute.assert_called_once_with(
               'COPY "abc" FROM LOCAL \'/path/to/file\' PARSER fcsvparser(header=false)'
         )
 
+
+class TestVerticaTypeEngine(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.vertica_type_engine = VerticaTypeEngine()
+
+    def test_to_ansi(self):
+        db_type = 'varchar2'
+
+        ansi_type = self.vertica_type_engine.to_ansi(db_type)
+
+        self.assertTrue(isinstance(ansi_type, VarChar))
+
+    def test_from_ansi(self):
+        ansi_type = VarChar()
+
+        db_type = self.vertica_type_engine.from_ansi(ansi_type)
+
+        self.assertEqual('varchar', db_type)

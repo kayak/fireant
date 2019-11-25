@@ -8,6 +8,24 @@ from pypika import (
 )
 
 from .base import Database
+from .type_engine import TypeEngine
+from .sql_types import (
+    Char,
+    VarChar,
+    Text,
+    Boolean,
+    Integer,
+    SmallInt,
+    BigInt,
+    Decimal,
+    Numeric,
+    Float,
+    DoublePrecision,
+    Date,
+    Time,
+    DateTime,
+    Timestamp,
+)
 
 
 class Trunc(terms.Function):
@@ -46,6 +64,7 @@ class MySQLDatabase(Database):
         self.user = user
         self.password = password
         self.charset = charset
+        self.type_engine = MySQLTypeEngine()
 
     def _get_connection_class(self):
         # Nesting inside a function so the import does not cause issues if users have not installed the 'mysql' extra
@@ -95,7 +114,9 @@ class MySQLDatabase(Database):
         return DateAdd(field, interval_term)
 
     def get_column_definitions(self, schema, table):
-        """ Return a list of column name, column data type pairs """
+        """
+        Return a list of column name, column data type pairs.
+        """
         columns = Table('columns', schema='INFORMATION_SCHEMA')
 
         columns_query = MySQLQuery \
@@ -125,3 +146,90 @@ class MySQLDatabase(Database):
         cursor.execute(str(query))
 
         connection.commit()
+
+    @staticmethod
+    def create_temporary_table_from_columns(connection, table_name, columns):
+        """
+        Creates a temporary table from a list of columns.
+
+        :param connection: The connection for mysql.
+        :param table_name: The name of the new temporary table.
+        :param columns: The columns of the new temporary table.
+        """
+        create_query = MySQLQuery \
+            .create_table(table_name) \
+            .temporary() \
+            .columns(*columns)
+
+        cursor = connection.cursor()
+        cursor.execute(str(create_query))
+
+        connection.commit()
+
+    @staticmethod
+    def create_temporary_table_from_select(connection, table_name, select_query):
+        """
+        Creates a temporary table from a SELECT query.
+
+        :param connection: The connection for mysql.
+        :param table_name: The name of the new temporary table.
+        :param select_query: The query to be used for selecting data of an existing table for the new temporary table.
+        """
+        create_query = MySQLQuery \
+            .create_table(table_name) \
+            .temporary() \
+            .as_select(select_query)
+
+        cursor = connection.cursor()
+        cursor.execute(str(create_query))
+
+        connection.commit()
+
+
+class MySQLTypeEngine(TypeEngine):
+    mysql_to_ansi_mapper = {
+        'bit': Char,
+        'char': Char,
+        'nchar': Char,
+        'varchar': VarChar,
+        'nvarchar': VarChar,
+        'text': Text,
+        'boolean': Boolean,
+        'int': Integer,
+        'integer': Integer,
+        'year': Integer,
+        'smallint': SmallInt,
+        'tinyint': SmallInt,
+        'bigint': BigInt,
+        'decimal': Decimal,
+        'fixed': Decimal,
+        'numeric': Numeric,
+        'float': Float,
+        'real': DoublePrecision,
+        'double': DoublePrecision,
+        'date': Date,
+        'time': Time,
+        'datetime': DateTime,
+        'timestamp': Timestamp,
+    }
+
+    ansi_to_mysql_mapper = {
+        'CHAR': 'char',
+        'VARCHAR': 'varchar',
+        'TEXT': 'text',
+        'BOOLEAN': 'boolean',
+        'INTEGER': 'integer',
+        'SMALLINT': 'smallint',
+        'BIGINT': 'bigint',
+        'DECIMAL': 'decimal',
+        'NUMERIC': 'numeric',
+        'FLOAT': 'float',
+        'REAL': 'real',
+        'DOUBLEPRECISION': 'real',
+        'DATE': 'date',
+        'TIME': 'time',
+        'TIMESTAMP': 'timestamp',
+    }
+
+    def __init__(self):
+        super(MySQLTypeEngine, self).__init__(self.mysql_to_ansi_mapper, self.ansi_to_mysql_mapper)

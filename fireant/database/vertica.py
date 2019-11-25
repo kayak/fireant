@@ -6,6 +6,26 @@ from pypika import (
 )
 
 from .base import Database
+from .type_engine import TypeEngine
+
+from .sql_types import (
+    Char,
+    VarChar,
+    Text,
+    Boolean,
+    Integer,
+    SmallInt,
+    BigInt,
+    Decimal,
+    Numeric,
+    Float,
+    Real,
+    DoublePrecision,
+    Date,
+    Time,
+    DateTime,
+    Timestamp,
+)
 
 
 class Trunc(terms.Function):
@@ -44,6 +64,7 @@ class VerticaDatabase(Database):
         self.user = user
         self.password = password
         self.read_timeout = read_timeout
+        self.type_engine = VerticaTypeEngine()
 
     def connect(self):
         import vertica_python
@@ -94,3 +115,98 @@ class VerticaDatabase(Database):
         cursor.execute(str(query))
 
         connection.commit()
+
+    @staticmethod
+    def create_temporary_table_from_columns(connection, table_name, columns):
+        """
+        Create a temporary table from a list of columns.
+
+        :param connection: The connection for vertica.
+        :param table_name: The name of the new temporary table.
+        :param columns: The columns of the new temporary table.
+        """
+        create_query = VerticaQuery \
+            .create_table(table_name) \
+            .temporary() \
+            .local() \
+            .preserve_rows() \
+            .columns(*columns)
+
+        cursor = connection.cursor()
+        cursor.execute(str(create_query))
+
+        connection.commit()
+
+    @staticmethod
+    def create_temporary_table_from_select(connection, table_name, select_query):
+        """
+        Create a temporary table from a SELECT query.
+
+        :param connection: The connection for vertica.
+        :param table_name: The name of the new temporary table.
+        :param select_query: The query to be used for selecting data of an existing table for the new temporary table.
+        :return:
+        """
+        create_query = VerticaQuery \
+            .create_table(table_name) \
+            .temporary() \
+            .local() \
+            .preserve_rows() \
+            .as_select(select_query)
+
+        cursor = connection.cursor()
+        cursor.execute(str(create_query))
+
+        connection.commit()
+
+
+class VerticaTypeEngine(TypeEngine):
+    vertica_to_ansi_mapper = {
+        'char': Char,
+        'varchar': VarChar,
+        'varchar2': VarChar,
+        'longvarchar': Text,
+        'boolean': Boolean,
+        'int': Integer,
+        'integer': Integer,
+        'int8': Integer,
+        'smallint': SmallInt,
+        'tinyint': SmallInt,
+        'bigint': BigInt,
+        'decimal': Decimal,
+        'numeric': Numeric,
+        'number': Numeric,
+        'float': Float,
+        'float8': Float,
+        'real': Real,
+        'double': DoublePrecision,
+        'date': Date,
+        'time': Time,
+        'timetz': Time,
+        'datetime': DateTime,
+        'smalldatetime': DateTime,
+        'timestamp': Timestamp,
+        'timestamptz': Timestamp,
+    }
+
+    ansi_to_vertica_mapper = {
+        'CHAR': 'char',
+        'VARCHAR': 'varchar',
+        'TEXT': 'longvarchar',
+        'BOOLEAN': 'boolean',
+        'INTEGER': 'integer',
+        'SMALLINT': 'smallint',
+        'BIGINT': 'bigint',
+        'DECIMAL': 'decimal',
+        'NUMERIC': 'numeric',
+        'FLOAT': 'float',
+        'REAL': 'real',
+        'DOUBLEPRECISION': 'double',
+        'DATE': 'date',
+        'TIME': 'time',
+        'DATETIME': 'datetime',
+        'TIMESTAMP': 'timestamp',
+    }
+
+    def __init__(self):
+        super(VerticaTypeEngine, self).__init__(self.vertica_to_ansi_mapper, self.ansi_to_vertica_mapper)
