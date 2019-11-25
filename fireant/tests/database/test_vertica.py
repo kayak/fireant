@@ -109,53 +109,32 @@ class TestVertica(TestCase):
         mock_fetch.assert_called_once_with('SELECT DISTINCT "column_name","data_type" FROM "columns" '
                                            'WHERE "table_schema"=\'test_schema\' AND "table_name"=\'test_table\'')
 
-    def test_create_temporary_table_from_columns(self):
-        mock_cursor = Mock()
-        mock_cursor.execute = Mock()
+    @patch.object(VerticaDatabase, 'execute')
+    def test_import_csv(self, mock_execute):
+        VerticaDatabase().import_csv('abc', '/path/to/file')
 
-        mock_connection = Mock()
-        mock_connection.cursor.return_value = mock_cursor
-        mock_connection.commit = Mock()
+        mock_execute.assert_called_once_with(
+              'COPY "abc" FROM LOCAL \'/path/to/file\' PARSER fcsvparser(header=false)'
+        )
 
+    @patch.object(VerticaDatabase, 'execute')
+    def test_create_temporary_table_from_columns(self, mock_execute):
         columns = PypikaColumn('a', 'varchar'), PypikaColumn('b', 'varchar(100)')
 
-        VerticaDatabase().create_temporary_table_from_columns(mock_connection, 'abc', columns)
+        VerticaDatabase().create_temporary_table_from_columns('abc', columns)
 
-        self.assertEqual(1, mock_connection.commit.call_count)
-        mock_cursor.execute.assert_called_once_with(
+        mock_execute.assert_called_once_with(
               'CREATE LOCAL TEMPORARY TABLE "abc" ("a" varchar,"b" varchar(100)) ON COMMIT PRESERVE ROWS'
         )
 
-    def test_create_temporary_table_from_select(self):
-        mock_cursor = Mock()
-        mock_cursor.execute = Mock()
-
-        mock_connection = Mock()
-        mock_connection.cursor.return_value = mock_cursor
-        mock_connection.commit = Mock()
-
+    @patch.object(VerticaDatabase, 'execute')
+    def test_create_temporary_table_from_select(self, mock_execute):
         query = VerticaQuery.from_('abc').select('*')
 
-        VerticaDatabase().create_temporary_table_from_select(mock_connection, 'def', query)
+        VerticaDatabase().create_temporary_table_from_select('def', query)
 
-        self.assertEqual(1, mock_connection.commit.call_count)
-        mock_cursor.execute.assert_called_once_with(
+        mock_execute.assert_called_once_with(
               'CREATE LOCAL TEMPORARY TABLE "def" ON COMMIT PRESERVE ROWS AS (SELECT * FROM "abc")'
-        )
-
-    def test_import_csv(self):
-        mock_cursor = Mock()
-        mock_cursor.execute = Mock()
-
-        mock_connection = Mock()
-        mock_connection.cursor.return_value = mock_cursor
-        mock_connection.commit = Mock()
-
-        VerticaDatabase().import_csv(mock_connection, 'abc', '/path/to/file')
-
-        self.assertEqual(1, mock_connection.commit.call_count)
-        mock_cursor.execute.assert_called_once_with(
-              'COPY "abc" FROM LOCAL \'/path/to/file\' PARSER fcsvparser(header=false)'
         )
 
 

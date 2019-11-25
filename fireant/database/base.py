@@ -10,10 +10,10 @@ from pypika import (
 from fireant.middleware.decorators import (
     db_cache,
     log,
+    with_connection,
 )
 
 from fireant.middleware.concurrency import ThreadPoolConcurrencyMiddleware
-from fireant.utils import write_named_temp_csv
 
 
 class Database(object):
@@ -34,12 +34,20 @@ class Database(object):
         self.max_result_set_size = max_result_set_size
         self.cache_middleware = cache_middleware
         self.concurrency_middleware = concurrency_middleware or ThreadPoolConcurrencyMiddleware(max_processes)
+        self.connection = None
 
     def connect(self):
         """
         This function must establish a connection to the database platform and return it.
         """
         raise NotImplementedError
+
+    def begin_session(self):
+        self.connection = self.connect()
+
+    def end_session(self):
+        self.connection.close()
+        self.connection = None
 
     def get_column_definitions(self, schema, table):
         """
@@ -64,30 +72,27 @@ class Database(object):
 
     @db_cache
     @log
-    def fetch(self, query):
-        with self.connect() as connection:
-            cursor = connection.cursor()
-            cursor.execute(query)
-            return cursor.fetchall()
+    @with_connection
+    def fetch(self, query, **kwargs):
+        connection = kwargs.get('connection')
+        cursor = connection.cursor()
+        cursor.execute(str(query))
+        return cursor.fetchall()
 
     @db_cache
     @log
-    def fetch_dataframe(self, query):
-        with self.connect() as connection:
-            return pd.read_sql(query, connection, coerce_float=True, parse_dates=True)
-
-    @staticmethod
-    def export_csv(connection, query):
-        """
-        Export result of query to temporary csv file.
-
-        :param connection: The database connection.
-        :param query: The Pypika query to be executed.
-        :return: A named temporary file containing the query result.
-        """
+    @with_connection
+    def execute(self, query, **kwargs):
+        connection = kwargs.get('connection')
         cursor = connection.cursor()
         cursor.execute(str(query))
 
-        result = cursor.fetchall()
+        connection.commit()
 
-        return write_named_temp_csv(result)
+    @db_cache
+    @log
+    @with_connection
+    def fetch_dataframe(self, query, **kwargs):
+        connection = kwargs.get('connection')
+        return pd.read_sql(query, connection, coerce_float=True, parse_dates=True)
+
