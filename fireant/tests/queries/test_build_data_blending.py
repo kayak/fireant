@@ -1,9 +1,7 @@
 from unittest import TestCase
 
 import fireant as f
-from fireant.tests.dataset.mocks import (
-    mock_dataset_blender,
-)
+from fireant.tests.dataset.mocks import mock_dataset_blender
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -32,6 +30,15 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                          'GROUP BY "$timestamp" '
                          'ORDER BY "$timestamp"'
                          ') "sq0" '
+                         'LEFT JOIN ('
+                         'SELECT '
+                         'TRUNC("timestamp",\'DD\') "$timestamp" '
+                         'FROM "politics"."politician_spend" '
+                         'GROUP BY "$timestamp" '
+                         'ORDER BY "$timestamp"'
+                         ') "sq1" '
+                         'ON '
+                         '"sq0"."timestamp"="sq1"."$timestamp" '
                          'GROUP BY "$timestamp" '
                          'ORDER BY "$timestamp"'
         , str(queries[0]))
@@ -204,6 +211,15 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                          'HAVING SUM("votes")>10 '
                          'ORDER BY "$timestamp"'
                          ') "sq0" '
+                         'LEFT JOIN ('
+                         'SELECT '
+                         'TRUNC("timestamp",\'DD\') "$timestamp" '
+                         'FROM "politics"."politician_spend" '
+                         'GROUP BY "$timestamp" '
+                         'ORDER BY "$timestamp"'
+                         ') "sq1" '
+                         'ON '
+                         '"sq0"."timestamp"="sq1"."$timestamp" '
                          'GROUP BY "$timestamp" '
                          'HAVING SUM("sq0"."$votes")>10 '
                          'ORDER BY "$timestamp"'
@@ -433,6 +449,15 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                              'GROUP BY "$timestamp" '
                              'ORDER BY "$timestamp"'
                              ') "sq0" '
+                             'LEFT JOIN ('
+                             'SELECT '
+                             'TRUNC("timestamp",\'DD\') "$timestamp" '
+                             'FROM "politics"."politician_spend" '
+                             'GROUP BY "$timestamp" '
+                             'ORDER BY "$timestamp"'
+                             ') "sq1" '
+                             'ON '
+                             '"sq0"."timestamp"="sq1"."$timestamp" '
                              'GROUP BY "$timestamp" '
                              'ORDER BY "$timestamp"'
             , str(queries[0]))
@@ -450,6 +475,15 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                              'GROUP BY "$timestamp" '
                              'ORDER BY "$timestamp"'
                              ') "sq0" '
+                             'LEFT JOIN ('
+                             'SELECT '
+                             'TRUNC(TIMESTAMPADD(\'week\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp" '
+                             'FROM "politics"."politician_spend" '
+                             'GROUP BY "$timestamp" '
+                             'ORDER BY "$timestamp"'
+                             ') "sq1" '
+                             'ON '
+                             '"sq0"."timestamp"="sq1"."$timestamp" '
                              'GROUP BY "$timestamp" '
                              'ORDER BY "$timestamp"'
             , str(queries[1]))
@@ -605,8 +639,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                          '"sq0"."$candidate-id" "$candidate-id",'
                          '"sq0"."$election-year" "$election-year",'
                          'SUM("sq0"."$votes") "$votes",'
-                         'AVG("sq1"."$candidate-spend"/"sq0"."$wins") "$average-candidate-spend-per-wins",'
-                         'SUM("sq1"."$candidate-spend") "$candidate-spend" '
+                         'SUM("sq1"."$candidate-spend") "$candidate-spend",'
+                         'AVG("sq1"."$candidate-spend"/"sq0"."$wins") "$average-candidate-spend-per-wins" '
                          'FROM ('
                          'SELECT '
                          '"candidate_id" "$candidate-id",'

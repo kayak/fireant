@@ -13,20 +13,14 @@ from fireant import (
 )
 from fireant.dataset.modifiers import DimensionModifier
 from fireant.queries import DataSetQueryBuilder
-from fireant.queries.builder.dataset_blender_query_builder.wrapper_query_helper import (
-    _make_dimensions_for_wrapper_query,
-    _make_filters_for_wrapper_query,
-    _make_metrics_for_wrapper_query,
-    _make_references_for_wrapper_query,
+from fireant.queries.field_helper import (
+    make_orders_for_dimensions,
+    make_term_for_metrics,
 )
-from fireant.queries.field_helper import make_orders_for_dimensions
 from fireant.queries.finders import (
     find_and_replace_reference_dimensions,
     find_metrics_for_widgets,
-    find_operations_for_widgets,
-    find_share_dimensions,
 )
-from fireant.queries.sql_transformer import make_slicer_query_with_totals_and_references
 from fireant.utils import alias_selector
 
 
@@ -77,40 +71,102 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         # First run validation for the query on all widgets
         self._validate()
 
-        operations = find_operations_for_widgets(self._widgets)
-        share_dimensions = find_share_dimensions(self._dimensions, operations)
+        metrics = [metric for metric in find_metrics_for_widgets(self._widgets)]
         orders = (self._orders or make_orders_for_dimensions(self._dimensions))
-        references = find_and_replace_reference_dimensions(self._references, self._dimensions)
 
         sub_query_joins_groups, sub_query_tables_groups = self.__sub_query_groups
 
         queries = []
 
         for i, (sub_query_joins, sub_query_tables) in enumerate(zip(sub_query_joins_groups, sub_query_tables_groups)):
+            dimension_aliases = {alias_selector(el.alias) for el in self._dimensions}
+            metric_aliases = {alias_selector(el.alias) for el in metrics}
+            reference_aliases = {
+                alias_selector('{}_{}'.format(el, ref.alias))
+                for el in metric_aliases
+                for ref in self._references
+            }
+            all_aliases = dimension_aliases | metric_aliases | reference_aliases
+
+            field_to_select = list()
+            aliases_already_added = set()
             primary_table = sub_query_tables[self.primary_dataset.table]
 
-            metrics = _make_metrics_for_wrapper_query(self._widgets, sub_query_tables)
-            # Filtering dimensions is not necessary since mapping dimensions are present in all datasets
-            filters_for_metrics_only = _make_filters_for_wrapper_query(metrics, self._filters, sub_query_tables)
-            # Unwrap dimension modifiers on wrapper query level, since modifiers were already applied on sub-queries
-            dimensions_without_modifiers = _make_dimensions_for_wrapper_query(self._dimensions, sub_query_tables)
-            references = _make_references_for_wrapper_query(references)
+            if i > 0 and self._references:
+                # From the second query onwards, we don't need to add the normal metrics, given the equivalent one
+                # with the reference applied will be present.
+                aliases_already_added.update(metric_aliases)
 
-            queries.append(
-                make_slicer_query_with_totals_and_references(
-                    self.dataset,
-                    self.dataset.primary_dataset.database,
-                    primary_table,
-                    sub_query_joins,
-                    dimensions_without_modifiers,
-                    metrics,
-                    operations,
-                    filters_for_metrics_only,
-                    references,
-                    orders,
-                    share_dimensions=share_dimensions
-                )[i]
-            )
+            query = self.primary_dataset.database.query_cls.from_(primary_table)
+
+            for field in primary_table._selects:
+                if field.alias in aliases_already_added or field.alias not in all_aliases:
+                    continue
+                field_to_select.append((field, primary_table))
+                aliases_already_added.add(field.alias)
+
+            for join in sub_query_joins:
+                query = query.join(join.table, how=join.join_type).on(join.criterion)
+                secondary_table = join.table
+
+                for field in secondary_table._selects:
+                    if field.alias in aliases_already_added or field.alias not in all_aliases:
+                        continue
+                    field_to_select.append((field, secondary_table))
+                    aliases_already_added.add(field.alias)
+
+            # Add dimensions and groups by
+            for field, table in field_to_select:
+                dimension_term = getattr(table, field.alias)
+
+                if field.is_aggregate:
+                    dimension_term = field.__class__(dimension_term)
+                dimension_term.table = table
+
+                dimension_term = dimension_term.as_(field.alias)
+                query = query.select(dimension_term)
+                if not field.is_aggregate:
+                    query = query.groupby(dimension_term)
+
+            # Add metrics
+            for metric in metrics:
+                for pypika_field in metric.definition.fields():
+                    sub_query = sub_query_tables.get(pypika_field.table)
+                    if sub_query:
+                        pypika_field.table = sub_query
+
+                if alias_selector(metric.alias) not in aliases_already_added:
+                    metric_definition = make_term_for_metrics(metric)
+                    query = query.select(metric_definition)
+
+            # Add filters
+            for filter in self._filters:
+                if alias_selector(filter.field_alias) not in metric_aliases:
+                    continue
+
+                filter_copy = copy.deepcopy(filter)
+
+                for pypika_field in filter_copy.definition.fields():
+                    sub_query = sub_query_tables.get(pypika_field.table)
+                    if sub_query:
+                        pypika_field.table = sub_query
+                    if len(filter_copy.definition.fields()) == 1 and not pypika_field.name.startswith('$'):
+                        pypika_field.name = alias_selector(filter_copy.field_alias)
+
+                query = query.having(filter_copy.definition) \
+                    if filter_copy.is_aggregate \
+                    else query.where(filter_copy.definition)
+
+            # Add orders by
+            for (orderby_term, orientation) in orders:
+                query = query.orderby(orderby_term, order=orientation)
+
+                if orderby_term.alias not in all_aliases:
+                    # In the case that the orders are determined by a field that is not selected as a metric or
+                    # dimension, then it needs to be added to the query.
+                    query = query.select(orderby_term)
+
+            queries.append(query)
 
         return queries
 
