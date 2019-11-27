@@ -21,18 +21,8 @@ from fireant.queries.finders import (
     find_and_replace_reference_dimensions,
     find_metrics_for_widgets,
 )
+from fireant.reference_helpers import reference_alias
 from fireant.utils import alias_selector
-
-
-def _get_pypika_field_name_or_alias(pypika_field):
-    """
-    Returns the name or alias, if any, of the provided PyPika Field instance.
-
-    :param pypika_field:
-        A PyPika Field instance.
-    :return: a string.
-    """
-    return pypika_field.alias if pypika_field.alias else pypika_field.name
 
 
 class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
@@ -41,16 +31,10 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
     more widgets is required. All others are optional.
     """
 
-    def __init__(self, dataset, aggregation_func_mapping=None):
+    def __init__(self, dataset):
         super(DataSetBlenderQueryBuilder, self).__init__(dataset)
         self.primary_dataset = dataset.primary_dataset
         self.secondary_datasets = dataset.secondary_datasets
-
-        if aggregation_func_mapping is None:
-            # SUM is used by default when no mapping is found
-            aggregation_func_mapping = {}
-
-        self.aggregation_func_mapping = aggregation_func_mapping
 
     @property
     def all_datasets(self):
@@ -82,9 +66,9 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
             dimension_aliases = {alias_selector(el.alias) for el in self._dimensions}
             metric_aliases = {alias_selector(el.alias) for el in metrics}
             reference_aliases = {
-                alias_selector('{}_{}'.format(el, ref.alias))
-                for el in metric_aliases
-                for ref in self._references
+                alias_selector(reference_alias(metric, reference))
+                for metric in metrics
+                for reference in self._references
             }
             all_aliases = dimension_aliases | metric_aliases | reference_aliases
 
@@ -303,7 +287,6 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
                         new_dimension.dimension
                     ]
 
-                new_dimension.definition = copy.deepcopy(new_dimension.definition)
                 for pypika_field in new_dimension.definition.fields():
                     pypika_field.table = dataset.table
                 dimensions_per_dataset[dataset].append(new_dimension)
@@ -326,10 +309,11 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
                     try:
                         metrics_per_dataset[dataset].append(
                             dataset.fields[
-                                _get_pypika_field_name_or_alias(pypika_field).replace('_', '-').replace('$', '')
+                                pypika_field.name.replace('_', '-').replace('$', '')
                             ]
                         )
                     except AttributeError:
+                        # We need to ignore a metric when it doesn't exist in the dataset.
                         pass
 
         return metrics_per_dataset
@@ -348,11 +332,12 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
                 try:
                     dataset.fields[filter.field_alias]
                     new_filter = copy.deepcopy(filter)
-                    new_filter.definition = copy.deepcopy(filter.definition)
                     for pypika_field in new_filter.definition.fields():
                         pypika_field.table = dataset.table
                     filters_per_dataset[dataset].append(new_filter)
                 except AttributeError:
+                    # We need to ignore a filter referencing a metric, when the respective metric doesn't
+                    # exist in the dataset.
                     pass
 
         return filters_per_dataset
@@ -379,7 +364,6 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
                         new_dimension.dimension
                     ]
 
-                new_dimension.definition = copy.deepcopy(new_dimension.definition)
                 for pypika_field in new_dimension.definition.fields():
                     pypika_field.table = dataset.table
                 references_per_dataset[dataset].append(new_reference)
