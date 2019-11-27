@@ -229,8 +229,6 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         for dataset, dataset_filters in filters_per_dataset.items():
             for filter in dataset_filters:
                 new_filter = copy.deepcopy(filter)
-                new_definition = copy.deepcopy(filter.definition)
-                new_filter.definition = new_definition
                 queries_per_dataset[dataset.table] = queries_per_dataset[dataset.table].filter(new_filter)
 
         for dataset, dataset_references in references_per_dataset.items():
@@ -357,14 +355,13 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
 
             for reference in references:
                 new_reference = copy.deepcopy(reference)
-                new_dimension = copy.deepcopy(reference.field)
 
-                if isinstance(new_dimension, DimensionModifier):
-                    new_dimension.dimension = self.dataset.field_mapping[dataset.table][
-                        new_dimension.dimension
+                if isinstance(reference.field, DimensionModifier):
+                    reference.field.dimension = self.dataset.field_mapping[dataset.table][
+                        reference.field.dimension
                     ]
 
-                for pypika_field in new_dimension.definition.fields():
+                for pypika_field in reference.field.definition.fields():
                     pypika_field.table = dataset.table
                 references_per_dataset[dataset].append(new_reference)
 
