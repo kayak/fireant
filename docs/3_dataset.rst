@@ -52,15 +52,8 @@ Code Example
         label='Clicks'
     ).field(
         # Aggregate definition (The SUM function aggregates a group of values into a single value)
-        alias='customer-spend',
-        # We use aggregate_by here since there is no arithmetic/boolean expression involved
-        definition=spend_dataset.fields['customer-spend'].aggregate_by(fn.Sum),
-        type=DataType.number,
-        label='Spend'
-    ).field(
-        # Aggregate definition (The SUM function aggregates a group of values into a single value)
         alias='customer-spend-per-clicks',
-        definition=fn.Sum(spend_dataset.fields['customer-spend'] / analytics.clicks),
+        definition=fn.Sum(analytics.customer_spend / analytics.clicks),
         type=DataType.number,
         label='Spend / Clicks'
     ).join(

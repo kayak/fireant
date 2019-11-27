@@ -54,9 +54,7 @@ Instantiating a Data Set
     from pypika import Tables, functions as fn
 
     vertica_database = VerticaDatabase(user='myuser', password='mypassword')
-    analytics, accounts = Tables('analytics', 'accounts')
-
-    spend_dataset = Dataset(...)
+    analytics, customers = Tables('analytics', 'customers')
 
     my_dataset = DataSet(
         database=vertica_database,
@@ -73,21 +71,20 @@ Instantiating a Data Set
         type=DataType.date,
         label='Date'
     ).field(
+        # Text type, also non-aggregate
+        alias='device_type',
+        definition=analytics.device_type,
+        type=DataType.text,
+        label='Device_type'
+    ).field(
         # Aggregate definition (The SUM function aggregates a group of values into a single value)
         alias='clicks',
         definition=fn.Sum(analytics.clicks),
         label='Clicks'
     ).field(
         # Aggregate definition (The SUM function aggregates a group of values into a single value)
-        alias='customer-spend',
-        # We use aggregate_by here since there is no arithmetic/boolean expression involved
-        definition=spend_dataset.fields['customer-spend'].aggregate_by(fn.Sum),
-        type=DataType.number,
-        label='Spend'
-    ).field(
-        # Aggregate definition (The SUM function aggregates a group of values into a single value)
         alias='customer-spend-per-clicks',
-        definition=fn.Sum(spend_dataset.fields['customer-spend'] / analytics.clicks),
+        definition=fn.Sum(analytics.customer_spend / analytics.clicks),
         type=DataType.number,
         label='Spend / Clicks'
     ).join(
@@ -132,7 +129,6 @@ This example uses the data set defined above
 
                # metrics are referenced by `dataset.metrics.{alias}`
                .axis(Matplotlib.ColumnSeries(
-                   my_dataset.fields['customer-spend'],
                    my_dataset.fields['customer-spend-per-clicks']
                ))
          ) \
@@ -140,7 +136,6 @@ This example uses the data set defined above
             # Add a pandas data frame table widget
             Pandas(
                 my_dataset.fields.clicks,
-                my_dataset.fields['customer-spend'],
                 my_dataset.fields['customer-spend-per-clicks']
             )
          ) \
