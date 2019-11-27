@@ -34,7 +34,6 @@ class Database(object):
         self.max_result_set_size = max_result_set_size
         self.cache_middleware = cache_middleware
         self.concurrency_middleware = concurrency_middleware or ThreadPoolConcurrencyMiddleware(max_processes)
-        self.connection = None
 
     def connect(self):
         """
