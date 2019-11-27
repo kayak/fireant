@@ -94,9 +94,9 @@ def adjust_dataframe_for_rolling_window(operations, data_frame):
     return data_frame
 
 
-def apply_to_query_args(database, table, joins, dimensions, metrics, operations, filters, references, orders):
+def apply_to_query_args(dataset, database, table, joins, dimensions, metrics, operations, filters, references, orders):
     filters = adjust_daterange_filter_for_rolling_window(dimensions, operations, filters)
-    return (database, table, joins, dimensions, metrics, operations, filters, references, orders)
+    return (dataset, database, table, joins, dimensions, metrics, operations, filters, references, orders)
 
 
 def apply_special_cases(f):

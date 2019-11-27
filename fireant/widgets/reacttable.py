@@ -23,6 +23,7 @@ from fireant.formats import (
     safe_value,
 )
 from fireant.reference_helpers import reference_alias
+from fireant.tests.dataset.mocks import mock_dataset
 from fireant.utils import (
     alias_for_alias_selector,
     alias_selector,
@@ -34,7 +35,7 @@ from .pandas import Pandas
 
 TOTALS_LABEL = 'Totals'
 METRICS_DIMENSION_ALIAS = 'metrics'
-METRICS_DIMENSION = Field(METRICS_DIMENSION_ALIAS, None, data_type=DataType.text, label='')
+METRICS_DIMENSION = Field(mock_dataset, METRICS_DIMENSION_ALIAS, None, data_type=DataType.text, label='')
 F_METRICS_DIMENSION_ALIAS = alias_selector(METRICS_DIMENSION.alias)
 
 

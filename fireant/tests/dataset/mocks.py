@@ -1,25 +1,25 @@
 from collections import (
     OrderedDict,
 )
+from datetime import datetime
 from unittest.mock import (
-    Mock,
     MagicMock,
+    Mock,
 )
 
 import pandas as pd
-from datetime import datetime
+from pypika import (
+    Case,
+    JoinType,
+    Table,
+    functions as fn,
+)
 
 from fireant import *
 from fireant.dataset.references import ReferenceType
 from fireant.dataset.totals import get_totals_marker_for_dtype
 from fireant.utils import (
     alias_selector as f,
-)
-from pypika import (
-    JoinType,
-    Table,
-    functions as fn,
-    Case,
 )
 
 
@@ -35,106 +35,162 @@ class TestDatabase(VerticaDatabase):
 
 test_database = TestDatabase()
 politicians_table = Table('politician', schema='politics')
+politicians_spend_table = Table('politician_spend', schema='politics')
 politicians_hint_table = Table('hints', schema='politics')
 voters_table = Table('voter', schema='politics')
 state_table = Table('state', schema='locations')
 district_table = Table('district', schema='locations')
 deep_join_table = Table('deep', schema='test')
 
+mock_spend_dataset = DataSet(
+    table=politicians_spend_table,
+    database=test_database,
+).field(
+    'timestamp',
+    label='Timestamp',
+    definition=politicians_spend_table.timestamp,
+    data_type=DataType.date
+).field(
+    'candidate-id',
+    label='Candidate ID',
+    definition=politicians_spend_table.candidate_id,
+    data_type=DataType.number
+).field(
+    'election-year',
+    label='Election Year',
+    definition=politicians_spend_table.election_year,
+    data_type=DataType.number
+).field(
+    'candidate-spend',
+    label='Candidate Spend',
+    definition=fn.Sum(politicians_spend_table.candidate_spend),
+    data_type=DataType.number,
+    thousands=','
+)
+
 mock_dataset = DataSet(
-      table=politicians_table,
-      database=test_database,
+    table=politicians_table,
+    database=test_database,
+).field(
+    'timestamp',
+    label='Timestamp',
+    definition=politicians_table.timestamp,
+    data_type=DataType.date
+).field(
+    'timestamp2',
+    label='Timestamp 2',
+    definition=politicians_table.timestamp2,
+    data_type=DataType.date
+).field(
+    'join_timestamp',
+    label='Join Timestamp',
+    definition=voters_table.timestamp,
+    data_type=DataType.date
+).field(
+    'political_party',
+    label='Party',
+    definition=politicians_table.political_party,
+    data_type=DataType.text
+).field(
+    'candidate-id',
+    label='Candidate ID',
+    definition=politicians_table.candidate_id,
+    data_type=DataType.number
+).field(
+    'candidate-name',
+    label='Candidate Name',
+    definition=politicians_table.candidate_name,
+    data_type=DataType.text
+).field(
+    'election-id',
+    label='Election ID',
+    definition=politicians_table.election_id,
+    data_type=DataType.number
+).field(
+    'election-year',
+    label='Election Year',
+    definition=politicians_table.election_year,
+    data_type=DataType.number
+).field(
+    'district-id',
+    label='District ID',
+    definition=politicians_table.district_id,
+    data_type=DataType.number
+).field(
+    'district-name',
+    label='District Name',
+    definition=district_table.district_name,
+    data_type=DataType.text
+).field(
+    'state',
+    label='State',
+    definition=state_table.state_name,
+    data_type=DataType.text
+).field(
+    'winner',
+    label='Winner',
+    definition=politicians_table.is_winner,
+    data_type=DataType.boolean
+).field(
+    'deepjoin',
+    definition=deep_join_table.id,
+    data_type=DataType.number
+).field(
+    'votes',
+    label='Votes',
+    definition=fn.Sum(politicians_table.votes),
+    data_type=DataType.number,
+    thousands=','
+).field(
+    'wins',
+    label='Wins',
+    definition=fn.Sum(politicians_table.is_winner)
+).field(
+    'voters',
+    label='Voters',
+    definition=fn.Count(voters_table.id)
+).field(
+    'turnout',
+    label='Turnout',
+    definition=fn.Sum(politicians_table.votes) / fn.Count(voters_table.id),
+    suffix='%',
+    precision=2
+).field(
+    'wins_with_style',
+    label='Wins',
+    definition=fn.Sum(politicians_table.is_winner),
+    prefix='$',
+    thousands='_',
+    suffix='€'
+).join(
+    table=district_table,
+    criterion=politicians_table.district_id == district_table.id,
+    join_type=JoinType.outer
+).join(
+    table=district_table,
+    criterion=politicians_table.district_id == district_table.id,
+    join_type=JoinType.outer
+).join(
+    table=state_table,
+    criterion=district_table.state_id == state_table.id
+).join(
+    table=voters_table,
+    criterion=politicians_table.id == voters_table.politician_id
+).join(
+    table=deep_join_table,
+    criterion=deep_join_table.id == state_table.ref_id
+)
 
-      joins=(
-          Join(table=district_table,
-               criterion=politicians_table.district_id == district_table.id,
-               join_type=JoinType.outer),
-          Join(table=district_table,
-               criterion=politicians_table.district_id == district_table.id,
-               join_type=JoinType.outer),
-          Join(table=state_table,
-               criterion=district_table.state_id == state_table.id),
-          Join(table=voters_table,
-               criterion=politicians_table.id == voters_table.politician_id),
-          Join(table=deep_join_table,
-               criterion=deep_join_table.id == state_table.ref_id),
-      ),
-
-      fields=(
-          Field('timestamp',
-                label='Timestamp',
-                definition=politicians_table.timestamp,
-                data_type=DataType.date),
-          Field('timestamp2',
-                label='Timestamp 2',
-                definition=politicians_table.timestamp2,
-                data_type=DataType.date),
-          Field('join_timestamp',
-                label='Join Timestamp',
-                definition=voters_table.timestamp,
-                data_type=DataType.date),
-          Field('political_party',
-                label='Party',
-                definition=politicians_table.political_party,
-                data_type=DataType.text),
-          Field('candidate-id',
-                label='Candidate ID',
-                definition=politicians_table.candidate_id,
-                data_type=DataType.number),
-          Field('candidate-name',
-                label='Candidate Name',
-                definition=politicians_table.candidate_name,
-                data_type=DataType.text),
-          Field('election-id',
-                label='Election ID',
-                definition=politicians_table.election_id,
-                data_type=DataType.number),
-          Field('election-year',
-                label='Election Year',
-                definition=politicians_table.election_year,
-                data_type=DataType.number),
-          Field('district-id',
-                label='District ID',
-                definition=politicians_table.district_id,
-                data_type=DataType.number),
-          Field('district-name',
-                label='District Name',
-                definition=district_table.district_name,
-                data_type=DataType.text),
-          Field('state',
-                label='State',
-                definition=state_table.state_name,
-                data_type=DataType.text),
-          Field('winner',
-                label='Winner',
-                definition=politicians_table.is_winner,
-                data_type=DataType.boolean),
-          Field('deepjoin',
-                definition=deep_join_table.id,
-                data_type=DataType.number),
-          Field('votes',
-                label='Votes',
-                definition=fn.Sum(politicians_table.votes),
-                data_type=DataType.number,
-                thousands=','),
-          Field('wins',
-                label='Wins',
-                definition=fn.Sum(politicians_table.is_winner)),
-          Field('voters',
-                label='Voters',
-                definition=fn.Count(voters_table.id)),
-          Field('turnout',
-                label='Turnout',
-                definition=fn.Sum(politicians_table.votes) / fn.Count(voters_table.id),
-                suffix='%',
-                precision=2),
-          Field('wins_with_style',
-                label='Wins',
-                definition=fn.Sum(politicians_table.is_winner),
-                prefix='$',
-                thousands='_',
-                suffix='€'),
-      ),
+mock_dataset_blender = DataSetBlender(mock_dataset).join(mock_spend_dataset).field(
+    'average-candidate-spend-per-voters',
+    label='Average Candidate Spend per Voters',
+    definition=mock_spend_dataset.fields['candidate-spend'] / mock_dataset.fields['voters'],
+    data_type=DataType.number
+).field(
+    'average-candidate-spend-per-wins',
+    label='Average Candidate Spend per Wins',
+    definition=mock_spend_dataset.fields['candidate-spend'] / mock_dataset.fields['wins'],
+    data_type=DataType.number
 )
 
 mock_case = Case() \
@@ -143,50 +199,53 @@ mock_case = Case() \
     .else_("")
 
 mock_hint_dataset = DataSet(
-      table=politicians_table,
-      database=test_database,
-
-      joins=(
-          Join(table=district_table,
-               criterion=politicians_table.district_id == district_table.id,
-               join_type=JoinType.outer),
-          Join(table=state_table,
-               criterion=politicians_table.state_id == state_table.id),
-      ),
-
-      fields=(
-          Field('political_party',
-                label='Party',
-                hint_table=politicians_hint_table,
-                definition=politicians_table.political_party,
-                data_type=DataType.text),
-          Field('candidate_name',
-                label='Candidate Name',
-                hint_table=politicians_hint_table,
-                definition=politicians_table.candidate_name,
-                data_type=DataType.text),
-          Field('election-year',
-                label='Election Year',
-                definition=politicians_table.election_year,
-                data_type=DataType.number),
-          Field('district-name',
-                label='District Name',
-                hint_table=politicians_hint_table,
-                definition=district_table.district_name,
-                data_type=DataType.text),
-          Field('candidate_name_display',
-                label='Candidate Name Display',
-                definition=politicians_table.candidate_name_display,
-                data_type=DataType.text),
-          Field('political_party_case',
-                label='Party',
-                definition=mock_case,
-                data_type=DataType.text),
-          Field('state',
-                label='State',
-                definition=state_table.state_name,
-                data_type=DataType.text),
-      ),
+    table=politicians_table,
+    database=test_database,
+).join(
+    table=district_table,
+    criterion=politicians_table.district_id == district_table.id,
+    join_type=JoinType.outer
+).join(
+    table=state_table,
+    criterion=politicians_table.state_id == state_table.id
+).field(
+    'political_party',
+    label='Party',
+    hint_table=politicians_hint_table,
+    definition=politicians_table.political_party,
+    data_type=DataType.text
+).field(
+    'candidate_name_display',
+    label='Candidate Name Display',
+    definition=politicians_table.candidate_name_display,
+    data_type=DataType.text
+).field(
+    'candidate_name',
+    label='Candidate Name',
+    hint_table=politicians_hint_table,
+    definition=politicians_table.candidate_name,
+    data_type=DataType.text
+).field(
+    'election-year',
+    label='Election Year',
+    definition=politicians_table.election_year,
+    data_type=DataType.number
+).field(
+    'district-name',
+    label='District Name',
+    hint_table=politicians_hint_table,
+    definition=district_table.district_name,
+    data_type=DataType.text
+).field(
+    'political_party_case',
+    label='Party',
+    definition=mock_case,
+    data_type=DataType.text
+).field(
+    'state',
+    label='State',
+    definition=state_table.state_name,
+    data_type=DataType.text
 )
 
 political_parties = OrderedDict((('d', 'Democrat'),
@@ -311,15 +370,15 @@ for (election_id, candidate_id, state_id), votes in election_candidate_state_vot
     winner = election_candidate_wins[(election_id, candidate_id)]
 
     records.append(PoliticsRow(
-          timestamp=datetime(int(election_year), 1, 1),
-          candidate_id=candidate_id,
-          candidate_name=candidates[candidate_id],
-          political_party=political_parties[candidate_parties[candidate_id]],
-          election_year=elections[election_id],
-          state=states[state_id],
-          winner=winner,
-          votes=votes,
-          wins=(1 if winner else 0),
+        timestamp=datetime(int(election_year), 1, 1),
+        candidate_id=candidate_id,
+        candidate_name=candidates[candidate_id],
+        political_party=political_parties[candidate_parties[candidate_id]],
+        election_year=elections[election_id],
+        state=states[state_id],
+        winner=winner,
+        votes=votes,
+        wins=(1 if winner else 0),
     ))
 
 mock_politics_database = pd.DataFrame.from_records(records, columns=df_columns)
@@ -396,9 +455,9 @@ def ref_delta(ref_data_frame, columns):
     ref_columns = ['%s_eoe' % column for column in columns]
 
     delta_data_frame = pd.DataFrame(
-          data=ref_data_frame[ref_columns].values - ref_data_frame[columns].values,
-          columns=['%s_eoe_delta' % column for column in columns],
-          index=ref_data_frame.index
+        data=ref_data_frame[ref_columns].values - ref_data_frame[columns].values,
+        columns=['%s_eoe_delta' % column for column in columns],
+        index=ref_data_frame.index
     )
     return ref_data_frame.join(delta_data_frame)
 
@@ -427,10 +486,10 @@ def totals(data_frame, dimensions, columns):
         totals_index_value = get_totals_marker_for_dtype(df.index.levels[-1].dtype)
 
         return pd.DataFrame(
-              [df.sum()],
-              columns=columns,
-              index=pd.Index([totals_index_value],
-                             name=df.index.names[-1]))
+            [df.sum()],
+            columns=columns,
+            index=pd.Index([totals_index_value],
+                           name=df.index.names[-1]))
 
     totals_df = None
     for i in range(-1, -1 - len(dimensions), -1):

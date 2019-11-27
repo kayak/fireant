@@ -1,12 +1,23 @@
-from pypika import JoinType
+from pypika import (
+    JoinType,
+)
 
 
 class Join(object):
     """
-    WRITEME
+    The `Join` class represents a traditional table join in the `Slicer` API. For joining sub-queries see the
+    `DataSetJoin` class.
     """
 
     def __init__(self, table, criterion, join_type=JoinType.inner):
+        """
+        :param table:
+            A PyPika Table instance.
+        :param criterion:
+            A PyPika boolean expression.
+        :param join_type:
+            The join type (e.g. inner, left, right). See JoinType enum for more info.
+        """
         self.table = table
         self.criterion = criterion
         self.join_type = join_type

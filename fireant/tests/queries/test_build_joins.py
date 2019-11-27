@@ -1,7 +1,10 @@
 from unittest import TestCase
 
 import fireant as f
-from fireant.tests.dataset.mocks import mock_dataset
+from fireant.tests.dataset.mocks import (
+    mock_dataset,
+    mock_spend_dataset,
+)
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection

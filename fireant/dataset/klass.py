@@ -1,10 +1,15 @@
 import itertools
 
+from fireant import (
+    Field,
+    Join,
+)
 from fireant.queries import (
     DataSetQueryBuilder,
     DimensionChoicesQueryBuilder,
     DimensionLatestQueryBuilder,
 )
+from fireant.utils import immutable
 
 
 class _Container(object):
@@ -23,10 +28,8 @@ class _Container(object):
         slicer.dimensions.my_dimension1
     """
 
-    def __init__(self, items):
-        self._items = items
-        for item in items:
-            setattr(self, item.alias, item)
+    def __init__(self):
+        self._items = []
 
     def __iter__(self):
         return iter(self._items)
@@ -36,6 +39,9 @@ class _Container(object):
 
     def __contains__(self, item):
         return hasattr(self, item)
+
+    def __hash__(self):
+        return hash((item for item in self._items))
 
     def __eq__(self, other):
         """
@@ -47,16 +53,21 @@ class _Container(object):
                     and a.alias == b.alias
                     for a, b in itertools.zip_longest(self._items, getattr(other, '_items', ()))])
 
+    def append(self, item):
+        self._items.append(item)
+        setattr(self, item.alias, item)
+
 
 class DataSet(object):
     """
-    WRITEME
+    The DataSet class abstracts the query generation, given the fields and what not that were provided, and the
+    fetching of the aforementioned query's data.
     """
 
     class Fields(_Container):
         pass
 
-    def __init__(self, table, database, joins=(), fields=(), always_query_all_metrics=False):
+    def __init__(self, table, database, always_query_all_metrics=False):
         """
         Constructor for a slicer.  Contains all the fields to initialize the slicer.
 
@@ -66,32 +77,19 @@ class DataSet(object):
         :param database:  (Required)
             A Database reference. Holds the connection details used by this slicer to execute queries.
 
-        :param fields: (Required: At least one)
-            A list of fields mapping definitions of data in the data set. Fields are similar to a column in a database
-            query result set. They are the values
-
-        :param joins:  (Optional)
-            A list of join descriptions for joining additional tables.  Joined tables are only used when querying a
-            metric or dimension which requires it.
-
         :param always_query_all_metrics: (Default: False)
             When true, all metrics will be included in database queries in order to increase cache hits.
         """
         self.table = table
         self.database = database
-        self.joins = joins
+        self.joins = []
 
-        self.fields = DataSet.Fields(fields)
+        self.fields = DataSet.Fields()
 
         # add query builder entry points
         self.query = DataSetQueryBuilder(self)
         self.latest = DimensionLatestQueryBuilder(self)
-
         self.always_query_all_metrics = always_query_all_metrics
-
-        for field in fields:
-            if not field.definition.is_aggregate:
-                field.choices = DimensionChoicesQueryBuilder(self, field)
 
     def __eq__(self, other):
         return isinstance(other, DataSet) \
@@ -101,3 +99,36 @@ class DataSet(object):
         return 'Slicer(fields=[{}])' \
             .format(','.join([repr(f)
                               for f in self.fields]))
+
+    def __hash__(self):
+        return hash((self.table, self.database.database, tuple(self.joins), self.fields, self.always_query_all_metrics))
+
+    @immutable
+    def join(self, *args, **kwargs):
+        """
+        Adds a join when building a slicer query.
+
+        :return:
+            A copy of this DataSet instance with the join added.
+        """
+
+        self.joins.append(
+            Join(*args, **kwargs)
+        )
+
+    @immutable
+    def field(self, *args, **kwargs):
+        """
+        Adds a field when building a slicer query. Fields are similar to a column in a database query result set.
+
+        :return:
+            A copy of this DataSet instance with the field added.
+        """
+        field = Field(self, *args, **kwargs)
+
+        if not field.definition.is_aggregate:
+            field.choices = DimensionChoicesQueryBuilder(self, field)
+
+        self.fields.append(
+            field
+        )

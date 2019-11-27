@@ -16,25 +16,28 @@ from pypika import (
 
 test_table = Table('test')
 ds = f.DataSet(
-      table=test_table,
-      database=test_database,
-      fields=(
-          f.Field('date',
-                  definition=test_table.date,
-                  data_type=f.DataType.date),
-          f.Field('text',
-                  definition=test_table.text,
-                  data_type=f.DataType.text),
-          f.Field('number',
-                  definition=test_table.number,
-                  data_type=f.DataType.number),
-          f.Field('boolean',
-                  definition=test_table.boolean,
-                  data_type=f.DataType.boolean),
-          f.Field('aggr_number',
-                  definition=fn.Sum(test_table.number),
-                  data_type=f.DataType.number),
-      ),
+    table=test_table,
+    database=test_database,
+).field(
+    'date',
+    definition=test_table.date,
+    data_type=f.DataType.date
+).field(
+    'text',
+    definition=test_table.text,
+    data_type=f.DataType.text
+).field(
+    'number',
+    definition=test_table.number,
+    data_type=f.DataType.number
+).field(
+    'boolean',
+    definition=test_table.boolean,
+    data_type=f.DataType.boolean
+).field(
+    'aggr_number',
+    definition=fn.Sum(test_table.number),
+    data_type=f.DataType.number
 )
 
 

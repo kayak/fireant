@@ -21,6 +21,8 @@ from .dataset.joins import Join
 # noinspection PyUnresolvedReferences
 from .dataset.klass import DataSet
 # noinspection PyUnresolvedReferences
+from .dataset.data_blending import DataSetBlender
+# noinspection PyUnresolvedReferences
 from .dataset.modifiers import (
     OmitFromRollup,
     Rollup,
