@@ -88,7 +88,7 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
             }
             all_aliases = dimension_aliases | metric_aliases | reference_aliases
 
-            field_to_select = list()
+            field_to_select = dict()
             aliases_already_added = set()
             primary_table = sub_query_tables[self.primary_dataset.table]
 
@@ -102,7 +102,7 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
             for field in primary_table._selects:
                 if field.alias in aliases_already_added or field.alias not in all_aliases:
                     continue
-                field_to_select.append((field, primary_table))
+                field_to_select[field.alias] = primary_table
                 aliases_already_added.add(field.alias)
 
             for join in sub_query_joins:
@@ -112,50 +112,33 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
                 for field in secondary_table._selects:
                     if field.alias in aliases_already_added or field.alias not in all_aliases:
                         continue
-                    field_to_select.append((field, secondary_table))
+                    field_to_select[field.alias] = secondary_table
                     aliases_already_added.add(field.alias)
 
-            # Add dimensions and groups by
-            for field, table in field_to_select:
-                dimension_term = getattr(table, field.alias)
-
-                if field.is_aggregate:
-                    dimension_term = field.__class__(dimension_term)
-                dimension_term.table = table
-
-                dimension_term = dimension_term.as_(field.alias)
+            # Add dimensions
+            for field_alias, table in field_to_select.items():
+                dimension_term = getattr(table, field_alias)
+                dimension_term = dimension_term.as_(field_alias)
                 query = query.select(dimension_term)
-                if not field.is_aggregate:
-                    query = query.groupby(dimension_term)
 
             # Add metrics
             for metric in metrics:
-                for pypika_field in metric.definition.fields():
-                    sub_query = sub_query_tables.get(pypika_field.table)
-                    if sub_query:
-                        pypika_field.table = sub_query
-
                 if alias_selector(metric.alias) not in aliases_already_added:
                     metric_definition = make_term_for_metrics(metric)
                     query = query.select(metric_definition)
+                    field_to_select[metric_definition.alias] = query
 
             # Add filters
             for filter in self._filters:
                 if alias_selector(filter.field_alias) not in metric_aliases:
                     continue
 
-                filter_copy = copy.deepcopy(filter)
+                table = field_to_select[alias_selector(filter.field_alias)]
 
-                for pypika_field in filter_copy.definition.fields():
-                    sub_query = sub_query_tables.get(pypika_field.table)
-                    if sub_query:
-                        pypika_field.table = sub_query
-                    if len(filter_copy.definition.fields()) == 1 and not pypika_field.name.startswith('$'):
-                        pypika_field.name = alias_selector(filter_copy.field_alias)
+                if filter.is_aggregate:
+                    filter.definition.left = getattr(table, alias_selector(filter.field_alias))
 
-                query = query.having(filter_copy.definition) \
-                    if filter_copy.is_aggregate \
-                    else query.where(filter_copy.definition)
+                query = query.where(filter.definition)
 
             # Add orders by
             for (orderby_term, orientation) in orders:
@@ -165,6 +148,9 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
                     # In the case that the orders are determined by a field that is not selected as a metric or
                     # dimension, then it needs to be added to the query.
                     query = query.select(orderby_term)
+
+            for table, sub_query in sub_query_tables.items():
+                query = query.replace_table(table, sub_query)
 
             queries.append(query)
 
@@ -215,7 +201,7 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
                 continue
 
             primary_pypika_field = getattr(
-                primary_table_sub_query, _get_pypika_field_name_or_alias(primary_field.definition),
+                primary_table_sub_query, alias_selector(primary_field.alias),
             )
             secondary_pypika_field = getattr(sub_query, alias_selector(secondary_field.alias))
 

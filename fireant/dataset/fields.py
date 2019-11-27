@@ -282,21 +282,6 @@ class Field:
             self.thousands, self.precision,
         ))
 
-    def aggregate_by(self, aggregate_function, *args, **kwargs):
-        """
-        This allows fields to be referenced in other field expressions, when blending data. It's only necessary
-        when there is no arithmetic/boolean expression involved.
-
-        :param aggregate_function:
-            A PyPika aggregation function (e.g. Sum, Avg).
-        :param args:
-            Any other args that you need to pass to the provided aggregation function.
-        :param kwargs:
-            Any other kwargs that you need to pass to the provided aggregation function.
-        :return: an aggregation function instance wrapping this field.
-        """
-        return aggregate_function(self._pypika_field_for_referencing_sub_queries, *args, **kwargs)
-
     @property
     @immutable
     def share(self):

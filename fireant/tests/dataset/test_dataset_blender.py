@@ -36,7 +36,6 @@ class BlendedSlicerContainerTests(TestCase):
                                             'political_party',
                                             'candidate-id', 'candidate-name', 'candidate-spend',
                                             'average-candidate-spend-per-voters', 'average-candidate-spend-per-wins',
-                                            'average-candidate-spend',
                                             'election-id', 'election-year',
                                             'district-id', 'district-name',
                                             'state', 'winner', 'deepjoin'})

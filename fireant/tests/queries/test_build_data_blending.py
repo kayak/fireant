@@ -21,7 +21,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
         self.assertEqual(
                          'SELECT '
                          '"sq0"."$timestamp" "$timestamp",'
-                         'SUM("sq0"."$votes") "$votes" '
+                         '"sq0"."$votes" "$votes" '
                          'FROM ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
@@ -38,8 +38,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                          'ORDER BY "$timestamp"'
                          ') "sq1" '
                          'ON '
-                         '"sq0"."timestamp"="sq1"."$timestamp" '
-                         'GROUP BY "$timestamp" '
+                         '"sq0"."$timestamp"="sq1"."$timestamp" '
                          'ORDER BY "$timestamp"'
         , str(queries[0]))
 
@@ -56,7 +55,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
         self.assertEqual(
                          'SELECT '
                          '"sq0"."$timestamp" "$timestamp",'
-                         'SUM("sq1"."$candidate-spend") "$candidate-spend" '
+                         '"sq1"."$candidate-spend" "$candidate-spend" '
                          'FROM ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp" '
@@ -73,8 +72,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                          'ORDER BY "$timestamp"'
                          ') "sq1" '
                          'ON '
-                         '"sq0"."timestamp"="sq1"."$timestamp" '
-                         'GROUP BY "$timestamp" '
+                         '"sq0"."$timestamp"="sq1"."$timestamp" '
                          'ORDER BY "$timestamp"'
         , str(queries[0]))
 
@@ -91,7 +89,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
         self.assertEqual(
                          'SELECT '
                          '"sq0"."$timestamp" "$timestamp",'
-                         'AVG("sq1"."$candidate-spend"/"sq0"."$wins") "$average-candidate-spend-per-wins" '
+                         '"sq1"."$candidate-spend"/"sq0"."$wins" "$average-candidate-spend-per-wins" '
                          'FROM ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
@@ -109,8 +107,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                          'ORDER BY "$timestamp"'
                          ') "sq1" '
                          'ON '
-                         '"sq0"."timestamp"="sq1"."$timestamp" '
-                         'GROUP BY "$timestamp" '
+                         '"sq0"."$timestamp"="sq1"."$timestamp" '
                          'ORDER BY "$timestamp"'
         , str(queries[0]))
 
@@ -127,7 +124,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
         self.assertEqual(
                          'SELECT '
                          '"sq0"."$timestamp" "$timestamp",'
-                         'AVG("sq1"."$candidate-spend"/"sq0"."$voters") "$average-candidate-spend-per-voters" '
+                         '"sq1"."$candidate-spend"/"sq0"."$voters" "$average-candidate-spend-per-voters" '
                          'FROM ('
                          'SELECT '
                          'TRUNC("politician"."timestamp",\'DD\') "$timestamp",'
@@ -147,43 +144,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                          'ORDER BY "$timestamp"'
                          ') "sq1" '
                          'ON '
-                         '"sq0"."timestamp"="sq1"."$timestamp" '
-                         'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp"'
-        , str(queries[0]))
-
-    def test_dimension_with_single_field_metric_in_query(self):
-        queries = mock_dataset_blender.query \
-            .widget(f.ReactTable(
-                mock_dataset_blender.fields['average-candidate-spend'],
-            )) \
-            .dimension(f.day(mock_dataset_blender.fields.timestamp)) \
-            .sql
-
-        self.assertEqual(len(queries), 1)
-
-        self.assertEqual(
-                         'SELECT '
-                         '"sq0"."$timestamp" "$timestamp",'
-                         'AVG("sq1"."$candidate-spend") "$average-candidate-spend" '
-                         'FROM ('
-                         'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp" '
-                         'FROM "politics"."politician" '
-                         'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp"'
-                         ') "sq0" '
-                         'LEFT JOIN ('
-                         'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp",'
-                         'SUM("candidate_spend") "$candidate-spend" '
-                         'FROM "politics"."politician_spend" '
-                         'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp"'
-                         ') "sq1" '
-                         'ON '
-                         '"sq0"."timestamp"="sq1"."$timestamp" '
-                         'GROUP BY "$timestamp" '
+                         '"sq0"."$timestamp"="sq1"."$timestamp" '
                          'ORDER BY "$timestamp"'
         , str(queries[0]))
 
@@ -201,7 +162,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
         self.assertEqual(
                          'SELECT '
                          '"sq0"."$timestamp" "$timestamp",'
-                         'SUM("sq0"."$votes") "$votes" '
+                         '"sq0"."$votes" "$votes" '
                          'FROM ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
@@ -219,9 +180,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                          'ORDER BY "$timestamp"'
                          ') "sq1" '
                          'ON '
-                         '"sq0"."timestamp"="sq1"."$timestamp" '
-                         'GROUP BY "$timestamp" '
-                         'HAVING SUM("sq0"."$votes")>10 '
+                         '"sq0"."$timestamp"="sq1"."$timestamp" '
+                         'WHERE "sq0"."$votes">10 '
                          'ORDER BY "$timestamp"'
         , str(queries[0]))
 
@@ -239,7 +199,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
         self.assertEqual(
                          'SELECT '
                          '"sq0"."$timestamp" "$timestamp",'
-                         'SUM("sq1"."$candidate-spend") "$candidate-spend" '
+                         '"sq1"."$candidate-spend" "$candidate-spend" '
                          'FROM ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp" '
@@ -257,9 +217,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                          'ORDER BY "$timestamp"'
                          ') "sq1" '
                          'ON '
-                         '"sq0"."timestamp"="sq1"."$timestamp" '
-                         'GROUP BY "$timestamp" '
-                         'HAVING SUM("sq1"."$candidate-spend")>500 '
+                         '"sq0"."$timestamp"="sq1"."$timestamp" '
+                         'WHERE "sq1"."$candidate-spend">500 '
                          'ORDER BY "$timestamp"'
         , str(queries[0]))
 
@@ -278,8 +237,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
         self.assertEqual(
                          'SELECT '
                          '"sq0"."$timestamp" "$timestamp",'
-                         'SUM("sq0"."$votes") "$votes",'
-                         'SUM("sq1"."$candidate-spend") "$candidate-spend" '
+                         '"sq0"."$votes" "$votes",'
+                         '"sq1"."$candidate-spend" "$candidate-spend" '
                          'FROM ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
@@ -299,8 +258,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                          'ORDER BY "$timestamp"'
                          ') "sq1" '
                          'ON '
-                         '"sq0"."timestamp"="sq1"."$timestamp" '
-                         'GROUP BY "$timestamp" '
+                         '"sq0"."$timestamp"="sq1"."$timestamp" '
                          'ORDER BY "$timestamp"'
         , str(queries[0]))
 
@@ -319,8 +277,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
         self.assertEqual(
                          'SELECT '
                          '"sq0"."$timestamp" "$timestamp",'
-                         'SUM("sq0"."$votes") "$votes",'
-                         'SUM("sq1"."$candidate-spend") "$candidate-spend" '
+                         '"sq0"."$votes" "$votes",'
+                         '"sq1"."$candidate-spend" "$candidate-spend" '
                          'FROM ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
@@ -339,9 +297,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                          'ORDER BY "$timestamp"'
                          ') "sq1" '
                          'ON '
-                         '"sq0"."timestamp"="sq1"."$timestamp" '
-                         'GROUP BY "$timestamp" '
-                         'HAVING SUM("sq0"."$votes")>10 '
+                         '"sq0"."$timestamp"="sq1"."$timestamp" '
+                         'WHERE "sq0"."$votes">10 '
                          'ORDER BY "$timestamp"'
         , str(queries[0]))
 
@@ -360,8 +317,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
         self.assertEqual(
                          'SELECT '
                          '"sq0"."$timestamp" "$timestamp",'
-                         'SUM("sq0"."$votes") "$votes",'
-                         'SUM("sq1"."$candidate-spend") "$candidate-spend" '
+                         '"sq0"."$votes" "$votes",'
+                         '"sq1"."$candidate-spend" "$candidate-spend" '
                          'FROM ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
@@ -379,8 +336,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                          'ORDER BY "$timestamp"'
                          ') "sq1" '
                          'ON '
-                         '"sq0"."timestamp"="sq1"."$timestamp" '
-                         'GROUP BY "$timestamp" '
+                         '"sq0"."$timestamp"="sq1"."$timestamp" '
                          'ORDER BY "$votes"'
         , str(queries[0]))
 
@@ -399,8 +355,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
         self.assertEqual(
                          'SELECT '
                          '"sq0"."$timestamp" "$timestamp",'
-                         'SUM("sq0"."$votes") "$votes",'
-                         'SUM("sq1"."$candidate-spend") "$candidate-spend" '
+                         '"sq0"."$votes" "$votes",'
+                         '"sq1"."$candidate-spend" "$candidate-spend" '
                          'FROM ('
                          'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
@@ -419,9 +375,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                          'ORDER BY "$timestamp"'
                          ') "sq1" '
                          'ON '
-                         '"sq0"."timestamp"="sq1"."$timestamp" '
-                         'GROUP BY "$timestamp" '
-                         'HAVING SUM("sq1"."$candidate-spend")>500 '
+                         '"sq0"."$timestamp"="sq1"."$timestamp" '
+                         'WHERE "sq1"."$candidate-spend">500 '
                          'ORDER BY "$timestamp"'
         , str(queries[0]))
 
@@ -440,7 +395,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             self.assertEqual(
                              'SELECT '
                              '"sq0"."$timestamp" "$timestamp",'
-                             'SUM("sq0"."$votes") "$votes" '
+                             '"sq0"."$votes" "$votes" '
                              'FROM ('
                              'SELECT '
                              'TRUNC("timestamp",\'DD\') "$timestamp",'
@@ -457,8 +412,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                              'ORDER BY "$timestamp"'
                              ') "sq1" '
                              'ON '
-                             '"sq0"."timestamp"="sq1"."$timestamp" '
-                             'GROUP BY "$timestamp" '
+                             '"sq0"."$timestamp"="sq1"."$timestamp" '
                              'ORDER BY "$timestamp"'
             , str(queries[0]))
 
@@ -466,7 +420,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             self.assertEqual(
                              'SELECT '
                              '"sq0"."$timestamp" "$timestamp",'
-                             'SUM("sq0"."$votes_wow") "$votes_wow" '
+                             '"sq0"."$votes_wow" "$votes_wow" '
                              'FROM ('
                              'SELECT '
                              'TRUNC(TIMESTAMPADD(\'week\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
@@ -483,8 +437,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                              'ORDER BY "$timestamp"'
                              ') "sq1" '
                              'ON '
-                             '"sq0"."timestamp"="sq1"."$timestamp" '
-                             'GROUP BY "$timestamp" '
+                             '"sq0"."$timestamp"="sq1"."$timestamp" '
                              'ORDER BY "$timestamp"'
             , str(queries[1]))
 
@@ -503,7 +456,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             self.assertEqual(
                              'SELECT '
                              '"sq0"."$timestamp" "$timestamp",'
-                             'SUM("sq1"."$candidate-spend") "$candidate-spend" '
+                             '"sq1"."$candidate-spend" "$candidate-spend" '
                              'FROM ('
                              'SELECT '
                              'TRUNC("timestamp",\'DD\') "$timestamp" '
@@ -520,8 +473,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                              'ORDER BY "$timestamp"'
                              ') "sq1" '
                              'ON '
-                             '"sq0"."timestamp"="sq1"."$timestamp" '
-                             'GROUP BY "$timestamp" '
+                             '"sq0"."$timestamp"="sq1"."$timestamp" '
                              'ORDER BY "$timestamp"'
             , str(queries[0]))
 
@@ -529,7 +481,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             self.assertEqual(
                         'SELECT '
                         '"sq0"."$timestamp" "$timestamp",'
-                        'SUM("sq1"."$candidate-spend_wow") "$candidate-spend_wow" '
+                        '"sq1"."$candidate-spend_wow" "$candidate-spend_wow" '
                         'FROM ('
                         'SELECT '
                          'TRUNC(TIMESTAMPADD(\'week\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp" '
@@ -546,8 +498,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                         'ORDER BY "$timestamp"'
                         ') "sq1" '
                         'ON '
-                        '"sq0"."timestamp"="sq1"."$timestamp" '
-                        'GROUP BY "$timestamp" '
+                        '"sq0"."$timestamp"="sq1"."$timestamp" '
                         'ORDER BY "$timestamp"'
             , str(queries[1]))
 
@@ -567,8 +518,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             self.assertEqual(
                              'SELECT '
                              '"sq0"."$timestamp" "$timestamp",'
-                             'SUM("sq0"."$votes") "$votes",'
-                             'SUM("sq1"."$candidate-spend") "$candidate-spend" '
+                             '"sq0"."$votes" "$votes",'
+                             '"sq1"."$candidate-spend" "$candidate-spend" '
                              'FROM ('
                              'SELECT '
                              'TRUNC("timestamp",\'DD\') "$timestamp",'
@@ -586,8 +537,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                              'ORDER BY "$timestamp"'
                              ') "sq1" '
                              'ON '
-                             '"sq0"."timestamp"="sq1"."$timestamp" '
-                             'GROUP BY "$timestamp" '
+                             '"sq0"."$timestamp"="sq1"."$timestamp" '
                              'ORDER BY "$timestamp"'
             , str(queries[0]))
 
@@ -595,8 +545,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             self.assertEqual(
                         'SELECT '
                         '"sq0"."$timestamp" "$timestamp",'
-                        'SUM("sq0"."$votes_wow") "$votes_wow",'
-                        'SUM("sq1"."$candidate-spend_wow") "$candidate-spend_wow" '
+                        '"sq0"."$votes_wow" "$votes_wow",'
+                        '"sq1"."$candidate-spend_wow" "$candidate-spend_wow" '
                         'FROM ('
                         'SELECT '
                          'TRUNC(TIMESTAMPADD(\'week\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
@@ -614,8 +564,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                         'ORDER BY "$timestamp"'
                         ') "sq1" '
                         'ON '
-                        '"sq0"."timestamp"="sq1"."$timestamp" '
-                        'GROUP BY "$timestamp" '
+                        '"sq0"."$timestamp"="sq1"."$timestamp" '
                         'ORDER BY "$timestamp"'
             , str(queries[1]))
 
@@ -638,9 +587,9 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                          'SELECT '
                          '"sq0"."$candidate-id" "$candidate-id",'
                          '"sq0"."$election-year" "$election-year",'
-                         'SUM("sq0"."$votes") "$votes",'
-                         'SUM("sq1"."$candidate-spend") "$candidate-spend",'
-                         'AVG("sq1"."$candidate-spend"/"sq0"."$wins") "$average-candidate-spend-per-wins" '
+                         '"sq0"."$votes" "$votes",'
+                         '"sq1"."$candidate-spend" "$candidate-spend",'
+                         '"sq1"."$candidate-spend"/"sq0"."$wins" "$average-candidate-spend-per-wins" '
                          'FROM ('
                          'SELECT '
                          '"candidate_id" "$candidate-id",'
@@ -663,9 +612,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                          'ORDER BY "$candidate-id","$election-year"'
                          ') "sq1" '
                          'ON '
-                         '"sq0"."candidate_id"="sq1"."$candidate-id" AND '
-                         '"sq0"."election_year"="sq1"."$election-year" '
-                         'GROUP BY "$candidate-id","$election-year" '
-                         'HAVING AVG("sq1"."$candidate-spend"/"sq0"."$wins")>500 '
+                         '"sq0"."$candidate-id"="sq1"."$candidate-id" AND '
+                         '"sq0"."$election-year"="sq1"."$election-year" '
+                         'WHERE "sq1"."$candidate-spend"/"sq0"."$wins">500 '
                          'ORDER BY "$candidate-id","$election-year"'
         , str(queries[0]))
