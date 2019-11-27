@@ -113,10 +113,7 @@ class MySQLDatabase(Database):
         interval_term = terms.Interval(**{'{}s'.format(str(date_part)): interval, 'dialect': Dialects.MYSQL})
         return DateAdd(field, interval_term)
 
-    def get_column_definitions(self, schema, table):
-        """
-        Return a list of column name, column data type pairs.
-        """
+    def get_column_definitions(self, schema, table, connection=None):
         columns = Table('columns', schema='INFORMATION_SCHEMA')
 
         columns_query = MySQLQuery \
@@ -127,63 +124,51 @@ class MySQLDatabase(Database):
             .distinct() \
             .orderby(columns.column_name)
 
-        return self.fetch(str(columns_query))
+        return self.fetch(str(columns_query), connection=connection)
 
-    @staticmethod
-    def import_csv(connection, table_name, file_path):
+    def import_csv(self, table, file_path, connection=None):
         """
         Execute a query to import a file into a table using the provided connection.
 
-        :param connection: The connection for mysql.
-        :param table_name: The name of a table to import data into.
+        :param table: The name of a table to import data into.
         :param file_path: The path of the file to be imported.
+        :param connection: (Optional) The connection to execute this query with.
         """
-        query = MySQLQuery \
+        import_query = MySQLQuery \
             .load(file_path) \
-            .into(table_name)
+            .into(table)
 
-        cursor = connection.cursor()
-        cursor.execute(str(query))
+        self.execute(str(import_query), connection=connection)
 
-        connection.commit()
-
-    @staticmethod
-    def create_temporary_table_from_columns(connection, table_name, columns):
+    def create_temporary_table_from_columns(self, table, columns, connection=None):
         """
         Creates a temporary table from a list of columns.
 
-        :param connection: The connection for mysql.
-        :param table_name: The name of the new temporary table.
+        :param table: The name of the new temporary table.
         :param columns: The columns of the new temporary table.
+        :param connection: (Optional) The connection to execute this query with.
         """
         create_query = MySQLQuery \
-            .create_table(table_name) \
+            .create_table(table) \
             .temporary() \
             .columns(*columns)
 
-        cursor = connection.cursor()
-        cursor.execute(str(create_query))
+        self.execute(str(create_query), connection=connection)
 
-        connection.commit()
-
-    @staticmethod
-    def create_temporary_table_from_select(connection, table_name, select_query):
+    def create_temporary_table_from_select(self, table, select_query, connection=None):
         """
         Creates a temporary table from a SELECT query.
 
-        :param connection: The connection for mysql.
-        :param table_name: The name of the new temporary table.
+        :param table: The name of the new temporary table.
         :param select_query: The query to be used for selecting data of an existing table for the new temporary table.
+        :param connection: (Optional) The connection to execute this query with.
         """
         create_query = MySQLQuery \
-            .create_table(table_name) \
+            .create_table(table) \
             .temporary() \
             .as_select(select_query)
 
-        cursor = connection.cursor()
-        cursor.execute(str(create_query))
-
-        connection.commit()
+        self.execute(str(create_query), connection=connection)
 
 
 class MySQLTypeEngine(TypeEngine):

@@ -47,8 +47,7 @@ class PostgreSQLDatabase(Database):
     def date_add(self, field, date_part, interval):
         return fn.DateAdd(str(date_part), interval, field)
 
-    def get_column_definitions(self, schema, table):
-        """ Return a list of column name, column data type pairs """
+    def get_column_definitions(self, schema, table, connection=None):
         columns = Table('columns', schema='INFORMATION_SCHEMA')
 
         columns_query = PostgreSQLQuery.from_(columns) \
@@ -58,5 +57,5 @@ class PostgreSQLDatabase(Database):
             .distinct() \
             .orderby(columns.column_name)
 
-        return self.fetch(str(columns_query))
+        return self.fetch(str(columns_query), connection=connection)
 

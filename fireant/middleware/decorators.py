@@ -36,3 +36,15 @@ def log(func):
         return result
 
     return wrapper
+
+
+def with_connection(func):
+    @wraps(func)
+    def wrapper(database, query, **kwargs):
+        connection = kwargs.get('connection', None)
+        if connection:
+            return func(database, query, connection=connection)
+        with database.connect() as connection:
+            return func(database, query, connection=connection)
+
+    return wrapper

@@ -1,11 +1,26 @@
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import (
+    Mock,
+    patch,
+)
 
 from pypika import Field
 
 from fireant.middleware.concurrency import ThreadPoolConcurrencyMiddleware
 from fireant.database import Database
-from fireant.utils import read_csv
+from fireant.middleware.decorators import with_connection
+
+
+@with_connection
+def test_fetch(database, query, **kwargs):
+    return kwargs.get('connection')
+
+
+def test_connect():
+    mock_connection = Mock()
+    mock_connection.__enter__ = Mock()
+    mock_connection.__exit__ = Mock()
+    return mock_connection
 
 
 class TestBaseDatabase(TestCase):
@@ -30,19 +45,31 @@ class TestBaseDatabase(TestCase):
         self.assertIsInstance(db.concurrency_middleware, ThreadPoolConcurrencyMiddleware)
         self.assertEquals(db.concurrency_middleware.max_processes, 5)
 
+    @patch.object(Database, 'fetch')
+    @patch.object(Database, 'connect')
+    def test_database_reuse_passed_connection(self, mock_connect, mock_fetch):
+        db = Database()
 
-class TestCSVExport(TestCase):
-    def test_export_csv(self):
-        mock_cursor = Mock()
-        mock_cursor.fetchall.return_value = [(1, 'a', True), (2, 'ab', False)]
-        mock_cursor.execute = Mock()
+        mock_connect.side_effect = test_connect
+        mock_fetch.side_effect = test_fetch
 
-        mock_connection = Mock()
-        mock_connection.cursor.return_value = mock_cursor
+        with db.connect() as connection:
+            connection_1 = db.fetch(db, 'SELECT a from abc', connection=connection)
+            connection_2 = db.fetch(db, 'SELECT b from def', connection=connection)
 
-        ntf = Database.export_csv(mock_connection, 'SELECT a FROM abc')
-        ntf_rows = read_csv(ntf.name)
+        self.assertEqual(1, mock_connect.call_count)
+        self.assertEqual(connection_1, connection_2)
 
-        mock_cursor.execute.assert_called_once_with('SELECT a FROM abc')
-        self.assertEqual(['1', 'a', 'True'], ntf_rows[0])
-        self.assertEqual(['2', 'ab', 'False'], ntf_rows[1])
+    @patch.object(Database, 'fetch')
+    @patch.object(Database, 'connect')
+    def test_database_opens_new_connection(self, mock_connect, mock_fetch):
+        db = Database()
+
+        mock_connect.side_effect = test_connect
+        mock_fetch.side_effect = test_fetch
+
+        connection_1 = db.fetch(db, 'SELECT a from abc')
+        connection_2 = db.fetch(db, 'SELECT b from def')
+
+        self.assertEqual(2, mock_connect.call_count)
+        self.assertNotEqual(connection_1, connection_2)

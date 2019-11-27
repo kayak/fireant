@@ -114,58 +114,43 @@ class TestMySQLDatabase(TestCase):
     def test_get_column_definitions(self, mock_fetch):
         MySQLDatabase().get_column_definitions('test_schema', 'test_table')
 
-        mock_fetch.assert_called_once_with('SELECT DISTINCT `column_name`,`column_type` '
-                                           'FROM `INFORMATION_SCHEMA`.`columns` '
-                                           'WHERE `table_schema`=\'test_schema\' AND `table_name`=\'test_table\' '
-                                           'ORDER BY `column_name`')
+        mock_fetch.assert_called_once_with(
+              'SELECT DISTINCT `column_name`,`column_type` '
+              'FROM `INFORMATION_SCHEMA`.`columns` '
+              'WHERE `table_schema`=\'test_schema\' AND `table_name`=\'test_table\' '
+              'ORDER BY `column_name`',
+              connection=None
+        )
 
-    def test_create_temporary_table_from_columns(self):
-        mock_cursor = Mock()
-        mock_cursor.execute = Mock()
+    @patch.object(MySQLDatabase, 'execute')
+    def test_import_csv(self, mock_execute):
+        MySQLDatabase().import_csv('abc', '/path/to/file')
 
-        mock_connection = Mock()
-        mock_connection.cursor.return_value = mock_cursor
-        mock_connection.commit = Mock()
+        mock_execute.assert_called_once_with(
+              'LOAD DATA LOCAL INFILE \'/path/to/file\' INTO TABLE `abc` FIELDS TERMINATED BY \',\'',
+              connection=None
+        )
 
+    @patch.object(MySQLDatabase, 'execute')
+    def test_create_temporary_table_from_columns(self, mock_execute):
         columns = PypikaColumn('a', 'varchar'), PypikaColumn('b', 'varchar(100)')
 
-        MySQLDatabase().create_temporary_table_from_columns(mock_connection, 'abc', columns)
+        MySQLDatabase().create_temporary_table_from_columns('abc', columns)
 
-        self.assertEqual(1, mock_connection.commit.call_count)
-        mock_cursor.execute.assert_called_once_with(
-              'CREATE TEMPORARY TABLE "abc" ("a" varchar,"b" varchar(100))'
+        mock_execute.assert_called_once_with(
+              'CREATE TEMPORARY TABLE "abc" ("a" varchar,"b" varchar(100))',
+              connection=None
         )
 
-    def test_create_temporary_table_from_select(self):
-        mock_cursor = Mock()
-        mock_cursor.execute = Mock()
-
-        mock_connection = Mock()
-        mock_connection.cursor.return_value = mock_cursor
-        mock_connection.commit = Mock()
-
+    @patch.object(MySQLDatabase, 'execute')
+    def test_create_temporary_table_from_select(self, mock_execute):
         query = MySQLQuery.from_('abc').select('*')
 
-        MySQLDatabase().create_temporary_table_from_select(mock_connection, 'def', query)
+        MySQLDatabase().create_temporary_table_from_select('def', query)
 
-        self.assertEqual(1, mock_connection.commit.call_count)
-        mock_cursor.execute.assert_called_once_with(
-              'CREATE TEMPORARY TABLE "def" AS (SELECT * FROM "abc")'
-        )
-
-    def test_import_csv(self):
-        mock_cursor = Mock()
-        mock_cursor.execute = Mock()
-
-        mock_connection = Mock()
-        mock_connection.cursor.return_value = mock_cursor
-        mock_connection.commit = Mock()
-
-        MySQLDatabase().import_csv(mock_connection, 'abc', '/path/to/file')
-
-        self.assertEqual(1, mock_connection.commit.call_count)
-        mock_cursor.execute.assert_called_once_with(
-            'LOAD DATA LOCAL INFILE \'/path/to/file\' INTO TABLE `abc` FIELDS TERMINATED BY \',\''
+        mock_execute.assert_called_once_with(
+              'CREATE TEMPORARY TABLE "def" AS (SELECT * FROM "abc")',
+              connection=None,
         )
 
 

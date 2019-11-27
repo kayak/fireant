@@ -101,8 +101,7 @@ class SnowflakeDatabase(Database):
                                   format=serialization.PrivateFormat.PKCS8,
                                   encryption_algorithm=serialization.NoEncryption())
 
-    def get_column_definitions(self, schema, table):
-        """ Return a list of column name, column data type pairs """
-        columns = self.fetch('DESCRIBE TABLE {}.{} TYPE=COLUMNS'.format(schema, table))
+    def get_column_definitions(self, schema, table, connection=None):
+        columns = self.fetch('DESCRIBE TABLE {}.{} TYPE=COLUMNS'.format(schema, table), connection=connection)
         return [column[0:2] for column in columns]
 

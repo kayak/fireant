@@ -94,7 +94,10 @@ class TestPostgreSQL(TestCase):
     def test_get_column_definitions(self, mock_fetch):
         PostgreSQLDatabase().get_column_definitions('test_schema', 'test_table')
 
-        mock_fetch.assert_called_once_with('SELECT DISTINCT "column_name","data_type" ' \
-                                           'FROM "INFORMATION_SCHEMA"."columns" ' \
-                                           'WHERE "table_schema"=\'test_schema\' AND "table_name"=\'test_table\' ' \
-                                           'ORDER BY "column_name"')
+        mock_fetch.assert_called_once_with(
+              'SELECT DISTINCT "column_name","data_type" ' \
+              'FROM "INFORMATION_SCHEMA"."columns" ' \
+              'WHERE "table_schema"=\'test_schema\' AND "table_name"=\'test_table\' ' \
+              'ORDER BY "column_name"',
+              connection=None
+        )
