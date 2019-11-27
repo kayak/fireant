@@ -114,18 +114,21 @@ class TestMySQLDatabase(TestCase):
     def test_get_column_definitions(self, mock_fetch):
         MySQLDatabase().get_column_definitions('test_schema', 'test_table')
 
-        mock_fetch.assert_called_once_with('SELECT DISTINCT `column_name`,`column_type` '
-                                           'FROM `INFORMATION_SCHEMA`.`columns` '
-                                           'WHERE `table_schema`=\'test_schema\' AND `table_name`=\'test_table\' '
-                                           'ORDER BY `column_name`')
+        mock_fetch.assert_called_once_with(
+              'SELECT DISTINCT `column_name`,`column_type` '
+              'FROM `INFORMATION_SCHEMA`.`columns` '
+              'WHERE `table_schema`=\'test_schema\' AND `table_name`=\'test_table\' '
+              'ORDER BY `column_name`',
+              connection=None
+        )
 
     @patch.object(MySQLDatabase, 'execute')
     def test_import_csv(self, mock_execute):
-
         MySQLDatabase().import_csv('abc', '/path/to/file')
 
         mock_execute.assert_called_once_with(
-            'LOAD DATA LOCAL INFILE \'/path/to/file\' INTO TABLE `abc` FIELDS TERMINATED BY \',\''
+              'LOAD DATA LOCAL INFILE \'/path/to/file\' INTO TABLE `abc` FIELDS TERMINATED BY \',\'',
+              connection=None
         )
 
     @patch.object(MySQLDatabase, 'execute')
@@ -135,7 +138,8 @@ class TestMySQLDatabase(TestCase):
         MySQLDatabase().create_temporary_table_from_columns('abc', columns)
 
         mock_execute.assert_called_once_with(
-              'CREATE TEMPORARY TABLE "abc" ("a" varchar,"b" varchar(100))'
+              'CREATE TEMPORARY TABLE "abc" ("a" varchar,"b" varchar(100))',
+              connection=None
         )
 
     @patch.object(MySQLDatabase, 'execute')
@@ -145,7 +149,8 @@ class TestMySQLDatabase(TestCase):
         MySQLDatabase().create_temporary_table_from_select('def', query)
 
         mock_execute.assert_called_once_with(
-              'CREATE TEMPORARY TABLE "def" AS (SELECT * FROM "abc")'
+              'CREATE TEMPORARY TABLE "def" AS (SELECT * FROM "abc")',
+              connection=None,
         )
 
 

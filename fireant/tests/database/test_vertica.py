@@ -106,15 +106,19 @@ class TestVertica(TestCase):
     def test_get_column_definitions(self, mock_fetch):
         VerticaDatabase().get_column_definitions('test_schema', 'test_table')
 
-        mock_fetch.assert_called_once_with('SELECT DISTINCT "column_name","data_type" FROM "columns" '
-                                           'WHERE "table_schema"=\'test_schema\' AND "table_name"=\'test_table\'')
+        mock_fetch.assert_called_once_with(
+              'SELECT DISTINCT "column_name","data_type" FROM "columns" '
+              'WHERE "table_schema"=\'test_schema\' AND "table_name"=\'test_table\'',
+              connection=None
+        )
 
     @patch.object(VerticaDatabase, 'execute')
     def test_import_csv(self, mock_execute):
         VerticaDatabase().import_csv('abc', '/path/to/file')
 
         mock_execute.assert_called_once_with(
-              'COPY "abc" FROM LOCAL \'/path/to/file\' PARSER fcsvparser(header=false)'
+              'COPY "abc" FROM LOCAL \'/path/to/file\' PARSER fcsvparser(header=false)',
+              connection=None
         )
 
     @patch.object(VerticaDatabase, 'execute')
@@ -124,7 +128,8 @@ class TestVertica(TestCase):
         VerticaDatabase().create_temporary_table_from_columns('abc', columns)
 
         mock_execute.assert_called_once_with(
-              'CREATE LOCAL TEMPORARY TABLE "abc" ("a" varchar,"b" varchar(100)) ON COMMIT PRESERVE ROWS'
+              'CREATE LOCAL TEMPORARY TABLE "abc" ("a" varchar,"b" varchar(100)) ON COMMIT PRESERVE ROWS',
+              connection=None
         )
 
     @patch.object(VerticaDatabase, 'execute')
@@ -134,7 +139,8 @@ class TestVertica(TestCase):
         VerticaDatabase().create_temporary_table_from_select('def', query)
 
         mock_execute.assert_called_once_with(
-              'CREATE LOCAL TEMPORARY TABLE "def" ON COMMIT PRESERVE ROWS AS (SELECT * FROM "abc")'
+              'CREATE LOCAL TEMPORARY TABLE "def" ON COMMIT PRESERVE ROWS AS (SELECT * FROM "abc")',
+              connection=None
         )
 
 

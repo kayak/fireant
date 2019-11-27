@@ -41,9 +41,14 @@ class Database(object):
         """
         raise NotImplementedError
 
-    def get_column_definitions(self, schema, table):
+    def get_column_definitions(self, schema, table, connection=None):
         """
-        This function must return the columns of a given schema and table.
+        Return a list of column name, column data type pairs.
+
+        :param schema: The name of the table schema.
+        :param table: The name of the table to get columns from.
+        :param connection: (Optional) The connection to execute this query with.
+        :return: A list of columns.
         """
         raise NotImplementedError
 

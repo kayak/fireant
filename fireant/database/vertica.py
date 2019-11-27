@@ -81,14 +81,7 @@ class VerticaDatabase(Database):
     def date_add(self, field, date_part, interval):
         return fn.TimestampAdd(str(date_part), interval, field)
 
-    def get_column_definitions(self, schema, table):
-        """
-        Return schema information including column names and their data type
-
-        :param schema: the name of the schema if you would like to narrow the results down (String)
-        :param table: the name of the table if you would like to narrow the results down (String)
-        :return: List of column name, column data type pairs
-        """
+    def get_column_definitions(self, schema, table, connection=None):
         table_columns = Table('columns')
 
         table_query = VerticaQuery.from_(table_columns) \
@@ -96,27 +89,29 @@ class VerticaDatabase(Database):
             .where((table_columns.table_schema == schema) & (table_columns.field('table_name') == table)) \
             .distinct()
 
-        return self.fetch(str(table_query))
+        return self.fetch(str(table_query), connection=connection)
 
-    def import_csv(self, table, file_path):
+    def import_csv(self, table, file_path, connection=None):
         """
         Imports a file into a database table.
 
         :param table: The name of a table to import data into.
         :param file_path: The path of the file to be imported.
+        :param connection: (Optional) The connection to execute this query with.
         """
         import_query = VerticaQuery \
             .from_file(file_path) \
             .copy_(table)
 
-        self.execute(str(import_query))
+        self.execute(str(import_query), connection=connection)
 
-    def create_temporary_table_from_columns(self, table, columns):
+    def create_temporary_table_from_columns(self, table, columns, connection=None):
         """
         Creates a temporary table from a list of columns.
 
         :param table: The name of the new temporary table.
         :param columns: The columns of the new temporary table.
+        :param connection: (Optional) The connection to execute this query with.
         """
         create_query = VerticaQuery \
             .create_table(table) \
@@ -125,15 +120,15 @@ class VerticaDatabase(Database):
             .preserve_rows() \
             .columns(*columns)
 
-        self.execute(str(create_query))
+        self.execute(str(create_query), connection=connection)
 
-    def create_temporary_table_from_select(self, table, select_query):
+    def create_temporary_table_from_select(self, table, select_query, connection=None):
         """
         Creates a temporary table from a SELECT query.
 
         :param table: The name of the new temporary table.
         :param select_query: The query to be used for selecting data of an existing table for the new temporary table.
-        :return:
+        :param connection: (Optional) The connection to execute this query with.
         """
         create_query = VerticaQuery \
             .create_table(table) \
@@ -142,7 +137,7 @@ class VerticaDatabase(Database):
             .preserve_rows() \
             .as_select(select_query)
 
-        self.execute(str(create_query))
+        self.execute(str(create_query), connection=connection)
 
 
 class VerticaTypeEngine(TypeEngine):

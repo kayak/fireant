@@ -138,4 +138,7 @@ class TestSnowflake(TestCase):
     def test_get_column_definitions(self, mock_fetch):
         SnowflakeDatabase().get_column_definitions('test_schema', 'test_table')
 
-        mock_fetch.assert_called_once_with('DESCRIBE TABLE test_schema.test_table TYPE=COLUMNS')
+        mock_fetch.assert_called_once_with(
+              'DESCRIBE TABLE test_schema.test_table TYPE=COLUMNS',
+              connection=None
+        )
