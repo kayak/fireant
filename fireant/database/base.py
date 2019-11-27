@@ -42,13 +42,6 @@ class Database(object):
         """
         raise NotImplementedError
 
-    def begin_session(self):
-        self.connection = self.connect()
-
-    def end_session(self):
-        self.connection.close()
-        self.connection = None
-
     def get_column_definitions(self, schema, table):
         """
         This function must return the columns of a given schema and table.

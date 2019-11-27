@@ -47,23 +47,22 @@ class TestBaseDatabase(TestCase):
 
     @patch.object(Database, 'fetch')
     @patch.object(Database, 'connect')
-    def test_database_session_fetch_reuses_connection(self, mock_connect, mock_fetch):
+    def test_database_reuse_passed_connection(self, mock_connect, mock_fetch):
         db = Database()
 
         mock_connect.side_effect = test_connect
         mock_fetch.side_effect = test_fetch
 
-        db.begin_session()
-        connection_1 = db.fetch(db, 'SELECT a from abc')
-        connection_2 = db.fetch(db, 'SELECT b from def')
-        db.end_session()
+        with db.connect() as connection:
+            connection_1 = db.fetch(db, 'SELECT a from abc', connection=connection)
+            connection_2 = db.fetch(db, 'SELECT b from def', connection=connection)
 
         self.assertEqual(1, mock_connect.call_count)
         self.assertEqual(connection_1, connection_2)
 
     @patch.object(Database, 'fetch')
     @patch.object(Database, 'connect')
-    def test_database_fetch_opens_new_connection(self, mock_connect, mock_fetch):
+    def test_database_opens_new_connection(self, mock_connect, mock_fetch):
         db = Database()
 
         mock_connect.side_effect = test_connect

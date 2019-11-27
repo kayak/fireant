@@ -40,9 +40,10 @@ def log(func):
 
 def with_connection(func):
     @wraps(func)
-    def wrapper(database, query):
-        if database.connection:
-            return func(database, query, connection=database.connection)
+    def wrapper(database, query, **kwargs):
+        connection = kwargs.get('connection', None)
+        if connection:
+            return func(database, query, connection=connection)
         with database.connect() as connection:
             return func(database, query, connection=connection)
 
