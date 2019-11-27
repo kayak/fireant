@@ -1,5 +1,8 @@
 import copy
-from collections import defaultdict
+from collections import (
+    OrderedDict,
+    defaultdict,
+)
 from itertools import chain
 
 from pypika import (
@@ -72,7 +75,7 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
             }
             all_aliases = dimension_aliases | metric_aliases | reference_aliases
 
-            field_to_select = dict()
+            field_to_select = OrderedDict()
             aliases_already_added = set()
             primary_table = sub_query_tables[self.primary_dataset.table]
 
