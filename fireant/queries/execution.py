@@ -12,6 +12,7 @@ import pandas as pd
 
 from fireant.database import Database
 from fireant.dataset.fields import Field
+from fireant.dataset.references import calculate_delta_percent
 from fireant.dataset.totals import get_totals_marker_for_dtype
 
 from fireant.utils import (
@@ -89,7 +90,7 @@ def reduce_result_set(results: Iterable[pd.DataFrame],
 
 
 def _replace_nans_for_totals_values(data_frame, dtypes):
-    # some things are just easier to do without an index. Reset it temporarily to replaxe NaN values with the rollup
+    # some things are just easier to do without an index. Reset it temporarily to replace NaN values with the rollup
     # marker values
     index_names = data_frame.index.names
     data_frame.reset_index(inplace=True)
@@ -131,5 +132,5 @@ def _make_reference_data_frame(base_df, ref_df, reference):
     ref_delta_df = base_df.subtract(ref_df, fill_value=0)
 
     if reference.delta_percent:
-        return 100. * ref_delta_df / ref_df.replace(0, np.nan)  # pandas raises an exception when dividing by zero
+        return calculate_delta_percent(ref_df, ref_delta_df)
     return ref_delta_df

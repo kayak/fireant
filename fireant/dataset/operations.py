@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+from fireant.dataset.references import calculate_delta_percent
 from fireant.dataset.totals import get_totals_marker_for_dtype
 from fireant.utils import (
     alias_selector,
@@ -55,9 +56,6 @@ class _BaseOperation(Operation):
         self.thousands = thousands
         self.precision = precision
 
-    def apply(self, data_frame, reference):
-        raise NotImplementedError()
-
     @property
     def metrics(self):
         return [metric
@@ -100,11 +98,52 @@ class _Cumulative(_BaseOperation):
         )
 
     def apply(self, data_frame, reference):
+        if reference and reference.delta_percent:
+            return self.apply_cummulative_for_delta_percent(data_frame, reference)
+        return self.apply_cummulative(data_frame, reference)
+
+    def apply_cummulative(self, data_frame, reference):
         raise NotImplementedError()
+
+    def apply_cummulative_for_delta_percent(self, data_frame, reference):
+        """
+        When a delta percent reference is combined with a cumulative operation, the delta percent values need to be
+        calculated based on the result of performing the operation on both the base values as well as
+        the reference values. The correct result can not be obtained by simply applying the operation to the delta
+        percent values.
+
+        This function could be simplified if the passed in data_frame also contained the original reference values
+        instead of only the delta percent values. Currently this function recalculates those original values using the
+        delta percent values.
+        """
+        operation_metric = self.args[0]
+
+        # get the base values on which this reference is based on
+        base_df_key = alias_selector(operation_metric.alias)
+        base_values = data_frame[base_df_key]
+
+        # get references delta percent values
+        reference_df_key = alias_selector(reference_alias(operation_metric, reference))
+        reference_delta_percent_values = data_frame[reference_df_key] / 100
+
+        # overwrite the percentage values with the original values (by recalculating them using the delta_percent value)
+        data_frame[reference_df_key] = base_values / (reference_delta_percent_values + 1)
+
+        # now apply the operation on the restored original reference values
+        reference_values_after_operation = self.apply_cummulative(data_frame, reference)
+
+        # get the base values on which the operation is already performed
+        base_values_after_operation_key = alias_selector(self.alias)
+        base_values_after_operation = data_frame[base_values_after_operation_key]
+
+        # recalculate the delta using the values on which the operation is already performed
+        ref_delta_df = base_values_after_operation.subtract(reference_values_after_operation, fill_value=0)
+        # recalculate the delta percent
+        return calculate_delta_percent(reference_values_after_operation, ref_delta_df)
 
 
 class CumSum(_Cumulative):
-    def apply(self, data_frame, reference):
+    def apply_cummulative(self, data_frame, reference):
         arg, = self.args
         df_key = alias_selector(reference_alias(arg, reference))
 
@@ -119,7 +158,7 @@ class CumSum(_Cumulative):
 
 
 class CumProd(_Cumulative):
-    def apply(self, data_frame, reference):
+    def apply_cummulative(self, data_frame, reference):
         arg, = self.args
         df_key = alias_selector(reference_alias(arg, reference))
 
@@ -138,7 +177,7 @@ class CumMean(_Cumulative):
     def cummean(x):
         return x.cumsum() / np.arange(1, len(x) + 1)
 
-    def apply(self, data_frame, reference):
+    def apply_cummulative(self, data_frame, reference):
         arg = self.args[0]
         df_key = alias_selector(reference_alias(arg, reference))
 
