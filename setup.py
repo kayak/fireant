@@ -2,7 +2,7 @@ import codecs
 import os
 import re
 
-from setuptools import setup
+from setuptools import find_packages, setup
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -45,12 +45,7 @@ setup(
       # License
       license='Apache License Version 2.0',
 
-      packages=['fireant',
-                'fireant.database',
-                'fireant.dataset',
-                'fireant.middleware',
-                'fireant.queries',
-                'fireant.widgets'],
+      packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
 
       # Include additional files into the package
       include_package_data=True,
