@@ -15,7 +15,7 @@ from fireant import (
     Join,
 )
 from fireant.dataset.modifiers import DimensionModifier
-from fireant.queries import DataSetQueryBuilder
+from fireant.queries.builder.dataset_query_builder import DataSetQueryBuilder
 from fireant.queries.field_helper import (
     make_orders_for_dimensions,
     make_term_for_metrics,
@@ -26,6 +26,7 @@ from fireant.queries.finders import (
 )
 from fireant.reference_helpers import reference_alias
 from fireant.utils import alias_selector
+from fireant.widgets.base import Widget
 
 
 class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
@@ -224,10 +225,10 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
             if not dataset_metrics:
                 continue
 
-            new_widgets = [copy.deepcopy(widget) for widget in self._widgets]
-            for widget in new_widgets:
-                widget.items = [copy.deepcopy(metric) for metric in dataset_metrics]
-                queries_per_dataset[dataset.table] = queries_per_dataset[dataset.table].widget(widget)
+            for _ in self._widgets:
+                # The widget type does not really matter, given the generated sub-queries are only going to be
+                # used by the sql method.
+                queries_per_dataset[dataset.table] = queries_per_dataset[dataset.table].widget(Widget(*dataset_metrics))
 
         for dataset, dataset_filters in filters_per_dataset.items():
             for filter in dataset_filters:

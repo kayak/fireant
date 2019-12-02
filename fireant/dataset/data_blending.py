@@ -4,11 +4,11 @@ from fireant import (
 from fireant.dataset.klass import (
     DataSet,
 )
-from fireant.queries import (
+from fireant.queries.builder import (
+    DataSetBlenderQueryBuilder,
     DimensionChoicesQueryBuilder,
     DimensionLatestQueryBuilder,
 )
-from fireant.queries.builder.dataset_blender_query_builder import DataSetBlenderQueryBuilder
 from fireant.utils import immutable
 
 
@@ -108,14 +108,17 @@ class DataSetBlender(object):
         self.secondary_datasets.append(secondary_dataset)
 
     @immutable
-    def field(self, *args, **kwargs):
+    def field(self, *args, field_class=Field, **kwargs):
         """
         Adds a field when building a slicer query. Fields are similar to a column in a database query result set.
 
+        :param field_class: (Optional)
+            A class that inherits from Field. That will be used for instantiating a new field with the provided
+            args and kwargs. Defaults to Field.
         :return:
             A copy of this DataSetBlender instance with the field added.
         """
-        field = Field(self, *args, **kwargs)
+        field = field_class(self, *args, **kwargs)
 
         if not field.definition.is_aggregate:
             field.choices = DimensionChoicesQueryBuilder(self.primary_dataset, field)
