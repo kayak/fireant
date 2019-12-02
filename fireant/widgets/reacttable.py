@@ -23,7 +23,6 @@ from fireant.formats import (
     safe_value,
 )
 from fireant.reference_helpers import reference_alias
-from fireant.tests.dataset.mocks import mock_dataset
 from fireant.utils import (
     alias_for_alias_selector,
     alias_selector,
@@ -35,8 +34,7 @@ from .pandas import Pandas
 
 TOTALS_LABEL = 'Totals'
 METRICS_DIMENSION_ALIAS = 'metrics'
-METRICS_DIMENSION = Field(mock_dataset, METRICS_DIMENSION_ALIAS, None, data_type=DataType.text, label='')
-F_METRICS_DIMENSION_ALIAS = alias_selector(METRICS_DIMENSION.alias)
+F_METRICS_DIMENSION_ALIAS = alias_selector(METRICS_DIMENSION_ALIAS)
 
 
 def map_index_level(index, level, func):
@@ -307,9 +305,7 @@ class ReactTable(Pandas):
                 continue
 
             field_alias = key
-            field = METRICS_DIMENSION \
-                if field_alias == METRICS_DIMENSION_ALIAS \
-                else field_map[field_alias]
+            field = field_map[field_alias]
 
             data = {RAW_VALUE: raw_value(value, field)}
             display = display_value(value, field)
@@ -446,7 +442,9 @@ class ReactTable(Pandas):
             TEXT_TOTALS: TotalsItem,
             DATE_TOTALS: TotalsItem,
             TOTALS_LABEL: TotalsItem,
-            alias_selector(METRICS_DIMENSION_ALIAS): METRICS_DIMENSION
+            alias_selector(METRICS_DIMENSION_ALIAS): Field(
+                slicer, METRICS_DIMENSION_ALIAS, None, data_type=DataType.text, label='',
+            )
         }
         all_dimensions_pivoted = 0 < len(dimensions) == len(self.pivot)  # has at least 1 dim and all are pivoted
 

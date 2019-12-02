@@ -3,11 +3,10 @@ from typing import (
     Union,
 )
 
-from fireant import (
-    Field,
-    Operation,
-    utils,
-)
+from fireant.dataset.fields import Field
+from fireant.dataset.operations import Operation
+from fireant import utils
+
 from .base import (
     MetricRequiredException,
     Widget,
