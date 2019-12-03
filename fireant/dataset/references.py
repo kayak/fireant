@@ -1,3 +1,5 @@
+import numpy as np
+
 from fireant import utils
 from pypika import functions as fn
 from pypika.queries import QueryBuilder
@@ -93,3 +95,8 @@ def reference_term(reference: Reference,
         return lambda metric: original_field(metric) - ref_field(metric)
 
     return ref_field
+
+
+def calculate_delta_percent(ref_df, ref_delta_df):
+    # pandas raises an exception when dividing by zero
+    return 100. * ref_delta_df / ref_df.replace(0, np.nan)

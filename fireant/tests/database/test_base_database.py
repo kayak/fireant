@@ -43,7 +43,7 @@ class TestBaseDatabase(TestCase):
         db = Database(max_processes=5)
 
         self.assertIsInstance(db.concurrency_middleware, ThreadPoolConcurrencyMiddleware)
-        self.assertEquals(db.concurrency_middleware.max_processes, 5)
+        self.assertEqual(db.concurrency_middleware.max_processes, 5)
 
     @patch.object(Database, 'fetch')
     @patch.object(Database, 'connect')

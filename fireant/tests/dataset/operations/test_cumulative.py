@@ -1,4 +1,5 @@
 from unittest import TestCase
+from unittest.mock import MagicMock
 
 import pandas as pd
 import pandas.testing
@@ -7,7 +8,8 @@ from fireant import (
     CumMean,
     CumProd,
     CumSum,
-)
+    Field)
+from fireant.dataset.references import Reference, WeekOverWeek
 from fireant.tests.dataset.mocks import (
     ElectionOverElection,
     dimx1_date_df,
@@ -45,6 +47,23 @@ class CumSumTests(TestCase):
                              index=dimx2_date_str_ref_df.index)
         pandas.testing.assert_series_equal(expected, result)
 
+    def test_apply_cummulative_for_delta_percent(self):
+        dataset = MagicMock()
+        dataset.table._table_name = "table"
+        field = Field(dataset, "value", None)
+        cumsum = CumSum(field)
+        reference = Reference(field, WeekOverWeek, delta=True, delta_percent=True)
+
+        df = pd.DataFrame.from_dict({
+                "$value": [55, 60, 108],
+                "$cumsum(value)": [55, 115, 223],
+                "$value_wow_delta_percent": [10, 20, 8],
+            }
+        )
+        result = cumsum.apply(df, reference)
+
+        pandas.testing.assert_series_equal(pd.Series([10.0, 15.0, 11.5]), result)
+
 
 class CumProdTests(TestCase):
     def test_apply_to_timeseries(self):
@@ -74,6 +93,23 @@ class CumProdTests(TestCase):
                              index=dimx2_date_str_ref_df.index)
         pandas.testing.assert_series_equal(expected, result)
 
+    def test_apply_cummulative_for_delta_percent(self):
+        dataset = MagicMock()
+        dataset.table._table_name = "table"
+        field = Field(dataset, "value", None)
+        cumsum = CumProd(field)
+        reference = Reference(field, WeekOverWeek, delta=True, delta_percent=True)
+
+        df = pd.DataFrame.from_dict({
+            "$value": [55, 60, 108],
+            "$cumprod(value)": [55, 3300, 356400],
+            "$value_wow_delta_percent": [10, 20, 8],
+        }
+        )
+        result = cumsum.apply(df, reference)
+
+        pandas.testing.assert_series_equal(pd.Series([10.0, 32.0, 42.56]), result)
+
 
 class CumMeanTests(TestCase):
     def test_apply_to_timeseries(self):
@@ -102,3 +138,19 @@ class CumMeanTests(TestCase):
                              name='$votes_eoe',
                              index=dimx2_date_str_ref_df.index)
         pandas.testing.assert_series_equal(expected, result)
+
+    def test_apply_cummulative_for_delta_percent(self):
+        dataset = MagicMock()
+        dataset.table._table_name = "table"
+        field = Field(dataset, "value", None)
+        cumsum = CumMean(field)
+        reference = Reference(field, WeekOverWeek, delta=True, delta_percent=True)
+
+        df = pd.DataFrame.from_dict({
+            "$value": [55, 60, 108],
+            "$cummean(value)": [55, 57.5, 74 + (1/3)],
+            "$value_wow_delta_percent": [10, 20, 8],
+        })
+        result = cumsum.apply(df, reference)
+
+        pandas.testing.assert_series_equal(pd.Series([10.0, 15.0, 11.5]), result)
