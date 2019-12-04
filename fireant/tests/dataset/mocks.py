@@ -61,6 +61,11 @@ mock_spend_dataset = DataSet(
     definition=politicians_spend_table.election_year,
     data_type=DataType.number
 ).field(
+    'id-of-the-district',
+    label='District Id',
+    definition=politicians_spend_table.id_of_the_district,
+    data_type=DataType.number
+).field(
     'candidate-spend',
     label='Candidate Spend',
     definition=fn.Sum(politicians_spend_table.candidate_spend),
