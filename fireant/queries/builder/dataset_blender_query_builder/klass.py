@@ -287,8 +287,12 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
 
         if dimensions_without_mapping_across_all_secondary_datasets:
             raise SlicerException(
-                f'The following dimensions are not mapped to a dimension in all necessary secondary'
-                f' datasets: {", ".join(str(a) for a in dimensions_without_mapping_across_all_secondary_datasets)}'
+                'The following dimensions are not mapped to a dimension in all necessary secondary'
+                ' datasets: {unmapped_dimensions}'.format(
+                    unmapped_dimensions=", ".join(
+                        str(a) for a in dimensions_without_mapping_across_all_secondary_datasets
+                    )
+                )
             )
 
         return sub_query_joins, sub_query_tables
