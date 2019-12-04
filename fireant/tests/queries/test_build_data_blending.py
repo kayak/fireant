@@ -1,7 +1,10 @@
 from unittest import TestCase
 
 import fireant as f
-from fireant.tests.dataset.mocks import mock_dataset_blender
+from fireant.tests.dataset.mocks import (
+    SlicerException,
+    mock_dataset_blender,
+)
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -20,25 +23,10 @@ class DataSetBlenderQueryBuilderTests(TestCase):
 
         self.assertEqual(
                          'SELECT '
-                         '"sq0"."$timestamp" "$timestamp",'
-                         '"sq0"."$votes" "$votes" '
-                         'FROM ('
-                         'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp"'
-                         ') "sq0" '
-                         'LEFT JOIN ('
-                         'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp" '
-                         'FROM "politics"."politician_spend" '
-                         'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp"'
-                         ') "sq1" '
-                         'ON '
-                         '"sq0"."$timestamp"="sq1"."$timestamp" '
                          'ORDER BY "$timestamp"'
         , str(queries[0]))
 
@@ -161,27 +149,11 @@ class DataSetBlenderQueryBuilderTests(TestCase):
 
         self.assertEqual(
                          'SELECT '
-                         '"sq0"."$timestamp" "$timestamp",'
-                         '"sq0"."$votes" "$votes" '
-                         'FROM ('
-                         'SELECT '
                          'TRUNC("timestamp",\'DD\') "$timestamp",'
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "$timestamp" '
                          'HAVING SUM("votes")>10 '
-                         'ORDER BY "$timestamp"'
-                         ') "sq0" '
-                         'LEFT JOIN ('
-                         'SELECT '
-                         'TRUNC("timestamp",\'DD\') "$timestamp" '
-                         'FROM "politics"."politician_spend" '
-                         'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp"'
-                         ') "sq1" '
-                         'ON '
-                         '"sq0"."$timestamp"="sq1"."$timestamp" '
-                         'WHERE "sq0"."$votes">10 '
                          'ORDER BY "$timestamp"'
         , str(queries[0]))
 
@@ -394,50 +366,20 @@ class DataSetBlenderQueryBuilderTests(TestCase):
         with self.subTest('base query is same as without reference'):
             self.assertEqual(
                              'SELECT '
-                             '"sq0"."$timestamp" "$timestamp",'
-                             '"sq0"."$votes" "$votes" '
-                             'FROM ('
-                             'SELECT '
                              'TRUNC("timestamp",\'DD\') "$timestamp",'
                              'SUM("votes") "$votes" '
                              'FROM "politics"."politician" '
                              'GROUP BY "$timestamp" '
-                             'ORDER BY "$timestamp"'
-                             ') "sq0" '
-                             'LEFT JOIN ('
-                             'SELECT '
-                             'TRUNC("timestamp",\'DD\') "$timestamp" '
-                             'FROM "politics"."politician_spend" '
-                             'GROUP BY "$timestamp" '
-                             'ORDER BY "$timestamp"'
-                             ') "sq1" '
-                             'ON '
-                             '"sq0"."$timestamp"="sq1"."$timestamp" '
                              'ORDER BY "$timestamp"'
             , str(queries[0]))
 
         with self.subTest('reference query is same as base query with filter on reference dimension shifted'):
             self.assertEqual(
                              'SELECT '
-                             '"sq0"."$timestamp" "$timestamp",'
-                             '"sq0"."$votes_wow" "$votes_wow" '
-                             'FROM ('
-                             'SELECT '
                              'TRUNC(TIMESTAMPADD(\'week\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
                              'SUM("votes") "$votes_wow" '
                              'FROM "politics"."politician" '
                              'GROUP BY "$timestamp" '
-                             'ORDER BY "$timestamp"'
-                             ') "sq0" '
-                             'LEFT JOIN ('
-                             'SELECT '
-                             'TRUNC(TIMESTAMPADD(\'week\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp" '
-                             'FROM "politics"."politician_spend" '
-                             'GROUP BY "$timestamp" '
-                             'ORDER BY "$timestamp"'
-                             ') "sq1" '
-                             'ON '
-                             '"sq0"."$timestamp"="sq1"."$timestamp" '
                              'ORDER BY "$timestamp"'
             , str(queries[1]))
 
@@ -617,3 +559,21 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                          'WHERE "sq1"."$candidate-spend"/"sq0"."$wins">500 '
                          'ORDER BY "$candidate-id","$election-year"'
         , str(queries[0]))
+
+    def test_does_not_raise_SlicerException_when_a_dimension_is_not_mapped_for_unnecessary_secondary_datasets(self):
+        mock_dataset_blender.query \
+            .widget(f.ReactTable(
+                mock_dataset_blender.fields['votes'],
+            )) \
+            .dimension(mock_dataset_blender.fields['district-id']) \
+            .sql
+
+    def test_raises_SlicerException_when_a_dimension_from_a_necessary_secondary_dataset_is_not_mapped(self):
+        with self.assertRaises(SlicerException):
+            mock_dataset_blender.query \
+                .widget(f.ReactTable(
+                    mock_dataset_blender.fields['candidate-spend'],
+                )) \
+                .dimension(mock_dataset_blender.fields['district-id']) \
+                .dimension(f.day(mock_dataset_blender.fields.timestamp)) \
+                .sql

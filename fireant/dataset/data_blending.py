@@ -102,7 +102,7 @@ class DataSetBlender(object):
         self.field_mapping[secondary_dataset.table] = field_mapping
 
         for secondary_field in secondary_dataset.fields:
-            if secondary_field.alias not in self.fields:
+            if secondary_field.alias not in self.fields and secondary_field.definition.is_aggregate:
                 self.fields.append(secondary_field)
 
         self.secondary_datasets.append(secondary_dataset)

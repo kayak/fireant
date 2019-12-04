@@ -15,6 +15,7 @@ from fireant import (
     Join,
 )
 from fireant.dataset.modifiers import DimensionModifier
+from fireant.exceptions import SlicerException
 from fireant.queries.builder.dataset_query_builder import DataSetQueryBuilder
 from fireant.queries.field_helper import (
     make_orders_for_dimensions,
@@ -65,6 +66,13 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         sub_query_joins_groups, sub_query_tables_groups = self.__sub_query_groups
 
         queries = []
+
+        try:
+            next(chain(*sub_query_joins_groups))
+        except StopIteration:
+            # When no join is necessary (i.e. no metric from secondary datasets is used),
+            # return just the primary dataset queries as if no data blending existed
+            return [group[self.primary_dataset.table] for group in sub_query_tables_groups]
 
         for i, (sub_query_joins, sub_query_tables) in enumerate(zip(sub_query_joins_groups, sub_query_tables_groups)):
             dimension_aliases = {alias_selector(el.alias) for el in self._dimensions}
@@ -163,8 +171,8 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
 
     def __criterion_for_sub_query(self, primary_table_sub_query, dataset, sub_query, dimensions):
         """
-        Returns a PyPika boolean expression, composed of ands involving all the dimensions, which will be used
-        as the join criterion for the provided sub-query.
+        Returns a tuple with a PyPika boolean expression, composed of ands involving all the dimensions which
+        will be used as the join criterion for the provided sub-query, and a set of dimensions that were not mapped.
 
         :param primary_table_sub_query:
             a PyPika Query instance.
@@ -174,10 +182,10 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
             A PyPika Query instance.
         :param dimensions:
             A list of Field instances.
-        :return: a PyPika boolean expression.
+        :return: a tuple with a PyPika boolean expression and a set of dimensions that were not mapped.
         """
         criterion = None
-        dimensions_without_mapping = []
+        dimensions_without_mapping = set()
         field_mapping = self.dataset.field_mapping[dataset.table]
 
         for dimension in dimensions:
@@ -185,7 +193,7 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
             try:
                 secondary_field = field_mapping[primary_field]
             except KeyError:
-                dimensions_without_mapping.append(dimension)
+                dimensions_without_mapping.add(dimension)
                 continue
 
             primary_pypika_field = getattr(
@@ -221,15 +229,6 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
             for dimension in dataset_dimensions:
                 queries_per_dataset[dataset.table] = queries_per_dataset[dataset.table].dimension(dimension)
 
-        for dataset, dataset_metrics in metrics_per_dataset.items():
-            if not dataset_metrics:
-                continue
-
-            for _ in self._widgets:
-                # The widget type does not really matter, given the generated sub-queries are only going to be
-                # used by the sql method.
-                queries_per_dataset[dataset.table] = queries_per_dataset[dataset.table].widget(Widget(*dataset_metrics))
-
         for dataset, dataset_filters in filters_per_dataset.items():
             for filter in dataset_filters:
                 new_filter = copy.deepcopy(filter)
@@ -238,6 +237,18 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         for dataset, dataset_references in references_per_dataset.items():
             for reference in dataset_references:
                 queries_per_dataset[dataset.table] = queries_per_dataset[dataset.table].reference(reference)
+
+        for dataset, dataset_metrics in metrics_per_dataset.items():
+            if not dataset_metrics:
+                if dataset != self.primary_dataset:
+                    # Secondary datasets without metrics mustn't be joined
+                    del queries_per_dataset[dataset.table]
+                continue
+
+            for _ in self._widgets:
+                # The widget type does not really matter, given the generated sub-queries are only going to be
+                # used by the sql method.
+                queries_per_dataset[dataset.table] = queries_per_dataset[dataset.table].widget(Widget(*dataset_metrics))
 
         return queries_per_dataset
 
@@ -254,20 +265,35 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         primary_tables = queries_per_dataset[self.primary_dataset.table].sql
         sub_query_tables = [dict() for _ in primary_tables]
         sub_query_joins = [set() for _ in primary_tables]
+        dimensions_without_mapping_across_all_secondary_datasets = set()
 
         for i, primary_table in enumerate(primary_tables):
             sub_query_tables[i][self.primary_dataset.table] = primary_table
             sub_query_tables[i][Table('blend_{}'.format(self.primary_dataset.table._table_name))] = primary_table
 
             for secondary_dataset in self.secondary_datasets:
-                sub_query = queries_per_dataset[secondary_dataset.table].sql[i]
+                try:
+                    sub_query = queries_per_dataset[secondary_dataset.table].sql[i]
+                except KeyError:
+                    continue
                 sub_query_tables[i][secondary_dataset.table] = sub_query
                 sub_query_tables[i][Table('blend_{}'.format(secondary_dataset.table._table_name))] = sub_query
                 sub_query_criterion, dimensions_without_mapping = self.__criterion_for_sub_query(
                     primary_table, secondary_dataset, sub_query, self._dimensions,
                 )
 
+                dimensions_without_mapping_across_all_secondary_datasets |= dimensions_without_mapping
                 sub_query_joins[i].add(Join(sub_query, join_type=JoinType.left, criterion=sub_query_criterion))
+
+        if dimensions_without_mapping_across_all_secondary_datasets:
+            raise SlicerException(
+                'The following dimensions are not mapped to a dimension in all necessary secondary'
+                ' datasets: {unmapped_dimensions}'.format(
+                    unmapped_dimensions=", ".join(
+                        str(a) for a in dimensions_without_mapping_across_all_secondary_datasets
+                    )
+                )
+            )
 
         return sub_query_joins, sub_query_tables
 
