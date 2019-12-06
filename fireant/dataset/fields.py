@@ -126,6 +126,10 @@ class Field:
         self.precision = precision
         self.hyperlink_template = hyperlink_template
 
+    @property
+    def is_aggregate(self):
+        return self.definition.is_aggregate
+
     def eq(self, other):
         return ComparatorFilter(self.alias, self.definition, ComparatorFilter.Operator.eq, other)
 

@@ -120,7 +120,7 @@ class DataSetBlender(object):
         """
         field = field_class(self, *args, **kwargs)
 
-        if not field.definition.is_aggregate:
+        if not field.is_aggregate:
             field.choices = DimensionChoicesQueryBuilder(self.primary_dataset, field)
 
         self.fields.append(field)
