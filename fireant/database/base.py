@@ -8,12 +8,9 @@ from pypika import (
 )
 
 from fireant.middleware.decorators import (
-    db_cache,
-    log,
-    with_connection,
+    connection_middleware,
+    apply_middlewares,
 )
-
-from fireant.middleware.concurrency import ThreadPoolConcurrencyMiddleware
 
 
 class Database(object):
@@ -26,14 +23,19 @@ class Database(object):
 
     slow_query_log_min_seconds = 15
 
-    def __init__(self, host=None, port=None, database=None, max_processes=1, max_result_set_size=200000,
-                 cache_middleware=None, concurrency_middleware=None):
+    def __init__(
+        self,
+        host=None,
+        port=None,
+        database=None,
+        max_result_set_size=200000,
+        middlewares=[],
+    ):
         self.host = host
         self.port = port
         self.database = database
         self.max_result_set_size = max_result_set_size
-        self.cache_middleware = cache_middleware
-        self.concurrency_middleware = concurrency_middleware or ThreadPoolConcurrencyMiddleware(max_processes)
+        self.middlewares = middlewares + [connection_middleware]
 
     def connect(self):
         """
@@ -67,29 +69,37 @@ class Database(object):
     def to_char(self, definition):
         return fn.Cast(definition, enums.SqlTypes.VARCHAR)
 
-    @db_cache
-    @log
-    @with_connection
+    @apply_middlewares
+    def fetch_queries(self, *queries, **kwargs):
+        results = []
+        connection = kwargs.get("connection")
+        for query in queries:
+            cursor = connection.cursor()
+            cursor.execute(str(query))
+            results.append(cursor.fetchall())
+
+        return results
+
     def fetch(self, query, **kwargs):
-        connection = kwargs.get('connection')
-        cursor = connection.cursor()
-        cursor.execute(str(query))
-        return cursor.fetchall()
+        return self.fetch_queries(query, **kwargs)[0]
 
-    @db_cache
-    @log
-    @with_connection
-    def execute(self, query, **kwargs):
-        connection = kwargs.get('connection')
-        cursor = connection.cursor()
-        cursor.execute(str(query))
+    @apply_middlewares
+    def execute(self, *queries, **kwargs):
+        connection = kwargs.get("connection")
+        for query in queries:
+            cursor = connection.cursor()
+            cursor.execute(str(query))
+            connection.commit()
 
-        connection.commit()
+    @apply_middlewares
+    def fetch_dataframes(self, *queries, **kwargs):
+        connection = kwargs.get("connection")
+        dataframes = []
+        for query in queries:
+            dataframes.append(
+                pd.read_sql(query, connection, coerce_float=True, parse_dates=True)
+            )
+        return dataframes
 
-    @db_cache
-    @log
-    @with_connection
     def fetch_dataframe(self, query, **kwargs):
-        connection = kwargs.get('connection')
-        return pd.read_sql(query, connection, coerce_float=True, parse_dates=True)
-
+        return self.fetch_dataframes(query, **kwargs)[0]
