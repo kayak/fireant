@@ -93,37 +93,3 @@ def _make_reference_filters(filters, ref_dimension, offset_func):
         reference_filters.append(ref_filter)
 
     return reference_filters
-
-
-#
-# def _apply_to_term_in_criterion(target: Term, replacement: Term, criterion: Criterion):
-#     """
-#     Finds and replaces a term within a criterion.  This is necessary for adapting filters used in reference queries
-#     where the reference dimension must be offset by some value.  The target term is found inside the criterion and
-#     replaced with the replacement.
-#
-#     :param target:
-#         The target term to replace in the criterion. It will be replaced in all locations within the criterion with
-#         the func applied to itself.
-#     :param replacement:
-#         The replacement for the term.
-#     :param criterion:
-#         The criterion to replace the term in.
-#     :return:
-#         A criterion identical to the original criterion arg except with the target term replaced by the replacement
-#         arg.
-#     """
-#     if isinstance(criterion, ComplexCriterion):
-#         criterion.left = _apply_to_term_in_criterion(
-#             target, replacement, criterion.left
-#         )
-#         criterion.right = _apply_to_term_in_criterion(
-#             target, replacement, criterion.right
-#         )
-#         return criterion
-#
-#     for attr in ["term", "left", "right"]:
-#         if hasattr(criterion, attr) and str(getattr(criterion, attr)) == str(target):
-#             setattr(criterion, attr, replacement)
-#
-#     return criterion
