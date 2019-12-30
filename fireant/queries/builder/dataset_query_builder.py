@@ -18,9 +18,7 @@ from .query_builder import (
 )
 from .. import special_cases
 from ..execution import fetch_data
-from ..field_helper import (
-    make_orders_for_dimensions,
-)
+from ..field_helper import initialize_orders
 from ..finders import (
     find_and_group_references_for_dimensions,
     find_and_replace_reference_dimensions,
@@ -29,14 +27,14 @@ from ..finders import (
     find_share_dimensions,
 )
 from ..pagination import paginate
-from ..sql_transformer import (
-    make_slicer_query_with_totals_and_references,
-)
+from ..sql_transformer import make_slicer_query_with_totals_and_references
 
 
-class DataSetQueryBuilder(ReferenceQueryBuilderMixin, WidgetQueryBuilderMixin, QueryBuilder):
+class DataSetQueryBuilder(
+    ReferenceQueryBuilderMixin, WidgetQueryBuilderMixin, QueryBuilder
+):
     """
-    Slicer queries consist of widgets, dimensions, filters, orders by and references. At least one or more widgets
+    Data Set queries consist of widgets, dimensions, filters, orders by and references. At least one or more widgets
     is required. All others are optional.
     """
 
@@ -45,10 +43,13 @@ class DataSetQueryBuilder(ReferenceQueryBuilderMixin, WidgetQueryBuilderMixin, Q
         self._totals_dimensions = set()
         self._apply_filter_to_totals = []
 
+    def __call__(self, *args, **kwargs):
+        return self
+
     @immutable
     def filter(self, *filters, apply_to_totals=True):
         """
-        Add one or more filters when building a slicer query.
+        Add one or more filters when building a dataset query.
 
         :param filters:
             Filters to add to the query
@@ -62,7 +63,11 @@ class DataSetQueryBuilder(ReferenceQueryBuilderMixin, WidgetQueryBuilderMixin, Q
 
     @property
     def reference_groups(self):
-        return list(find_and_group_references_for_dimensions(self._dimensions, self._references).values())
+        return list(
+            find_and_group_references_for_dimensions(
+                self._dimensions, self._references
+            ).values()
+        )
 
     @property
     def sql(self):
@@ -82,20 +87,24 @@ class DataSetQueryBuilder(ReferenceQueryBuilderMixin, WidgetQueryBuilderMixin, Q
         metrics = find_metrics_for_widgets(self._widgets)
         operations = find_operations_for_widgets(self._widgets)
         share_dimensions = find_share_dimensions(self._dimensions, operations)
-        references = find_and_replace_reference_dimensions(self._references, self._dimensions)
-        orders = (self._orders or make_orders_for_dimensions(self._dimensions))
+        references = find_and_replace_reference_dimensions(
+            self._references, self._dimensions
+        )
+        orders = initialize_orders(self._orders, self._dimensions)
 
-        return make_slicer_query_with_totals_and_references(self.dataset,
-                                                            self.dataset.database,
-                                                            self.table,
-                                                            self.dataset.joins,
-                                                            self._dimensions,
-                                                            metrics,
-                                                            operations,
-                                                            self._filters,
-                                                            references,
-                                                            orders,
-                                                            share_dimensions=share_dimensions)
+        return make_slicer_query_with_totals_and_references(
+            self.dataset,
+            self.dataset.database,
+            self.table,
+            self.dataset.joins,
+            self._dimensions,
+            metrics,
+            operations,
+            self._filters,
+            references,
+            orders,
+            share_dimensions=share_dimensions,
+        )
 
     def fetch(self, hint=None) -> Iterable[Dict]:
         """
@@ -111,11 +120,13 @@ class DataSetQueryBuilder(ReferenceQueryBuilderMixin, WidgetQueryBuilderMixin, Q
         operations = find_operations_for_widgets(self._widgets)
         share_dimensions = find_share_dimensions(self._dimensions, operations)
 
-        data_frame = fetch_data(self.dataset.database,
-                                queries,
-                                self._dimensions,
-                                share_dimensions,
-                                self.reference_groups)
+        data_frame = fetch_data(
+            self.dataset.database,
+            queries,
+            self._dimensions,
+            share_dimensions,
+            self.reference_groups,
+        )
 
         # Apply operations
         for operation in operations:
@@ -124,22 +135,32 @@ class DataSetQueryBuilder(ReferenceQueryBuilderMixin, WidgetQueryBuilderMixin, Q
                 data_frame[df_key] = operation.apply(data_frame, reference)
 
         data_frame = scrub_totals_from_share_results(data_frame, self._dimensions)
-        data_frame = special_cases.apply_operations_to_data_frame(operations, data_frame)
-        data_frame = paginate(data_frame,
-                              self._widgets,
-                              orders=self._orders,
-                              limit=self._limit,
-                              offset=self._offset)
+        data_frame = special_cases.apply_operations_to_data_frame(
+            operations, data_frame
+        )
+        data_frame = paginate(
+            data_frame,
+            self._widgets,
+            orders=self._orders,
+            limit=self._limit,
+            offset=self._offset,
+        )
 
         # Apply transformations
-        return [widget.transform(data_frame, self.dataset, self._dimensions, self._references)
-                for widget in self._widgets]
+        return [
+            widget.transform(
+                data_frame, self.dataset, self._dimensions, self._references
+            )
+            for widget in self._widgets
+        ]
 
     def plot(self):
         try:
             from IPython.display import display
         except ImportError:
-            raise QueryException('Optional dependency ipython missing. Please install fireant[ipython] to use plot.')
+            raise QueryException(
+                "Optional dependency ipython missing. Please install fireant[ipython] to use plot."
+            )
 
         widgets = self.fetch()
         for widget in reversed(widgets):
@@ -149,16 +170,28 @@ class DataSetQueryBuilder(ReferenceQueryBuilderMixin, WidgetQueryBuilderMixin, Q
         return str(self.sql)
 
     def __repr__(self):
-        return ".".join(["slicer", "data"]
-                        + ["widget({})".format(repr(widget))
-                           for widget in self._widgets]
-                        + ["dimension({})".format(repr(dimension))
-                           for dimension in self._dimensions]
-                        + ["filter({}{})".format(repr(f),
-                                                 ', apply_filter_to_totals=True' if apply_filter_to_totals else '')
-                           for f, apply_filter_to_totals in zip(self._filters, self._apply_filter_to_totals)]
-                        + ["reference({})".format(repr(reference))
-                           for reference in self._references]
-                        + ["orderby({}, {})".format(definition.alias,
-                                                    orientation)
-                           for (definition, orientation) in self._orders])
+        return ".".join(
+            ["dataset", "query"]
+            + ["widget({})".format(repr(widget)) for widget in self._widgets]
+            + [
+                "dimension({})".format(repr(dimension))
+                for dimension in self._dimensions
+            ]
+            + [
+                "filter({}{})".format(
+                    repr(f),
+                    ", apply_filter_to_totals=True" if apply_filter_to_totals else "",
+                )
+                for f, apply_filter_to_totals in zip(
+                    self._filters, self._apply_filter_to_totals
+                )
+            ]
+            + [
+                "reference({})".format(repr(reference))
+                for reference in self._references
+            ]
+            + [
+                "orderby({}, {})".format(definition.alias, orientation)
+                for (definition, orientation) in self._orders
+            ]
+        )

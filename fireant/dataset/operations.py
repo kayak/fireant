@@ -15,14 +15,12 @@ from ..reference_helpers import reference_alias
 
 
 def _extract_key_or_arg(data_frame, key):
-    return data_frame[key] \
-        if key in data_frame \
-        else key
+    return data_frame[key] if key in data_frame else key
 
 
 class Operation:
     """
-    The `Operation` class represents an operation in the `Slicer` API.
+    The `Operation` class represents an operation in the `DataSet` API.
     """
 
     def apply(self, data_frame, reference):
@@ -40,14 +38,16 @@ class Operation:
 class _BaseOperation(Operation):
     data_type = DataType.number
 
-    def __init__(self,
-                 alias,
-                 label,
-                 args,
-                 prefix: str = None,
-                 suffix: str = None,
-                 thousands: str = None,
-                 precision: int = None):
+    def __init__(
+        self,
+        alias,
+        label,
+        args,
+        prefix: str = None,
+        suffix: str = None,
+        thousands: str = None,
+        precision: int = None,
+    ):
         self.alias = alias
         self.label = label
         self.args = args
@@ -58,16 +58,16 @@ class _BaseOperation(Operation):
 
     @property
     def metrics(self):
-        return [metric
-                for metric in self.args
-                if isinstance(metric, Field)]
+        return [metric for metric in self.args if isinstance(metric, Field)]
 
     @property
     def operations(self):
-        return [op_and_children
-                for operation in self.args
-                if isinstance(operation, Operation)
-                for op_and_children in [operation] + operation.operations]
+        return [
+            op_and_children
+            for operation in self.args
+            if isinstance(operation, Operation)
+            for op_and_children in [operation] + operation.operations
+        ]
 
     def _group_levels(self, index):
         """
@@ -86,15 +86,15 @@ class _BaseOperation(Operation):
 class _Cumulative(_BaseOperation):
     def __init__(self, arg):
         super(_Cumulative, self).__init__(
-              alias='{}({})'.format(self.__class__.__name__.lower(),
-                                    getattr(arg, 'alias', arg)),
-              label='{}({})'.format(self.__class__.__name__,
-                                    getattr(arg, 'label', arg)),
-              args=[arg],
-              prefix=getattr(arg, 'prefix'),
-              suffix=getattr(arg, 'suffix'),
-              thousands=getattr(arg, 'thousands'),
-              precision=getattr(arg, 'precision'),
+            alias="{}({})".format(
+                self.__class__.__name__.lower(), getattr(arg, "alias", arg)
+            ),
+            label="{}({})".format(self.__class__.__name__, getattr(arg, "label", arg)),
+            args=[arg],
+            prefix=getattr(arg, "prefix"),
+            suffix=getattr(arg, "suffix"),
+            thousands=getattr(arg, "thousands"),
+            precision=getattr(arg, "precision"),
         )
 
     def apply(self, data_frame, reference):
@@ -127,7 +127,9 @@ class _Cumulative(_BaseOperation):
         reference_delta_percent_values = data_frame[reference_df_key] / 100
 
         # overwrite the percentage values with the original values (by recalculating them using the delta_percent value)
-        data_frame[reference_df_key] = base_values / (reference_delta_percent_values + 1)
+        data_frame[reference_df_key] = base_values / (
+            reference_delta_percent_values + 1
+        )
 
         # now apply the operation on the restored original reference values
         reference_values_after_operation = self.apply_cummulative(data_frame, reference)
@@ -137,37 +139,35 @@ class _Cumulative(_BaseOperation):
         base_values_after_operation = data_frame[base_values_after_operation_key]
 
         # recalculate the delta using the values on which the operation is already performed
-        ref_delta_df = base_values_after_operation.subtract(reference_values_after_operation, fill_value=0)
+        ref_delta_df = base_values_after_operation.subtract(
+            reference_values_after_operation, fill_value=0
+        )
         # recalculate the delta percent
         return calculate_delta_percent(reference_values_after_operation, ref_delta_df)
 
 
 class CumSum(_Cumulative):
     def apply_cummulative(self, data_frame, reference):
-        arg, = self.args
+        (arg,) = self.args
         df_key = alias_selector(reference_alias(arg, reference))
 
         if isinstance(data_frame.index, pd.MultiIndex):
             levels = self._group_levels(data_frame.index)
 
-            return data_frame[df_key] \
-                .groupby(level=levels) \
-                .cumsum()
+            return data_frame[df_key].groupby(level=levels).cumsum()
 
         return data_frame[df_key].cumsum()
 
 
 class CumProd(_Cumulative):
     def apply_cummulative(self, data_frame, reference):
-        arg, = self.args
+        (arg,) = self.args
         df_key = alias_selector(reference_alias(arg, reference))
 
         if isinstance(data_frame.index, pd.MultiIndex):
             levels = self._group_levels(data_frame.index)
 
-            return data_frame[df_key] \
-                .groupby(level=levels) \
-                .cumprod()
+            return data_frame[df_key].groupby(level=levels).cumprod()
 
         return data_frame[df_key].cumprod()
 
@@ -184,9 +184,7 @@ class CumMean(_Cumulative):
         if isinstance(data_frame.index, pd.MultiIndex):
             levels = self._group_levels(data_frame.index)
 
-            return data_frame[df_key] \
-                .groupby(level=levels) \
-                .apply(self.cummean)
+            return data_frame[df_key].groupby(level=levels).apply(self.cummean)
 
         return self.cummean(data_frame[df_key])
 
@@ -194,17 +192,17 @@ class CumMean(_Cumulative):
 class RollingOperation(_BaseOperation):
     def __init__(self, arg, window, min_periods=None):
         super(RollingOperation, self).__init__(
-              alias='{}({},{})'.format(self.__class__.__name__.lower(),
-                                       getattr(arg, 'alias', arg),
-                                       window),
-              label='{}({},{})'.format(self.__class__.__name__,
-                                       getattr(arg, 'label', arg),
-                                       window),
-              args=[arg],
-              prefix=getattr(arg, 'prefix'),
-              suffix=getattr(arg, 'suffix'),
-              thousands=getattr(arg, 'thousands'),
-              precision=getattr(arg, 'precision'),
+            alias="{}({},{})".format(
+                self.__class__.__name__.lower(), getattr(arg, "alias", arg), window
+            ),
+            label="{}({},{})".format(
+                self.__class__.__name__, getattr(arg, "label", arg), window
+            ),
+            args=[arg],
+            prefix=getattr(arg, "prefix"),
+            suffix=getattr(arg, "suffix"),
+            thousands=getattr(arg, "thousands"),
+            precision=getattr(arg, "precision"),
         )
         self.window = window
         self.min_periods = min_periods
@@ -212,7 +210,9 @@ class RollingOperation(_BaseOperation):
     def _should_adjust(self, other_operations):
         # Need to figure out if this rolling operation is has the largest window, and if it's the first of multiple
         # rolling operations if there are more than one operation sharing the largest window.
-        first_max_rolling = list(sorted(other_operations, key=lambda operation: operation.window))[0]
+        first_max_rolling = list(
+            sorted(other_operations, key=lambda operation: operation.window)
+        )[0]
 
         return first_max_rolling is self
 
@@ -225,15 +225,13 @@ class RollingMean(RollingOperation):
         return x.rolling(self.window, self.min_periods).mean()
 
     def apply(self, data_frame, reference):
-        arg, = self.args
+        (arg,) = self.args
         df_alias = alias_selector(reference_alias(arg, reference))
 
         if isinstance(data_frame.index, pd.MultiIndex):
             levels = self._group_levels(data_frame.index)
 
-            return data_frame[df_alias] \
-                .groupby(level=levels) \
-                .apply(self.rolling_mean)
+            return data_frame[df_alias].groupby(level=levels).apply(self.rolling_mean)
 
         return self.rolling_mean(data_frame[df_alias])
 
@@ -241,13 +239,15 @@ class RollingMean(RollingOperation):
 class Share(_BaseOperation):
     def __init__(self, metric: Field, over: Field = None, precision=2):
         super(Share, self).__init__(
-              alias='share({},{})'.format(getattr(metric, 'alias', metric),
-                                          getattr(over, 'alias', over), ),
-              label='Share of {} over {}'.format(getattr(metric, 'label', metric),
-                                                 getattr(over, 'label', over)),
-              args=[metric, over],
-              suffix='%',
-              precision=precision,
+            alias="share({},{})".format(
+                getattr(metric, "alias", metric), getattr(over, "alias", over),
+            ),
+            label="Share of {} over {}".format(
+                getattr(metric, "label", metric), getattr(over, "label", over)
+            ),
+            args=[metric, over],
+            suffix="%",
+            precision=precision,
         )
 
     @property
@@ -283,7 +283,9 @@ class Share(_BaseOperation):
         over_dim_value = get_totals_marker_for_dtype(data_frame.index.levels[idx].dtype)
         totals_alias = (slice(None),) * idx + (slice(over_dim_value, over_dim_value),)
 
-        totals = reduce_data_frame_levels(data_frame.loc[totals_alias, f_metric_alias], group_levels)
+        totals = reduce_data_frame_levels(
+            data_frame.loc[totals_alias, f_metric_alias], group_levels
+        )
 
         def apply_totals(group_df):
             if not isinstance(totals, pd.Series):
@@ -295,8 +297,10 @@ class Share(_BaseOperation):
             share = 100 * group_df / totals[group_df.index]
             return pd.Series(share.values, index=group_df.index)
 
-        return data_frame[f_metric_alias] \
-            .groupby(level=group_levels) \
-            .apply(apply_totals) \
-            .reorder_levels(order=data_frame.index.names) \
+        return (
+            data_frame[f_metric_alias]
+            .groupby(level=group_levels)
+            .apply(apply_totals)
+            .reorder_levels(order=data_frame.index.names)
             .sort_index()
+        )

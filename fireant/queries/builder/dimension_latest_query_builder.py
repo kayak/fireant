@@ -7,9 +7,7 @@ from .query_builder import (
     QueryBuilder,
     QueryException,
 )
-from ..sql_transformer import (
-    make_latest_query,
-)
+from ..sql_transformer import make_latest_query
 
 
 class DimensionLatestQueryBuilder(QueryBuilder):
@@ -31,21 +29,24 @@ class DimensionLatestQueryBuilder(QueryBuilder):
         needed
         for the query to fetch choices for dimensions.
 
-        The slicer query extends this with metrics, references, and totals.
+        The dataset query extends this with metrics, references, and totals.
         """
         if not self._dimensions:
-            raise QueryException('Must select at least one dimension to query latest values')
+            raise QueryException(
+                "Must select at least one dimension to query latest values"
+            )
 
-        query = make_latest_query(database=self.dataset.database,
-                                  base_table=self.table,
-                                  joins=self.dataset.joins,
-                                  dimensions=self._dimensions)
+        query = make_latest_query(
+            database=self.dataset.database,
+            base_table=self.table,
+            joins=self.dataset.joins,
+            dimensions=self._dimensions,
+        )
         return [query]
 
     def fetch(self, hint=None):
         data = super().fetch(hint=hint).reset_index().iloc[0]
         # Remove the row index as the name and trim the special dimension key characters from the dimension key
         data.name = None
-        data.index = [alias_for_alias_selector(alias)
-                      for alias in data.index]
+        data.index = [alias_for_alias_selector(alias) for alias in data.index]
         return data

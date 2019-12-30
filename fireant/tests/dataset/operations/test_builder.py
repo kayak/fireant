@@ -3,8 +3,7 @@ from unittest import TestCase
 from fireant import *
 from fireant.tests.dataset.mocks import mock_dataset
 
-test_field = Field(mock_dataset,
-                   'my_field',
+test_field = Field('my_field',
                    None,
                    label='My Field',
                    prefix='a',
@@ -28,7 +27,7 @@ class OperationBuilderTests(TestCase):
             test_alias(RollingMean, [test_field, 3], 'rollingmean(my_field,3)')
             test_alias(RollingMean, [test_field, 7], 'rollingmean(my_field,7)')
         with self.subTest(Share.__name__):
-            test_dimension = Field(mock_dataset, 'my_other_field', None)
+            test_dimension = Field('my_other_field', None)
             test_alias(Share, [test_field, test_dimension], 'share(my_field,my_other_field)')
 
     def test_label_derived_from_field(self):
@@ -46,10 +45,10 @@ class OperationBuilderTests(TestCase):
             test_label(RollingMean, [test_field, 3], 'RollingMean(My Field,3)')
             test_label(RollingMean, [test_field, 7], 'RollingMean(My Field,7)')
         with self.subTest(Share.__name__):
-            test_dimension = Field(mock_dataset, 'my_other_field', None, label='Another Field')
+            test_dimension = Field('my_other_field', None, label='Another Field')
             test_label(Share, [test_field, test_dimension], 'Share of My Field over Another Field')
 
     def test_share_metric_sets_suffix_as_percent(self):
-        test_dimension = Field(mock_dataset, 'my_other_field', None, label='Another Field')
+        test_dimension = Field('my_other_field', None, label='Another Field')
         share = Share(test_field, test_dimension)
         self.assertEqual('%', share.suffix)

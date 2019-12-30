@@ -1,9 +1,5 @@
 import itertools
 
-from fireant import (
-    Field,
-    Join,
-)
 from fireant.queries.builder import (
     DataSetQueryBuilder,
     DimensionChoicesQueryBuilder,
@@ -14,22 +10,24 @@ from fireant.utils import immutable
 
 class _Container(object):
     """
-    This is a list of slicer elements, metrics or dimensions, used for accessing an element by key with a dot syntax.
+    This is a list of dataset elements, metrics or dimensions, used for accessing an element by key with a dot syntax.
 
     Example:
 
     .. code-block:: python
 
-        slicer = Slicer(
+        dataset = DataSet(
             dimensions=[
                 Dimension(key='my_dimension1')
             ]
         )
-        slicer.dimensions.my_dimension1
+        dataset.dimensions.my_dimension1
     """
 
-    def __init__(self):
-        self._items = []
+    def __init__(self, items=()):
+        self._items = list(items)
+        for item in items:
+            setattr(self, item.alias, item)
 
     def __iter__(self):
         return iter(self._items)
@@ -38,7 +36,19 @@ class _Container(object):
         return getattr(self, item)
 
     def __contains__(self, item):
-        return hasattr(self, item)
+        from .fields import Field
+
+        if isinstance(item, str):
+            return hasattr(self, item)
+
+        if not isinstance(item, Field):
+            return False
+
+        self_item = getattr(self, item.alias, None)
+        if self_item is None:
+            return False
+
+        return str(item.definition) == str(self_item.definition)
 
     def __hash__(self):
         return hash((item for item in self._items))
@@ -47,11 +57,14 @@ class _Container(object):
         """
         Checks if the other object is an instance of _Container and has the same number of items with matching keys.
         """
-        return isinstance(other, _Container) and \
-               all([a is not None
-                    and b is not None
-                    and a.alias == b.alias
-                    for a, b in itertools.zip_longest(self._items, getattr(other, '_items', ()))])
+        return isinstance(other, _Container) and all(
+            [
+                a is not None and b is not None and a.alias == b.alias
+                for a, b in itertools.zip_longest(
+                    self._items, getattr(other, "_items", ())
+                )
+            ]
+        )
 
     def append(self, item):
         self._items.append(item)
@@ -67,71 +80,70 @@ class DataSet(object):
     class Fields(_Container):
         pass
 
-    def __init__(self, table, database, always_query_all_metrics=False):
+    def __init__(
+        self, table, database, joins=(), fields=(), always_query_all_metrics=False
+    ):
         """
-        Constructor for a slicer.  Contains all the fields to initialize the slicer.
+        Constructor for a dataset.  Contains all the fields to initialize the dataset.
 
         :param table: (Required)
-            A pypika Table reference. The primary table that this slicer will retrieve data from.
+            A pypika Table reference. The primary table that this dataset will retrieve data from.
 
         :param database:  (Required)
-            A Database reference. Holds the connection details used by this slicer to execute queries.
+            A Database reference. Holds the connection details used by this dataset to execute queries.
+
+        :param fields: (Required: At least one)
+            A list of fields mapping definitions of data in the data set. Fields are similar to a column in a database
+            query result set. They are the values
+
+        :param joins:  (Optional)
+            A list of join descriptions for joining additional tables.  Joined tables are only used when querying a
+            metric or dimension which requires it.
 
         :param always_query_all_metrics: (Default: False)
             When true, all metrics will be included in database queries in order to increase cache hits.
         """
         self.table = table
         self.database = database
-        self.joins = []
+        self.joins = list(joins)
 
-        self.fields = DataSet.Fields()
+        self.fields = DataSet.Fields(fields)
 
         # add query builder entry points
         self.query = DataSetQueryBuilder(self)
         self.latest = DimensionLatestQueryBuilder(self)
         self.always_query_all_metrics = always_query_all_metrics
 
+        for field in fields:
+            if not field.definition.is_aggregate:
+                field.choices = DimensionChoicesQueryBuilder(self, field)
+
     def __eq__(self, other):
-        return isinstance(other, DataSet) \
-               and self.fields == other.fields
+        return isinstance(other, DataSet) and self.fields == other.fields
 
     def __repr__(self):
-        return 'Slicer(fields=[{}])' \
-            .format(','.join([repr(f)
-                              for f in self.fields]))
+        return "DataSet(fields=[{}])".format(",".join([repr(f) for f in self.fields]))
 
     def __hash__(self):
-        return hash((self.table, self.database.database, tuple(self.joins), self.fields, self.always_query_all_metrics))
-
-    @immutable
-    def join(self, *args, **kwargs):
-        """
-        Adds a join when building a slicer query.
-
-        :return:
-            A copy of this DataSet instance with the join added.
-        """
-
-        self.joins.append(
-            Join(*args, **kwargs)
+        return hash(
+            (
+                self.table,
+                self.database.database,
+                tuple(self.joins),
+                self.fields,
+                self.always_query_all_metrics,
+            )
         )
 
     @immutable
-    def field(self, *args, field_class=Field, **kwargs):
+    def extra_fields(self, *fields):
+        for field in fields:
+            self.fields.append(field)
+
+    def blend(self, other):
         """
-        Adds a field when building a slicer query. Fields are similar to a column in a database query result set.
-
-        :param field_class: (Optional)
-            A class that inherits from Field. That will be used for instantiating a new field with the provided
-            args and kwargs. Defaults to Field.
-        :return:
-            A copy of this DataSet instance with the field added.
+        Returns a Data Set blender which enables to execute queries on multiple data sets and combine them.
         """
-        field = field_class(self, *args, **kwargs)
+        from .data_blending import DataSetBlenderBuilder
 
-        if not field.definition.is_aggregate:
-            field.choices = DimensionChoicesQueryBuilder(self, field)
-
-        self.fields.append(
-            field
-        )
+        return DataSetBlenderBuilder(self, other)

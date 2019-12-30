@@ -1,6 +1,7 @@
 import numpy as np
 
 from fireant import utils
+from fireant.utils import immutable
 from pypika import functions as fn
 from pypika.queries import QueryBuilder
 
@@ -10,17 +11,21 @@ class Reference(object):
         self.field = field
 
         self.reference_type = reference_type
-        self.alias = reference_type.alias + '_delta_percent' \
-            if delta_percent \
-            else reference_type.alias + '_delta' \
-            if delta \
+        self.alias = (
+            reference_type.alias + "_delta_percent"
+            if delta_percent
+            else reference_type.alias + "_delta"
+            if delta
             else reference_type.alias
+        )
 
-        self.label = reference_type.label + ' Δ%' \
-            if delta_percent \
-            else reference_type.label + ' Δ' \
-            if delta \
+        self.label = (
+            reference_type.label + " Δ%"
+            if delta_percent
+            else reference_type.label + " Δ"
+            if delta
             else reference_type.label
+        )
 
         self.time_unit = reference_type.time_unit
         self.interval = reference_type.interval
@@ -29,15 +34,21 @@ class Reference(object):
         self.delta_percent = delta_percent
 
     def __eq__(self, other):
-        return isinstance(self, Reference) \
-               and self.field == other.field \
-               and self.alias == other.alias
+        return (
+            isinstance(self, Reference)
+            and self.field == other.field
+            and self.alias == other.alias
+        )
 
     def __hash__(self):
-        return hash('reference{}{}'.format(self.alias, self.field))
+        return hash("reference{}{}".format(self.alias, self.field))
 
     def __repr__(self):
-        return '{}({})'.format(self.alias, self.field.alias)
+        return "{}({})".format(self.alias, self.field.alias)
+
+    @immutable
+    def for_(self, field):
+        self.field = field
 
 
 class ReferenceType(object):
@@ -52,26 +63,28 @@ class ReferenceType(object):
         return Reference(dimension, self, delta=delta, delta_percent=delta_percent)
 
     def __eq__(self, other):
-        return isinstance(self, ReferenceType) \
-               and self.time_unit == other.time_unit \
-               and self.interval == other.interval
+        return (
+            isinstance(self, ReferenceType)
+            and self.time_unit == other.time_unit
+            and self.interval == other.interval
+        )
 
     def __hash__(self):
-        return hash('reference' + self.alias)
+        return hash("reference" + self.alias)
 
 
-DayOverDay = ReferenceType('dod', 'DoD', 'day', 1)
-WeekOverWeek = ReferenceType('wow', 'WoW', 'week', 1)
-MonthOverMonth = ReferenceType('mom', 'MoM', 'month', 1)
-QuarterOverQuarter = ReferenceType('qoq', 'QoQ', 'quarter', 1)
-YearOverYear = ReferenceType('yoy', 'YoY', 'year', 1)
+DayOverDay = ReferenceType("dod", "DoD", "day", 1)
+WeekOverWeek = ReferenceType("wow", "WoW", "week", 1)
+MonthOverMonth = ReferenceType("mom", "MoM", "month", 1)
+QuarterOverQuarter = ReferenceType("qoq", "QoQ", "quarter", 1)
+YearOverYear = ReferenceType("yoy", "YoY", "year", 1)
 
 
-def reference_term(reference: Reference,
-                   original_query: QueryBuilder,
-                   ref_query: QueryBuilder):
+def reference_term(
+    reference: Reference, original_query: QueryBuilder, ref_query: QueryBuilder
+):
     """
-    Part of query building. Given a reference, the original slicer query, and the ref query, creates the pypika for
+    Part of query building. Given a reference, the original dataset query, and the ref query, creates the pypika for
     the reference that should be selected in the reference container query.
 
     :param reference:
@@ -88,9 +101,9 @@ def reference_term(reference: Reference,
 
     if reference.delta:
         if reference.delta_percent:
-            return lambda metric: (original_field(metric) - ref_field(metric)) \
-                                  * \
-                                  (100 / fn.NullIf(ref_field(metric), 0))
+            return lambda metric: (original_field(metric) - ref_field(metric)) * (
+                100 / fn.NullIf(ref_field(metric), 0)
+            )
 
         return lambda metric: original_field(metric) - ref_field(metric)
 
@@ -99,4 +112,4 @@ def reference_term(reference: Reference,
 
 def calculate_delta_percent(ref_df, ref_delta_df):
     # pandas raises an exception when dividing by zero
-    return 100. * ref_delta_df / ref_df.replace(0, np.nan)
+    return 100.0 * ref_delta_df / ref_df.replace(0, np.nan)

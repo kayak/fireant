@@ -40,7 +40,7 @@ Data Sets
 
 |FeatureDataSet| are the core component of |Brand|. A |FeatureDataSet| is a representation of a data set and is used to execute queries and transform result sets into widgets such as charts or tables.
 
-A |FeatureDataSet| requires only a couple of definitions in order to use: A database connector, a database table, join tables, and dimensions and metrics. Metrics and Dimension definitions tell |Brand| how to query and use data in widgets. Once a slicer is created, it's query API can be used to build queries with just a few lines of code selecting which dimensions and metrics to use and how to filter the data.
+A |FeatureDataSet| requires only a couple of definitions in order to use: A database connector, a database table, join tables, and dimensions and metrics. Metrics and Dimension definitions tell |Brand| how to query and use data in widgets. Once a dataset is created, it's query API can be used to build queries with just a few lines of code selecting which dimensions and metrics to use and how to filter the data.
 
 .. _dataset_example_start:
 
@@ -59,37 +59,44 @@ Instantiating a Data Set
     my_dataset = DataSet(
         database=vertica_database,
         table=analytics,
-    ).field(
-        # Non-aggregate definition
-        alias='customer',
-        definition=customers.id,
-        label='Customer'
-    ).field(
-        # Date/Time type, also non-aggregate
-        alias='date',
-        definition=analytics.timestamp,
-        type=DataType.date,
-        label='Date'
-    ).field(
-        # Text type, also non-aggregate
-        alias='device_type',
-        definition=analytics.device_type,
-        type=DataType.text,
-        label='Device_type'
-    ).field(
-        # Aggregate definition (The SUM function aggregates a group of values into a single value)
-        alias='clicks',
-        definition=fn.Sum(analytics.clicks),
-        label='Clicks'
-    ).field(
-        # Aggregate definition (The SUM function aggregates a group of values into a single value)
-        alias='customer-spend-per-clicks',
-        definition=fn.Sum(analytics.customer_spend / analytics.clicks),
-        type=DataType.number,
-        label='Spend / Clicks'
-    ).join(
-        customers, analytics.customer_id == customers.id
-    )
+        fields=[
+            Field(
+                # Non-aggregate definition
+                alias='customer',
+                definition=customers.id,
+                label='Customer'
+            ),
+            Field(
+                # Date/Time type, also non-aggregate
+                alias='date',
+                definition=analytics.timestamp,
+                type=DataType.date,
+                label='Date'
+            ),
+            Field(
+                # Text type, also non-aggregate
+                alias='device_type',
+                definition=analytics.device_type,
+                type=DataType.text,
+                label='Device_type'
+            ),
+            Field(
+                # Aggregate definition (The SUM function aggregates a group of values into a single value)
+                alias='clicks',
+                definition=fn.Sum(analytics.clicks),
+                label='Clicks'
+            ),
+            Field(
+                # Aggregate definition (The SUM function aggregates a group of values into a single value)
+                alias='customer-spend-per-clicks',
+                definition=fn.Sum(analytics.customer_spend / analytics.clicks),
+                type=DataType.number,
+                label='Spend / Clicks'
+            )
+        ],
+        joins=[
+            Join(customers, analytics.customer_id == customers.id),
+        ],
 
 .. _dataset_example_end:
 
@@ -199,44 +206,44 @@ Crafted with ♥ in Berlin.
 .. |FeatureReference| replace:: *Reference*
 .. |FeatureOperation| replace:: *Operation*
 
-.. |ClassDataSet| replace:: :class:`fireant.DataSet <fireant.dataset.klass.DataSet>`
-.. |ClassDatabase| replace:: :class:`fireant.database.Database <fireant.database.base.Database>`
-.. |ClassJoin| replace:: :class:`fireant.Join <fireant.dataset.joins.Join>`
-.. |ClassMetric| replace:: :class:`fireant.Field <fireant.dataset.fields.Field>`
-.. |ClassThreadPoolConcurrencyMiddleware| replace:: :class:`fireant.middleware.ThreadPoolConcurrencyMiddleware <fireant.middleware.concurrency.ThreadPoolConcurrencyMiddleware>`
-.. |ClassBaseConcurrencyMiddleware| replace:: :class:`fireant.middleware.BaseConcurrencyMiddleware <fireant.middleware.concurrency.BaseConcurrencyMiddleware>`
+.. |ClassDataSet| replace:: ``fireant.DataSet <fireant.dataset.klass.DataSet>``
+.. |ClassDatabase| replace:: ``fireant.database.Database <fireant.database.base.Database>``
+.. |ClassJoin| replace:: ``fireant.Join <fireant.dataset.joins.Join>``
+.. |ClassMetric| replace:: ``fireant.Field <fireant.dataset.fields.Field>``
+.. |ClassThreadPoolConcurrencyMiddleware| replace:: ``fireant.middleware.ThreadPoolConcurrencyMiddleware <fireant.middleware.concurrency.ThreadPoolConcurrencyMiddleware>``
+.. |ClassBaseConcurrencyMiddleware| replace:: ``fireant.middleware.BaseConcurrencyMiddleware <fireant.middleware.concurrency.BaseConcurrencyMiddleware>``
 
-.. |ClassBooleanDimension| replace:: :class:`fireant.dataset.dimensions.BooleanDimension`
-.. |ClassContDimension| replace:: :class:`fireant.dataset.dimensions.ContinuousDimension`
-.. |ClassDateDimension| replace:: :class:`fireant.dataset.dimensions.DatetimeDimension`
-.. |ClassCatDimension| replace:: :class:`fireant.dataset.dimensions.CategoricalDimension`
-.. |ClassUniqueDimension| replace:: :class:`fireant.dataset.dimensions.UniqueDimension`
-.. |ClassDisplayDimension| replace:: :class:`fireant.dataset.dimensions.DisplayDimension`
+.. |ClassBooleanDimension| replace:: ``fireant.dataset.dimensions.BooleanDimension``
+.. |ClassContDimension| replace:: ``fireant.dataset.dimensions.ContinuousDimension``
+.. |ClassDateDimension| replace:: ``fireant.dataset.dimensions.DatetimeDimension``
+.. |ClassCatDimension| replace:: ``fireant.dataset.dimensions.CategoricalDimension``
+.. |ClassUniqueDimension| replace:: ``fireant.dataset.dimensions.UniqueDimension``
+.. |ClassDisplayDimension| replace:: ``fireant.dataset.dimensions.DisplayDimension``
 
-.. |ClassFilter| replace:: :class:`fireant.dataset.filters.Filter`
-.. |ClassComparatorFilter| replace:: :class:`fireant.dataset.filters.ComparatorFilter`
-.. |ClassBooleanFilter| replace:: :class:`fireant.dataset.filters.BooleanFilter`
-.. |ClassContainsFilter| replace:: :class:`fireant.dataset.filters.ContainsFilter`
-.. |ClassExcludesFilter| replace:: :class:`fireant.dataset.filters.ExcludesFilter`
-.. |ClassRangeFilter| replace:: :class:`fireant.dataset.filters.RangeFilter`
-.. |ClassPatternFilter| replace:: :class:`fireant.dataset.filters.PatternFilter`
-.. |ClassAntiPatternFilter| replace:: :class:`fireant.dataset.filters.AntiPatternFilter`
+.. |ClassFilter| replace:: ``fireant.dataset.filters.Filter``
+.. |ClassComparatorFilter| replace:: ``fireant.dataset.filters.ComparatorFilter``
+.. |ClassBooleanFilter| replace:: ``fireant.dataset.filters.BooleanFilter``
+.. |ClassContainsFilter| replace:: ``fireant.dataset.filters.ContainsFilter``
+.. |ClassExcludesFilter| replace:: ``fireant.dataset.filters.ExcludesFilter``
+.. |ClassRangeFilter| replace:: ``fireant.dataset.filters.RangeFilter``
+.. |ClassPatternFilter| replace:: ``fireant.dataset.filters.PatternFilter``
+.. |ClassAntiPatternFilter| replace:: ``fireant.dataset.filters.AntiPatternFilter``
 
-.. |ClassReference| replace:: :class:`fireant.dataset.references.Reference`
+.. |ClassReference| replace:: ``fireant.dataset.references.Reference``
 
-.. |ClassWidget| replace:: :class:`fireant.widgets.base.Widget`
-.. |ClassPandasWidget| replace:: :class:`fireant.widgets.pandas.Pandas`
-.. |ClassHighChartsWidget| replace:: :class:`fireant.widgets.highcharts.HighCharts <fireant.widgets.highcharts.HighCharts>`
-.. |ClassHighChartsSeries| replace:: :class:`fireant.widgets.highcharts.Series <fireant.widgets.chart_base.Series>`
+.. |ClassWidget| replace:: ``fireant.widgets.base.Widget``
+.. |ClassPandasWidget| replace:: ``fireant.widgets.pandas.Pandas``
+.. |ClassHighChartsWidget| replace:: ``fireant.widgets.highcharts.HighCharts <fireant.widgets.highcharts.HighCharts>``
+.. |ClassHighChartsSeries| replace:: ``fireant.widgets.highcharts.Series <fireant.widgets.chart_base.Series>``
 
-.. |ClassOperation| replace:: :class:`fireant.dataset.operations.Operation`
+.. |ClassOperation| replace:: ``fireant.dataset.operations.Operation``
 
-.. |ClassVerticaDatabase| replace:: :class:`fireant.database.VerticaDatabase`
-.. |ClassMySQLDatabase| replace:: :class:`fireant.database.MySQLDatabase`
-.. |ClassPostgreSQLDatabase| replace:: :class:`fireant.database.PostgreSQLDatabase`
-.. |ClassRedshiftDatabase| replace:: :class:`fireant.database.RedshiftDatabase`
+.. |ClassVerticaDatabase| replace:: ``fireant.database.VerticaDatabase``
+.. |ClassMySQLDatabase| replace:: ``fireant.database.MySQLDatabase``
+.. |ClassPostgreSQLDatabase| replace:: ``fireant.database.PostgreSQLDatabase``
+.. |ClassRedshiftDatabase| replace:: ``fireant.database.RedshiftDatabase``
 
-.. |ClassDatetimeInterval| replace:: :class:`fireant.DatetimeInterval <fireant.dataset.intervals.DatetimeInterval>`
+.. |ClassDatetimeInterval| replace:: ``fireant.DatetimeInterval <fireant.dataset.intervals.DatetimeInterval>``
 
 .. |ClassTable| replace:: ``pypika.Table``
 .. |ClassTables| replace:: ``pypika.Tables``

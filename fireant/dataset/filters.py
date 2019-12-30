@@ -1,3 +1,4 @@
+from fireant.utils import immutable
 from pypika import (
     EmptyCriterion,
     Not,
@@ -6,85 +7,124 @@ from pypika.functions import Lower
 
 
 class Filter(object):
-    def __init__(self, field_alias, definition):
-        self.field_alias = field_alias
-        self.definition = definition
+    def __init__(self, field):
+        self.field = field
+
+    @property
+    def definition(self):
+        raise NotImplementedError()
 
     @property
     def is_aggregate(self):
         return self.definition.is_aggregate
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) \
-               and str(self.definition) == str(other.definition)
+        return all(
+            [
+                isinstance(other, self.__class__),
+                str(self.definition) == str(other.definition),
+            ]
+        )
 
     def __repr__(self):
         return str(self.definition)
 
+    @immutable
+    def for_(self, field):
+        self.field = field
+        # self.definition = self._make_definition(field)
+
 
 class ComparatorFilter(Filter):
     class Operator(object):
-        eq = 'eq'
-        ne = 'ne'
-        gt = 'gt'
-        lt = 'lt'
-        gte = 'gte'
-        lte = 'lte'
+        eq = "eq"
+        ne = "ne"
+        gt = "gt"
+        lt = "lt"
+        gte = "gte"
+        lte = "lte"
 
-    def __init__(self, field_alias, metric_definition, operator, value):
-        definition = getattr(metric_definition, operator)(value)
-        super(ComparatorFilter, self).__init__(field_alias, definition)
+    def __init__(self, field, operator, value):
+        self.operator = operator
+        self.value = value
+        super(ComparatorFilter, self).__init__(field)
+
+    @property
+    def definition(self):
+        return getattr(self.field.definition, self.operator)(self.value)
 
 
 class BooleanFilter(Filter):
-    def __init__(self, field_alias, dimension_definition, value):
-        definition = dimension_definition \
-            if value \
-            else Not(dimension_definition)
+    def __init__(self, field, value):
+        self.value = value
+        super(BooleanFilter, self).__init__(field)
 
-        super(BooleanFilter, self).__init__(field_alias, definition)
+    @property
+    def definition(self):
+        if self.value:
+            return self.field.definition
+        return Not(self.field.definition)
 
 
 class ContainsFilter(Filter):
-    def __init__(self, field_alias, dimension_definition, values):
-        definition = dimension_definition.isin(values)
-        super(ContainsFilter, self).__init__(field_alias, definition)
+    def __init__(self, field, values):
+        self.values = values
+        super(ContainsFilter, self).__init__(field)
+
+    @property
+    def definition(self):
+        return self.field.definition.isin(self.values)
 
 
-class ExcludesFilter(Filter):
-    def __init__(self, field_alias, dimension_definition, values):
-        definition = dimension_definition.notin(values)
-        super(ExcludesFilter, self).__init__(field_alias, definition)
+class NegatedFilterMixin:
+    @property
+    def definition(self):
+        definition = super().definition
+        return definition.negate()
+
+
+class ExcludesFilter(NegatedFilterMixin, ContainsFilter):
+    pass
 
 
 class RangeFilter(Filter):
-    def __init__(self, field_alias, dimension_definition, start, stop):
-        definition = dimension_definition[start:stop]
-        super(RangeFilter, self).__init__(field_alias, definition)
+    def __init__(self, field, start, stop):
+        self.start = start
+        self.stop = stop
+        super(RangeFilter, self).__init__(field)
+
+    @property
+    def definition(self):
+        return self.field.definition[self.start : self.stop]
 
 
 class PatternFilter(Filter):
-    def __init__(self, field_alias, dimension_definition, pattern, *patterns):
-        definition = self._apply(dimension_definition, (pattern,) + patterns)
-        super(PatternFilter, self).__init__(field_alias, definition)
+    def __init__(self, field, pattern, *patterns):
+        self.patterns = (pattern, *patterns)
+        super(PatternFilter, self).__init__(field)
 
-    def _apply(self, dimension_definition, patterns):
-        definition = Lower(dimension_definition).like(Lower(patterns[0]))
+    @property
+    def definition(self):
+        first, *rest = self.patterns
+        definition = Lower(self.field.definition).like(Lower(first))
 
-        for pattern in patterns[1:]:
-            definition |= Lower(dimension_definition).like(Lower(pattern))
+        for pattern in rest:
+            definition |= Lower(self.field.definition).like(Lower(pattern))
 
         return definition
 
 
-class AntiPatternFilter(PatternFilter):
-    def _apply(self, dimension_definition, pattern):
-        return super(AntiPatternFilter, self)._apply(dimension_definition, pattern).negate()
+class AntiPatternFilter(NegatedFilterMixin, PatternFilter):
+    pass
 
 
 class VoidFilter(Filter):
-    def __init__(self, field_alias):
-        super(VoidFilter, self).__init__(field_alias, EmptyCriterion())
+    def __init__(self, field):
+        super(VoidFilter, self).__init__(field)
+
+    @property
+    def definition(self):
+        return EmptyCriterion()
 
     def __repr__(self):
-        return 'VoidFilter()'
+        return "VoidFilter()"

@@ -8,34 +8,32 @@ import numpy as np
 import pandas as pd
 from fireant.dataset.fields import DataType
 from fireant.dataset.totals import TOTALS_MARKERS
-from fireant.utils import (
-    filter_kwargs,
-)
+from fireant.utils import filter_kwargs
 
-RAW_VALUE = 'raw'
+RAW_VALUE = "raw"
 INF_VALUE = "Inf"
-NULL_VALUE = 'null'
-BLANK_VALUE = ''
-TOTALS_VALUE = '$totals'
-TOTALS_LABEL = 'Totals'
+NULL_VALUE = "null"
+BLANK_VALUE = ""
+TOTALS_VALUE = "$totals"
+TOTALS_LABEL = "Totals"
 
 epoch = np.datetime64(datetime.utcfromtimestamp(0))
-milliseconds = np.timedelta64(1, 'ms')
+milliseconds = np.timedelta64(1, "ms")
 
 DATE_FORMATS = {
-    'iso': '%Y-%m-%dT%H:%M:%S',
-    'hour': '%Y-%m-%d %H:00',
-    'day': '%Y-%m-%d',
-    'week': 'W%W %Y-%m-%d',
-    'month': '%b %Y',
-    'quarter': '%Y-%q',
-    'year': '%Y',
+    "iso": "%Y-%m-%dT%H:%M:%S",
+    "hour": "%Y-%m-%d %H:00",
+    "day": "%Y-%m-%d",
+    "week": "W%W %Y-%m-%d",
+    "month": "%b %Y",
+    "quarter": "%Y-%q",
+    "year": "%Y",
 }
 
 
 @filter_kwargs
 def date_as_string(value, interval_key=None):
-    f = DATE_FORMATS.get(interval_key, '%Y-%m-%d')
+    f = DATE_FORMATS.get(interval_key, "%Y-%m-%d")
     return value.strftime(f)
 
 
@@ -52,17 +50,19 @@ def return_none(value):
 
 
 @filter_kwargs
-def _format_decimal(value, thousands='', precision=None):
+def _format_decimal(value, thousands="", precision=None):
     if not isinstance(value, (int, float)):
         return value
 
-    precision_pattern = '{{:{}.{}f}}'.format(thousands, precision) \
-        if precision is not None \
-        else '{{:{}f}}'.format(thousands)
+    precision_pattern = (
+        "{{:{}.{}f}}".format(thousands, precision)
+        if precision is not None
+        else "{{:{}f}}".format(thousands)
+    )
 
     f_value = precision_pattern.format(value)
     if precision is None:
-        f_value = f_value.rstrip('0').rstrip('.')
+        f_value = f_value.rstrip("0").rstrip(".")
     return f_value
 
 
@@ -71,10 +71,9 @@ def wrap_styling(value, prefix=None, suffix=None):
     if value is None:
         return value
 
-    return '{prefix}{value}{suffix}' \
-        .format(prefix=prefix or '',
-                suffix=suffix or '',
-                value=value)
+    return "{prefix}{value}{suffix}".format(
+        prefix=prefix or "", suffix=suffix or "", value=value
+    )
 
 
 @filter_kwargs
@@ -82,7 +81,7 @@ def _identity(value):
     return value
 
 
-UNSAFE_CHARS = re.compile(r'[^\w\d\s\-:()]')
+UNSAFE_CHARS = re.compile(r"[^\w\d\s\-:()]")
 
 
 def json_value(value):
@@ -92,24 +91,26 @@ def json_value(value):
     if pd.isnull(value):
         return None
     if isinstance(value, float) and np.isinf(value):
-        return 'inf'
+        return "inf"
     if value in TOTALS_MARKERS:
         return TOTALS_VALUE
     return value
 
 
 def safe_value(value):
-    if value is None or value is '' or pd.isnull(value):
+    if value is None or value is "" or pd.isnull(value):
         return NULL_VALUE
     if isinstance(value, float) and np.isinf(value):
-        return 'inf'
+        return "inf"
     if value in TOTALS_MARKERS:
         return TOTALS_VALUE
 
-    str_value = date_as_string(value, interval_key='iso') \
-        if isinstance(value, date) \
+    str_value = (
+        date_as_string(value, interval_key="iso")
+        if isinstance(value, date)
         else str(value)
-    return UNSAFE_CHARS.sub('$', str_value)
+    )
+    return UNSAFE_CHARS.sub("$", str_value)
 
 
 @filter_kwargs
@@ -130,7 +131,7 @@ def raw_value(value, field, date_as=date_as_string):
     :param value:
         The raw metric value.
     :param field:
-        The slicer field that the value represents.
+        The dataset field that the value represents.
     :param date_as:
     """
     if value is None or pd.isnull(value):
@@ -141,9 +142,7 @@ def raw_value(value, field, date_as=date_as_string):
         return TOTALS_VALUE
 
     formatter = RAW_FIELD_FORMATTER.get(field.data_type, _identity)
-    return formatter(value,
-                     date_as=date_as,
-                     interval_key='iso')
+    return formatter(value, date_as=date_as, interval_key="iso")
 
 
 def _format_number_field_value(value, **kwargs):
@@ -171,7 +170,7 @@ def display_value(value, field, date_as=date_as_string):
     :param value:
         The raw metric value.
     :param field:
-        The slicer field that the value represents.
+        The dataset field that the value represents.
     :param date_as:
         A format function for datetimes.
     :return:
@@ -184,13 +183,13 @@ def display_value(value, field, date_as=date_as_string):
     if value in TOTALS_MARKERS:
         return TOTALS_LABEL
 
-    format_kwargs = {key: getattr(field, key, None)
-                     for key in ('prefix', 'suffix', 'thousands', 'precision', 'interval_key')}
-    format_kwargs = {key: value
-                     for key, value in format_kwargs.items()
-                     if value is not None}
+    format_kwargs = {
+        key: getattr(field, key, None)
+        for key in ("prefix", "suffix", "thousands", "precision", "interval_key")
+    }
+    format_kwargs = {
+        key: value for key, value in format_kwargs.items() if value is not None
+    }
 
     formatter = FIELD_DISPLAY_FORMATTER.get(field.data_type, _identity)
-    return formatter(value,
-                     date_as=date_as,
-                     **format_kwargs)
+    return formatter(value, date_as=date_as, **format_kwargs)

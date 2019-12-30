@@ -34,30 +34,37 @@ Code Example
     my_dataset = DataSet(
         database=vertica_database,
         table=analytics,
-    ).field(
-        # Non-aggregate definition
-        alias='customer',
-        definition=customers.id,
-        label='Customer'
-    ).field(
-        # Date/Time type, also non-aggregate
-        alias='date',
-        definition=analytics.timestamp,
-        type=DataType.date,
-        label='Date'
-    ).field(
-        # Aggregate definition (The SUM function aggregates a group of values into a single value)
-        alias='clicks',
-        definition=fn.Sum(analytics.clicks),
-        label='Clicks'
-    ).field(
-        # Aggregate definition (The SUM function aggregates a group of values into a single value)
-        alias='customer-spend-per-clicks',
-        definition=fn.Sum(analytics.customer_spend / analytics.clicks),
-        type=DataType.number,
-        label='Spend / Clicks'
-    ).join(
-        customers, analytics.customer_id == customers.id
+        fields=[
+            Field(
+                # Non-aggregate definition
+                alias='customer',
+                definition=customers.id,
+                label='Customer'
+            ),
+            Field(
+                # Date/Time type, also non-aggregate
+                alias='date',
+                definition=analytics.timestamp,
+                type=DataType.date,
+                label='Date'
+            ),
+            Field(
+                # Aggregate definition (The SUM function aggregates a group of values into a single value)
+                alias='clicks',
+                definition=fn.Sum(analytics.clicks),
+                label='Clicks'
+            ),
+            Field(
+                # Aggregate definition (The SUM function aggregates a group of values into a single value)
+                alias='customer-spend-per-clicks',
+                definition=fn.Sum(analytics.customer_spend / analytics.clicks),
+                type=DataType.number,
+                label='Spend / Clicks'
+            )
+        ],
+        joins=[
+            Join(customers, analytics.customer_id == customers.id)
+        ],
     )
 
 .. include:: ../README.rst
