@@ -48,7 +48,9 @@ def _replace_field(dimension, field_map, omit_umapped=False):
 
     if not omit_umapped and dimension not in field_map:
         raise DataSetException(
-            f"Invalid Dimension {dimension.alias}. Dimensions must be mapped in order to be used in a blender query."
+            "Invalid Dimension {}. Dimensions must be mapped in order to be used in a blender query.".format(
+                dimension.alias
+            )
         )
 
     return field_map.get(dimension, None)
@@ -198,21 +200,6 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
     Blended dataset queries consist of widgets, dimensions, filters, orders by and references. At least one or
     more widgets is required. All others are optional.
     """
-
-    # def dimension(self, *dimensions):
-    #     # Validate the dimensions here and only allow dimensions which appear as keys in the DataSetBlender.field_map.
-    #     unmodified_dimensions = {
-    #         dimension.dimension if hasattr(dimension, "dimension") else dimension
-    #         for dimension in dimensions
-    #     }
-    #     unmapped_dimensions = unmodified_dimensions - set(self.dataset.field_map)
-    #     if unmapped_dimensions:
-    #         aliases = ", ".join(d.alias for d in unmapped_dimensions)
-    #         raise DataSetException(
-    #             f"Invalid dimensions {aliases}. All dimensions must be mapped in order to be used in "
-    #             f"a blender query."
-    #         )
-    #     return super().dimension(*dimensions)
 
     @property
     def sql(self):
