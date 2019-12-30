@@ -8,9 +8,7 @@ from pypika import (
 from fireant.database import Database
 from fireant.dataset.fields import Field
 from fireant.dataset.filters import Filter
-from fireant.dataset.joins import (
-    Join,
-)
+from fireant.dataset.joins import Join
 from fireant.dataset.modifiers import Rollup
 from fireant.utils import (
     alias_selector,
@@ -32,17 +30,19 @@ from .totals_helper import adapt_for_totals_query
 
 
 @apply_special_cases
-def make_slicer_query_with_totals_and_references(dataset,
-                                                 database,
-                                                 table,
-                                                 joins,
-                                                 dimensions,
-                                                 metrics,
-                                                 operations,
-                                                 filters,
-                                                 references,
-                                                 orders,
-                                                 share_dimensions=()):
+def make_slicer_query_with_totals_and_references(
+    dataset,
+    database,
+    table,
+    joins,
+    dimensions,
+    metrics,
+    operations,
+    filters,
+    references,
+    orders,
+    share_dimensions=(),
+):
     """
     :param dataset:
     :param database:
@@ -81,28 +81,33 @@ def make_slicer_query_with_totals_and_references(dataset,
 
     queries = []
     for totals_dimension in totals_dimensions_and_none:
-        (dimensions_for_totals,
-         filters_for_totals) = adapt_for_totals_query(totals_dimension,
-                                                      dimensions,
-                                                      filters)
+        (dimensions_for_totals, filters_for_totals) = adapt_for_totals_query(
+            totals_dimension, dimensions, filters
+        )
 
         for reference_parts, references in reference_groups_and_none:
-            (dimensions_for_ref,
-             metrics_for_ref,
-             filters_for_ref) = adapt_for_reference_query(dataset,
-                                                          reference_parts,
-                                                          database,
-                                                          dimensions_for_totals,
-                                                          metrics,
-                                                          filters_for_totals,
-                                                          references)
-            query = make_slicer_query(database,
-                                      table,
-                                      joins,
-                                      dimensions_for_ref,
-                                      metrics_for_ref,
-                                      filters_for_ref,
-                                      orders)
+            (
+                dimensions_for_ref,
+                metrics_for_ref,
+                filters_for_ref,
+            ) = adapt_for_reference_query(
+                dataset,
+                reference_parts,
+                database,
+                dimensions_for_totals,
+                metrics,
+                filters_for_totals,
+                references,
+            )
+            query = make_slicer_query(
+                database,
+                table,
+                joins,
+                dimensions_for_ref,
+                metrics_for_ref,
+                filters_for_ref,
+                orders,
+            )
 
             # Add these to the query instance so when the data frames are joined together, the correct references and
             # totals can be applied when combining the separate result set from each query.
@@ -114,13 +119,15 @@ def make_slicer_query_with_totals_and_references(dataset,
     return queries
 
 
-def make_slicer_query(database: Database,
-                      base_table: Table,
-                      joins: Iterable[Join] = (),
-                      dimensions: Iterable[Field] = (),
-                      metrics: Iterable[Field] = (),
-                      filters: Iterable[Filter] = (),
-                      orders: Iterable = ()):
+def make_slicer_query(
+    database: Database,
+    base_table: Table,
+    joins: Iterable[Join] = (),
+    dimensions: Iterable[Field] = (),
+    metrics: Iterable[Field] = (),
+    filters: Iterable[Filter] = (),
+    orders: Iterable = (),
+):
     """
     Creates a pypika/SQL query from a list of slicer elements.
 
@@ -168,13 +175,14 @@ def make_slicer_query(database: Database,
 
     # Add filters
     for fltr in filters:
-        query = query.having(fltr.definition) \
-            if fltr.is_aggregate \
+        query = (
+            query.having(fltr.definition)
+            if fltr.is_aggregate
             else query.where(fltr.definition)
+        )
 
     # Add metrics
-    metric_terms = [make_term_for_metrics(metric)
-                    for metric in metrics]
+    metric_terms = [make_term_for_metrics(metric) for metric in metrics]
     if metric_terms:
         query = query.select(*metric_terms)
 
@@ -190,10 +198,12 @@ def make_slicer_query(database: Database,
     return query
 
 
-def make_latest_query(database: Database,
-                      base_table: Table,
-                      joins: Iterable[Join] = (),
-                      dimensions: Iterable[Field] = ()):
+def make_latest_query(
+    database: Database,
+    base_table: Table,
+    joins: Iterable[Join] = (),
+    dimensions: Iterable[Field] = (),
+):
     query = database.query_cls.from_(base_table)
 
     # Add joins
@@ -206,5 +216,3 @@ def make_latest_query(database: Database,
         query = query.select(fn.Max(dimension.definition).as_(f_dimension_key))
 
     return query
-
-

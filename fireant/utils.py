@@ -7,9 +7,7 @@ from functools import partial
 
 
 def wrap_list(value, wrapper=list):
-    return value \
-        if isinstance(value, (tuple, list)) \
-        else wrapper([value])
+    return value if isinstance(value, (tuple, list)) else wrapper([value])
 
 
 def setdeepattr(d, keys, value):
@@ -106,8 +104,11 @@ def getdeepattr(d, keys, default_value=None):
     d_level = d
 
     for key in keys:
-        if isinstance(d_level, dict) and key not in d_level \
-              or not hasattr(d_level, key):
+        if (
+            isinstance(d_level, dict)
+            and key not in d_level
+            or not hasattr(d_level, key)
+        ):
             return default_value
 
         d_level = d_level[key]
@@ -117,10 +118,15 @@ def getdeepattr(d, keys, default_value=None):
 
 def apply_kwargs(f, *args, **kwargs):
     argspec = inspect.getfullargspec(f)
-    allowed = set(argspec.args[-len(argspec.defaults or ()):])
-    return f(*args, **{key: kwarg
-                       for key, kwarg in kwargs.items()
-                       if argspec.varkw or key in allowed})
+    allowed = set(argspec.args[-len(argspec.defaults or ()) :])
+    return f(
+        *args,
+        **{
+            key: kwarg
+            for key, kwarg in kwargs.items()
+            if argspec.varkw or key in allowed
+        }
+    )
 
 
 def filter_kwargs(f):
@@ -139,8 +145,7 @@ def flatten(items):
 
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
-    return [l[i:i + n]
-            for i in range(0, len(l), n)]
+    return [l[i : i + n] for i in range(0, len(l), n)]
 
 
 def immutable(func):
@@ -157,9 +162,7 @@ def immutable(func):
         :param mutate:
             When True, overrides the immutable behavior of this decorator.
         """
-        self_copy = self \
-            if mutate \
-            else copy.deepcopy(self)
+        self_copy = self if mutate else copy.deepcopy(self)
         result = func(self_copy, *args, **kwargs)
 
         # Return self if the inner function returns None.  This way the inner function can return something
@@ -174,18 +177,14 @@ def immutable(func):
 
 def ordered_distinct_list(l):
     seen = set()
-    return [x
-            for x in l
-            if not x in seen
-            and not seen.add(x)]
+    return [x for x in l if not x in seen and not seen.add(x)]
 
 
-def ordered_distinct_list_by_attr(l, attr='alias'):
+def ordered_distinct_list_by_attr(l, attr="alias"):
     seen = set()
-    return [x
-            for x in l
-            if not getattr(x, attr) in seen
-            and not seen.add(getattr(x, attr))]
+    return [
+        x for x in l if not getattr(x, attr) in seen and not seen.add(getattr(x, attr))
+    ]
 
 
 def groupby(items, by):
@@ -214,13 +213,13 @@ def groupby(items, by):
 
 
 def alias_selector(alias):
-    if alias is None or alias.startswith('$'):
+    if alias is None or alias.startswith("$"):
         return alias
-    return '${}'.format(alias)
+    return "${}".format(alias)
 
 
 def alias_for_alias_selector(f_alias):
-    if f_alias and f_alias[0] == '$':
+    if f_alias and f_alias[0] == "$":
         return f_alias[1:]
     return f_alias
 
@@ -240,8 +239,8 @@ def read_csv(fp):
     :return: List of rows.
     """
     rows = []
-    with open(fp, 'r') as f:
-        csv_reader = csv.reader(f, delimiter=',')
+    with open(fp, "r") as f:
+        csv_reader = csv.reader(f, delimiter=",")
         for row in csv_reader:
             rows.append(row)
 
@@ -255,9 +254,9 @@ def write_named_temp_csv(rows):
     :param rows: List of lists to be written.
     :return: A named temporary file containing the rows.
     """
-    ntf = tempfile.NamedTemporaryFile(suffix='.csv')
-    with open(ntf.name, 'w') as f:
-        ntf_writer = csv.writer(f, delimiter=',')
+    ntf = tempfile.NamedTemporaryFile(suffix=".csv")
+    with open(ntf.name, "w") as f:
+        ntf_writer = csv.writer(f, delimiter=",")
         ntf_writer.writerows(rows)
 
     return ntf

@@ -1,40 +1,32 @@
 import pandas as pd
 from pypika import Order
 
-from fireant.utils import (
-    alias_selector,
-)
+from fireant.utils import alias_selector
 from .query_builder import (
     QueryBuilder,
     add_hints,
     get_column_names,
 )
 from ..execution import fetch_data
-from ..field_helper import (
-    make_term_for_dimension,
-)
-from ..finders import (
-    find_joins_for_tables,
-)
-from ..sql_transformer import (
-    make_slicer_query,
-)
+from ..field_helper import make_term_for_dimension
+from ..finders import find_joins_for_tables
+from ..sql_transformer import make_slicer_query
 from ...formats import display_value
 
 
 class DimensionChoicesQueryBuilder(QueryBuilder):
     """
-    This builder is used for building slicer queries for fetching the choices for a dimension given a set of filters.
+    This builder is used for building dataset queries for fetching the choices for a dimension given a set of filters.
     """
 
     def __init__(self, dataset, dimension):
         super(DimensionChoicesQueryBuilder, self).__init__(dataset, dataset.table)
 
-        self.hint_table = getattr(dimension, 'hint_table', None)
+        self.hint_table = getattr(dimension, "hint_table", None)
         self._dimensions.append(dimension)
 
         # TODO remove after 3.0.0
-        display_alias = dimension.alias + '_display'
+        display_alias = dimension.alias + "_display"
         if display_alias in dataset.fields:
             self._dimensions.append(dataset.fields[display_alias])
 
@@ -50,21 +42,31 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
 
         filters = []
         for filter_ in self._filters:
-            base_fields = [field
-                           for field in filter_.definition.fields()
-                           if all(table == base_table for table in field.tables_)]
+            base_fields = [
+                field
+                for field in filter_.definition.fields_()
+                if all(table == base_table for table in field.tables_)
+            ]
 
-            join_tables = [table
-                           for field in filter_.definition.fields()
-                           for table in field.tables_
-                           if table != base_table]
+            join_tables = [
+                table
+                for field in filter_.definition.fields_()
+                for table in field.tables_
+                if table != base_table
+            ]
 
-            required_joins = find_joins_for_tables(self.dataset.joins, self.dataset.table, join_tables)
+            required_joins = find_joins_for_tables(
+                self.dataset.joins, self.dataset.table, join_tables
+            )
 
-            base_fields.extend([field
-                                for join in required_joins
-                                for field in join.criterion.fields()
-                                if all(table == base_table for table in field.tables_)])
+            base_fields.extend(
+                [
+                    field
+                    for join in required_joins
+                    for field in join.criterion.fields_()
+                    if all(table == base_table for table in field.tables_)
+                ]
+            )
 
             if all(field.name in hint_column_names for field in base_fields):
                 filters.append(filter_)
@@ -80,8 +82,12 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
         """
         dimension_terms = []
         for dimension in self._dimensions:
-            dimension_term = make_term_for_dimension(dimension, self.dataset.database.trunc_date)
-            dimension_term = dimension_term.replace_table(dimension_term.table, self.hint_table)
+            dimension_term = make_term_for_dimension(
+                dimension, self.dataset.database.trunc_date
+            )
+            dimension_term = dimension_term.replace_table(
+                dimension_term.table, self.hint_table
+            )
             dimension_terms.append(dimension_term)
 
         return dimension_terms
@@ -92,29 +98,27 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
         Serializes this query builder as a set of SQL queries. This method will always return a list of one query since
         only one query is required to retrieve dimension choices.
 
-        The slicer query extends this with metrics, references, and totals.
+        The dataset query extends this with metrics, references, and totals.
         """
-        dimensions = [] \
-            if self.hint_table \
-            else self._dimensions
+        dimensions = [] if self.hint_table else self._dimensions
 
-        filters = self._extract_hint_filters() \
-            if self.hint_table \
-            else self._filters
+        filters = self._extract_hint_filters() if self.hint_table else self._filters
 
-        query = make_slicer_query(database=self.dataset.database,
-                                  base_table=self.dataset.table,
-                                  joins=self.dataset.joins,
-                                  dimensions=dimensions,
-                                  filters=filters) \
-            .limit(self._limit) \
+        query = (
+            make_slicer_query(
+                database=self.dataset.database,
+                base_table=self.dataset.table,
+                joins=self.dataset.joins,
+                dimensions=dimensions,
+                filters=filters,
+            )
+            .limit(self._limit)
             .offset(self._offset)
+        )
 
         if self.hint_table:
             hint_dimension_terms = self._make_terms_for_hint_dimensions()
-            query = query \
-                .select(*hint_dimension_terms) \
-                .groupby(*hint_dimension_terms)
+            query = query.select(*hint_dimension_terms).groupby(*hint_dimension_terms)
             query = query.replace_table(self.dataset.table, self.hint_table)
 
         return [query]
@@ -138,12 +142,17 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
         dimension_definition = dimension.definition
 
         if self.hint_table:
-            alias_definition = alias_definition.replace_table(alias_definition.table, self.hint_table)
-            dimension_definition = dimension.definition.replace_table(dimension_definition.table, self.hint_table)
+            alias_definition = alias_definition.replace_table(
+                alias_definition.table, self.hint_table
+            )
+            dimension_definition = dimension.definition.replace_table(
+                dimension_definition.table, self.hint_table
+            )
 
         if force_include:
-            include = self.dataset.database.to_char(dimension_definition) \
-                .isin([str(x) for x in force_include])
+            include = self.dataset.database.to_char(dimension_definition).isin(
+                [str(x) for x in force_include]
+            )
 
             # Ensure that these values are included
             query = query.orderby(include, order=Order.desc)
@@ -159,13 +168,14 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
             choices = data[display_alias]
 
         else:
-            data['display'] = data.index.tolist()
-            choices = data['display']
+            data["display"] = data.index.tolist()
+            choices = data["display"]
 
         dimension_display = self._dimensions[-1]
         return choices.map(lambda raw: display_value(raw, dimension_display) or raw)
 
     def __repr__(self):
-        return ".".join(["slicer", self._dimensions[0].alias, "choices"]
-                        + ["filter({})".format(repr(f))
-                           for f in self._filters])
+        return ".".join(
+            ["dataset", self._dimensions[0].alias, "choices"]
+            + ["filter({})".format(repr(f)) for f in self._filters]
+        )

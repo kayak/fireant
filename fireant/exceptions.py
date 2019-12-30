@@ -1,2 +1,2 @@
-class SlicerException(Exception):
+class DataSetException(Exception):
     pass

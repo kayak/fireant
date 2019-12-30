@@ -1,12 +1,10 @@
-# noinspection PyUnresolvedReferences
 from .database import *
-# noinspection PyUnresolvedReferences
+from .dataset.data_blending import DataSetBlender
 from .dataset.fields import (
     DataSetFilterException,
     DataType,
     Field,
 )
-# noinspection PyUnresolvedReferences
 from .dataset.intervals import (
     NumericInterval,
     day,
@@ -16,19 +14,12 @@ from .dataset.intervals import (
     week,
     year,
 )
-# noinspection PyUnresolvedReferences
 from .dataset.joins import Join
-# noinspection PyUnresolvedReferences
 from .dataset.klass import DataSet
-# noinspection PyUnresolvedReferences
-from .dataset.data_blending import DataSetBlender
-# noinspection PyUnresolvedReferences
 from .dataset.modifiers import (
     OmitFromRollup,
     Rollup,
 )
-# noinspection PyUnresolvedReferences
-# noinspection PyUnresolvedReferences
 from .dataset.operations import (
     CumMean,
     CumProd,
@@ -37,7 +28,6 @@ from .dataset.operations import (
     RollingMean,
     Share,
 )
-# noinspection PyUnresolvedReferences
 from .dataset.references import (
     DayOverDay,
     MonthOverMonth,
@@ -45,9 +35,7 @@ from .dataset.references import (
     WeekOverWeek,
     YearOverYear,
 )
-# noinspection PyUnresolvedReferences
-from .exceptions import SlicerException
-# noinspection PyUnresolvedReferences
+from .exceptions import DataSetException
 from .widgets import *
 
-__version__ = '4.0.4'
+__version__ = "4.0.4"

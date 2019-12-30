@@ -50,7 +50,7 @@ class CumSumTests(TestCase):
     def test_apply_cummulative_for_delta_percent(self):
         dataset = MagicMock()
         dataset.table._table_name = "table"
-        field = Field(dataset, "value", None)
+        field = Field("value", None)
         cumsum = CumSum(field)
         reference = Reference(field, WeekOverWeek, delta=True, delta_percent=True)
 
@@ -96,7 +96,7 @@ class CumProdTests(TestCase):
     def test_apply_cummulative_for_delta_percent(self):
         dataset = MagicMock()
         dataset.table._table_name = "table"
-        field = Field(dataset, "value", None)
+        field = Field("value", None)
         cumsum = CumProd(field)
         reference = Reference(field, WeekOverWeek, delta=True, delta_percent=True)
 
@@ -142,7 +142,7 @@ class CumMeanTests(TestCase):
     def test_apply_cummulative_for_delta_percent(self):
         dataset = MagicMock()
         dataset.table._table_name = "table"
-        field = Field(dataset, "value", None)
+        field = Field("value", None)
         cumsum = CumMean(field)
         reference = Reference(field, WeekOverWeek, delta=True, delta_percent=True)
 
