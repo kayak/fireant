@@ -7,13 +7,13 @@ from unittest.mock import (
 )
 
 from fireant import Database
+from fireant.middleware import log_middleware
 
 
 class FetchDataTests(TestCase):
     def setUp(self):
-        self.database = Database()
+        self.database = Database(middlewares=[])
         self.database.slow_query_log_min_seconds = 15
-        self.database.cache_middleware = None
 
         mock_connect = self.database.connect = MagicMock()
         self.mock_connection = mock_connect.return_value.__enter__.return_value
@@ -26,7 +26,7 @@ class FetchDataTests(TestCase):
         self.mock_dimensions[0].is_rollup = False
         self.mock_dimensions[1].is_rollup = True
 
-    def test_do_fetch_data_calls_database_fetch_data(self, ):
+    def test_do_fetch_data_calls_database_fetch_data(self):
         with patch('fireant.queries.execution.pd.read_sql', return_value=self.mock_data_frame) as mock_read_sql:
             self.database.fetch_dataframe(self.mock_query)
 
@@ -41,9 +41,8 @@ class FetchDataLoggingTests(TestCase):
     def setUp(self):
         self.mock_query = 'SELECT *'
 
-        self.database = Database()
+        self.database = Database(middlewares=[log_middleware])
         self.database.slow_query_log_min_seconds = 15
-        self.database.cache_middleware = None
 
         mock_connect = self.database.connect = MagicMock()
         mock_cursor_func = mock_connect.__enter__.return_value.cursor

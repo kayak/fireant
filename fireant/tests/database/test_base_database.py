@@ -8,10 +8,10 @@ from pypika import Field
 
 from fireant.middleware.concurrency import ThreadPoolConcurrencyMiddleware
 from fireant.database import Database
-from fireant.middleware.decorators import with_connection
+from fireant.middleware.decorators import connection_middleware
 
 
-@with_connection
+@connection_middleware
 def test_fetch(database, query, **kwargs):
     return kwargs.get('connection')
 
@@ -39,11 +39,12 @@ class TestBaseDatabase(TestCase):
         to_char = db.to_char(Field('field'))
         self.assertEqual(str(to_char), 'CAST("field" AS VARCHAR)')
 
-    def test_no_concurrency_middleware_specified_gives_default_threadpool(self):
-        db = Database(max_processes=5)
+    def test_no_custom_middlewares_specified_still_gives_connection_middleware(self):
+        db = Database()
 
-        self.assertIsInstance(db.concurrency_middleware, ThreadPoolConcurrencyMiddleware)
-        self.assertEqual(db.concurrency_middleware.max_processes, 5)
+        self.assertEqual(1, len(db.middlewares))
+        self.assertIs(db.middlewares[0], connection_middleware)
+
 
     @patch.object(Database, 'fetch')
     @patch.object(Database, 'connect')

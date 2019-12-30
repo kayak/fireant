@@ -7,7 +7,6 @@ from typing import (
     Union,
 )
 
-import numpy as np
 import pandas as pd
 
 from fireant.database import Database
@@ -31,9 +30,7 @@ def fetch_data(database: Database,
         str(query.limit(min(query._limit or float("inf"), database.max_result_set_size)))
         for query in queries
     ]
-
-    results = database.concurrency_middleware.fetch_queries_as_dataframe(queries, database)
-
+    results = database.fetch_dataframes(*queries)
     return reduce_result_set(results, reference_groups, dimensions, share_dimensions)
 
 

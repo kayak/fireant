@@ -67,18 +67,20 @@ class TestFetchData(TestCase):
         cls.test_result_b = pd.DataFrame([{"b": 2.0}])
 
     @patch("fireant.queries.execution.reduce_result_set")
-    def test_fetch_data_with_concurrency_middleware_specified(self, reduce_mock):
-        middleware_mock = MagicMock()
-        database = VerticaDatabase(concurrency_middleware=middleware_mock)
-        middleware_mock_return_value = [self.test_result_a, self.test_result_b]
-        middleware_mock.fetch_queries_as_dataframe.return_value = middleware_mock_return_value
+    def test_fetch_data(self, reduce_mock):
+        database = MagicMock()
+        database.max_result_set_size = 5
+        database.fetch_dataframes.return_value = [self.test_result_a, self.test_result_b]
+
         mocked_result = pd.DataFrame([{"a": 1.0}])
         reduce_mock.return_value = mocked_result
 
         result = fetch_data(database, self.test_queries, self.test_dimensions)
 
         pandas.testing.assert_frame_equal(mocked_result, result)
-        reduce_mock.assert_called_once_with(middleware_mock_return_value, (), self.test_dimensions, ())
+        database.fetch_dataframes.assert_called_with('SELECT * FROM "politics"."politician" LIMIT 5',
+                                                     'SELECT * FROM "politics"."hints" LIMIT 5')
+        reduce_mock.assert_called_once_with([self.test_result_a, self.test_result_b], (), self.test_dimensions, ())
 
 
 class ReduceResultSetsTests(TestCase):

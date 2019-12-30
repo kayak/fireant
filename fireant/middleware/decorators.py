@@ -7,44 +7,52 @@ from fireant.middleware.slow_query_logger import (
 )
 
 
-def db_cache(func):
+def log_middleware(func):
+
     @wraps(func)
-    def wrapper(database, query):
-        if database.cache_middleware is not None:
-            return database.cache_middleware(func)(database, query)
-        return func(database, query)
+    def wrapper(database, *queries, **kwargs):
+        results = []
+
+        for query in queries:
+            start_time = time.time()
+            query_logger.debug(query)
+
+            results.append(func(database, query)[0])
+
+            duration = round(time.time() - start_time, 4)
+            query_log_msg = '[{duration} seconds]: {query}'.format(duration=duration,
+                                                                   query=query)
+            query_logger.info(query_log_msg)
+
+            if database.slow_query_log_min_seconds is not None and duration >= database.slow_query_log_min_seconds:
+                slow_query_logger.warning(query_log_msg)
+
+        return results
 
     return wrapper
 
 
-def log(func):
+def connection_middleware(func):
+
     @wraps(func)
-    def wrapper(database, query):
-        start_time = time.time()
-        query_logger.debug(query)
-
-        result = func(database, query)
-
-        duration = round(time.time() - start_time, 4)
-        query_log_msg = '[{duration} seconds]: {query}'.format(duration=duration,
-                                                               query=query)
-        query_logger.info(query_log_msg)
-
-        if database.slow_query_log_min_seconds is not None and duration >= database.slow_query_log_min_seconds:
-            slow_query_logger.warning(query_log_msg)
-
-        return result
-
-    return wrapper
-
-
-def with_connection(func):
-    @wraps(func)
-    def wrapper(database, query, **kwargs):
+    def wrapper(database, *queries, **kwargs):
         connection = kwargs.get('connection', None)
         if connection:
-            return func(database, query, connection=connection)
+            return func(database, *queries, connection=connection)
         with database.connect() as connection:
-            return func(database, query, connection=connection)
+            return func(database, *queries, connection=connection)
+
+    return wrapper
+
+
+def apply_middlewares(wrapped_func):
+
+    @wraps(wrapped_func)
+    def wrapper(database, *args, **kwargs):
+        func = wrapped_func
+        for middleware in reversed(database.middlewares):
+            func = middleware(func)
+
+        return func(database, *args, **kwargs)
 
     return wrapper
