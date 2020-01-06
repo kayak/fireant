@@ -2,8 +2,8 @@ from unittest import TestCase
 
 import fireant as f
 from fireant.tests.dataset.mocks import (
-    Rollup,
     DataSetException,
+    Rollup,
     mock_dataset_blender,
 )
 
@@ -260,6 +260,50 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             str(queries[0]),
         )
 
+    def test_blend_data_set_on_query_using_joins(self):
+        query = (
+            mock_dataset_blender.query()
+            .widget(
+                f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"])
+            )
+            .dimension(
+                f.day(mock_dataset_blender.fields.timestamp),
+                mock_dataset_blender.fields.state,
+            )
+        )
+
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq0"."$state" "$state",'
+            '"sq1"."$candidate-spend"/"sq0"."$wins" "$candidate-spend-per-wins" '
+            "FROM ("
+            "SELECT "
+            'TRUNC("politician"."timestamp",\'DD\') "$timestamp",'
+            '"state"."state_name" "$state",'
+            'SUM("politician"."is_winner") "$wins" '
+            'FROM "politics"."politician" '
+            'FULL OUTER JOIN "locations"."district" '
+            'ON "politician"."district_id"="district"."id" '
+            'JOIN "locations"."state" '
+            'ON "district"."state_id"="state"."id" '
+            'GROUP BY "$timestamp","$state" ORDER BY "$timestamp","$state"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            'TRUNC("timestamp",\'DD\') "$timestamp",'
+            '"state" "$state",'
+            'SUM("candidate_spend") "$candidate-spend" '
+            'FROM "politics"."politician_spend" '
+            'GROUP BY "$timestamp","$state" ORDER BY "$timestamp","$state"'
+            ') "sq1" '
+            "ON "
+            '"sq0"."$timestamp"="sq1"."$timestamp" '
+            'AND "sq0"."$state"="sq1"."$state" '
+            'ORDER BY "$timestamp","$state"',
+            str(query.sql[0]),
+        )
+
     def test_apply_reference_to_blended_query(self):
         query = (
             mock_dataset_blender.query()
@@ -275,30 +319,30 @@ class DataSetBlenderQueryBuilderTests(TestCase):
 
         self.assertEqual(len(sql), 2)
         (base_query, ref_query) = sql
-        with self.subTest("base query"):
-            self.assertEqual(
-                "SELECT "
-                '"sq0"."$timestamp" "$timestamp",'
-                '"sq1"."$candidate-spend"/"sq0"."$wins" "$candidate-spend-per-wins" '
-                "FROM ("
-                "SELECT "
-                'TRUNC("timestamp",\'DD\') "$timestamp",'
-                'SUM("is_winner") "$wins" '
-                'FROM "politics"."politician" '
-                'GROUP BY "$timestamp" ORDER BY "$timestamp"'
-                ') "sq0" '
-                "LEFT JOIN ("
-                "SELECT "
-                'TRUNC("timestamp",\'DD\') "$timestamp",'
-                'SUM("candidate_spend") "$candidate-spend" '
-                'FROM "politics"."politician_spend" '
-                'GROUP BY "$timestamp" ORDER BY "$timestamp"'
-                ') "sq1" '
-                "ON "
-                '"sq0"."$timestamp"="sq1"."$timestamp" '
-                'ORDER BY "$timestamp"',
-                str(base_query),
-            )
+        # with self.subTest("base query"):
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq1"."$candidate-spend"/"sq0"."$wins" "$candidate-spend-per-wins" '
+            "FROM ("
+            "SELECT "
+            'TRUNC("timestamp",\'DD\') "$timestamp",'
+            'SUM("is_winner") "$wins" '
+            'FROM "politics"."politician" '
+            'GROUP BY "$timestamp" ORDER BY "$timestamp"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            'TRUNC("timestamp",\'DD\') "$timestamp",'
+            'SUM("candidate_spend") "$candidate-spend" '
+            'FROM "politics"."politician_spend" '
+            'GROUP BY "$timestamp" ORDER BY "$timestamp"'
+            ') "sq1" '
+            "ON "
+            '"sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$timestamp"',
+            str(base_query),
+        )
         with self.subTest("ref query"):
             self.assertEqual(
                 "SELECT "

@@ -1,4 +1,3 @@
-import copy
 from collections import (
     defaultdict,
     namedtuple,
@@ -186,24 +185,18 @@ def find_filters_for_totals(filters):
     return [fltr for fltr in filters if not isinstance(fltr, OmitFromRollup)]
 
 
-def find_and_replace_reference_dimensions(references, dimensions):
+def find_field_in_modified_field(field):
     """
-    Finds the dimension for a reference in the query if there is one and replaces it. This is to force the reference to
-    use the same modifiers with a dimension if it is selected in the query.
-
-    :param references:
-    :param dimensions:
-    :return:
+    Returns the field from a modified field argument (or just the field argument if it is not modified).
     """
-    dimensions_by_key = {dimension.alias: dimension for dimension in dimensions}
+    root = field
+    while hasattr(root, "dimension"):
+        root = root.dimension
+    return root
 
-    reference_copies = []
-    for reference in map(copy.deepcopy, references):
-        dimension = dimensions_by_key.get(reference.field.alias)
-        if dimension is not None:
-            reference.field = dimension
-        reference_copies.append(reference)
-    return reference_copies
+
+def find_fields_in_modified_fields(fields):
+    return [find_field_in_modified_field(field) for field in fields]
 
 
 interval_weekdays = {

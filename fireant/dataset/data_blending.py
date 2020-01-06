@@ -1,7 +1,7 @@
 from fireant.dataset.fields import Field
 from fireant.dataset.klass import DataSet
-from fireant.queries.builder import DataSetBlenderQueryBuilder
 from fireant.utils import immutable
+from fireant.queries.builder import DataSetBlenderQueryBuilder
 
 
 class DataSetBlender:

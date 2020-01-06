@@ -21,7 +21,6 @@ from ..execution import fetch_data
 from ..field_helper import initialize_orders
 from ..finders import (
     find_and_group_references_for_dimensions,
-    find_and_replace_reference_dimensions,
     find_metrics_for_widgets,
     find_operations_for_widgets,
     find_share_dimensions,
@@ -87,9 +86,6 @@ class DataSetQueryBuilder(
         metrics = find_metrics_for_widgets(self._widgets)
         operations = find_operations_for_widgets(self._widgets)
         share_dimensions = find_share_dimensions(self._dimensions, operations)
-        references = find_and_replace_reference_dimensions(
-            self._references, self._dimensions
-        )
         orders = initialize_orders(self._orders, self._dimensions)
 
         return make_slicer_query_with_totals_and_references(
@@ -101,7 +97,7 @@ class DataSetQueryBuilder(
             metrics,
             operations,
             self._filters,
-            references,
+            self._references,
             orders,
             share_dimensions=share_dimensions,
         )

@@ -2,7 +2,6 @@ from collections import Iterable
 from enum import Enum
 from functools import wraps
 
-from fireant.utils import immutable
 from pypika.enums import Arithmetic
 from pypika.terms import (
     ArithmeticExpression,
@@ -20,6 +19,7 @@ from .filters import (
     RangeFilter,
     VoidFilter,
 )
+from ..utils import immutable
 
 
 class DataType(Enum):
@@ -115,6 +115,22 @@ class Field(Node):
         self.precision = precision
         self.hyperlink_template = hyperlink_template
 
+    def __copy__(self):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        result.__dict__.update(self.__dict__)
+        return result
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        from copy import deepcopy
+
+        for k, v in self.__dict__.items():
+            setattr(result, k, deepcopy(v, memo))
+        return result
+
     @property
     def is_aggregate(self):
         return self.definition.is_aggregate
@@ -177,7 +193,8 @@ class Field(Node):
             An iterable of value to constrain the dataset query results by.
 
         :return:
-            A dataset query filter used to filter a dataset query to results where this dimension is *not* one of a set of
+            A dataset query filter used to filter a dataset query to results where this dimension is *not* one of a
+            set of
             values. Opposite of #isin.
         """
         return ExcludesFilter(self, values)
@@ -284,3 +301,4 @@ class Field(Node):
     @immutable
     def share(self):
         self._share = True
+        return self

@@ -2,54 +2,54 @@ import copy
 from functools import partial
 
 from fireant.dataset.fields import Field
-from fireant.dataset.modifiers import Rollup
 from .field_helper import make_term_for_dimension
+from .finders import find_field_in_modified_field
 
 
 def adapt_for_reference_query(
-    dataset, reference_parts, database, dimensions, metrics, filters, references
+    reference_parts, database, dimensions, metrics, filters, references
 ):
     if reference_parts is None:
         return dimensions, metrics, filters
 
     ref_dimension, time_unit, interval = reference_parts
     # Unpack rolled up dimensions
-    ref_dimension = (
-        ref_dimension.dimension if isinstance(ref_dimension, Rollup) else ref_dimension
-    )
+    ref_dimension = find_field_in_modified_field(ref_dimension)
 
-    ref_metrics = _make_reference_metrics(
-        dataset, metrics, references[0].reference_type.alias
-    )
+    ref_metrics = _make_reference_metrics(metrics, references[0].reference_type.alias)
     offset_func = partial(database.date_add, date_part=time_unit, interval=interval)
     ref_dimensions = _make_reference_dimensions(
-        database, dimensions, ref_dimension, offset_func
+        dimensions, ref_dimension, offset_func, database.trunc_date
     )
     ref_filters = _make_reference_filters(filters, ref_dimension, offset_func)
     return ref_dimensions, ref_metrics, ref_filters
 
 
-def _make_reference_dimensions(database, dimensions, ref_dimension, offset_func):
-    def replace_reference_dimension(dimension):
-        ref_dimension_copy = copy.copy(dimension)
-        if hasattr(ref_dimension_copy, "dimension"):
-            ref_dimension_copy.dimension = copy.copy(dimension.dimension)
+def _replace_reference_dimension(dimension, offset_func, trunc_date=None):
+    ref_definition = offset_func(make_term_for_dimension(dimension, trunc_date))
+    field = Field(
+        alias=dimension.alias,
+        definition=ref_definition,
+        data_type=dimension.data_type,
+        label=dimension.label,
+    )
 
-        ref_definition = make_term_for_dimension(
-            ref_dimension_copy, database.trunc_date
-        )
-        ref_dimension_copy.definition = offset_func(ref_definition)
-        return ref_dimension_copy
+    if hasattr(dimension, "for_"):
+        return dimension.for_(field)
 
+    return field
+
+
+def _make_reference_dimensions(dimensions, ref_dimension, offset_func, trunc_date):
     return [
-        replace_reference_dimension(dimension)
-        if dimension is ref_dimension
+        _replace_reference_dimension(dimension, offset_func, trunc_date)
+        if ref_dimension is find_field_in_modified_field(dimension)
         else dimension
         for dimension in dimensions
     ]
 
 
-def _make_reference_metrics(dataset, metrics, ref_key):
+def _make_reference_metrics(metrics, ref_key):
     metric_copies = []
 
     for metric in [copy.deepcopy(metric) for metric in metrics]:
@@ -63,6 +63,7 @@ def _make_reference_metrics(dataset, metrics, ref_key):
         Field(
             "{}_{}".format(metric.alias, ref_key),
             metric.definition,
+            data_type=metric.data_type,
             label=metric.label,
             prefix=metric.prefix,
             suffix=metric.suffix,
@@ -87,9 +88,10 @@ def _make_reference_filters(filters, ref_dimension, offset_func):
 
     reference_filters = []
     for ref_filter in filters:
-        if ref_filter.field.alias == ref_dimension.alias:
-            ref_filter = copy.deepcopy(ref_filter)
-            ref_filter.field.definition = offset_ref_dimension_definition
+        if ref_filter.field is ref_dimension:
+            offset_ref_field = _replace_reference_dimension(ref_dimension, offset_func)
+            ref_filter = ref_filter.for_(offset_ref_field)
+
         reference_filters.append(ref_filter)
 
     return reference_filters

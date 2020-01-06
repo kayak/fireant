@@ -1,11 +1,11 @@
 import itertools
 
+from fireant.utils import immutable
 from fireant.queries.builder import (
     DataSetQueryBuilder,
     DimensionChoicesQueryBuilder,
     DimensionLatestQueryBuilder,
 )
-from fireant.utils import immutable
 
 
 class _Container(object):
@@ -29,6 +29,14 @@ class _Container(object):
         for item in items:
             setattr(self, item.alias, item)
 
+    def __copy__(self):
+        return type(self)(self._items)
+
+    def __deepcopy__(self, memodict):
+        for field in self:
+            memodict[id(field)] = field
+        return type(self)(self._items)
+
     def __iter__(self):
         return iter(self._items)
 
@@ -45,10 +53,7 @@ class _Container(object):
             return False
 
         self_item = getattr(self, item.alias, None)
-        if self_item is None:
-            return False
-
-        return str(item.definition) == str(self_item.definition)
+        return item is self_item
 
     def __hash__(self):
         return hash((item for item in self._items))
@@ -71,7 +76,7 @@ class _Container(object):
         setattr(self, item.alias, item)
 
 
-class DataSet(object):
+class DataSet:
     """
     The DataSet class abstracts the query generation, given the fields and what not that were provided, and the
     fetching of the aforementioned query's data.

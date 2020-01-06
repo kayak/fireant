@@ -36,7 +36,7 @@ class Reference(object):
     def __eq__(self, other):
         return (
             isinstance(self, Reference)
-            and self.field == other.field
+            and self.field is other.field
             and self.alias == other.alias
         )
 

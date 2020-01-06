@@ -11,6 +11,7 @@ from fireant.queries.builder.dataset_query_builder import DataSetQueryBuilder
 from fireant.queries.finders import (
     find_dataset_metrics,
     find_metrics_for_widgets,
+    find_field_in_modified_field,
 )
 from fireant.reference_helpers import reference_alias
 from fireant.utils import alias_selector
@@ -38,9 +39,10 @@ def _datasets_and_field_maps(blender):
 
 
 def _replace_field(dimension, field_map, omit_umapped=False):
-    if hasattr(dimension, "dimension"):
+    root_dimension = find_field_in_modified_field(dimension)
+    if root_dimension is not dimension:
         # Handle modified dimensions
-        wrapped_dimension = _replace_field(dimension.dimension, field_map)
+        wrapped_dimension = _replace_field(root_dimension, field_map)
         return dimension.for_(wrapped_dimension)
 
     if field_map is None:

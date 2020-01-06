@@ -1,9 +1,35 @@
-import inspect
 import csv
+import inspect
 import tempfile
-
 from collections import OrderedDict
 from functools import partial
+
+
+def immutable(func):
+    """
+    Decorator for wrapper "builder" functions.  These are functions on the Query class or other classes used for
+    building queries which mutate the query and return self.  To make the build functions immutable, this decorator is
+    used which will deepcopy the current instance.  This decorator will return the return value of the inner function
+    or the new copy of the instance.  The inner function does not need to return self.
+    """
+    import copy
+
+    def _copy(self, *args, mutate=False, **kwargs):
+        """
+        :param mutate:
+            When True, overrides the immutable behavior of this decorator.
+        """
+        self_copy = self if mutate else copy.deepcopy(self)
+        result = func(self_copy, *args, **kwargs)
+
+        # Return self if the inner function returns None.  This way the inner function can return something
+        # different (for example when creating joins, a different builder is returned).
+        if result is None:
+            return self_copy
+
+        return result
+
+    return _copy
 
 
 def wrap_list(value, wrapper=list):
@@ -146,33 +172,6 @@ def flatten(items):
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
     return [l[i : i + n] for i in range(0, len(l), n)]
-
-
-def immutable(func):
-    """
-    Decorator for wrapper "builder" functions.  These are functions on the Query class or other classes used for
-    building queries which mutate the query and return self.  To make the build functions immutable, this decorator is
-    used which will deepcopy the current instance.  This decorator will return the return value of the inner function
-    or the new copy of the instance.  The inner function does not need to return self.
-    """
-    import copy
-
-    def _copy(self, *args, mutate=False, **kwargs):
-        """
-        :param mutate:
-            When True, overrides the immutable behavior of this decorator.
-        """
-        self_copy = self if mutate else copy.deepcopy(self)
-        result = func(self_copy, *args, **kwargs)
-
-        # Return self if the inner function returns None.  This way the inner function can return something
-        # different (for example when creating joins, a different builder is returned).
-        if result is None:
-            return self_copy
-
-        return result
-
-    return _copy
 
 
 def ordered_distinct_list(l):

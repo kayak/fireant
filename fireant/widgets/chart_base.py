@@ -3,14 +3,14 @@ from typing import (
     Union,
 )
 
+from fireant import utils
 from fireant.dataset.fields import Field
 from fireant.dataset.operations import Operation
-from fireant import utils
-
 from .base import (
     MetricRequiredException,
     Widget,
 )
+from ..utils import immutable
 
 
 class Series:
@@ -23,8 +23,7 @@ class Series:
         self.stacking = self.stacking or stacking
 
     def __repr__(self):
-        return "{}({})".format(self.__class__.__name__,
-                               repr(self.metric))
+        return "{}({})".format(self.__class__.__name__, repr(self.metric))
 
 
 class ContinuousAxisSeries(Series):
@@ -49,10 +48,10 @@ class Axis:
 
 class ChartWidget(Widget):
     class LineSeries(ContinuousAxisSeries):
-        type = 'line'
+        type = "line"
 
     class AreaSeries(ContinuousAxisSeries):
-        type = 'area'
+        type = "area"
 
     class AreaStackedSeries(AreaSeries):
         stacking = "normal"
@@ -61,21 +60,21 @@ class ChartWidget(Widget):
         stacking = "percent"
 
     class PieSeries(Series):
-        type = 'pie'
+        type = "pie"
 
     class BarSeries(Series):
-        type = 'bar'
+        type = "bar"
 
     class StackedBarSeries(BarSeries):
         stacking = "normal"
 
     class ColumnSeries(Series):
-        type = 'column'
+        type = "column"
 
     class StackedColumnSeries(ColumnSeries):
         stacking = "normal"
 
-    @utils.immutable
+    @immutable
     def axis(self, *series: Series, **kwargs):
         """
         (Immutable) Adds an axis to the Chart.
@@ -96,16 +95,22 @@ class ChartWidget(Widget):
             raise MetricRequiredException(str(self))
 
         seen = set()
-        return [metric
-                for axis in self.items
-                for series in axis
-                for metric in getattr(series.metric, 'metrics', [series.metric])
-                if not (metric.alias in seen or seen.add(metric.alias))]
+        return [
+            metric
+            for axis in self.items
+            for series in axis
+            for metric in getattr(series.metric, "metrics", [series.metric])
+            if not (metric.alias in seen or seen.add(metric.alias))
+        ]
 
     @property
     def operations(self):
-        return utils.ordered_distinct_list_by_attr([operation
-                                                    for axis in self.items
-                                                    for series in axis
-                                                    if isinstance(series.metric, Operation)
-                                                    for operation in [series.metric] + series.metric.operations])
+        return utils.ordered_distinct_list_by_attr(
+            [
+                operation
+                for axis in self.items
+                for series in axis
+                if isinstance(series.metric, Operation)
+                for operation in [series.metric] + series.metric.operations
+            ]
+        )

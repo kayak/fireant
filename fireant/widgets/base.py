@@ -36,6 +36,21 @@ class Widget:
             for metric in getattr(group, "metrics", [group])
         ]
 
+    def __deepcopy__(self, memo):
+        from copy import deepcopy
+
+        cls = self.__class__
+        result = cls.__new__(cls)
+
+        memo[id(self)] = result
+        for item in self.items:
+            memo[id(item)] = item
+
+        for k, v in self.__dict__.items():
+            setattr(result, k, deepcopy(v, memo))
+
+        return result
+
     @property
     def operations(self):
         return [item for item in self.items if isinstance(item, Operation)]
