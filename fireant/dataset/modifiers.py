@@ -11,21 +11,10 @@ class Modifier:
         wrapped_key = super().__getattribute__("wrapped_key")
         setattr(self, wrapped_key, wrapped)
 
-    def __copy__(self):
-        cls = self.__class__
-        result = cls.__new__(cls)
-        result.__dict__.update(self.__dict__)
-        return result
-
-    def __deepcopy__(self, memo):
-        cls = self.__class__
-        result = cls.__new__(cls)
-        memo[id(self)] = result
-        for k, v in self.__dict__.items():
-            setattr(result, k, deepcopy(v, memo))
-        return result
-
     def __getattr__(self, attr):
+        if attr in ("__copy__", "__deepcopy__"):
+            raise AttributeError()
+
         if attr in self.__dict__:
             return super().__getattribute__(attr)
 
