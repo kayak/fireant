@@ -195,10 +195,6 @@ def find_field_in_modified_field(field):
     return root
 
 
-def find_fields_in_modified_fields(fields):
-    return [find_field_in_modified_field(field) for field in fields]
-
-
 interval_weekdays = {
     "month": ("week", 4),
     "quarter": ("week", 4 * 3),

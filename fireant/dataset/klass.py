@@ -29,9 +29,6 @@ class _Container(object):
         for item in items:
             setattr(self, item.alias, item)
 
-    def __copy__(self):
-        return type(self)(self._items)
-
     def __deepcopy__(self, memodict):
         for field in self:
             memodict[id(field)] = field

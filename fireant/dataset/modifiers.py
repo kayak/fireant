@@ -57,7 +57,7 @@ class Modifier:
 
     @immutable
     def for_(self, wrapped):
-        wrapped_key = super(type(self), self).__getattribute__("wrapped_key")
+        wrapped_key = super().__getattribute__("wrapped_key")
         setattr(self, wrapped_key, wrapped)
 
 

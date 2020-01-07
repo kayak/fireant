@@ -3,7 +3,7 @@ from fireant.exceptions import DataSetException
 from fireant.utils import immutable
 from pypika import Order
 from ..execution import fetch_data
-from ..finders import find_fields_in_modified_fields
+from ..finders import find_field_in_modified_field
 
 
 class QueryException(DataSetException):
@@ -29,16 +29,16 @@ def get_column_names(database, table):
 
 def _strip_modifiers(fields):
     for field in fields:
-        next = field
-        while hasattr(next, "dimension"):
-            next = next.dimension
-        yield next
+        node = field
+        while hasattr(node, "dimension"):
+            node = node.dimension
+        yield node
 
 
 def _validate_fields(fields, dataset):
-    fields = find_fields_in_modified_fields(fields)
-    invalid = [field.alias for field in fields if field not in dataset.fields]
+    fields = [find_field_in_modified_field(field) for field in fields]
 
+    invalid = [field.alias for field in fields if field not in dataset.fields]
     if not invalid:
         return
 
