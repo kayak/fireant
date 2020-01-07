@@ -1,15 +1,13 @@
-from fireant.utils import immutable
 from pypika import (
     EmptyCriterion,
     Not,
 )
 from pypika.functions import Lower
 
+from .modifiers import FieldModifier
 
-class Filter(object):
-    def __init__(self, field):
-        self.field = field
 
+class Filter(FieldModifier):
     @property
     def definition(self):
         raise NotImplementedError()
@@ -28,11 +26,6 @@ class Filter(object):
 
     def __repr__(self):
         return str(self.definition)
-
-    @immutable
-    def for_(self, field):
-        self.field = field
-        # self.definition = self._make_definition(field)
 
 
 class ComparatorFilter(Filter):

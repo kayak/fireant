@@ -5,11 +5,12 @@ from typing import (
     List,
 )
 
-from fireant.exceptions import DataSetException
 from fireant.dataset.fields import Field
+from fireant.exceptions import DataSetException
 from fireant.queries.builder.dataset_query_builder import DataSetQueryBuilder
 from fireant.queries.finders import (
     find_dataset_metrics,
+    find_field_in_modified_field,
     find_metrics_for_widgets,
 )
 from fireant.reference_helpers import reference_alias
@@ -37,13 +38,20 @@ def _datasets_and_field_maps(blender):
     return zip(*_flatten_blend_datasets(blender))
 
 
-def _replace_field(dimension, field_map, omit_umapped=False):
-    if hasattr(dimension, "dimension"):
+def _replace_field(dimension, field_map=None, dataset=None, omit_umapped=False):
+    root_dimension = find_field_in_modified_field(dimension)
+    if root_dimension is not dimension:
         # Handle modified dimensions
-        wrapped_dimension = _replace_field(dimension.dimension, field_map)
+        wrapped_dimension = _replace_field(root_dimension, field_map, dataset)
         return dimension.for_(wrapped_dimension)
 
-    if field_map is None:
+    if field_map is not None and dimension in field_map:
+        return field_map.get(dimension, None)
+
+    if dataset is not None and dimension.alias in dataset.fields:
+        return dataset.fields[dimension.alias]
+
+    if dimension.definition is not None:
         return dimension.definition
 
     if not omit_umapped and dimension not in field_map:
@@ -73,12 +81,12 @@ def _build_dataset_query(dataset, field_map, metrics, dimensions, filters, refer
         return None
 
     blended_dimensions = [
-        _replace_field(dimension, field_map) for dimension in dimensions
+        _replace_field(dimension, field_map, dataset) for dimension in dimensions
     ]
 
     blended_filters = []
     for fltr in filters:
-        filter_field = _replace_field(fltr.field, field_map, omit_umapped=True)
+        filter_field = _replace_field(fltr.field, field_map, dataset, omit_umapped=True)
 
         if filter_field not in dataset.fields:
             continue
@@ -87,7 +95,7 @@ def _build_dataset_query(dataset, field_map, metrics, dimensions, filters, refer
 
     blended_references = []
     for reference in references:
-        reference_field = _replace_field(reference.field, field_map)
+        reference_field = _replace_field(reference.field, field_map, dataset)
 
         if reference_field not in dataset.fields:
             continue
@@ -96,10 +104,10 @@ def _build_dataset_query(dataset, field_map, metrics, dimensions, filters, refer
 
     return (
         dataset.query()
-        .widget(EmptyWidget(*dataset_metrics))
-        .dimension(*blended_dimensions)
-        .filter(*blended_filters)
-        .reference(*blended_references)
+        .widget(EmptyWidget(*dataset_metrics), mutate=True)
+        .dimension(*blended_dimensions, mutate=True)
+        .filter(*blended_filters, mutate=True)
+        .reference(*blended_references, mutate=True)
     )
 
 

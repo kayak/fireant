@@ -1,11 +1,9 @@
 from fireant.dataset.fields import Field
 from fireant.exceptions import DataSetException
-from fireant.utils import (
-    alias_selector,
-    immutable,
-)
+from fireant.utils import immutable
 from pypika import Order
 from ..execution import fetch_data
+from ..finders import find_field_in_modified_field
 
 
 class QueryException(DataSetException):
@@ -27,6 +25,28 @@ def get_column_names(database, table):
     )
 
     return {column_definition[0] for column_definition in column_definitions}
+
+
+def _strip_modifiers(fields):
+    for field in fields:
+        node = field
+        while hasattr(node, "dimension"):
+            node = node.dimension
+        yield node
+
+
+def _validate_fields(fields, dataset):
+    fields = [find_field_in_modified_field(field) for field in fields]
+
+    invalid = [field.alias for field in fields if field not in dataset.fields]
+    if not invalid:
+        return
+
+    raise DataSetException(
+        "Only fields from dataset can be used in a dataset query. Found invalid fields: {}.".format(
+            ", ".join(invalid)
+        )
+    )
 
 
 class QueryBuilder(object):
@@ -54,6 +74,7 @@ class QueryBuilder(object):
         :return:
             A copy of the query with the dimensions added.
         """
+        _validate_fields(dimensions, self.dataset)
         aliases = {dimension.alias for dimension in self._dimensions}
         self._dimensions += [
             dimension for dimension in dimensions if dimension.alias not in aliases
@@ -69,6 +90,7 @@ class QueryBuilder(object):
         :return:
             A copy of the query with the filters added.
         """
+        _validate_fields([fltr.field for fltr in filters], self.dataset)
         self._filters += [f for f in filters]
 
     @immutable
@@ -81,6 +103,8 @@ class QueryBuilder(object):
         :return:
             A copy of the query with the order by added.
         """
+        _validate_fields([field], self.dataset)
+
         if self._orders is None:
             self._orders = []
 
@@ -131,7 +155,7 @@ class QueryBuilder(object):
         Fetches the data for this query instance and returns it in an instance of `pd.DataFrame`
 
         :param hint:
-            For database vendors that support it, add a query hint to collect analytics on the queries triggerd by
+            For database vendors that support it, add a query hint to collect analytics on the queries triggered by
             fireant.
         """
         queries = add_hints(self.sql, hint)
@@ -139,7 +163,7 @@ class QueryBuilder(object):
         return fetch_data(self.dataset.database, queries, self._dimensions)
 
 
-class ReferenceQueryBuilderMixin(object):
+class ReferenceQueryBuilderMixin:
     """
     This is a mixin class for building dataset queries that allow references. This class provides an interface for
     building dataset queries via a set of functions which can be chained together.
@@ -159,10 +183,11 @@ class ReferenceQueryBuilderMixin(object):
         :return:
             A copy of the query with the references added.
         """
+        _validate_fields([reference.field for reference in references], self.dataset)
         self._references += references
 
 
-class WidgetQueryBuilderMixin(object):
+class WidgetQueryBuilderMixin:
     """
     This is a mixin class for building dataset queries that allow widgets. This class provides an interface for
     building dataset queries via a set of functions which can be chained together.
@@ -187,4 +212,8 @@ class WidgetQueryBuilderMixin(object):
         :return:
             A copy of the query with the widgets added.
         """
+        _validate_fields(
+            [field for widget in widgets for field in widget.metrics], self.dataset
+        )
+
         self._widgets += widgets

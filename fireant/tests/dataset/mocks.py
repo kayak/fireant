@@ -65,6 +65,7 @@ mock_dataset = DataSet(
             label="Party",
             definition=politicians_table.political_party,
             data_type=DataType.text,
+            hyperlink_template="http://example.com/{political_party}",
         ),
         Field(
             "candidate-id",
@@ -77,6 +78,7 @@ mock_dataset = DataSet(
             label="Candidate Name",
             definition=politicians_table.candidate_name,
             data_type=DataType.text,
+            hyperlink_template="http://example.com/{political_party}/{candidate-name}",
         ),
         Field(
             "election-id",
@@ -137,7 +139,7 @@ mock_dataset = DataSet(
             definition=fn.Sum(politicians_table.is_winner),
             prefix="$",
             thousands="_",
-            suffix="€",
+            precision=0,
         ),
     ],
     joins=[
@@ -187,6 +189,12 @@ mock_spend_dataset = DataSet(
             label="Election Year",
             definition=politicians_spend_table.election_year,
             data_type=DataType.number,
+        ),
+        Field(
+            "state",
+            label="State",
+            definition=politicians_spend_table.state,
+            data_type=DataType.text,
         ),
     ],
 ).extra_fields(
@@ -455,47 +463,48 @@ for (
     )
 
 mock_politics_database = pd.DataFrame.from_records(records, columns=df_columns)
+mock_politics_database[f("wins_with_style")] = mock_politics_database[f("wins")]
+mock_politics_database[f("turnout")] = 25 * mock_politics_database[f("wins")]
 
 dimx0_metricx1_df = pd.DataFrame(mock_politics_database[[f("votes")]].sum()).T
 
-dimx0_metricx2_df = pd.DataFrame(
-    mock_politics_database[[f("votes"), f("wins")]].sum()
-).T
+metrics = [f("votes"), f("wins"), f("wins_with_style"), f("turnout")]
+dimx0_metricx2_df = pd.DataFrame(mock_politics_database[metrics].sum()).T
 
 dimx1_date_df = (
-    mock_politics_database[[f("timestamp"), f("votes"), f("wins")]]
-    .groupby(f("timestamp"))
-    .sum()
+    mock_politics_database[[f("timestamp")] + metrics].groupby(f("timestamp")).sum()
 )
 
 no_index_df = pd.DataFrame(dimx1_date_df.sum()).T
 
 dimx1_str_df = (
-    mock_politics_database[[f("political_party"), f("votes"), f("wins")]]
+    mock_politics_database[[f("political_party")] + metrics]
     .groupby(f("political_party"))
     .sum()
 )
 
-dimx1_none_df = pd.DataFrame(mock_politics_database[[f("votes"), f("wins")]].sum()).T
+dimx1_none_df = pd.DataFrame(mock_politics_database[metrics].sum()).T
 
 dimx1_num_df = (
-    mock_politics_database[[f("candidate-id"), f("votes"), f("wins")]]
+    mock_politics_database[[f("candidate-id")] + metrics]
     .groupby(f("candidate-id"))
     .sum()
 )
 
 dimx2_str_num_df = (
-    mock_politics_database[
-        [f("political_party"), f("candidate-id"), f("votes"), f("wins")]
-    ]
+    mock_politics_database[[f("political_party"), f("candidate-id")] + metrics]
     .groupby([f("political_party"), f("candidate-id")])
     .sum()
 )
 
+dimx2_str_str_df = (
+    mock_politics_database[[f("political_party"), f("candidate-name")] + metrics]
+    .groupby([f("political_party"), f("candidate-name")])
+    .sum()
+)
+
 dimx2_date_str_df = (
-    mock_politics_database[
-        [f("timestamp"), f("political_party"), f("votes"), f("wins")]
-    ]
+    mock_politics_database[[f("timestamp"), f("political_party")] + metrics]
     .groupby([f("timestamp"), f("political_party")])
     .sum()
 )
@@ -507,15 +516,13 @@ dimx2_date_bool_df = (
 )
 
 dimx2_date_num_df = (
-    mock_politics_database[[f("timestamp"), f("candidate-id"), f("votes"), f("wins")]]
+    mock_politics_database[[f("timestamp"), f("candidate-id")] + metrics]
     .groupby([f("timestamp"), f("candidate-id")])
     .sum()
 )
 
 dimx3_date_str_str_df = (
-    mock_politics_database[
-        [f("timestamp"), f("political_party"), f("state"), f("votes"), f("wins")]
-    ]
+    mock_politics_database[[f("timestamp"), f("political_party"), f("state")] + metrics]
     .groupby([f("timestamp"), f("political_party"), f("state")])
     .sum()
 )
@@ -549,7 +556,7 @@ def ref_delta(ref_data_frame, columns):
     return ref_data_frame.join(delta_data_frame)
 
 
-_columns = [f("votes"), f("wins")]
+_columns = metrics
 dimx2_date_str_ref_df = ref(dimx2_date_str_df, _columns)
 dimx2_date_str_ref_delta_df = ref_delta(dimx2_date_str_ref_df, _columns)
 

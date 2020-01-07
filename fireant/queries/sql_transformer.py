@@ -24,7 +24,7 @@ from .finders import (
     find_required_tables_to_join,
     find_totals_dimensions,
 )
-from .reference_helper import adapt_for_reference_query
+from .references import adapt_for_reference_query
 from .special_cases import apply_special_cases
 from .totals_helper import adapt_for_totals_query
 
@@ -81,31 +81,30 @@ def make_slicer_query_with_totals_and_references(
 
     queries = []
     for totals_dimension in totals_dimensions_and_none:
-        (dimensions_for_totals, filters_for_totals) = adapt_for_totals_query(
+        (dimensions_with_totals, filters_with_totals) = adapt_for_totals_query(
             totals_dimension, dimensions, filters
         )
 
         for reference_parts, references in reference_groups_and_none:
             (
-                dimensions_for_ref,
-                metrics_for_ref,
-                filters_for_ref,
+                dimensions_with_ref,
+                metrics_with_ref,
+                filters_with_ref,
             ) = adapt_for_reference_query(
-                dataset,
                 reference_parts,
                 database,
-                dimensions_for_totals,
+                dimensions_with_totals,
                 metrics,
-                filters_for_totals,
+                filters_with_totals,
                 references,
             )
             query = make_slicer_query(
                 database,
                 table,
                 joins,
-                dimensions_for_ref,
-                metrics_for_ref,
-                filters_for_ref,
+                dimensions_with_ref,
+                metrics_with_ref,
+                filters_with_ref,
                 orders,
             )
 

@@ -1,7 +1,10 @@
 from fireant.dataset.fields import Field
 from fireant.dataset.klass import DataSet
 from fireant.queries.builder import DataSetBlenderQueryBuilder
-from fireant.utils import immutable
+from fireant.utils import (
+    immutable,
+    deepcopy,
+)
 
 
 class DataSetBlender:
@@ -66,6 +69,11 @@ class DataSetBlender:
 
     def __hash__(self):
         return hash((self.primary_dataset, self.secondary_dataset, self.fields))
+
+    def __deepcopy__(self, memodict={}):
+        for field in self.field_map.values():
+            memodict[id(field)] = field
+        return deepcopy(self, memodict)
 
     @property
     def table(self):
