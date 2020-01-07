@@ -26,23 +26,3 @@ def make_term_for_dimension(dimension, window=None):
         return window(dimension.definition, dimension.interval_key).as_(f_alias)
 
     return dimension.definition.as_(f_alias)
-
-
-def initialize_orders(orders, dimensions):
-    """
-    Initialize the DataSetQueryBuilder values for orders so that the SQL queries can be built. This also initializes
-    the default values for orders, which is all of the dimensions, if no order is specified.
-    """
-    if orders is not None:
-        return [
-            (field.definition.as_(alias_selector(field.alias)), orientation)
-            for (field, orientation) in orders
-        ]
-
-    # Initialize ordering to be by all dimensions
-
-    # Use the same function to make the definition terms to force it to be consistent.
-    # Always take the last element in order to prefer the display definition.
-    definitions = [make_term_for_dimension(dimension) for dimension in dimensions]
-
-    return [(definition, None) for definition in definitions]

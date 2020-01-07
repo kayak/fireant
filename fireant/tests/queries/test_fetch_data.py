@@ -234,7 +234,7 @@ class QueryBuilderPaginationTests(TestCase):
             [mock_widget],
             limit=None,
             offset=None,
-            orders=None,
+            orders=[(mock_dataset.fields.timestamp, None)],
         )
 
     def test_pagination_applied_with_limit(
@@ -253,7 +253,7 @@ class QueryBuilderPaginationTests(TestCase):
             [mock_widget],
             limit=15,
             offset=None,
-            orders=None,
+            orders=[(mock_dataset.fields.timestamp, None)],
         )
 
     def test_pagination_applied_with_offset(
@@ -272,7 +272,7 @@ class QueryBuilderPaginationTests(TestCase):
             [mock_widget],
             limit=15,
             offset=20,
-            orders=None,
+            orders=[(mock_dataset.fields.timestamp, None)],
         )
 
     def test_pagination_applied_with_orders(
