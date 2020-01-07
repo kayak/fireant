@@ -115,6 +115,7 @@ class DataSetQueryBuilder(
 
         operations = find_operations_for_widgets(self._widgets)
         share_dimensions = find_share_dimensions(self._dimensions, operations)
+        orders = initialize_orders(self._orders, self._dimensions)
 
         data_frame = fetch_data(
             self.dataset.database,
@@ -137,7 +138,7 @@ class DataSetQueryBuilder(
         data_frame = paginate(
             data_frame,
             self._widgets,
-            orders=self._orders,
+            orders=orders,
             limit=self._limit,
             offset=self._offset,
         )
