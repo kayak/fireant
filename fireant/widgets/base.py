@@ -10,7 +10,10 @@ from fireant.reference_helpers import (
     reference_prefix,
     reference_suffix,
 )
-from fireant.utils import immutable
+from fireant.utils import (
+    deepcopy,
+    immutable,
+)
 
 
 class MetricRequiredException(DataSetException):
@@ -36,20 +39,10 @@ class Widget:
             for metric in getattr(group, "metrics", [group])
         ]
 
-    def __deepcopy__(self, memo):
-        from copy import deepcopy
-
-        cls = self.__class__
-        result = cls.__new__(cls)
-
-        memo[id(self)] = result
+    def __deepcopy__(self, memodict={}):
         for item in self.items:
-            memo[id(item)] = item
-
-        for k, v in self.__dict__.items():
-            setattr(result, k, deepcopy(v, memo))
-
-        return result
+            memodict[id(item)] = item
+        return deepcopy(self, memodict)
 
     @property
     def operations(self):

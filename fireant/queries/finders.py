@@ -189,10 +189,10 @@ def find_field_in_modified_field(field):
     """
     Returns the field from a modified field argument (or just the field argument if it is not modified).
     """
-    root = field
-    while hasattr(root, "dimension"):
-        root = root.dimension
-    return root
+    modified_field = field
+    while hasattr(modified_field, "dimension"):
+        modified_field = modified_field.dimension
+    return modified_field
 
 
 interval_weekdays = {
@@ -238,7 +238,8 @@ def find_and_group_references_for_dimensions(dimensions, references):
             else defaults
         )
 
-        return reference.field, time_unit, interval_muliplier * reference.interval
+        field = find_field_in_modified_field(reference.field)
+        return field, time_unit, interval_muliplier * reference.interval
 
     distinct_references = ordered_distinct_list(references)
     return groupby(distinct_references, get_dimension_time_unit_and_interval)

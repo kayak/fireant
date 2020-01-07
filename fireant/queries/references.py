@@ -1,7 +1,7 @@
-import copy
 from functools import partial
 
 from fireant.dataset.fields import Field
+
 from .field_helper import make_term_for_dimension
 from .finders import find_field_in_modified_field
 
@@ -13,9 +13,6 @@ def adapt_for_reference_query(
         return dimensions, metrics, filters
 
     ref_dimension, time_unit, interval = reference_parts
-    # Unpack rolled up dimensions
-    ref_dimension = find_field_in_modified_field(ref_dimension)
-
     ref_metrics = _make_reference_metrics(metrics, references[0].reference_type.alias)
     offset_func = partial(database.date_add, date_part=time_unit, interval=interval)
     ref_dimensions = _make_reference_dimensions(
@@ -50,15 +47,6 @@ def _make_reference_dimensions(dimensions, ref_dimension, offset_func, trunc_dat
 
 
 def _make_reference_metrics(metrics, ref_key):
-    metric_copies = []
-
-    for metric in [copy.deepcopy(metric) for metric in metrics]:
-        for pypika_field in metric.definition.fields_():
-            if pypika_field.name.startswith("$"):
-                pypika_field.name = "{}_{}".format(pypika_field.name, ref_key)
-
-        metric_copies.append(metric)
-
     return [
         Field(
             "{}_{}".format(metric.alias, ref_key),
@@ -69,7 +57,7 @@ def _make_reference_metrics(metrics, ref_key):
             suffix=metric.suffix,
             precision=metric.precision,
         )
-        for metric in metric_copies
+        for metric in metrics
     ]
 
 
@@ -84,8 +72,6 @@ def _make_reference_filters(filters, ref_dimension, offset_func):
     :param offset_func:
     :return:
     """
-    offset_ref_dimension_definition = offset_func(ref_dimension.definition)
-
     reference_filters = []
     for ref_filter in filters:
         if ref_filter.field is ref_dimension:

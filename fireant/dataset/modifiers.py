@@ -1,6 +1,7 @@
-from copy import deepcopy
-
-from fireant.utils import immutable
+from fireant.utils import (
+    deepcopy,
+    immutable,
+)
 from pypika import NullValue
 
 
@@ -44,10 +45,29 @@ class Modifier:
         wrapped = super().__getattribute__(wrapped_key)
         return "{}({})".format(self.__class__.__name__, repr(wrapped))
 
+    def __deepcopy__(self, memodict={}):
+        wrapped_key = super().__getattribute__("wrapped_key")
+        wrapped = super().__getattribute__(wrapped_key)
+        memodict[id(wrapped)] = wrapped
+        return deepcopy(self, memodict)
+
     @immutable
     def for_(self, wrapped):
         wrapped_key = super().__getattribute__("wrapped_key")
         setattr(self, wrapped_key, wrapped)
+
+
+class FieldModifier:
+    def __init__(self, field):
+        self.field = field
+
+    @immutable
+    def for_(self, field):
+        self.field = field
+
+    def __deepcopy__(self, memodict={}):
+        memodict[id(self.field)] = self.field
+        return deepcopy(self, memodict)
 
 
 class DimensionModifier(Modifier):

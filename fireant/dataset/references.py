@@ -1,14 +1,15 @@
 import numpy as np
-
 from fireant import utils
 from fireant.utils import immutable
 from pypika import functions as fn
 from pypika.queries import QueryBuilder
 
+from .modifiers import FieldModifier
 
-class Reference(object):
+
+class Reference(FieldModifier):
     def __init__(self, field, reference_type, delta=False, delta_percent=False):
-        self.field = field
+        super().__init__(field)
 
         self.reference_type = reference_type
         self.alias = (

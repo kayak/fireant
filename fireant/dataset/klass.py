@@ -1,6 +1,6 @@
 import itertools
 
-from fireant.utils import immutable
+from fireant.utils import immutable, deepcopy
 from fireant.queries.builder import (
     DataSetQueryBuilder,
     DimensionChoicesQueryBuilder,
@@ -29,10 +29,10 @@ class _Container(object):
         for item in items:
             setattr(self, item.alias, item)
 
-    def __deepcopy__(self, memodict):
+    def __deepcopy__(self, memodict={}):
         for field in self:
             memodict[id(field)] = field
-        return type(self)(self._items)
+        return deepcopy(self, memodict)
 
     def __iter__(self):
         return iter(self._items)

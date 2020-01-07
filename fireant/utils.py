@@ -1,3 +1,4 @@
+import copy
 import csv
 import inspect
 import tempfile
@@ -12,7 +13,6 @@ def immutable(func):
     used which will deepcopy the current instance.  This decorator will return the return value of the inner function
     or the new copy of the instance.  The inner function does not need to return self.
     """
-    import copy
 
     def _copy(self, *args, mutate=False, **kwargs):
         """
@@ -30,6 +30,20 @@ def immutable(func):
         return result
 
     return _copy
+
+
+def deepcopy(value, memodict):
+    cls = value.__class__
+    result = cls.__new__(cls)
+
+    memodict[id(value)] = result
+
+    for k, v in value.__dict__.items():
+        result.__dict__[k] = (
+            memodict[id(v)] if id(v) in memodict else copy.deepcopy(v, memodict)
+        )
+
+    return result
 
 
 def wrap_list(value, wrapper=list):

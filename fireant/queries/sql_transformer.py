@@ -24,7 +24,7 @@ from .finders import (
     find_required_tables_to_join,
     find_totals_dimensions,
 )
-from .reference_helper import adapt_for_reference_query
+from .references import adapt_for_reference_query
 from .special_cases import apply_special_cases
 from .totals_helper import adapt_for_totals_query
 
