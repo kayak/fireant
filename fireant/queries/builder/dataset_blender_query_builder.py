@@ -126,9 +126,6 @@ def _join_criteria_for_blender_subqueries(primary, secondary, dimensions, field_
 def _blender(dimensions, metrics, orders, field_maps) -> Callable:
     raw_dataset_metrics = set(find_dataset_metrics(metrics))
 
-    if orders is None:
-        orders = [(dimension, None) for dimension in dimensions]
-
     def _field_subquery_map(dataset_sql):
         """
         This nasty little function returns a dictionary that tells how how to select dimensions and metrics in the
@@ -227,6 +224,7 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         datasets, field_maps = _datasets_and_field_maps(self.dataset)
         metrics = find_metrics_for_widgets(self._widgets)
         raw_dataset_metrics = find_dataset_metrics(metrics)
+        orders = self.orders
         dataset_queries = [
             _build_dataset_query(
                 dataset,
@@ -264,8 +262,5 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
             zip(*[dataset_query.sql for i, dataset_query in enumerate(dataset_queries)])
         )
 
-        blend_query = _blender(self._dimensions, metrics, self._orders, field_maps)
+        blend_query = _blender(self._dimensions, metrics, orders, field_maps)
         return [blend_query(*cp) for cp in tx_query_matrix]
-
-    def __str__(self):
-        return str(self.sql)
