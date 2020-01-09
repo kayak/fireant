@@ -1,19 +1,22 @@
 import pandas as pd
+from fireant.utils import alias_selector
 
 from pypika import Order
 
 
 def _get_window(limit, offset):
     start = offset
-    end = offset + limit \
-        if None not in (offset, limit) \
-        else limit
+    end = offset + limit if None not in (offset, limit) else limit
     return start, end
 
 
 def _apply_sorting(orders):
-    sort_values, ascending = zip(*[(order[0].alias, order[1] is Order.asc)
-                                   for order in orders])
+    sort_values, ascending = zip(
+        *[
+            (alias_selector(field.alias), orientation is Order.asc)
+            for field, orientation in orders
+        ]
+    )
     return list(sort_values), ascending
 
 
@@ -37,9 +40,9 @@ def paginate(data_frame, widgets, orders=(), limit=None, offset=None):
         return data_frame
 
     start, end = _get_window(limit, offset)
-    group_pagination = isinstance(data_frame.index, pd.MultiIndex) \
-                       and any([getattr(widget, 'group_pagination', False)
-                                for widget in widgets])
+    group_pagination = isinstance(data_frame.index, pd.MultiIndex) and any(
+        [getattr(widget, "group_pagination", False) for widget in widgets]
+    )
 
     if group_pagination:
         return _group_paginate(data_frame, start, end, orders)
@@ -62,17 +65,16 @@ def _simple_paginate(data_frame, start=None, end=None, orders=()):
     """
     if orders:
         sort, ascending = _apply_sorting(orders)
-        data_frame = data_frame.sort_values(by=sort,
-                                            ascending=ascending)
+        data_frame = data_frame.sort_values(by=sort, ascending=ascending)
 
     return data_frame[start:end]
 
 
 def _index_isnull(data_frame):
     if isinstance(data_frame.index, pd.MultiIndex):
-        return [any(pd.isnull(value)
-                    for value in level)
-                for level in list(data_frame.index)]
+        return [
+            any(pd.isnull(value) for value in level) for level in list(data_frame.index)
+        ]
 
     return pd.isnull(data_frame.index)
 
@@ -97,9 +99,7 @@ def _group_paginate(data_frame, start=None, end=None, orders=()):
 
     # Do not apply ordering on the 0th dimension !!!
     # This would not have any result since the X-Axis on a chart is ordered sequentially
-    orders = [order
-              for order in orders
-              if order[0].alias != data_frame.index.names[0]]
+    orders = [order for order in orders if order[0].alias != data_frame.index.names[0]]
 
     if orders:
         # FIXME this should aggregate according to field definition, instead of sum
@@ -107,16 +107,19 @@ def _group_paginate(data_frame, start=None, end=None, orders=()):
         aggregated_df = dimension_groups.sum()
 
         sort, ascending = _apply_sorting(orders)
-        sorted_df = aggregated_df.sort_values(by=sort,
-                                              ascending=ascending)
+        sorted_df = aggregated_df.sort_values(by=sort, ascending=ascending)
         sorted_dimension_values = tuple(sorted_df.index)[start:end]
 
     else:
-        sorted_dimension_values = tuple(dimension_groups.apply(lambda g: g.name))[start:end]
+        sorted_dimension_values = tuple(dimension_groups.apply(lambda g: g.name))[
+            start:end
+        ]
 
-    sorted_dimension_values = pd.Index(sorted_dimension_values, name=dimension_levels[0]) \
-        if len(dimension_levels) == 1 \
+    sorted_dimension_values = (
+        pd.Index(sorted_dimension_values, name=dimension_levels[0])
+        if len(dimension_levels) == 1
         else pd.MultiIndex.from_tuples(sorted_dimension_values, names=dimension_levels)
+    )
 
     def _apply_pagination(df):
         # This function applies sorting by using the sorted dimension values as an index to select values in the right
@@ -138,7 +141,8 @@ def _group_paginate(data_frame, start=None, end=None, orders=()):
 
         return dfx.loc[index_slice, :].append(dfx[isnull])
 
-    return data_frame \
-        .sort_values(data_frame.index.names[0], ascending=True) \
-        .groupby(level=0) \
+    return (
+        data_frame.sort_values(data_frame.index.names[0], ascending=True)
+        .groupby(level=0)
         .apply(_apply_pagination)
+    )

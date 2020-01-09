@@ -136,6 +136,12 @@ class QueryBuilder(object):
         self._offset = offset
 
     @property
+    def orders(self):
+        if self._orders is None:
+            return [(dimension, None) for dimension in self._dimensions]
+        return self._orders
+
+    @property
     def sql(self):
         """
         Serialize this query builder object to a set of Pypika/SQL queries.

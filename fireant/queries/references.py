@@ -2,7 +2,7 @@ from functools import partial
 
 from fireant.dataset.fields import Field
 
-from .field_helper import make_term_for_dimension
+from .field_helper import make_term_for_field
 from .finders import find_field_in_modified_field
 
 
@@ -23,7 +23,7 @@ def adapt_for_reference_query(
 
 
 def _replace_reference_dimension(dimension, offset_func, trunc_date=None):
-    ref_definition = offset_func(make_term_for_dimension(dimension, trunc_date))
+    ref_definition = offset_func(make_term_for_field(dimension, trunc_date))
     field = Field(
         alias=dimension.alias,
         definition=ref_definition,

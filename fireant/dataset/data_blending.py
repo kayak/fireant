@@ -79,6 +79,10 @@ class DataSetBlender:
     def table(self):
         return None
 
+    @property
+    def database(self):
+        return self.primary_dataset.database
+
     @immutable
     def extra_fields(self, *fields):
         for field in fields:

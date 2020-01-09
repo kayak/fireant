@@ -15,8 +15,8 @@ from fireant.utils import (
     flatten,
 )
 from .field_helper import (
-    make_term_for_dimension,
-    make_term_for_metrics,
+    make_term_for_field,
+    make_term_for_field,
 )
 from .finders import (
     find_and_group_references_for_dimensions,
@@ -31,7 +31,6 @@ from .totals_helper import adapt_for_totals_query
 
 @apply_special_cases
 def make_slicer_query_with_totals_and_references(
-    dataset,
     database,
     table,
     joins,
@@ -167,7 +166,7 @@ def make_slicer_query(
 
     # Add dimensions
     for dimension in dimensions:
-        dimension_term = make_term_for_dimension(dimension, database.trunc_date)
+        dimension_term = make_term_for_field(dimension, database.trunc_date)
         query = query.select(dimension_term)
         if not isinstance(dimension, Rollup):
             query = query.groupby(dimension_term)
@@ -181,14 +180,15 @@ def make_slicer_query(
         )
 
     # Add metrics
-    metric_terms = [make_term_for_metrics(metric) for metric in metrics]
+    metric_terms = [make_term_for_field(metric) for metric in metrics]
     if metric_terms:
         query = query.select(*metric_terms)
 
     # In the case that the orders are determined by a field that is not selected as a metric or dimension, then it needs
     # to be added to the query.
     select_aliases = {el.alias for el in query._selects}
-    for (orderby_term, orientation) in orders:
+    for (orderby_field, orientation) in orders:
+        orderby_term = make_term_for_field(orderby_field)
         query = query.orderby(orderby_term, order=orientation)
 
         if orderby_term.alias not in select_aliases:

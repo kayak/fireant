@@ -9,6 +9,7 @@ from fireant.utils import (
     alias_selector,
     immutable,
 )
+
 from .query_builder import (
     QueryBuilder,
     QueryException,
@@ -18,7 +19,6 @@ from .query_builder import (
 )
 from .. import special_cases
 from ..execution import fetch_data
-from ..field_helper import make_term_for_dimension
 from ..finders import (
     find_and_group_references_for_dimensions,
     find_metrics_for_widgets,
@@ -69,28 +69,6 @@ class DataSetQueryBuilder(
         )
 
     @property
-    def orders(self):
-        """
-        Initialize the DataSetQueryBuilder values for orders so that the SQL queries can be built. This also initializes
-        the default values for orders, which is all of the dimensions, if no order is specified.
-        """
-        if self._orders is not None:
-            return [
-                (field.definition.as_(alias_selector(field.alias)), orientation)
-                for (field, orientation) in self._orders
-            ]
-
-        # Initialize ordering to be by all dimensions
-
-        # Use the same function to make the definition terms to force it to be consistent.
-        # Always take the last element in order to prefer the display definition.
-        definitions = [
-            make_term_for_dimension(dimension) for dimension in self._dimensions
-        ]
-
-        return [(definition, None) for definition in definitions]
-
-    @property
     def sql(self):
         """
         Serialize this query builder to a list of Pypika/SQL queries. This function will return one query for every
@@ -110,7 +88,6 @@ class DataSetQueryBuilder(
         share_dimensions = find_share_dimensions(self._dimensions, operations)
 
         return make_slicer_query_with_totals_and_references(
-            self.dataset,
             self.dataset.database,
             self.table,
             self.dataset.joins,
@@ -188,27 +165,32 @@ class DataSetQueryBuilder(
 
     def __repr__(self):
         return ".".join(
-            ["dataset", "query"]
-            + ["widget({})".format(repr(widget)) for widget in self._widgets]
-            + [
-                "dimension({})".format(repr(dimension))
-                for dimension in self._dimensions
-            ]
-            + [
-                "filter({}{})".format(
-                    repr(f),
-                    ", apply_filter_to_totals=True" if apply_filter_to_totals else "",
-                )
-                for f, apply_filter_to_totals in zip(
-                    self._filters, self._apply_filter_to_totals
-                )
-            ]
-            + [
-                "reference({})".format(repr(reference))
-                for reference in self._references
-            ]
-            + [
-                "orderby({}, {})".format(definition.alias, orientation)
-                for (definition, orientation) in self.orders
-            ]
+            [
+                "dataset",
+                "query",
+                *["widget({})".format(repr(widget)) for widget in self._widgets],
+                *[
+                    "dimension({})".format(repr(dimension))
+                    for dimension in self._dimensions
+                ],
+                *[
+                    "filter({}{})".format(
+                        repr(f),
+                        ", apply_filter_to_totals=True"
+                        if apply_filter_to_totals
+                        else "",
+                    )
+                    for f, apply_filter_to_totals in zip(
+                        self._filters, self._apply_filter_to_totals
+                    )
+                ],
+                *[
+                    "reference({})".format(repr(reference))
+                    for reference in self._references
+                ],
+                *[
+                    "orderby({}, {})".format(definition.alias, orientation)
+                    for (definition, orientation) in self.orders
+                ],
+            ],
         )

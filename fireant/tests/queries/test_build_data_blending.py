@@ -9,6 +9,9 @@ from fireant.tests.dataset.mocks import (
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
+from pypika import Order
+
+
 class DataSetBlenderQueryBuilderTests(TestCase):
     maxDiff = None
 
@@ -220,7 +223,6 @@ class DataSetBlenderQueryBuilderTests(TestCase):
     def test_multiple_metrics_with_an_order_by_in_query_applies_order_to_wrapping_query(
         self,
     ):
-        # TODO test order by metric not selected
         queries = (
             mock_dataset_blender.query()
             .widget(
@@ -312,37 +314,36 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             )
             .dimension(f.day(mock_dataset_blender.fields.timestamp))
             .reference(f.WeekOverWeek(mock_dataset_blender.fields.timestamp))
-            # TODO enforce reference only on mapped dimensions
         )
 
         sql = query.sql
 
         self.assertEqual(len(sql), 2)
         (base_query, ref_query) = sql
-        # with self.subTest("base query"):
-        self.assertEqual(
-            "SELECT "
-            '"sq0"."$timestamp" "$timestamp",'
-            '"sq1"."$candidate-spend"/"sq0"."$wins" "$candidate-spend-per-wins" '
-            "FROM ("
-            "SELECT "
-            'TRUNC("timestamp",\'DD\') "$timestamp",'
-            'SUM("is_winner") "$wins" '
-            'FROM "politics"."politician" '
-            'GROUP BY "$timestamp" ORDER BY "$timestamp"'
-            ') "sq0" '
-            "LEFT JOIN ("
-            "SELECT "
-            'TRUNC("timestamp",\'DD\') "$timestamp",'
-            'SUM("candidate_spend") "$candidate-spend" '
-            'FROM "politics"."politician_spend" '
-            'GROUP BY "$timestamp" ORDER BY "$timestamp"'
-            ') "sq1" '
-            "ON "
-            '"sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp"',
-            str(base_query),
-        )
+        with self.subTest("base query"):
+            self.assertEqual(
+                "SELECT "
+                '"sq0"."$timestamp" "$timestamp",'
+                '"sq1"."$candidate-spend"/"sq0"."$wins" "$candidate-spend-per-wins" '
+                "FROM ("
+                "SELECT "
+                'TRUNC("timestamp",\'DD\') "$timestamp",'
+                'SUM("is_winner") "$wins" '
+                'FROM "politics"."politician" '
+                'GROUP BY "$timestamp" ORDER BY "$timestamp"'
+                ') "sq0" '
+                "LEFT JOIN ("
+                "SELECT "
+                'TRUNC("timestamp",\'DD\') "$timestamp",'
+                'SUM("candidate_spend") "$candidate-spend" '
+                'FROM "politics"."politician_spend" '
+                'GROUP BY "$timestamp" ORDER BY "$timestamp"'
+                ') "sq1" '
+                "ON "
+                '"sq0"."$timestamp"="sq1"."$timestamp" '
+                'ORDER BY "$timestamp"',
+                str(base_query),
+            )
         with self.subTest("ref query"):
             self.assertEqual(
                 "SELECT "
@@ -412,7 +413,52 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 'ORDER BY "$timestamp","$candidate-id"',
                 str(base_query),
             )
-        # with self.subTest("ref query"):
+        with self.subTest("totals query"):
+            self.assertEqual(
+                "SELECT "
+                '"sq0"."$timestamp" "$timestamp",'
+                '"sq0"."$candidate-id" "$candidate-id",'
+                '"sq1"."$candidate-spend"/"sq0"."$wins" "$candidate-spend-per-wins" '
+                "FROM ("
+                "SELECT "
+                'TRUNC("timestamp",\'DD\') "$timestamp",'
+                'NULL "$candidate-id",'
+                'SUM("is_winner") "$wins" '
+                'FROM "politics"."politician" '
+                'GROUP BY "$timestamp" '
+                'ORDER BY "$timestamp","$candidate-id"'
+                ') "sq0" '
+                "LEFT JOIN ("
+                "SELECT "
+                'TRUNC("timestamp",\'DD\') "$timestamp",'
+                'NULL "$candidate-id",'
+                'SUM("candidate_spend") "$candidate-spend" '
+                'FROM "politics"."politician_spend" '
+                'GROUP BY "$timestamp" '
+                'ORDER BY "$timestamp","$candidate-id"'
+                ') "sq1" '
+                "ON "
+                '"sq0"."$timestamp"="sq1"."$timestamp" '
+                'AND "sq0"."$candidate-id"="sq1"."$candidate-id" '
+                'ORDER BY "$timestamp","$candidate-id"',
+                str(totals_query),
+            )
+
+    def test_blended_query_with_orderby_mapped_dimension(self):
+        queries = (
+            mock_dataset_blender.query()
+            .widget(
+                f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"])
+            )
+            .dimension(
+                f.day(mock_dataset_blender.fields.timestamp),
+                mock_dataset_blender.fields["candidate-id"],
+            )
+            .orderby(mock_dataset_blender.fields["candidate-id"], Order.desc)
+        ).sql
+
+        self.assertEqual(len(queries), 1)
+        (query,) = queries
         self.assertEqual(
             "SELECT "
             '"sq0"."$timestamp" "$timestamp",'
@@ -421,26 +467,26 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             "FROM ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
-            'NULL "$candidate-id",'
+            '"candidate_id" "$candidate-id",'
             'SUM("is_winner") "$wins" '
             'FROM "politics"."politician" '
-            'GROUP BY "$timestamp" '
+            'GROUP BY "$timestamp","$candidate-id" '
             'ORDER BY "$timestamp","$candidate-id"'
             ') "sq0" '
             "LEFT JOIN ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
-            'NULL "$candidate-id",'
+            '"candidate_id" "$candidate-id",'
             'SUM("candidate_spend") "$candidate-spend" '
             'FROM "politics"."politician_spend" '
-            'GROUP BY "$timestamp" '
+            'GROUP BY "$timestamp","$candidate-id" '
             'ORDER BY "$timestamp","$candidate-id"'
             ') "sq1" '
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
             'AND "sq0"."$candidate-id"="sq1"."$candidate-id" '
-            'ORDER BY "$timestamp","$candidate-id"',
-            str(totals_query),
+            'ORDER BY "$candidate-id" DESC',
+            str(query),
         )
 
     def test_does_not_raise_SlicerException_when_a_dimension_is_not_mapped_for_unnecessary_secondary_datasets(
