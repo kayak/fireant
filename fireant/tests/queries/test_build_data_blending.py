@@ -6,9 +6,6 @@ from fireant.tests.dataset.mocks import (
     Rollup,
     mock_dataset_blender,
 )
-
-
-# noinspection SqlDialectInspection,SqlNoDataSourceInspection
 from pypika import Order
 
 
