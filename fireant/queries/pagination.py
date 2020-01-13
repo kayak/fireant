@@ -99,7 +99,11 @@ def _group_paginate(data_frame, start=None, end=None, orders=()):
 
     # Do not apply ordering on the 0th dimension !!!
     # This would not have any result since the X-Axis on a chart is ordered sequentially
-    orders = [order for order in orders if order[0].alias != data_frame.index.names[0]]
+    orders = [
+        (field, orientation)
+        for field, orientation in orders
+        if alias_selector(field.alias) != data_frame.index.names[0]
+    ]
 
     if orders:
         # FIXME this should aggregate according to field definition, instead of sum
