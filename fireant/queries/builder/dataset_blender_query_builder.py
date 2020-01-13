@@ -1,11 +1,10 @@
-from copy import deepcopy
+import copy
 from functools import reduce
 from typing import (
     Callable,
     List,
 )
 
-from fireant.dataset.fields import Field
 from fireant.exceptions import DataSetException
 from fireant.queries.builder.dataset_query_builder import DataSetQueryBuilder
 from fireant.queries.finders import (
@@ -123,8 +122,8 @@ def _join_criteria_for_blender_subqueries(primary, secondary, dimensions, field_
     return reduce(lambda a, b: a & b, join_criteria)
 
 
-def _blender(dimensions, metrics, orders, field_maps) -> Callable:
-    raw_dataset_metrics = set(find_dataset_metrics(metrics))
+def _blender(datasets, dimensions, metrics, orders, field_maps) -> Callable:
+    dataset_metrics = set(find_dataset_metrics(metrics))
 
     def _field_subquery_map(dataset_sql):
         """
@@ -144,31 +143,36 @@ def _blender(dimensions, metrics, orders, field_maps) -> Callable:
             field_subquery_map[dimension] = base[dimension_alias].as_(dimension_alias)
 
         # dataset metrics
-        for metric in raw_dataset_metrics:
-            for sql in dataset_sql:
-                metric_alias = alias_selector(reference_alias(metric, reference))
-                select_aliases = {select.alias for select in sql._selects}
-                if metric_alias in select_aliases:
-                    field_subquery_map[metric] = sql[metric_alias].as_(metric_alias)
-                    break
+        for metric in dataset_metrics:
+            # Get the pypika query for the dataset this metric belongs too
+            sql = [
+                sql
+                for dataset, sql in zip(datasets, dataset_sql)
+                if metric in dataset.fields
+            ][0]
 
-        # complex metrics - fields with definitions referring to other fields
-        complex_metrics = [
-            metric for metric in metrics if metric not in raw_dataset_metrics
-        ]
-        for metric in complex_metrics:
+            metric_alias = alias_selector(reference_alias(metric, reference))
+            term = sql[metric_alias].as_(metric_alias)
+            field_subquery_map[metric] = term
+
             # ######### WARNING: This is pretty shitty. #########
             # A `get_sql` method is monkey patched to the instance of each Field inside the definition of the Field
             # containing them. The definition must also be deep copied in case there are reference queries,
             # since there will be multiple instances of the field with different aliases.
-            #
-            # A better solution for this would be to implement a replace function in pypika which could replace
-            # specific nodes in the object graph.
-            definition_copy = deepcopy(metric.definition)
-            metric_alias = alias_selector(reference_alias(metric, reference))
-            field_subquery_map[metric] = definition_copy.as_(metric_alias)
-            for field in definition_copy.find_(Field):
-                field.get_sql = field_subquery_map[field].get_sql
+            metric.get_sql = term.get_sql
+
+        dataset_blender_metrics = [
+            metric for metric in metrics if metric not in dataset_metrics
+        ]
+        for metric in dataset_blender_metrics:
+            if metric.definition in field_subquery_map:
+                field_subquery_map[metric] = field_subquery_map[metric.definition]
+
+            else:
+                # Need to copy the metrics if there are references so that the `get_sql` monkey patch does not conflict
+                definition_copy = copy.deepcopy(metric.definition)
+                metric_alias = alias_selector(reference_alias(metric, reference))
+                field_subquery_map[metric] = definition_copy.as_(metric_alias)
 
         return field_subquery_map
 
@@ -188,7 +192,7 @@ def _blender(dimensions, metrics, orders, field_maps) -> Callable:
 
         field_subquery_map = _field_subquery_map([base, *rest])
         query = query.select(
-            *[field_subquery_map[select] for select in [*dimensions, *metrics]]
+            *[field_subquery_map[select] for select in [*dimensions, *metrics]],
         )
 
         for field, orientation in orders:
@@ -258,9 +262,9 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         be produced.  This next line converts the list of rows of the table in the diagram to a list of columns. Each 
         set of queries in a column are then reduced to a single data blending sql query. 
         """
-        tx_query_matrix = list(
+        querysets_tx = list(
             zip(*[dataset_query.sql for i, dataset_query in enumerate(dataset_queries)])
         )
 
-        blend_query = _blender(self._dimensions, metrics, orders, field_maps)
-        return [blend_query(*cp) for cp in tx_query_matrix]
+        blend_query = _blender(datasets, self._dimensions, metrics, orders, field_maps)
+        return [blend_query(*cp) for cp in querysets_tx]

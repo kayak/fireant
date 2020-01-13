@@ -270,13 +270,7 @@ class Field(Node):
             """
             return hash(None)
 
-        return hash(
-            (
-                self.alias,
-                self.data_type,
-                # self.definition
-            )
-        )
+        return id(self)
 
     def get_sql(self, **kwargs):
         raise NotImplementedError

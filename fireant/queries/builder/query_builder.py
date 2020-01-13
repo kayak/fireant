@@ -1,6 +1,9 @@
 from fireant.dataset.fields import Field
 from fireant.exceptions import DataSetException
-from fireant.utils import immutable
+from fireant.utils import (
+    immutable,
+    deepcopy,
+)
 from pypika import Order
 from ..execution import fetch_data
 from ..finders import find_field_in_modified_field
@@ -63,6 +66,17 @@ class QueryBuilder(object):
         self._orders = None
         self._limit = None
         self._offset = None
+
+    def __deepcopy__(self, memodict={}):
+        fields = [d for d in self._dimensions]
+        if self._orders is not None:
+            fields += [field for (field, _) in self._orders]
+
+        for field in fields:
+            field = find_field_in_modified_field(field)
+            memodict[id(field)] = field
+
+        return deepcopy(self, memodict)
 
     @immutable
     def dimension(self, *dimensions):
