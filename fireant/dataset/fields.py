@@ -19,10 +19,7 @@ from .filters import (
     RangeFilter,
     VoidFilter,
 )
-from ..utils import (
-    immutable,
-    deepcopy,
-)
+from ..utils import immutable
 
 
 class DataType(Enum):

@@ -262,12 +262,6 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         be produced.  This next line converts the list of rows of the table in the diagram to a list of columns. Each 
         set of queries in a column are then reduced to a single data blending sql query. 
         """
-        # querysets = [
-        #     sql
-        #     for i, dataset_query in enumerate(dataset_queries)
-        #     for sql in dataset_query.sql
-        # ]
-        # querysets_tx = list(zip(*querysets))
         querysets_tx = list(
             zip(*[dataset_query.sql for i, dataset_query in enumerate(dataset_queries)])
         )

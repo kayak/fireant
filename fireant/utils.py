@@ -39,9 +39,7 @@ def deepcopy(value, memodict):
     memodict[id(value)] = result
 
     for k, v in value.__dict__.items():
-        result.__dict__[k] = (
-            memodict[id(v)] if id(v) in memodict else copy.deepcopy(v, memodict)
-        )
+        result.__dict__[k] = copy.deepcopy(v, memodict)
 
     return result
 
