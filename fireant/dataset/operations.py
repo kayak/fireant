@@ -99,13 +99,13 @@ class _Cumulative(_BaseOperation):
 
     def apply(self, data_frame, reference):
         if reference and reference.delta_percent:
-            return self.apply_cummulative_for_delta_percent(data_frame, reference)
-        return self.apply_cummulative(data_frame, reference)
+            return self.apply_cumulative_for_delta_percent(data_frame, reference)
+        return self.apply_cumulative(data_frame, reference)
 
-    def apply_cummulative(self, data_frame, reference):
+    def apply_cumulative(self, data_frame, reference):
         raise NotImplementedError()
 
-    def apply_cummulative_for_delta_percent(self, data_frame, reference):
+    def apply_cumulative_for_delta_percent(self, data_frame, reference):
         """
         When a delta percent reference is combined with a cumulative operation, the delta percent values need to be
         calculated based on the result of performing the operation on both the base values as well as
@@ -132,7 +132,7 @@ class _Cumulative(_BaseOperation):
         )
 
         # now apply the operation on the restored original reference values
-        reference_values_after_operation = self.apply_cummulative(data_frame, reference)
+        reference_values_after_operation = self.apply_cumulative(data_frame, reference)
 
         # get the base values on which the operation is already performed
         base_values_after_operation_key = alias_selector(self.alias)
@@ -147,11 +147,11 @@ class _Cumulative(_BaseOperation):
 
 
 class CumSum(_Cumulative):
-    def apply_cummulative(self, data_frame, reference):
+    def apply_cumulative(self, data_frame, reference):
         (arg,) = self.args
         df_key = alias_selector(reference_alias(arg, reference))
 
-        if isinstance(data_frame.index, pd.MultiIndex):
+        if isinstance(data_frame.index, pd.MultiIndex) and not data_frame.empty:
             levels = self._group_levels(data_frame.index)
 
             return data_frame[df_key].groupby(level=levels).cumsum()
@@ -160,11 +160,11 @@ class CumSum(_Cumulative):
 
 
 class CumProd(_Cumulative):
-    def apply_cummulative(self, data_frame, reference):
+    def apply_cumulative(self, data_frame, reference):
         (arg,) = self.args
         df_key = alias_selector(reference_alias(arg, reference))
 
-        if isinstance(data_frame.index, pd.MultiIndex):
+        if isinstance(data_frame.index, pd.MultiIndex) and not data_frame.empty:
             levels = self._group_levels(data_frame.index)
 
             return data_frame[df_key].groupby(level=levels).cumprod()
@@ -177,11 +177,11 @@ class CumMean(_Cumulative):
     def cummean(x):
         return x.cumsum() / np.arange(1, len(x) + 1)
 
-    def apply_cummulative(self, data_frame, reference):
+    def apply_cumulative(self, data_frame, reference):
         arg = self.args[0]
         df_key = alias_selector(reference_alias(arg, reference))
 
-        if isinstance(data_frame.index, pd.MultiIndex):
+        if isinstance(data_frame.index, pd.MultiIndex) and not data_frame.empty:
             levels = self._group_levels(data_frame.index)
 
             return data_frame[df_key].groupby(level=levels).apply(self.cummean)
