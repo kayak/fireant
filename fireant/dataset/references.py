@@ -113,4 +113,4 @@ def reference_term(
 
 def calculate_delta_percent(ref_df, ref_delta_df):
     # pandas raises an exception when dividing by zero
-    return 100.0 * ref_delta_df / ref_df.replace(0, np.nan)
+    return 100.0 * ref_delta_df.divide(ref_df.replace(0, np.nan))
