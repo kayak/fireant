@@ -157,6 +157,9 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
             # Ensure that these values are included
             query = query.orderby(include, order=Order.desc)
 
+        # Filter out NULL values from choices
+        query = query.where(dimension_definition.notnull())
+
         # Order by the dimension definition that the choices are for
         query = query.orderby(alias_definition)
 
