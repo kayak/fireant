@@ -66,6 +66,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
                                                 [PypikaQueryMatcher('SELECT '
                                                                     '"political_party" "$political_party" '
                                                                     'FROM "politics"."hints" '
+                                                                    'WHERE NOT "political_party" IS NULL '
                                                                     'GROUP BY "$political_party" '
                                                                     'ORDER BY "$political_party"')],
                                                 FieldMatcher(mock_hint_dataset.fields.political_party))
@@ -86,6 +87,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
                                                                     '"candidate_name_display" '
                                                                     '"$candidate_name_display" '
                                                                     'FROM "politics"."hints" '
+                                                                    'WHERE NOT "candidate_name" IS NULL '
                                                                     'GROUP BY "$candidate_name",'
                                                                     '"$candidate_name_display" '
                                                                     'ORDER BY "$candidate_name"')],
@@ -110,6 +112,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
                                                                     'JOIN "locations"."state" ON '
                                                                     '"hints"."state_id"="state"."id" '
                                                                     'WHERE "state"."state_name" IN (\'Texas\') '
+                                                                    'AND NOT "hints"."political_party" IS NULL '
                                                                     'GROUP BY "$political_party" '
                                                                     'ORDER BY "$political_party"')],
                                                 FieldMatcher(mock_hint_dataset.fields.political_party))
@@ -131,6 +134,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
                                                                     '"political_party" "$political_party" '
                                                                     'FROM "politics"."hints" '
                                                                     'WHERE "candidate_name" IN (\'Bill Clinton\') '
+                                                                    'AND NOT "political_party" IS NULL '
                                                                     'GROUP BY "$political_party" '
                                                                     'ORDER BY "$political_party"')],
                                                 FieldMatcher(mock_hint_dataset.fields.political_party))
@@ -150,6 +154,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
                                                 [PypikaQueryMatcher('SELECT '
                                                                     '"political_party" "$political_party" '
                                                                     'FROM "politics"."hints" '
+                                                                    'WHERE NOT "political_party" IS NULL '
                                                                     'GROUP BY "$political_party" '
                                                                     'ORDER BY "$political_party"')],
                                                 FieldMatcher(mock_hint_dataset.fields.political_party))
@@ -168,6 +173,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
                                                 [PypikaQueryMatcher('SELECT '
                                                                     '"district_name" "$district-name" '
                                                                     'FROM "politics"."hints" '
+                                                                    'WHERE NOT "district_name" IS NULL '
                                                                     'GROUP BY "$district-name" '
                                                                     'ORDER BY "$district-name"')],
                                                 FieldMatcher(mock_hint_dataset.fields['district-name']))
@@ -188,6 +194,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
                                                                     '"district_name" "$district-name" '
                                                                     'FROM "politics"."hints" '
                                                                     'WHERE "candidate_name" IN (\'Bill Clinton\') '
+                                                                    'AND NOT "district_name" IS NULL '
                                                                     'GROUP BY "$district-name" '
                                                                     'ORDER BY "$district-name"')],
                                                 FieldMatcher(mock_hint_dataset.fields['district-name']))
@@ -211,6 +218,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
                                                                     '"hints"."district_id"="district"."id" '
                                                                     'WHERE "district"."district_name" IN ('
                                                                     '\'Manhattan\') '
+                                                                    'AND NOT "hints"."district_name" IS NULL '
                                                                     'GROUP BY "$district-name" '
                                                                     'ORDER BY "$district-name"')],
                                                 FieldMatcher(mock_hint_dataset.fields['district-name']))
@@ -228,6 +236,7 @@ class DimensionsChoicesFetchTests(TestCase):
                                                 [PypikaQueryMatcher('SELECT '
                                                                     '"political_party" "$political_party" '
                                                                     'FROM "politics"."politician" '
+                                                                    'WHERE NOT "political_party" IS NULL '
                                                                     'GROUP BY "$political_party" '
                                                                     'ORDER BY "$political_party"')],
                                                 FieldMatcher(mock_dataset.fields.political_party))
