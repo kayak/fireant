@@ -103,6 +103,45 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             str(queries[0]),
         )
 
+    def test_using_datablender_builds_query_with_mapped_and_unmapped_dimensions(self):
+        queries = (
+            mock_dataset_blender.query()
+            .widget(
+                f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"])
+            )
+            .dimension(
+                f.day(mock_dataset_blender.fields.timestamp),
+                mock_dataset_blender.fields.political_party,
+            )
+        ).sql
+
+        self.assertEqual(len(queries), 1)
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq0"."$political_party" "$political_party",'
+            '"sq1"."$candidate-spend"/"sq0"."$wins" "$candidate-spend-per-wins" '
+            "FROM ("
+            "SELECT "
+            'TRUNC("timestamp",\'DD\') "$timestamp",'
+            '"political_party" "$political_party",'
+            'SUM("is_winner") "$wins" '
+            'FROM "politics"."politician" '
+            'GROUP BY "$timestamp","$political_party" ORDER BY "$timestamp","$political_party"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            'TRUNC("timestamp",\'DD\') "$timestamp",'
+            'SUM("candidate_spend") "$candidate-spend" '
+            'FROM "politics"."politician_spend" '
+            'GROUP BY "$timestamp" ORDER BY "$timestamp"'
+            ') "sq1" '
+            "ON "
+            '"sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$timestamp","$political_party"',
+            str(queries[0]),
+        )
+
     def test_apply_metric_filter_to_dataset_field_filters_in_nested_dataset_query(self):
         queries = (
             mock_dataset_blender.query()
@@ -494,14 +533,3 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             .widget(f.ReactTable(mock_dataset_blender.fields["votes"]))
             .dimension(mock_dataset_blender.fields["district-id"])
         ).sql
-
-    def test_raises_SlicerException_when_a_dimension_from_a_necessary_secondary_dataset_is_not_mapped(
-        self,
-    ):
-        with self.assertRaises(DataSetException):
-            queries = (
-                mock_dataset_blender.query()
-                .widget(f.ReactTable(mock_dataset_blender.fields["candidate-spend"]))
-                .dimension(f.day(mock_dataset_blender.fields.timestamp))
-                .dimension(mock_dataset_blender.fields["district-id"])
-            ).sql

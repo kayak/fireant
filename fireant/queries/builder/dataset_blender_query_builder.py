@@ -5,7 +5,6 @@ from typing import (
     List,
 )
 
-from fireant.exceptions import DataSetException
 from fireant.queries.builder.dataset_query_builder import DataSetQueryBuilder
 from fireant.queries.finders import (
     find_dataset_metrics,
@@ -37,7 +36,7 @@ def _datasets_and_field_maps(blender):
     return zip(*_flatten_blend_datasets(blender))
 
 
-def _replace_field(dimension, field_map=None, dataset=None, omit_umapped=False):
+def _replace_field(dimension, field_map=None, dataset=None):
     root_dimension = find_field_in_modified_field(dimension)
     if root_dimension is not dimension:
         # Handle modified dimensions
@@ -47,18 +46,12 @@ def _replace_field(dimension, field_map=None, dataset=None, omit_umapped=False):
     if field_map is not None and dimension in field_map:
         return field_map.get(dimension, None)
 
-    if dataset is not None and dimension.alias in dataset.fields:
-        return dataset.fields[dimension.alias]
+    if dataset is not None:
+        if dimension.definition is not None and dimension.definition in dataset.fields:
+            return dimension.definition
 
-    if dimension.definition is not None:
-        return dimension.definition
-
-    if not omit_umapped and dimension not in field_map:
-        raise DataSetException(
-            "Invalid Dimension {}. Dimensions must be mapped in order to be used in a blender query.".format(
-                dimension.alias
-            )
-        )
+        if dimension.alias in dataset.fields:
+            return dataset.fields[dimension.alias]
 
     return field_map.get(dimension, None)
 
@@ -80,12 +73,16 @@ def _build_dataset_query(dataset, field_map, metrics, dimensions, filters, refer
         return None
 
     blended_dimensions = [
-        _replace_field(dimension, field_map, dataset) for dimension in dimensions
+        dimension
+        for dimension in [
+            _replace_field(dimension, field_map, dataset) for dimension in dimensions
+        ]
+        if dimension is not None
     ]
 
     blended_filters = []
     for fltr in filters:
-        filter_field = _replace_field(fltr.field, field_map, dataset, omit_umapped=True)
+        filter_field = _replace_field(fltr.field, field_map, dataset)
 
         if filter_field not in dataset.fields:
             continue
@@ -114,9 +111,12 @@ def _join_criteria_for_blender_subqueries(primary, secondary, dimensions, field_
     join_criteria = []
 
     for dimension in dimensions:
-        mapped_dimension = _replace_field(dimension, field_map)
-        p_alias = alias_selector(dimension.alias)
-        s_alias = alias_selector(mapped_dimension.alias)
+        primary_dimension = find_field_in_modified_field(dimension).definition
+        if primary_dimension not in field_map:
+            continue
+        secondary_dimension = field_map[primary_dimension]
+        p_alias = alias_selector(primary_dimension.alias)
+        s_alias = alias_selector(secondary_dimension.alias)
         join_criteria.append(primary[p_alias] == secondary[s_alias])
 
     return reduce(lambda a, b: a & b, join_criteria)
