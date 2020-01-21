@@ -1,10 +1,38 @@
 from fireant.dataset.fields import Field
 from fireant.dataset.klass import DataSet
-from fireant.queries.builder import DataSetBlenderQueryBuilder
+from fireant.queries.builder import (
+    DataSetBlenderQueryBuilder,
+    DimensionChoicesQueryBuilder,
+)
+from fireant.queries.builder.query_builder import validate_fields
 from fireant.utils import (
     immutable,
     deepcopy,
 )
+
+
+def _wrap_dataset_fields(dataset):
+    wrapped_fields = []
+    for field in dataset.fields:
+        wrapped_field = Field(
+              alias=field.alias,
+              definition=field,
+              data_type=field.data_type,
+              label=field.label,
+              hint_table=field.hint_table,
+              prefix=field.prefix,
+              suffix=field.suffix,
+              thousands=field.thousands,
+              precision=field.precision,
+              hyperlink_template=field.hyperlink_template,
+        )
+
+        if not field.definition.is_aggregate:
+            wrapped_field.choices = DimensionChoicesBlenderQueryBuilder(dataset, field)
+
+        wrapped_fields.append(wrapped_field)
+
+    return wrapped_fields
 
 
 class DataSetBlender:
@@ -36,24 +64,7 @@ class DataSetBlender:
         #   1. DataSetBlender doesn't share a reference to a field with a DataSet
         #   2. When complex fields are added, the `definition` attribute will always have at least one field within
         #      its object graph
-        all_fields = [*secondary_dataset.fields, *primary_dataset.fields]
-        self.fields = DataSet.Fields(
-            [
-                Field(
-                    alias=field.alias,
-                    definition=field,
-                    data_type=field.data_type,
-                    label=field.label,
-                    hint_table=field.hint_table,
-                    prefix=field.prefix,
-                    suffix=field.suffix,
-                    thousands=field.thousands,
-                    precision=field.precision,
-                    hyperlink_template=field.hyperlink_template,
-                )
-                for field in all_fields
-            ]
-        )
+        self.fields = DataSet.Fields([*_wrap_dataset_fields(primary_dataset), *_wrap_dataset_fields(secondary_dataset)])
 
         # add query builder entry points
         self.query = DataSetBlenderQueryBuilder(self)
@@ -118,3 +129,13 @@ class DataSetBlenderBuilder:
             field_map[primary_ds_field] = secondary_ds_field
 
         return self.on(field_map)
+
+
+class DimensionChoicesBlenderQueryBuilder(DimensionChoicesQueryBuilder):
+    @immutable
+    def filter(self, *filters):
+        for filter_ in filters:
+            filter_.field = filter_.field.definition  # replace blender filter field with field of primary/secondary
+
+        validate_fields([filter_.field for filter_ in filters], self.dataset)
+        self._filters += [filter_ for filter_ in filters]

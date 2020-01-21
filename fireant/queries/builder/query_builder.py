@@ -30,15 +30,7 @@ def get_column_names(database, table):
     return {column_definition[0] for column_definition in column_definitions}
 
 
-def _strip_modifiers(fields):
-    for field in fields:
-        node = field
-        while hasattr(node, "dimension"):
-            node = node.dimension
-        yield node
-
-
-def _validate_fields(fields, dataset):
+def validate_fields(fields, dataset):
     fields = [find_field_in_modified_field(field) for field in fields]
 
     invalid = [field.alias for field in fields if field not in dataset.fields]
@@ -46,10 +38,18 @@ def _validate_fields(fields, dataset):
         return
 
     raise DataSetException(
-        "Only fields from dataset can be used in a dataset query. Found invalid fields: {}.".format(
-            ", ".join(invalid)
-        )
+          "Only fields from dataset can be used in a dataset query. Found invalid fields: {}.".format(
+                ", ".join(invalid)
+          )
     )
+
+
+def _strip_modifiers(fields):
+    for field in fields:
+        node = field
+        while hasattr(node, "dimension"):
+            node = node.dimension
+        yield node
 
 
 class QueryBuilder(object):
@@ -88,7 +88,7 @@ class QueryBuilder(object):
         :return:
             A copy of the query with the dimensions added.
         """
-        _validate_fields(dimensions, self.dataset)
+        validate_fields(dimensions, self.dataset)
         aliases = {dimension.alias for dimension in self._dimensions}
         self._dimensions += [
             dimension for dimension in dimensions if dimension.alias not in aliases
@@ -104,7 +104,7 @@ class QueryBuilder(object):
         :return:
             A copy of the query with the filters added.
         """
-        _validate_fields([fltr.field for fltr in filters], self.dataset)
+        validate_fields([fltr.field for fltr in filters], self.dataset)
         self._filters += [f for f in filters]
 
     @immutable
@@ -117,7 +117,7 @@ class QueryBuilder(object):
         :return:
             A copy of the query with the order by added.
         """
-        _validate_fields([field], self.dataset)
+        validate_fields([field], self.dataset)
 
         if self._orders is None:
             self._orders = []
@@ -203,7 +203,7 @@ class ReferenceQueryBuilderMixin:
         :return:
             A copy of the query with the references added.
         """
-        _validate_fields([reference.field for reference in references], self.dataset)
+        validate_fields([reference.field for reference in references], self.dataset)
         self._references += references
 
 
@@ -232,8 +232,8 @@ class WidgetQueryBuilderMixin:
         :return:
             A copy of the query with the widgets added.
         """
-        _validate_fields(
-            [field for widget in widgets for field in widget.metrics], self.dataset
+        validate_fields(
+              [field for widget in widgets for field in widget.metrics], self.dataset
         )
 
         self._widgets += widgets
