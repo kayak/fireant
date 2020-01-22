@@ -15,16 +15,16 @@ def _wrap_dataset_fields(dataset):
     wrapped_fields = []
     for field in dataset.fields:
         wrapped_field = Field(
-              alias=field.alias,
-              definition=field,
-              data_type=field.data_type,
-              label=field.label,
-              hint_table=field.hint_table,
-              prefix=field.prefix,
-              suffix=field.suffix,
-              thousands=field.thousands,
-              precision=field.precision,
-              hyperlink_template=field.hyperlink_template,
+            alias=field.alias,
+            definition=field,
+            data_type=field.data_type,
+            label=field.label,
+            hint_table=field.hint_table,
+            prefix=field.prefix,
+            suffix=field.suffix,
+            thousands=field.thousands,
+            precision=field.precision,
+            hyperlink_template=field.hyperlink_template,
         )
 
         if not field.definition.is_aggregate:
@@ -64,7 +64,12 @@ class DataSetBlender:
         #   1. DataSetBlender doesn't share a reference to a field with a DataSet
         #   2. When complex fields are added, the `definition` attribute will always have at least one field within
         #      its object graph
-        self.fields = DataSet.Fields([*_wrap_dataset_fields(primary_dataset), *_wrap_dataset_fields(secondary_dataset)])
+        self.fields = DataSet.Fields(
+            [
+                *_wrap_dataset_fields(secondary_dataset),
+                *_wrap_dataset_fields(primary_dataset),
+            ]
+        )
 
         # add query builder entry points
         self.query = DataSetBlenderQueryBuilder(self)
@@ -135,7 +140,9 @@ class DimensionChoicesBlenderQueryBuilder(DimensionChoicesQueryBuilder):
     @immutable
     def filter(self, *filters):
         for filter_ in filters:
-            filter_.field = filter_.field.definition  # replace blender filter field with field of primary/secondary
+            filter_.field = (
+                filter_.field.definition
+            )  # replace blender filter field with field of primary/secondary
 
         validate_fields([filter_.field for filter_ in filters], self.dataset)
         self._filters += [filter_ for filter_ in filters]

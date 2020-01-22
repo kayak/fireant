@@ -119,6 +119,9 @@ def _join_criteria_for_blender_subqueries(primary, secondary, dimensions, field_
         s_alias = alias_selector(secondary_dimension.alias)
         join_criteria.append(primary[p_alias] == secondary[s_alias])
 
+    if not join_criteria:
+        return join_criteria
+
     return reduce(lambda a, b: a & b, join_criteria)
 
 
