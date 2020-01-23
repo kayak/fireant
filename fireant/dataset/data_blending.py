@@ -6,8 +6,8 @@ from fireant.queries.builder import (
 )
 from fireant.queries.builder.query_builder import validate_fields
 from fireant.utils import (
-    immutable,
     deepcopy,
+    immutable,
     ordered_distinct_list_by_attr,
 )
 
@@ -148,9 +148,7 @@ class DataSetBlenderBuilder:
 
 
 class DimensionChoicesBlenderQueryBuilder(DimensionChoicesQueryBuilder):
-    def filter(self, *filters):
-        for fltr in filters:
-            # replace blender filter field with field of primary/secondary
-            fltr.for_(fltr.field.definition)
-
-        super().filter(*filters)
+    def filter(self, *filters, **kwargs):
+        # replace blender filter field with field of primary/secondary
+        filters = [fltr.for_(fltr.field.definition) for fltr in filters]
+        return super().filter(*filters, **kwargs)
