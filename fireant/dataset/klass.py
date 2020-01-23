@@ -1,6 +1,11 @@
 import itertools
 
-from fireant.utils import immutable, deepcopy
+from fireant.utils import (
+    immutable,
+    deepcopy,
+    ordered_distinct_list,
+    ordered_distinct_list_by_attr,
+)
 from fireant.queries.builder import (
     DataSetQueryBuilder,
     DimensionChoicesQueryBuilder,
@@ -25,8 +30,8 @@ class _Container(object):
     """
 
     def __init__(self, items=()):
-        self._items = list(items)
-        for item in items:
+        self._items = ordered_distinct_list_by_attr(items)
+        for item in self._items:
             setattr(self, item.alias, item)
 
     def __deepcopy__(self, memodict={}):

@@ -2,7 +2,6 @@ from unittest import TestCase
 
 import fireant as f
 from fireant.tests.dataset.mocks import (
-    DataSetException,
     Rollup,
     mock_dataset_blender,
 )
@@ -56,7 +55,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             'JOIN "politics"."voter" ON "politician"."id"="voter"."politician_id" '
             'GROUP BY "$timestamp" ORDER BY "$timestamp"'
             ') "sq0" '
-            "LEFT JOIN ("
+            "JOIN ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
             'SUM("candidate_spend") "$candidate-spend" '
@@ -90,7 +89,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             'FROM "politics"."politician" '
             'GROUP BY "$timestamp" ORDER BY "$timestamp"'
             ') "sq0" '
-            "LEFT JOIN ("
+            "JOIN ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
             'SUM("candidate_spend") "$candidate-spend" '
@@ -129,7 +128,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             'FROM "politics"."politician" '
             'GROUP BY "$timestamp","$political_party" ORDER BY "$timestamp","$political_party"'
             ') "sq0" '
-            "LEFT JOIN ("
+            "JOIN ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
             'SUM("candidate_spend") "$candidate-spend" '
@@ -166,7 +165,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             'HAVING SUM("votes")>10 '
             'ORDER BY "$timestamp"'
             ') "sq0" '
-            "LEFT JOIN ("
+            "JOIN ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
             'SUM("candidate_spend") "$candidate-spend" '
@@ -204,7 +203,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             'WHERE "candidate_id"=1 '
             'GROUP BY "$timestamp" ORDER BY "$timestamp"'
             ') "sq0" '
-            "LEFT JOIN ("
+            "JOIN ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
             'SUM("candidate_spend") "$candidate-spend" '
@@ -243,7 +242,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             "WHERE \"political_party\"='d' "
             'GROUP BY "$timestamp" ORDER BY "$timestamp"'
             ') "sq0" '
-            "LEFT JOIN ("
+            "JOIN ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
             'SUM("candidate_spend") "$candidate-spend" '
@@ -285,7 +284,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             'FROM "politics"."politician" '
             'GROUP BY "$timestamp" ORDER BY "$timestamp"'
             ') "sq0" '
-            "LEFT JOIN ("
+            "JOIN ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
             'SUM("candidate_spend") "$candidate-spend" '
@@ -327,7 +326,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             'ON "district"."state_id"="state"."id" '
             'GROUP BY "$timestamp","$state" ORDER BY "$timestamp","$state"'
             ') "sq0" '
-            "LEFT JOIN ("
+            "JOIN ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
             '"state" "$state",'
@@ -368,7 +367,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" ORDER BY "$timestamp"'
                 ') "sq0" '
-                "LEFT JOIN ("
+                "JOIN ("
                 "SELECT "
                 'TRUNC("timestamp",\'DD\') "$timestamp",'
                 'SUM("candidate_spend") "$candidate-spend" '
@@ -392,7 +391,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" ORDER BY "$timestamp"'
                 ') "sq0" '
-                "LEFT JOIN ("
+                "JOIN ("
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('week',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("candidate_spend") "$candidate-spend_wow" '
@@ -434,7 +433,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 'GROUP BY "$timestamp","$candidate-id" '
                 'ORDER BY "$timestamp","$candidate-id"'
                 ') "sq0" '
-                "LEFT JOIN ("
+                "JOIN ("
                 "SELECT "
                 'TRUNC("timestamp",\'DD\') "$timestamp",'
                 '"candidate_id" "$candidate-id",'
@@ -464,7 +463,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 'GROUP BY "$timestamp" '
                 'ORDER BY "$timestamp","$candidate-id"'
                 ') "sq0" '
-                "LEFT JOIN ("
+                "JOIN ("
                 "SELECT "
                 'TRUNC("timestamp",\'DD\') "$timestamp",'
                 'NULL "$candidate-id",'
@@ -509,7 +508,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             'GROUP BY "$timestamp","$candidate-id" '
             'ORDER BY "$timestamp","$candidate-id"'
             ') "sq0" '
-            "LEFT JOIN ("
+            "JOIN ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
             '"candidate_id" "$candidate-id",'

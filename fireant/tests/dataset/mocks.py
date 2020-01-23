@@ -196,6 +196,12 @@ mock_spend_dataset = DataSet(
             definition=politicians_spend_table.state,
             data_type=DataType.text,
         ),
+        Field(
+            "special",
+            label="special",
+            definition=politicians_spend_table.special,
+            data_type=DataType.text,
+        ),
     ],
 ).extra_fields(
     Field(

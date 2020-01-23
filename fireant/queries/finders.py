@@ -192,6 +192,8 @@ def find_field_in_modified_field(field):
     modified_field = field
     while hasattr(modified_field, "dimension"):
         modified_field = modified_field.dimension
+    while hasattr(modified_field, "field"):
+        modified_field = modified_field.field
     return modified_field
 
 

@@ -3,7 +3,11 @@ import csv
 import inspect
 import tempfile
 from collections import OrderedDict
-from functools import partial
+from functools import (
+    partial,
+    wraps,
+)
+from types import GeneratorType
 
 
 def immutable(func):
@@ -271,3 +275,14 @@ def write_named_temp_csv(rows):
         ntf_writer.writerows(rows)
 
     return ntf
+
+
+def listify(func):
+    @wraps(func)
+    def new_func(*args, **kwargs):
+        retval = func(*args, **kwargs)
+        if isinstance(retval, GeneratorType):
+            return list(retval)
+        return retval
+
+    return new_func
