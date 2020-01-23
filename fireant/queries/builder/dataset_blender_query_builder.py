@@ -1,13 +1,10 @@
 import copy
-from typing import (
-    Callable,
-    List,
-)
+from typing import List
 
 from fireant.dataset.fields import Field
 from fireant.queries.builder.dataset_query_builder import DataSetQueryBuilder
 from fireant.queries.finders import (
-    find_dataset_metrics,
+    find_dataset_fields,
     find_field_in_modified_field,
     find_metrics_for_widgets,
 )
@@ -57,7 +54,7 @@ def _find_dataset_fields_needed_to_be_mapped(dataset):
         else:
             complex_fields.append(field)
 
-    yield from find_dataset_metrics(complex_fields)
+    yield from find_dataset_fields(complex_fields)
 
 
 @listify
@@ -76,12 +73,17 @@ def _datasets_and_field_maps(blender):
         primary = dataset.primary_dataset
         secondary = dataset.secondary_dataset
 
-        if hasattr(primary, "primary_dataset"):
-            # TODO handle additional dataset blenders
-            return [
-                *_flatten_blend_datasets(primary),
-                (secondary, dataset.dimension_map),
-            ]
+        # TODO handle additional dataset blenders
+        # if isinstance(primary, DataSetBlenderQueryBuilder):
+        #     return [
+        #         *_flatten_blend_datasets(primary),
+        #         (secondary, dataset.dimension_map),
+        #     ]
+        # if isinstance(secondary, DataSetBlenderQueryBuilder):
+        #     return [
+        #         (primary, dataset.dimension_map),
+        #         *_flatten_blend_datasets(secondary),
+        #     ]
 
         # TODO explain this
         dataset_fields = _find_dataset_fields_needed_to_be_mapped(dataset)
@@ -120,12 +122,7 @@ def _build_dataset_query(dataset, field_map, metrics, dimensions, filters, refer
             if field_from_blender not in field_map:
                 continue
 
-            mapped_field = field_map.get(field_from_blender)
-            if hasattr(field, "for_"):
-                yield field.for_(mapped_field)
-
-            else:
-                yield mapped_field
+            yield field.for_(field_map[field_from_blender])
 
     dataset_metrics = _map_fields(metrics)
 
@@ -173,71 +170,64 @@ def _blender_join_criteria(
     return join_criteria
 
 
-def _blender(dimensions, metrics, orders, field_maps) -> Callable:
-    def _blend_query(*queries):
-        base_query, *join_queries = queries
-        base_field_map, *join_field_maps = field_maps
+def _blend_query(dimensions, metrics, orders, field_maps, queries):
+    base_query, *join_queries = queries
+    base_field_map, *join_field_maps = field_maps
 
-        blender_query = Query.from_(base_query)
-        for join_sql, join_field_map in zip(join_queries, join_field_maps):
-            criteria = _blender_join_criteria(
-                base_query, join_sql, dimensions, base_field_map, join_field_map
+    blender_query = Query.from_(base_query)
+    for join_sql, join_field_map in zip(join_queries, join_field_maps):
+        criteria = _blender_join_criteria(
+            base_query, join_sql, dimensions, base_field_map, join_field_map
+        )
+
+        # In most cases there are dimensions to join the two data blending queries on, but if there are none, then
+        # instead of doing a join, add the data blending query to the from clause
+        blender_query = (
+            blender_query.from_(join_sql)  # <-- no dimensions mapped
+            if criteria is None
+            else blender_query.join(join_sql).on(criteria)  # <-- mapped dimensions
+        )
+
+    def _get_sq_field_for_blender_field(field, reference=None):
+        unmodified_field = find_field_in_modified_field(field)
+        field_alias = alias_selector(reference_alias(field, reference))
+
+        # search for the field in each field map to determine which subquery it will be in
+        for query, field_map in zip(queries, field_maps):
+            if unmodified_field not in field_map:
+                continue
+
+            mapped_field = field_map[unmodified_field]
+            mapped_field_alias = alias_selector(
+                reference_alias(mapped_field, reference)
             )
 
-            # In most cases there are dimensions to join the two data blending queries on, but if there are none, then
-            # instead of doing a join, add the data blending query to the from clause
-            blender_query = (
-                blender_query.from_(join_sql)  # <-- no dimensions mapped
-                if criteria is None
-                else blender_query.join(join_sql).on(criteria)  # <-- mapped dimensions
-            )
+            subquery_field = query[mapped_field_alias]
+            # case #1 modified fields, ex. day(timestamp) or rollup(dimension)
+            return field.for_(subquery_field).as_(field_alias)
 
-        def _get_sq_field_for_blender_field(field, reference=None):
-            unmondified_field = find_field_in_modified_field(field)
-            field_alias = alias_selector(reference_alias(field, reference))
+        # Need to copy the metrics if there are references so that the `get_sql` monkey patch does not conflict
+        definition = copy.deepcopy(field.definition)
+        # case #2: complex blender fields
+        return definition.as_(field_alias)
 
-            # search for the field in each field map to determine which subquery it will be in
-            for query, field_map in zip(queries, field_maps):
-                if unmondified_field not in field_map:
-                    continue
+    reference = base_query._references[0] if base_query._references else None
 
-                mapped_field = field_map[unmondified_field]
-                mapped_field_alias = alias_selector(
-                    reference_alias(mapped_field, reference)
-                )
+    # WARNING: In order to make complex fields work, the get_sql for each field is monkey patched in. This must
+    # happen here because a complex metric by definition references values selected from the dataset subqueries.
+    for metric in find_dataset_fields(metrics):
+        subquery_field = _get_sq_field_for_blender_field(metric, reference)
+        metric.get_sql = subquery_field.get_sql
 
-                subquery_field = query[mapped_field_alias]
-                if hasattr(field, "for_"):
-                    # case #2 modified fields, ex. day(timestamp) or rollup(dimension)
-                    return field.for_(subquery_field).as_(field_alias)
+    sq_dimensions = [_get_sq_field_for_blender_field(d) for d in dimensions]
+    sq_metrics = [_get_sq_field_for_blender_field(m, reference) for m in metrics]
+    blender_query = blender_query.select(*sq_dimensions).select(*sq_metrics)
 
-                # case #1: dataset fields, ex. my_dataset.fields.metric
-                return subquery_field.as_(field_alias)
+    for field, orientation in orders:
+        orderby_field = _get_sq_field_for_blender_field(field)
+        blender_query = blender_query.orderby(orderby_field, order=orientation)
 
-            # Need to copy the metrics if there are references so that the `get_sql` monkey patch does not conflict
-            definition = copy.deepcopy(field.definition)
-            # case #3: complex blender fields
-            return definition.as_(field_alias)
-
-        reference = base_query._references[0] if base_query._references else None
-
-        # WARNING: In order to make complex fields work, the get_sql for each field is monkey patched in. This must
-        # happen here because a complex metric by definition references values selected from the dataset subqueries.
-        for metric in find_dataset_metrics(metrics):
-            subquery_field = _get_sq_field_for_blender_field(metric, reference)
-            metric.get_sql = subquery_field.get_sql
-
-        sq_dimensions = [_get_sq_field_for_blender_field(d) for d in dimensions]
-        sq_metrics = [_get_sq_field_for_blender_field(m, reference) for m in metrics]
-        blender_query = blender_query.select(*sq_dimensions).select(*sq_metrics)
-
-        for field, orientation in orders:
-            orderby_term = _get_sq_field_for_blender_field(field)
-            blender_query = blender_query.orderby(orderby_term, order=orientation)
-
-        return blender_query
-
-    return _blend_query
+    return blender_query
 
 
 class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
@@ -263,9 +253,7 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
 
         datasets, field_maps = _datasets_and_field_maps(self.dataset)
         metrics = find_metrics_for_widgets(self._widgets)
-        # This contains the metrics that must be selected from a dataset subquery
-        dataset_metrics = find_dataset_metrics(metrics)
-        orders = self.orders
+        dataset_metrics = find_dataset_fields(metrics)
         dataset_queries = [
             _build_dataset_query(
                 dataset,
@@ -300,8 +288,10 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         set of queries in a column are then reduced to a single data blending sql query. 
         """
         querysets_tx = list(
-            zip(*[dataset_query.sql for i, dataset_query in enumerate(dataset_queries)])
+            zip(*[dataset_query.sql for dataset_query in dataset_queries])
         )
 
-        blend_query = _blender(self._dimensions, metrics, orders, field_maps)
-        return [blend_query(*cp) for cp in querysets_tx]
+        return [
+            _blend_query(self._dimensions, metrics, self.orders, field_maps, queryset)
+            for queryset in querysets_tx
+        ]
