@@ -75,7 +75,8 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 '"political_party" "$political_party",'
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
-                "WHERE TIMESTAMPADD('day',1,\"timestamp\") BETWEEN '2000-01-01' AND '2000-03-01' "
+                "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('day',-1,'2000-01-01') "
+                "AND TIMESTAMPADD('day',-1,'2000-03-01') "
                 'GROUP BY "$political_party" '
                 'ORDER BY "$political_party"',
                 str(queries[1]),
@@ -945,7 +946,8 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
                 "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
-                "WHERE TIMESTAMPADD('day',1,\"timestamp\") BETWEEN '2018-01-01' AND '2018-01-31' "
+                "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('day',-1,'2018-01-01') "
+                "AND TIMESTAMPADD('day',-1,'2018-01-31') "
                 'GROUP BY "$timestamp" '
                 'ORDER BY "$timestamp"',
                 str(queries[1]),
@@ -990,7 +992,7 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
                 "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
-                "WHERE TIMESTAMPADD('day',1,\"timestamp\") BETWEEN '2018-01-01' AND '2018-01-31' "
+                "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('day',-1,'2018-01-01') AND TIMESTAMPADD('day',-1,'2018-01-31') "
                 "AND \"political_party\" IN ('d') "
                 'GROUP BY "$timestamp" '
                 'ORDER BY "$timestamp"',
@@ -1041,7 +1043,8 @@ class QueryBuilderReferencesWithRollupTests(TestCase):
                 "TRUNC(TIMESTAMPADD('week',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_wow" '
                 'FROM "politics"."politician" '
-                "WHERE TIMESTAMPADD('week',1,\"timestamp\") BETWEEN '2018-01-01' AND '2018-01-31' "
+                "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('week',-1,'2018-01-01') "
+                "AND TIMESTAMPADD('week',-1,'2018-01-31') "
                 'GROUP BY "$timestamp" '
                 'ORDER BY "$timestamp"',
                 str(reference),
@@ -1066,7 +1069,8 @@ class QueryBuilderReferencesWithRollupTests(TestCase):
                 'NULL "$timestamp",'
                 'SUM("votes") "$votes_wow" '
                 'FROM "politics"."politician" '
-                "WHERE TIMESTAMPADD('week',1,\"timestamp\") BETWEEN '2018-01-01' AND '2018-01-31' "
+                "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('week',-1,'2018-01-01') "
+                "AND TIMESTAMPADD('week',-1,'2018-01-31') "
                 'ORDER BY "$timestamp"',
                 str(reference_rollup),
             )

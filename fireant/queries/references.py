@@ -1,7 +1,7 @@
+import copy
 from functools import partial
 
 from fireant.dataset.fields import Field
-
 from .field_helper import make_term_for_field
 from .finders import find_field_in_modified_field
 
@@ -12,13 +12,16 @@ def adapt_for_reference_query(
     if reference_parts is None:
         return dimensions, metrics, filters
 
-    ref_dimension, time_unit, interval = reference_parts
+    ref_dim, unit, interval = reference_parts
+
+    trunc = database.trunc_date
+    offset_func = partial(database.date_add, date_part=unit, interval=interval)
+    offset_func_inv = partial(database.date_add, date_part=unit, interval=-interval)
+
+    ref_dimensions = _make_reference_dimensions(dimensions, ref_dim, offset_func, trunc)
     ref_metrics = _make_reference_metrics(metrics, references[0].reference_type.alias)
-    offset_func = partial(database.date_add, date_part=time_unit, interval=interval)
-    ref_dimensions = _make_reference_dimensions(
-        dimensions, ref_dimension, offset_func, database.trunc_date
-    )
-    ref_filters = _make_reference_filters(filters, ref_dimension, offset_func)
+    ref_filters = _make_reference_filters(filters, ref_dim, offset_func_inv)
+
     return ref_dimensions, ref_metrics, ref_filters
 
 
@@ -75,8 +78,11 @@ def _make_reference_filters(filters, ref_dimension, offset_func):
     reference_filters = []
     for ref_filter in filters:
         if ref_filter.field is ref_dimension:
-            offset_ref_field = _replace_reference_dimension(ref_dimension, offset_func)
-            ref_filter = ref_filter.for_(offset_ref_field)
+            # NOTE: Important to apply the offset function to the start and stop properties because the date math can
+            # become expensive over many rows
+            ref_filter = copy.copy(ref_filter)
+            ref_filter.start = offset_func(ref_filter.start)
+            ref_filter.stop = offset_func(ref_filter.stop)
 
         reference_filters.append(ref_filter)
 
