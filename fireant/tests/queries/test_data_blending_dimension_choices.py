@@ -1,14 +1,15 @@
+from datetime import date
 from unittest.case import TestCase
 from unittest.mock import (
-    patch,
-    Mock,
     ANY,
+    Mock,
+    patch,
 )
 
-from fireant import DataSetException
+from fireant import day
 from fireant.tests.dataset.matchers import (
-    PypikaQueryMatcher,
     FieldMatcher,
+    PypikaQueryMatcher,
 )
 from fireant.tests.dataset.mocks import mock_dataset_blender
 
@@ -19,9 +20,8 @@ class BlenderDimensionsChoicesFetchTests(TestCase):
     def test_query_choices_for_primary_field_in_dataset_blender(
         self, mock_fetch_data: Mock
     ):
-        mock_dataset_blender.fields.political_party.choices.filter(
-            mock_dataset_blender.fields.political_party.isin(["d", "r"])
-        ).fetch()
+        d_or_r = mock_dataset_blender.fields.political_party.isin(["d", "r"])
+        mock_dataset_blender.fields.political_party.choices.filter(d_or_r).fetch()
 
         mock_fetch_data.assert_called_once_with(
             ANY,
@@ -41,9 +41,8 @@ class BlenderDimensionsChoicesFetchTests(TestCase):
     def test_query_choices_for_secondary_field_in_dataset_blender(
         self, mock_fetch_data: Mock
     ):
-        mock_dataset_blender.fields.special.choices.filter(
-            mock_dataset_blender.fields.special.isin(["something"])
-        ).fetch()
+        something = mock_dataset_blender.fields.special.isin(["something"])
+        mock_dataset_blender.fields.special.choices.filter(something).fetch()
 
         mock_fetch_data.assert_called_once_with(
             ANY,
@@ -60,10 +59,22 @@ class BlenderDimensionsChoicesFetchTests(TestCase):
             FieldMatcher(mock_dataset_blender.fields.special),
         )
 
-    def test_query_choices_with_fields_from_different_datasets_raises_exception(
+    def test_silently_omit_filters_on_fields_from_foreign_datasets(
         self, mock_fetch_data: Mock
     ):
-        with self.assertRaises(DataSetException):
-            mock_dataset_blender.fields.political_party.choices.filter(
-                mock_dataset_blender.fields.state.isin(["Texas"])
-            ).fetch()
+        special = mock_dataset_blender.fields.special.isin(["something"])
+        mock_dataset_blender.fields.political_party.choices.filter(special).fetch()
+
+        mock_fetch_data.assert_called_once_with(
+            ANY,
+            [
+                PypikaQueryMatcher(
+                    'SELECT "political_party" "$political_party" '
+                    'FROM "politics"."politician" '
+                    'WHERE NOT "political_party" IS NULL '
+                    'GROUP BY "$political_party" '
+                    'ORDER BY "$political_party"'
+                )
+            ],
+            FieldMatcher(mock_dataset_blender.fields.political_party),
+        )

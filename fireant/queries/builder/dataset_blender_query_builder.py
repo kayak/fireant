@@ -64,39 +64,50 @@ def _map_field(dataset, fields, dimension_map=None):
             yield field, dimension_map[field.definition]
         if field.definition in dataset.fields:
             yield field, field.definition
+            # also yield the dataset field mapped to itself so that any reference to this field (from blender or
+            # from dataset) can be used.
+            yield field.definition, field.definition
         if field in dataset.fields:
             yield field, field
 
 
 def _datasets_and_field_maps(blender):
+    from fireant.dataset.data_blending import DataSetBlender
+
     def _flatten_blend_datasets(dataset) -> List:
         primary = dataset.primary_dataset
         secondary = dataset.secondary_dataset
-
-        # TODO handle additional dataset blenders
-        # if isinstance(primary, DataSetBlenderQueryBuilder):
-        #     return [
-        #         *_flatten_blend_datasets(primary),
-        #         (secondary, dataset.dimension_map),
-        #     ]
-        # if isinstance(secondary, DataSetBlenderQueryBuilder):
-        #     return [
-        #         (primary, dataset.dimension_map),
-        #         *_flatten_blend_datasets(secondary),
-        #     ]
-
         # TODO explain this
         dataset_fields = _find_dataset_fields_needed_to_be_mapped(dataset)
 
-        blender2primary_field_map = dict(
-            _map_field(dataset.primary_dataset, dataset_fields)
-        )
+        blender2primary_field_map = dict(_map_field(primary, dataset_fields))
         blender2secondary_field_map = dict(
-            _map_field(dataset.secondary_dataset, dataset_fields, dataset.dimension_map)
+            _map_field(secondary, dataset_fields, dataset.dimension_map)
         )
 
+        if not isinstance(primary, DataSetBlender):
+            return [
+                (primary, blender2primary_field_map),
+                (secondary, blender2secondary_field_map),
+            ]
+
+        # get the dataset children of the blender (`dataset.primary_dataset`) and their corresponding field_maps,
+        # then update the field map to reference this blender's field (`dataset`)
+        datasets_and_field_maps = []
+        for ds, fm in _flatten_blend_datasets(primary):
+            remapped_field_map = {**fm}
+            for field in dataset_fields:
+                if (
+                    field not in blender2primary_field_map
+                    or blender2primary_field_map[field] not in fm
+                ):
+                    continue
+                remapped_field_map[field] = fm[blender2primary_field_map[field]]
+
+            datasets_and_field_maps.append((ds, remapped_field_map))
+
         return [
-            (primary, blender2primary_field_map),
+            *datasets_and_field_maps,
             (secondary, blender2secondary_field_map),
         ]
 

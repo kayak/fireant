@@ -319,3 +319,175 @@ class DataSetBlenderIntegrationTests(TestCase):
             'ORDER BY "$a"',
             str(query),
         )
+
+
+class DataSetBlenderMultipleDatasetsTests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        db = Database()
+        t0, t1, t2, t3 = Tables("test0", "test1", "test2", "test3")
+        cls.primary_ds = DataSet(
+            table=t0,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t0.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "metric0",
+                    label="Metric0",
+                    definition=t0.metric,
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        cls.primary_ds.id = 0
+        cls.secondary_ds = DataSet(
+            table=t1,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t1.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "metric1",
+                    label="Metric1",
+                    definition=t1.metric,
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        cls.secondary_ds.id = 1
+        cls.tertiary_ds = DataSet(
+            table=t2,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t2.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "metric2",
+                    label="Metric2",
+                    definition=t2.metric,
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        cls.tertiary_ds.id = 2
+        cls.quaternary_ds = DataSet(
+            table=t3,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t3.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "metric3",
+                    label="Metric3",
+                    definition=t3.metric,
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        cls.quaternary_ds.id = 3
+        cls.blend_ds = (
+            cls.primary_ds.blend(cls.secondary_ds)
+            .on_dimensions()
+            .blend(cls.tertiary_ds)
+            .on_dimensions()
+            .blend(cls.quaternary_ds)
+            .on_dimensions()
+        )
+
+    def _do_test(self, blender):
+        (query,) = (
+            blender.query()
+            .dimension(blender.fields.timestamp)
+            .widget(ReactTable(blender.fields.metric_share))
+        ).sql
+
+        self.assertEqual(
+            (
+                "SELECT "
+                '"sq0"."$timestamp" "$timestamp",'
+                '"sq0"."$metric0"/"sq1"."$metric1"/"sq2"."$metric2"/"sq3"."$metric3" "$metric_share" '
+                "FROM ("
+                "SELECT "
+                '"timestamp" "$timestamp",'
+                '"metric" "$metric0" '
+                'FROM "test0" '
+                'GROUP BY "$timestamp" '
+                'ORDER BY "$timestamp"'
+                ') "sq0" '
+                "JOIN ("
+                "SELECT "
+                '"timestamp" "$timestamp",'
+                '"metric" "$metric1" '
+                'FROM "test1" '
+                'GROUP BY "$timestamp" '
+                'ORDER BY "$timestamp"'
+                ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
+                "JOIN ("
+                "SELECT "
+                '"timestamp" "$timestamp",'
+                '"metric" "$metric2" '
+                'FROM "test2" '
+                'GROUP BY "$timestamp" '
+                'ORDER BY "$timestamp"'
+                ') "sq2" ON "sq0"."$timestamp"="sq2"."$timestamp" '
+                "JOIN ("
+                "SELECT "
+                '"timestamp" "$timestamp",'
+                '"metric" "$metric3" '
+                'FROM "test3" '
+                'GROUP BY "$timestamp" '
+                'ORDER BY "$timestamp"'
+                ') "sq3" ON "sq0"."$timestamp"="sq3"."$timestamp" '
+                'ORDER BY "$timestamp"'
+            ),
+            str(query),
+        )
+
+    def test_dataset_blender_fourway_flattens_on_join_criteria_to_build_on_primary_dataset(
+        self,
+    ):
+        self._do_test(
+            self.blend_ds.extra_fields(
+                Field(
+                    "metric_share",
+                    label="Metric Share",
+                    definition=self.primary_ds.fields.metric0
+                    / self.secondary_ds.fields.metric1
+                    / self.tertiary_ds.fields.metric2
+                    / self.quaternary_ds.fields.metric3,
+                    data_type=DataType.number,
+                ),
+            )
+        )
+
+    def test_dataset_using_fields_refering_top_blender_maps_to_correct_field(self):
+        self._do_test(
+            self.blend_ds.extra_fields(
+                Field(
+                    "metric_share",
+                    label="Metric Share",
+                    definition=self.blend_ds.fields.metric0
+                    / self.blend_ds.fields.metric1
+                    / self.blend_ds.fields.metric2
+                    / self.blend_ds.fields.metric3,
+                    data_type=DataType.number,
+                ),
+            )
+        )

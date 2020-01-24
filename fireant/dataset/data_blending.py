@@ -149,6 +149,9 @@ class DataSetBlenderBuilder:
 
 class DimensionChoicesBlenderQueryBuilder(DimensionChoicesQueryBuilder):
     def filter(self, *filters, **kwargs):
-        # replace blender filter field with field of primary/secondary
-        filters = [fltr.for_(fltr.field.definition) for fltr in filters]
+        filters = [
+            fltr.for_(fltr.field.definition)
+            for fltr in filters
+            if fltr.field.definition in self.dataset.fields
+        ]
         return super().filter(*filters, **kwargs)
