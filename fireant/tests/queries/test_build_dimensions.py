@@ -12,7 +12,8 @@ class QueryBuilderDimensionTests(TestCase):
 
     def test_build_query_with_datetime_no_interval(self):
         queries = (
-            mock_dataset.query.widget(f.ReactTable(mock_dataset.fields.votes))
+            mock_dataset.query()
+            .widget(f.ReactTable(mock_dataset.fields.votes))
             .dimension(mock_dataset.fields.timestamp)
             .sql
         )
@@ -31,7 +32,8 @@ class QueryBuilderDimensionTests(TestCase):
 
     def test_build_query_with_datetime_interval_hourly(self):
         queries = (
-            mock_dataset.query.widget(f.ReactTable(mock_dataset.fields.votes))
+            mock_dataset.query()
+            .widget(f.ReactTable(mock_dataset.fields.votes))
             .dimension(f.hour(mock_dataset.fields.timestamp))
             .sql
         )
@@ -50,7 +52,8 @@ class QueryBuilderDimensionTests(TestCase):
 
     def test_build_query_with_datetime_interval_daily(self):
         queries = (
-            mock_dataset.query.widget(f.ReactTable(mock_dataset.fields.votes))
+            mock_dataset.query()
+            .widget(f.ReactTable(mock_dataset.fields.votes))
             .dimension(f.day(mock_dataset.fields.timestamp))
             .sql
         )
@@ -69,7 +72,8 @@ class QueryBuilderDimensionTests(TestCase):
 
     def test_build_query_with_datetime_interval_weekly(self):
         queries = (
-            mock_dataset.query.widget(f.ReactTable(mock_dataset.fields.votes))
+            mock_dataset.query()
+            .widget(f.ReactTable(mock_dataset.fields.votes))
             .dimension(f.week(mock_dataset.fields.timestamp))
             .sql
         )
@@ -88,7 +92,8 @@ class QueryBuilderDimensionTests(TestCase):
 
     def test_build_query_with_datetime_interval_monthly(self):
         queries = (
-            mock_dataset.query.widget(f.ReactTable(mock_dataset.fields.votes))
+            mock_dataset.query()
+            .widget(f.ReactTable(mock_dataset.fields.votes))
             .dimension(f.month(mock_dataset.fields.timestamp))
             .sql
         )
@@ -107,7 +112,8 @@ class QueryBuilderDimensionTests(TestCase):
 
     def test_build_query_with_datetime_interval_quarterly(self):
         queries = (
-            mock_dataset.query.widget(f.ReactTable(mock_dataset.fields.votes))
+            mock_dataset.query()
+            .widget(f.ReactTable(mock_dataset.fields.votes))
             .dimension(f.quarter(mock_dataset.fields.timestamp))
             .sql
         )
@@ -126,7 +132,8 @@ class QueryBuilderDimensionTests(TestCase):
 
     def test_build_query_with_datetime_interval_annually(self):
         queries = (
-            mock_dataset.query.widget(f.ReactTable(mock_dataset.fields.votes))
+            mock_dataset.query()
+            .widget(f.ReactTable(mock_dataset.fields.votes))
             .dimension(f.year(mock_dataset.fields.timestamp))
             .sql
         )
@@ -145,7 +152,8 @@ class QueryBuilderDimensionTests(TestCase):
 
     def test_build_query_with_boolean_type_dimension(self):
         queries = (
-            mock_dataset.query.widget(f.ReactTable(mock_dataset.fields.votes))
+            mock_dataset.query()
+            .widget(f.ReactTable(mock_dataset.fields.votes))
             .dimension(mock_dataset.fields.winner)
             .sql
         )
@@ -164,7 +172,8 @@ class QueryBuilderDimensionTests(TestCase):
 
     def test_build_query_with_dimension(self):
         queries = (
-            mock_dataset.query.widget(f.ReactTable(mock_dataset.fields.votes))
+            mock_dataset.query()
+            .widget(f.ReactTable(mock_dataset.fields.votes))
             .dimension(mock_dataset.fields.political_party)
             .sql
         )
@@ -183,7 +192,8 @@ class QueryBuilderDimensionTests(TestCase):
 
     def test_build_query_with_multiple_dimensions(self):
         queries = (
-            mock_dataset.query.widget(f.ReactTable(mock_dataset.fields.votes))
+            mock_dataset.query()
+            .widget(f.ReactTable(mock_dataset.fields.votes))
             .dimension(f.day(mock_dataset.fields.timestamp))
             .dimension(mock_dataset.fields["candidate-id"])
             .dimension(mock_dataset.fields["candidate-name"])
@@ -206,9 +216,8 @@ class QueryBuilderDimensionTests(TestCase):
 
     def test_build_query_with_multiple_dimensions_and_visualizations(self):
         queries = (
-            mock_dataset.query.widget(
-                f.ReactTable(mock_dataset.fields.votes, mock_dataset.fields.wins)
-            )
+            mock_dataset.query()
+            .widget(f.ReactTable(mock_dataset.fields.votes, mock_dataset.fields.wins))
             .widget(
                 f.HighCharts()
                 .axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
@@ -240,7 +249,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
 
     def test_build_query_with_single_rollup_dimension(self):
         queries = (
-            mock_dataset.query.widget(f.ReactTable(mock_dataset.fields.votes))
+            mock_dataset.query()
+            .widget(f.ReactTable(mock_dataset.fields.votes))
             .dimension(f.Rollup(mock_dataset.fields.political_party))
             .sql
         )
@@ -270,7 +280,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
 
     def test_build_query_with_totals_on_dimension_and_subsequent_dimensions(self):
         queries = (
-            mock_dataset.query.widget(f.ReactTable(mock_dataset.fields.votes))
+            mock_dataset.query()
+            .widget(f.ReactTable(mock_dataset.fields.votes))
             .dimension(
                 f.day(mock_dataset.fields.timestamp),
                 f.Rollup(mock_dataset.fields["candidate-id"]),
@@ -309,7 +320,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
 
     def test_build_query_with_rollup_multiple_dimensions(self):
         queries = (
-            mock_dataset.query.widget(f.ReactTable(mock_dataset.fields.votes))
+            mock_dataset.query()
+            .widget(f.ReactTable(mock_dataset.fields.votes))
             .dimension(
                 f.day(mock_dataset.fields.timestamp),
                 f.Rollup(mock_dataset.fields["candidate-id"]),
@@ -366,7 +378,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
 
     def test_build_query_with_rollup_dimension_and_a_reference(self):
         queries = (
-            mock_dataset.query.widget(f.ReactTable(mock_dataset.fields.votes))
+            mock_dataset.query()
+            .widget(f.ReactTable(mock_dataset.fields.votes))
             .dimension(
                 f.day(mock_dataset.fields.timestamp),
                 f.Rollup(mock_dataset.fields.political_party),
@@ -433,7 +446,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
         self,
     ):
         queries = (
-            mock_dataset.query.widget(f.ReactTable(mock_dataset.fields.votes))
+            mock_dataset.query()
+            .widget(f.ReactTable(mock_dataset.fields.votes))
             .dimension(f.day(mock_dataset.fields.timestamp))
             .dimension(f.Rollup(mock_dataset.fields.political_party))
             .reference(f.DayOverDay(mock_dataset.fields.timestamp))
@@ -507,7 +521,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
 
     def test_build_query_with_rollup_dimension_and_total_filter_not_applied(self):
         queries = (
-            mock_dataset.query.widget(f.ReactTable(mock_dataset.fields.votes))
+            mock_dataset.query()
+            .widget(f.ReactTable(mock_dataset.fields.votes))
             .dimension(
                 mock_dataset.fields.political_party,
                 f.Rollup(f.day(mock_dataset.fields.timestamp)),
@@ -555,7 +570,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
         self,
     ):
         queries = (
-            mock_dataset.query.widget(f.ReactTable(mock_dataset.fields.votes))
+            mock_dataset.query()
+            .widget(f.ReactTable(mock_dataset.fields.votes))
             .dimension(
                 mock_dataset.fields.political_party,
                 f.Rollup(f.day(mock_dataset.fields.timestamp)),
@@ -608,7 +624,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
         self,
     ):
         queries = (
-            mock_dataset.query.widget(f.ReactTable(mock_dataset.fields.votes))
+            mock_dataset.query()
+            .widget(f.ReactTable(mock_dataset.fields.votes))
             .dimension(
                 f.Rollup(mock_dataset.fields.political_party),
                 f.Rollup(f.day(mock_dataset.fields.timestamp)),
