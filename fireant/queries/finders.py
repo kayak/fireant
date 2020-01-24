@@ -122,7 +122,7 @@ def find_operations_for_widgets(widgets):
     )
 
 
-def find_dataset_metrics(metrics):
+def find_dataset_fields(metrics):
     """
     Given a list of metrics used in widgets from a dataset blender query, this function returns a list of metrics that
     are from a dataset. Concretely, this means that if a dataset blender has a metric built on dataset metrics, then
@@ -192,6 +192,8 @@ def find_field_in_modified_field(field):
     modified_field = field
     while hasattr(modified_field, "dimension"):
         modified_field = modified_field.dimension
+    while hasattr(modified_field, "field"):
+        modified_field = modified_field.field
     return modified_field
 
 

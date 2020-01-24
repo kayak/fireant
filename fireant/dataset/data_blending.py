@@ -6,33 +6,40 @@ from fireant.queries.builder import (
 )
 from fireant.queries.builder.query_builder import validate_fields
 from fireant.utils import (
-    immutable,
     deepcopy,
+    immutable,
+    ordered_distinct_list_by_attr,
 )
 
 
 def _wrap_dataset_fields(dataset):
     wrapped_fields = []
     for field in dataset.fields:
-        wrapped_field = Field(
-            alias=field.alias,
-            definition=field,
-            data_type=field.data_type,
-            label=field.label,
-            hint_table=field.hint_table,
-            prefix=field.prefix,
-            suffix=field.suffix,
-            thousands=field.thousands,
-            precision=field.precision,
-            hyperlink_template=field.hyperlink_template,
-        )
-
-        if not field.definition.is_aggregate:
-            wrapped_field.choices = DimensionChoicesBlenderQueryBuilder(dataset, field)
+        wrapped_field = _wrap_field(dataset, field)
 
         wrapped_fields.append(wrapped_field)
 
     return wrapped_fields
+
+
+def _wrap_field(dataset, field):
+    wrapped_field = Field(
+        alias=field.alias,
+        definition=field,
+        data_type=field.data_type,
+        label=field.label,
+        hint_table=field.hint_table,
+        prefix=field.prefix,
+        suffix=field.suffix,
+        thousands=field.thousands,
+        precision=field.precision,
+        hyperlink_template=field.hyperlink_template,
+    )
+
+    if not field.definition.is_aggregate:
+        wrapped_field.choices = DimensionChoicesBlenderQueryBuilder(dataset, field)
+
+    return wrapped_field
 
 
 class DataSetBlender:
@@ -41,7 +48,7 @@ class DataSetBlender:
     instances.
     """
 
-    def __init__(self, primary_dataset, secondary_dataset, field_map):
+    def __init__(self, primary_dataset, secondary_dataset, dimension_map):
         """
         Constructor for a blended dataset.  Contains all the fields to initialize the dataset.
 
@@ -52,23 +59,25 @@ class DataSetBlender:
         :param secondary_dataset: (Required)
             The dataset being blended. This should be a `DataSet` instance. (It might actually work with an instance of
             `DataSetBlender` as well, though.)
-        :param field_map:
+        :param dimension_map:
             A dict mapping up fields from the primary to the secondary dataset. This tells the Blender which fields
             can be used as dimensions in the Blender queries.
         """
         self.primary_dataset = primary_dataset
         self.secondary_dataset = secondary_dataset
-        self.field_map = field_map
+        self.dimension_map = dimension_map
 
         # Wrap all dataset fields with another field on top so that:
         #   1. DataSetBlender doesn't share a reference to a field with a DataSet
         #   2. When complex fields are added, the `definition` attribute will always have at least one field within
         #      its object graph
         self.fields = DataSet.Fields(
-            [
-                *_wrap_dataset_fields(secondary_dataset),
-                *_wrap_dataset_fields(primary_dataset),
-            ]
+            ordered_distinct_list_by_attr(
+                [
+                    *_wrap_dataset_fields(primary_dataset),
+                    *_wrap_dataset_fields(secondary_dataset),
+                ]
+            )
         )
 
         # add query builder entry points
@@ -87,7 +96,7 @@ class DataSetBlender:
         return hash((self.primary_dataset, self.secondary_dataset, self.fields))
 
     def __deepcopy__(self, memodict={}):
-        for field in self.field_map.values():
+        for field in self.dimension_map.values():
             memodict[id(field)] = field
         return deepcopy(self, memodict)
 
@@ -116,11 +125,13 @@ class DataSetBlenderBuilder:
         self.primary_dataset = primary
         self.secondary_dataset = secondary
 
-    def on(self, field_map):
-        return DataSetBlender(self.primary_dataset, self.secondary_dataset, field_map)
+    def on(self, dimension_map):
+        return DataSetBlender(
+            self.primary_dataset, self.secondary_dataset, dimension_map
+        )
 
     def on_dimensions(self):
-        field_map = {}
+        dimension_map = {}
 
         for secondary_ds_field in self.secondary_dataset.fields:
             is_aggregate_field = secondary_ds_field.is_aggregate
@@ -131,18 +142,16 @@ class DataSetBlenderBuilder:
                 continue
 
             primary_ds_field = self.primary_dataset.fields[secondary_ds_field.alias]
-            field_map[primary_ds_field] = secondary_ds_field
+            dimension_map[primary_ds_field] = secondary_ds_field
 
-        return self.on(field_map)
+        return self.on(dimension_map)
 
 
 class DimensionChoicesBlenderQueryBuilder(DimensionChoicesQueryBuilder):
-    @immutable
-    def filter(self, *filters):
-        for filter_ in filters:
-            filter_.field = (
-                filter_.field.definition
-            )  # replace blender filter field with field of primary/secondary
-
-        validate_fields([filter_.field for filter_ in filters], self.dataset)
-        self._filters += [filter_ for filter_ in filters]
+    def filter(self, *filters, **kwargs):
+        filters = [
+            fltr.for_(fltr.field.definition)
+            for fltr in filters
+            if fltr.field.definition in self.dataset.fields
+        ]
+        return super().filter(*filters, **kwargs)

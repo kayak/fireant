@@ -272,6 +272,9 @@ class Field(Node):
 
         return id(self)
 
+    def for_(self, replacement):
+        return replacement
+
     def get_sql(self, **kwargs):
         raise NotImplementedError
 
