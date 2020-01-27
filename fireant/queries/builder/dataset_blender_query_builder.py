@@ -185,7 +185,7 @@ def _blend_query(dimensions, metrics, orders, field_maps, queries):
     base_query, *join_queries = queries
     base_field_map, *join_field_maps = field_maps
 
-    blender_query = Query.from_(base_query)
+    blender_query = Query.from_(base_query, immutable=False)
     for join_sql, join_field_map in zip(join_queries, join_field_maps):
         criteria = _blender_join_criteria(
             base_query, join_sql, dimensions, base_field_map, join_field_map

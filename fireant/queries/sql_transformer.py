@@ -151,7 +151,7 @@ def make_slicer_query(
 
     :return:
     """
-    query = database.query_cls.from_(base_table)
+    query = database.query_cls.from_(base_table, immutable=False)
     elements = flatten([metrics, dimensions, filters])
 
     # Add joins
@@ -199,7 +199,7 @@ def make_latest_query(
     joins: Iterable[Join] = (),
     dimensions: Iterable[Field] = (),
 ):
-    query = database.query_cls.from_(base_table)
+    query = database.query_cls.from_(base_table, immutable=False)
 
     # Add joins
     join_tables_needed_for_query = find_required_tables_to_join(dimensions, base_table)

@@ -63,7 +63,7 @@ class PostgreSQLDatabase(Database):
         columns = Table("columns", schema="INFORMATION_SCHEMA")
 
         columns_query = (
-            PostgreSQLQuery.from_(columns)
+            PostgreSQLQuery.from_(columns, immutable=False)
             .select(columns.column_name, columns.data_type)
             .where(columns.table_schema == schema)
             .where(columns.field("table_name") == table)

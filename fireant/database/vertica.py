@@ -96,7 +96,7 @@ class VerticaDatabase(Database):
         table_columns = Table("columns")
 
         table_query = (
-            VerticaQuery.from_(table_columns)
+            VerticaQuery.from_(table_columns, immutable=False)
             .select(table_columns.column_name, table_columns.data_type)
             .where(
                 (table_columns.table_schema == schema)
