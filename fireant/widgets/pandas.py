@@ -17,16 +17,26 @@ HARD_MAX_COLUMNS = 24
 
 
 class Pandas(TransformableWidget):
-    def __init__(self, metric: Field, *metrics: Iterable[Field],
-                 pivot=(), transpose=False, sort=None, ascending=None, max_columns=None):
+    def __init__(
+        self,
+        metric: Field,
+        *metrics: Iterable[Field],
+        pivot=(),
+        transpose=False,
+        sort=None,
+        ascending=None,
+        max_columns=None
+    ):
         super(Pandas, self).__init__(metric, *metrics)
         self.pivot = pivot
         self.transpose = transpose
         self.sort = sort
         self.ascending = ascending
-        self.max_columns = min(max_columns, HARD_MAX_COLUMNS) \
-            if max_columns is not None \
+        self.max_columns = (
+            min(max_columns, HARD_MAX_COLUMNS)
+            if max_columns is not None
             else HARD_MAX_COLUMNS
+        )
 
     def transform(self, data_frame, slicer, dimensions, references):
         """
@@ -40,30 +50,33 @@ class Pandas(TransformableWidget):
         """
         result = data_frame.copy()
 
-        items = [item if reference is None else ReferenceItem(item, reference)
-                 for item in self.items
-                 for reference in [None] + references]
+        items = [
+            item if reference is None else ReferenceItem(item, reference)
+            for item in self.items
+            for reference in [None] + references
+        ]
 
         if isinstance(data_frame.index, pd.MultiIndex):
-            index_levels = [alias_selector(dimension.alias)
-                            for dimension in dimensions]
+            index_levels = [alias_selector(dimension.alias) for dimension in dimensions]
             result = result.reorder_levels(index_levels)
 
-        result = result[[alias_selector(item.alias)
-                         for item in items]]
+        result = result[[alias_selector(item.alias) for item in items]]
 
         if dimensions:
-            result.index.names = [dimension.label or dimension.alias
-                                  for dimension in dimensions]
+            result.index.names = [
+                dimension.label or dimension.alias for dimension in dimensions
+            ]
 
-        result.columns = pd.Index([item.label
-                                   for item in items],
-                                  name='Metrics')
+        result.columns = pd.Index([item.label for item in items], name="Metrics")
 
-        pivot_dimensions = [dimension.label or dimension.alias for dimension in self.pivot]
+        pivot_dimensions = [
+            dimension.label or dimension.alias for dimension in self.pivot
+        ]
         pivot_df = self.pivot_data_frame(result, pivot_dimensions, self.transpose)
 
-        return self.add_formatting(dimensions, items, pivot_df).fillna(value=formats.BLANK_VALUE)
+        return self.add_formatting(dimensions, items, pivot_df).fillna(
+            value=formats.BLANK_VALUE
+        )
 
     def pivot_data_frame(self, data_frame, pivot=(), transpose=False):
         """
@@ -83,7 +96,9 @@ class Pandas(TransformableWidget):
             The shifted/transposed data frame
         """
         not_transforming_df = not (pivot or transpose)
-        pivot_and_transpose_cancel_out = transpose and len(pivot) == len(data_frame.index.names)
+        pivot_and_transpose_cancel_out = transpose and len(pivot) == len(
+            data_frame.index.names
+        )
         if not_transforming_df or pivot_and_transpose_cancel_out:
             return self.sort_data_frame(data_frame)
 
@@ -98,9 +113,15 @@ class Pandas(TransformableWidget):
             data_frame = data_frame.transpose()
 
         # If there are more than one column levels and the last level is a single metric, drop the level
-        if isinstance(data_frame.columns, pd.MultiIndex) and 1 == len(data_frame.columns.levels[0]):
-            data_frame.name = data_frame.columns.levels[0][0]  # capture the name of the metrics column
-            data_frame.columns = data_frame.columns.droplevel(0)  # drop the metrics level
+        if isinstance(data_frame.columns, pd.MultiIndex) and 1 == len(
+            data_frame.columns.levels[0]
+        ):
+            data_frame.name = data_frame.columns.levels[0][
+                0
+            ]  # capture the name of the metrics column
+            data_frame.columns = data_frame.columns.droplevel(
+                0
+            )  # drop the metrics level
 
         return self.sort_data_frame(data_frame)
 
@@ -114,14 +135,12 @@ class Pandas(TransformableWidget):
         unsorted = data_frame.reset_index()
         column_names = list(unsorted.columns)
 
-        ascending = self.ascending \
-            if self.ascending is not None \
-            else True
+        ascending = self.ascending if self.ascending is not None else True
 
         sort = wrap_list(self.sort)
-        sort_columns = [column_names[column]
-                        for column in sort
-                        if column < len(column_names)]
+        sort_columns = [
+            column_names[column] for column in sort if column < len(column_names)
+        ]
 
         if not sort_columns:
             return data_frame
@@ -129,16 +148,14 @@ class Pandas(TransformableWidget):
         # ignore additional values for ascending if they do not align lengthwise with sort_columns
         # Default to the first value or None
         if isinstance(ascending, list) and len(ascending) != len(sort_columns):
-            ascending = ascending[0] \
-                if len(ascending) > 0 \
-                else None
+            ascending = ascending[0] if len(ascending) > 0 else None
 
-        sorted = unsorted \
-            .sort_values(sort_columns, ascending=ascending) \
-            .set_index(index_names)
+        sorted = unsorted.sort_values(sort_columns, ascending=ascending).set_index(
+            index_names
+        )
 
         # Maintain the single metric name
-        if hasattr(data_frame, 'name'):
+        if hasattr(data_frame, "name"):
             sorted.name = data_frame.name
 
         return sorted
@@ -147,12 +164,20 @@ class Pandas(TransformableWidget):
         format_df = pivot_df.copy()
 
         def _get_f_display(item):
-            return partial(formats.display_value, field=item)
+            return partial(
+                formats.display_value, field=item, nan_value="", null_value=""
+            )
 
-        if self.transpose or not self.transpose and len(dimensions) == len(self.pivot) > 0:
+        if (
+            self.transpose
+            or not self.transpose
+            and len(dimensions) == len(self.pivot) > 0
+        ):
             for item in items:
                 f_display = _get_f_display(item)
-                format_df.loc[items[0].label] = format_df.loc[items[0].label].apply(f_display)
+                format_df.loc[items[0].label] = format_df.loc[items[0].label].apply(
+                    f_display
+                )
 
             return format_df
 
@@ -164,8 +189,10 @@ class Pandas(TransformableWidget):
         for item in items:
             key = item.label
             f_display = _get_f_display(item)
-            format_df[key] = format_df[key].apply(f_display) \
-                if isinstance(format_df[key], pd.Series) \
+            format_df[key] = (
+                format_df[key].apply(f_display)
+                if isinstance(format_df[key], pd.Series)
                 else format_df[key].applymap(f_display)
+            )
 
         return format_df
