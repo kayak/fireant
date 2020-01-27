@@ -1,10 +1,5 @@
 from typing import Iterable
 
-from pypika import (
-    Table,
-    functions as fn,
-)
-
 from fireant.database import Database
 from fireant.dataset.fields import Field
 from fireant.dataset.filters import Filter
@@ -14,10 +9,11 @@ from fireant.utils import (
     alias_selector,
     flatten,
 )
-from .field_helper import (
-    make_term_for_field,
-    make_term_for_field,
+from pypika import (
+    Table,
+    functions as fn,
 )
+from .field_helper import make_term_for_field
 from .finders import (
     find_and_group_references_for_dimensions,
     find_joins_for_tables,

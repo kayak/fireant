@@ -4,28 +4,26 @@ from pypika import (
     functions as fn,
     terms,
 )
-
 from .base import Database
-from .type_engine import TypeEngine
-
 from .sql_types import (
-    Char,
-    VarChar,
-    Text,
-    Boolean,
-    Integer,
-    SmallInt,
     BigInt,
-    Decimal,
-    Numeric,
-    Float,
-    Real,
-    DoublePrecision,
+    Boolean,
+    Char,
     Date,
-    Time,
     DateTime,
+    Decimal,
+    DoublePrecision,
+    Float,
+    Integer,
+    Numeric,
+    Real,
+    SmallInt,
+    Text,
+    Time,
     Timestamp,
+    VarChar,
 )
+from .type_engine import TypeEngine
 
 
 class Trunc(terms.Function):
@@ -34,7 +32,7 @@ class Trunc(terms.Function):
     """
 
     def __init__(self, field, date_format, alias=None):
-        super(Trunc, self).__init__('TRUNC', field, date_format, alias=alias)
+        super(Trunc, self).__init__("TRUNC", field, date_format, alias=alias)
         # Setting the fields here means we can access the TRUNC args by name.
         self.field = field
         self.date_format = date_format
@@ -50,16 +48,24 @@ class VerticaDatabase(Database):
     query_cls = VerticaQuery
 
     DATETIME_INTERVALS = {
-        'hour': 'HH',
-        'day': 'DD',
-        'week': 'IW',
-        'month': 'MM',
-        'quarter': 'Q',
-        'year': 'Y'
+        "hour": "HH",
+        "day": "DD",
+        "week": "IW",
+        "month": "MM",
+        "quarter": "Q",
+        "year": "Y",
     }
 
-    def __init__(self, host='localhost', port=5433, database='vertica', user='vertica', password=None,
-                 read_timeout=None, **kwags):
+    def __init__(
+        self,
+        host="localhost",
+        port=5433,
+        database="vertica",
+        user="vertica",
+        password=None,
+        read_timeout=None,
+        **kwags
+    ):
         super(VerticaDatabase, self).__init__(host, port, database, **kwags)
         self.user = user
         self.password = password
@@ -69,25 +75,35 @@ class VerticaDatabase(Database):
     def connect(self):
         import vertica_python
 
-        return vertica_python.connect(host=self.host, port=self.port, database=self.database,
-                                      user=self.user, password=self.password,
-                                      read_timeout=self.read_timeout,
-                                      unicode_error='replace')
+        return vertica_python.connect(
+            host=self.host,
+            port=self.port,
+            database=self.database,
+            user=self.user,
+            password=self.password,
+            read_timeout=self.read_timeout,
+            unicode_error="replace",
+        )
 
     def trunc_date(self, field, interval):
-        trunc_date_interval = self.DATETIME_INTERVALS.get(str(interval), 'DD')
+        trunc_date_interval = self.DATETIME_INTERVALS.get(str(interval), "DD")
         return Trunc(field, trunc_date_interval)
 
     def date_add(self, field, date_part, interval):
         return fn.TimestampAdd(str(date_part), interval, field)
 
     def get_column_definitions(self, schema, table, connection=None):
-        table_columns = Table('columns')
+        table_columns = Table("columns")
 
-        table_query = VerticaQuery.from_(table_columns) \
-            .select(table_columns.column_name, table_columns.data_type) \
-            .where((table_columns.table_schema == schema) & (table_columns.field('table_name') == table)) \
+        table_query = (
+            VerticaQuery.from_(table_columns)
+            .select(table_columns.column_name, table_columns.data_type)
+            .where(
+                (table_columns.table_schema == schema)
+                & (table_columns.field("table_name") == table)
+            )
             .distinct()
+        )
 
         return self.fetch(str(table_query), connection=connection)
 
@@ -99,9 +115,7 @@ class VerticaDatabase(Database):
         :param file_path: The path of the file to be imported.
         :param connection: (Optional) The connection to execute this query with.
         """
-        import_query = VerticaQuery \
-            .from_file(file_path) \
-            .copy_(table)
+        import_query = VerticaQuery.from_file(file_path).copy_(table)
 
         self.execute(str(import_query), connection=connection)
 
@@ -113,12 +127,13 @@ class VerticaDatabase(Database):
         :param columns: The columns of the new temporary table.
         :param connection: (Optional) The connection to execute this query with.
         """
-        create_query = VerticaQuery \
-            .create_table(table) \
-            .temporary() \
-            .local() \
-            .preserve_rows() \
+        create_query = (
+            VerticaQuery.create_table(table)
+            .temporary()
+            .local()
+            .preserve_rows()
             .columns(*columns)
+        )
 
         self.execute(str(create_query), connection=connection)
 
@@ -130,63 +145,66 @@ class VerticaDatabase(Database):
         :param select_query: The query to be used for selecting data of an existing table for the new temporary table.
         :param connection: (Optional) The connection to execute this query with.
         """
-        create_query = VerticaQuery \
-            .create_table(table) \
-            .temporary() \
-            .local() \
-            .preserve_rows() \
+        create_query = (
+            VerticaQuery.create_table(table)
+            .temporary()
+            .local()
+            .preserve_rows()
             .as_select(select_query)
+        )
 
         self.execute(str(create_query), connection=connection)
 
 
 class VerticaTypeEngine(TypeEngine):
     vertica_to_ansi_mapper = {
-        'char': Char,
-        'varchar': VarChar,
-        'varchar2': VarChar,
-        'longvarchar': Text,
-        'boolean': Boolean,
-        'int': Integer,
-        'integer': Integer,
-        'int8': Integer,
-        'smallint': SmallInt,
-        'tinyint': SmallInt,
-        'bigint': BigInt,
-        'decimal': Decimal,
-        'numeric': Numeric,
-        'number': Numeric,
-        'float': Float,
-        'float8': Float,
-        'real': Real,
-        'double': DoublePrecision,
-        'date': Date,
-        'time': Time,
-        'timetz': Time,
-        'datetime': DateTime,
-        'smalldatetime': DateTime,
-        'timestamp': Timestamp,
-        'timestamptz': Timestamp,
+        "char": Char,
+        "varchar": VarChar,
+        "varchar2": VarChar,
+        "longvarchar": Text,
+        "boolean": Boolean,
+        "int": Integer,
+        "integer": Integer,
+        "int8": Integer,
+        "smallint": SmallInt,
+        "tinyint": SmallInt,
+        "bigint": BigInt,
+        "decimal": Decimal,
+        "numeric": Numeric,
+        "number": Numeric,
+        "float": Float,
+        "float8": Float,
+        "real": Real,
+        "double": DoublePrecision,
+        "date": Date,
+        "time": Time,
+        "timetz": Time,
+        "datetime": DateTime,
+        "smalldatetime": DateTime,
+        "timestamp": Timestamp,
+        "timestamptz": Timestamp,
     }
 
     ansi_to_vertica_mapper = {
-        'CHAR': 'char',
-        'VARCHAR': 'varchar',
-        'TEXT': 'longvarchar',
-        'BOOLEAN': 'boolean',
-        'INTEGER': 'integer',
-        'SMALLINT': 'smallint',
-        'BIGINT': 'bigint',
-        'DECIMAL': 'decimal',
-        'NUMERIC': 'numeric',
-        'FLOAT': 'float',
-        'REAL': 'real',
-        'DOUBLEPRECISION': 'double',
-        'DATE': 'date',
-        'TIME': 'time',
-        'DATETIME': 'datetime',
-        'TIMESTAMP': 'timestamp',
+        "CHAR": "char",
+        "VARCHAR": "varchar",
+        "TEXT": "longvarchar",
+        "BOOLEAN": "boolean",
+        "INTEGER": "integer",
+        "SMALLINT": "smallint",
+        "BIGINT": "bigint",
+        "DECIMAL": "decimal",
+        "NUMERIC": "numeric",
+        "FLOAT": "float",
+        "REAL": "real",
+        "DOUBLEPRECISION": "double",
+        "DATE": "date",
+        "TIME": "time",
+        "DATETIME": "datetime",
+        "TIMESTAMP": "timestamp",
     }
 
     def __init__(self):
-        super(VerticaTypeEngine, self).__init__(self.vertica_to_ansi_mapper, self.ansi_to_vertica_mapper)
+        super(VerticaTypeEngine, self).__init__(
+            self.vertica_to_ansi_mapper, self.ansi_to_vertica_mapper
+        )
