@@ -1,5 +1,6 @@
 import re
 from collections import OrderedDict
+from functools import partial
 
 import pandas as pd
 
@@ -35,6 +36,7 @@ from .pandas import Pandas
 TOTALS_LABEL = "Totals"
 METRICS_DIMENSION_ALIAS = "metrics"
 F_METRICS_DIMENSION_ALIAS = alias_selector(METRICS_DIMENSION_ALIAS)
+_display_value = partial(display_value, nan_value="", null_value="")
 
 
 def map_index_level(index, level, func):
@@ -263,7 +265,7 @@ class ReactTable(Pandas):
 
             if f_dimension_alias in field_map:
                 field = field_map[f_dimension_alias]
-                return display_value(column_value, field) or safe_value(column_value)
+                return _display_value(column_value, field) or safe_value(column_value)
 
             if f_dimension_alias is None:
                 return ""
@@ -337,7 +339,7 @@ class ReactTable(Pandas):
             field = field_map[field_alias]
 
             data = {RAW_VALUE: raw_value(value, field)}
-            display = display_value(value, field)
+            display = _display_value(value, field)
             if display is not None:
                 data["display"] = display
 
@@ -368,7 +370,7 @@ class ReactTable(Pandas):
             field = fields[metric_alias]
 
             data = {RAW_VALUE: raw_value(value, field)}
-            display = display_value(value, field, date_as=return_none)
+            display = _display_value(value, field, date_as=return_none)
             if display is not None:
                 data["display"] = display
 

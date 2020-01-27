@@ -6,12 +6,14 @@ from datetime import (
 
 import numpy as np
 import pandas as pd
+
 from fireant.dataset.fields import DataType
 from fireant.dataset.totals import TOTALS_MARKERS
 from fireant.utils import filter_kwargs
 
 RAW_VALUE = "raw"
 INF_VALUE = "Inf"
+NAN_VALUE = "NaN"
 NULL_VALUE = "null"
 BLANK_VALUE = ""
 TOTALS_VALUE = "$totals"
@@ -163,7 +165,9 @@ FIELD_DISPLAY_FORMATTER = {
 }
 
 
-def display_value(value, field, date_as=date_as_string):
+def display_value(
+    value, field, date_as=date_as_string, nan_value=NAN_VALUE, null_value=NULL_VALUE
+):
     """
     Converts a metric value into the display value by applying formatting.
 
@@ -176,8 +180,10 @@ def display_value(value, field, date_as=date_as_string):
     :return:
         A formatted string containing the display value for the metric.
     """
+    if value is None:
+        return null_value
     if pd.isnull(value):
-        return BLANK_VALUE
+        return nan_value
     if isinstance(value, float) and np.isinf(value):
         return INF_VALUE
     if value in TOTALS_MARKERS:

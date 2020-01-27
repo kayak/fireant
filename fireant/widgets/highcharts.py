@@ -387,6 +387,9 @@ class HighCharts(ChartWidget, TransformableWidget):
         series = []
         for labels, y in group_df[field_alias].iteritems():
             label = labels[0] if isinstance(labels, tuple) else labels
+            if pd.isnull(label):
+                # ignore nans in index
+                continue
 
             series.append(
                 {"x": categories.index(label), "y": formats.raw_value(y, metric)}
