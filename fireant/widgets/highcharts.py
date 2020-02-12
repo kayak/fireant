@@ -461,10 +461,12 @@ class HighCharts(ChartWidget, TransformableWidget):
         :return:
         """
         if isinstance(data_frame.index, pd.MultiIndex):
-            index_slice = data_frame.index.get_level_values(0) < TS_UPPER_BOUND
-            return data_frame.loc[index_slice, :]
+            first_index = data_frame.index.get_level_values(0)
+            if isinstance(first_index, pd.DatetimeIndex):
+                index_slice = first_index < TS_UPPER_BOUND
+                return data_frame.loc[index_slice, :]
 
-        if isinstance(data_frame.index, pd.DatetimeIndex):
+        elif isinstance(data_frame.index, pd.DatetimeIndex):
             return data_frame[data_frame.index < TS_UPPER_BOUND]
 
         return data_frame

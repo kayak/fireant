@@ -1,9 +1,8 @@
 from unittest import TestCase
 
-from fireant import (
-    CumSum,
-    Rollup,
-)
+import pandas as pd
+
+from fireant import CumSum, Rollup
 from fireant.tests.dataset.mocks import (
     ElectionOverElection,
     day,
@@ -24,10 +23,7 @@ from fireant.tests.dataset.mocks import (
     mock_dataset,
     year,
 )
-from fireant.widgets.highcharts import (
-    DEFAULT_COLORS,
-    HighCharts,
-)
+from fireant.widgets.highcharts import DEFAULT_COLORS, HighCharts
 
 
 class HighChartsLineChartTransformerTests(TestCase):
@@ -47,7 +43,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         self.assertEqual(
             {
                 "title": {"text": "Time Series, Single Metric"},
-                "xAxis": {"type": "datetime", "visible": True,},
+                "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
                         "id": "0",
@@ -99,7 +95,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         self.assertEqual(
             {
                 "title": {"text": "Time Series, Single Metric"},
-                "xAxis": {"type": "datetime", "visible": True,},
+                "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
                         "id": "0",
@@ -149,7 +145,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         self.assertEqual(
             {
                 "title": {"text": "Time Series, Single Metric"},
-                "xAxis": {"type": "datetime", "visible": True,},
+                "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
                         "id": "0",
@@ -199,7 +195,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         self.assertEqual(
             {
                 "title": {"text": "Time Series, Single Metric"},
-                "xAxis": {"type": "datetime", "visible": True,},
+                "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
                         "id": "0",
@@ -254,7 +250,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         self.assertEqual(
             {
                 "title": {"text": "Time Series, Single Metric"},
-                "xAxis": {"type": "datetime", "visible": True,},
+                "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
                         "id": "0",
@@ -307,7 +303,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 "title": {
                     "text": "Time Series with Unique Dimension and Single Metric"
                 },
-                "xAxis": {"type": "datetime", "visible": True,},
+                "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
                         "id": "0",
@@ -404,7 +400,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 "title": {
                     "text": "Time Series with Unique Dimension and Multiple Metrics"
                 },
-                "xAxis": {"type": "datetime", "visible": True,},
+                "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
                         "id": "0",
@@ -560,7 +556,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 "title": {
                     "text": "Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"
                 },
-                "xAxis": {"type": "datetime", "visible": True,},
+                "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
                         "id": "1",
@@ -702,6 +698,102 @@ class HighChartsLineChartTransformerTests(TestCase):
             result,
         )
 
+    def test_multi_dim_with_totals_line_chart_and_empty_data(self):
+        dataframe = pd.DataFrame().from_dict(
+            {
+                "$timestamp": ["~~totals"],
+                "$political_party": ["~~totals"],
+                "$votes": [None],
+                "$wins": [None],
+                "$wins_with_style": [None],
+                "$turnout": [None],
+            }
+        ).set_index(dimx2_date_str_totals_df.index.names)
+
+        result = (
+            HighCharts(
+                title="Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"
+            )
+            .axis(self.chart_class(mock_dataset.fields.votes))
+            .axis(self.chart_class(mock_dataset.fields.wins))
+            .transform(
+                dataframe,
+                mock_dataset,
+                [mock_dataset.fields.timestamp, Rollup(mock_dataset.fields.state)],
+                [],
+            )
+        )
+
+        self.assertEqual(
+            result,
+            {
+                "title": {
+                    "text": "Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"
+                },
+                "xAxis": {"type": "datetime", "visible": True},
+                "yAxis": [
+                    {
+                        "id": "1",
+                        "title": {"text": None},
+                        "labels": {"style": {"color": "#55BF3B"}},
+                        "visible": True,
+                    },
+                    {
+                        "id": "0",
+                        "title": {"text": None},
+                        "labels": {"style": {"color": "#DDDF0D"}},
+                        "visible": True,
+                    },
+                ],
+                "colors": (
+                    "#DDDF0D",
+                    "#55BF3B",
+                    "#DF5353",
+                    "#7798BF",
+                    "#AAEEEE",
+                    "#FF0066",
+                    "#EEAAEE",
+                    "#DF5353",
+                    "#7798BF",
+                    "#AAEEEE",
+                ),
+                "series": [
+                    {
+                        "type": self.chart_type,
+                        "name": "Votes (Totals)",
+                        "data": [],
+                        "tooltip": {
+                            "valuePrefix": None,
+                            "valueSuffix": None,
+                            "valueDecimals": None,
+                        },
+                        "yAxis": "0",
+                        "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
+                        "stacking": self.stacking,
+                        "color": "#DDDF0D",
+                        "dashStyle": "Solid",
+                    },
+                    {
+                        "type": self.chart_type,
+                        "name": "Wins (Totals)",
+                        "data": [],
+                        "tooltip": {
+                            "valuePrefix": None,
+                            "valueSuffix": None,
+                            "valueDecimals": None,
+                        },
+                        "yAxis": "1",
+                        "marker": {"symbol": "circle", "fillColor": "#55BF3B"},
+                        "stacking": self.stacking,
+                        "color": "#55BF3B",
+                        "dashStyle": "Solid",
+                    },
+                ],
+                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                "legend": {"useHTML": True},
+            },
+        )
+
     def test_multi_dim_with_totals_line_chart(self):
         result = (
             HighCharts(
@@ -722,7 +814,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 "title": {
                     "text": "Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"
                 },
-                "xAxis": {"type": "datetime", "visible": True,},
+                "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
                         "id": "1",
@@ -931,7 +1023,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 "title": {
                     "text": "Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"
                 },
-                "xAxis": {"type": "datetime", "visible": True,},
+                "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
                         "id": "1",
@@ -1129,7 +1221,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         self.assertEqual(
             {
                 "title": {"text": "Time Series with Unique Dimension and Reference"},
-                "xAxis": {"type": "datetime", "visible": True,},
+                "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
                         "id": "0",
@@ -1249,7 +1341,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 "title": {
                     "text": "Time Series with Unique Dimension and Delta Reference"
                 },
-                "xAxis": {"type": "datetime", "visible": True,},
+                "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
                         "id": "0",
@@ -1370,7 +1462,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         self.assertEqual(
             {
                 "title": {"text": "Time Series, Single Metric"},
-                "xAxis": {"type": "datetime", "visible": True,},
+                "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
                         "id": "0",
@@ -1426,7 +1518,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 "title": {
                     "text": "Time Series with Unique Dimension and Delta Reference"
                 },
-                "xAxis": {"type": "datetime", "visible": True,},
+                "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
                         "id": "0",
@@ -1555,7 +1647,7 @@ class HighChartsBarChartTransformerTests(TestCase):
         self.assertEqual(
             {
                 "title": {"text": "All Votes"},
-                "xAxis": {"type": "category", "categories": ["All"], "visible": True,},
+                "xAxis": {"type": "category", "categories": ["All"], "visible": True},
                 "yAxis": [
                     {
                         "id": "0",
@@ -1599,7 +1691,7 @@ class HighChartsBarChartTransformerTests(TestCase):
         self.assertEqual(
             {
                 "title": {"text": "Votes and Wins"},
-                "xAxis": {"type": "category", "categories": ["All"], "visible": True,},
+                "xAxis": {"type": "category", "categories": ["All"], "visible": True},
                 "yAxis": [
                     {
                         "id": "0",
@@ -1772,7 +1864,7 @@ class HighChartsBarChartTransformerTests(TestCase):
         self.assertEqual(
             {
                 "title": {"text": "Election Votes by State"},
-                "xAxis": {"type": "datetime", "visible": True,},
+                "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
                         "id": "0",
@@ -1857,7 +1949,7 @@ class HighChartsBarChartTransformerTests(TestCase):
         self.assertEqual(
             {
                 "title": {"text": "Election Votes by State"},
-                "xAxis": {"type": "datetime", "visible": True,},
+                "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
                         "id": "0",
@@ -1993,7 +2085,7 @@ class HighChartsBarChartTransformerTests(TestCase):
         self.assertEqual(
             {
                 "title": {"text": "Election Votes by State"},
-                "xAxis": {"type": "datetime", "visible": True,},
+                "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
                         "id": "1",
@@ -2334,7 +2426,7 @@ class HighChartsBarChartTransformerTests(TestCase):
         self.assertEqual(
             {
                 "title": {"text": "All Votes"},
-                "xAxis": {"type": "category", "categories": ["All"], "visible": True,},
+                "xAxis": {"type": "category", "categories": ["All"], "visible": True},
                 "yAxis": [
                     {
                         "id": "0",
@@ -2422,7 +2514,7 @@ class HighChartsPieChartTransformerTests(TestCase):
                     {
                         "name": "Votes",
                         "type": "pie",
-                        "data": [{"name": "Votes", "y": 111674336,}],
+                        "data": [{"name": "Votes", "y": 111674336}],
                         "tooltip": {
                             "pointFormat": '<span style="color:{point.color}">●</span> '
                             "{series.name}: <b>{point.y} ({point.percentage:.1f}%)</b><br/>",
@@ -2432,7 +2524,7 @@ class HighChartsPieChartTransformerTests(TestCase):
                         },
                     }
                 ],
-                "xAxis": {"type": "category", "categories": ["All"], "visible": True,},
+                "xAxis": {"type": "category", "categories": ["All"], "visible": True},
                 "yAxis": [
                     {
                         "id": "0",
@@ -2465,7 +2557,7 @@ class HighChartsPieChartTransformerTests(TestCase):
                     {
                         "name": "Votes",
                         "type": "pie",
-                        "data": [{"name": "Votes", "y": 111674336,}],
+                        "data": [{"name": "Votes", "y": 111674336}],
                         "tooltip": {
                             "pointFormat": '<span style="color:{point.color}">●</span> '
                             "{series.name}: <b>{point.y} ({point.percentage:.1f}%)</b><br/>",
@@ -2477,7 +2569,7 @@ class HighChartsPieChartTransformerTests(TestCase):
                     {
                         "name": "Wins",
                         "type": "pie",
-                        "data": [{"name": "Wins", "y": 12,}],
+                        "data": [{"name": "Wins", "y": 12}],
                         "tooltip": {
                             "pointFormat": '<span style="color:{point.color}">●</span> '
                             "{series.name}: <b>{point.y} ({point.percentage:.1f}%)</b><br/>",
@@ -2487,7 +2579,7 @@ class HighChartsPieChartTransformerTests(TestCase):
                         },
                     },
                 ],
-                "xAxis": {"type": "category", "categories": ["All"], "visible": True,},
+                "xAxis": {"type": "category", "categories": ["All"], "visible": True},
                 "yAxis": [
                     {
                         "id": "0",
