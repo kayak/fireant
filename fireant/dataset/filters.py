@@ -88,7 +88,7 @@ class RangeFilter(Filter):
 
     @property
     def definition(self):
-        return self.field.definition[self.start : self.stop]
+        return self.field.definition[self.start:self.stop]
 
 
 class PatternFilter(Filter):

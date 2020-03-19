@@ -7,6 +7,8 @@ from fireant.queries.finders import (
     find_dataset_fields,
     find_field_in_modified_field,
     find_metrics_for_widgets,
+    find_share_dimensions,
+    find_operations_for_widgets
 )
 from fireant.reference_helpers import reference_alias
 from fireant.utils import (
@@ -281,7 +283,18 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
 
         # If data blending is unnecessary, then behave just like a regular dataset
         if len(dataset_queries) == 1:
-            return dataset_queries[0].sql
+            dataset_query_builder = dataset_queries[0]
+
+            # we need to perform some calculation on the operations that are available here
+            operations = find_operations_for_widgets(self._widgets)  # not available on dataset_query_builder
+            metrics = dataset_query_builder._widgets[0].metrics
+            share_dimensions = find_share_dimensions(dataset_query_builder._dimensions, operations)
+
+            return dataset_query_builder.make_query(
+                metrics,
+                operations,
+                share_dimensions,
+            )
 
         """
         A dataset query can yield one or more sql queries, dependending on how many types of references or dimensions 
