@@ -87,6 +87,13 @@ class DataSetQueryBuilder(
         operations = find_operations_for_widgets(self._widgets)
         share_dimensions = find_share_dimensions(self._dimensions, operations)
 
+        return self.make_query(
+            metrics,
+            operations,
+            share_dimensions,
+        )
+
+    def make_query(self, metrics, operations, share_dimensions):
         return make_slicer_query_with_totals_and_references(
             self.dataset.database,
             self.table,
