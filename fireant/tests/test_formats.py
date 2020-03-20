@@ -265,3 +265,7 @@ class FormatDisplayValueStyleTests(TestCase):
             precision=2,
         )
         self.assertEqual("$-1,000,000.00", formats.display_value(-1000000, euro_field))
+
+    def test_use_raw_value(self):
+        field = Field("number", None, data_type=DataType.number, suffix="€", prefix="$")
+        self.assertEqual("1234", formats.display_value(1234, field, use_raw_value=True))
