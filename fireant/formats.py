@@ -69,8 +69,8 @@ def _format_decimal(value, thousands="", precision=None):
 
 
 @filter_kwargs
-def wrap_styling(value, prefix=None, suffix=None):
-    if value is None:
+def wrap_styling(value, use_raw_value=False, prefix=None, suffix=None):
+    if value is None or use_raw_value:
         return value
 
     return "{prefix}{value}{suffix}".format(
@@ -166,7 +166,7 @@ FIELD_DISPLAY_FORMATTER = {
 
 
 def display_value(
-    value, field, date_as=date_as_string, nan_value=NAN_VALUE, null_value=NULL_VALUE
+    value, field, date_as=date_as_string, nan_value=NAN_VALUE, null_value=NULL_VALUE, use_raw_value=False,
 ):
     """
     Converts a metric value into the display value by applying formatting.
@@ -198,4 +198,4 @@ def display_value(
     }
 
     formatter = FIELD_DISPLAY_FORMATTER.get(field.data_type, _identity)
-    return formatter(value, date_as=date_as, **format_kwargs)
+    return formatter(value, date_as=date_as, use_raw_value=use_raw_value, **format_kwargs)

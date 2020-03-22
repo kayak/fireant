@@ -38,7 +38,7 @@ class Pandas(TransformableWidget):
             else HARD_MAX_COLUMNS
         )
 
-    def transform(self, data_frame, slicer, dimensions, references):
+    def transform(self, data_frame, slicer, dimensions, references, use_raw_values=False):
         """
         WRITEME
 
@@ -46,6 +46,7 @@ class Pandas(TransformableWidget):
         :param slicer:
         :param dimensions:
         :param references:
+        :param use_raw_values: Don't add prefix or postfix to values
         :return:
         """
         result = data_frame.copy()
@@ -74,7 +75,7 @@ class Pandas(TransformableWidget):
         ]
         pivot_df = self.pivot_data_frame(result, pivot_dimensions, self.transpose)
 
-        return self.add_formatting(dimensions, items, pivot_df).fillna(
+        return self.add_formatting(dimensions, items, pivot_df, use_raw_values).fillna(
             value=formats.BLANK_VALUE
         )
 
@@ -160,12 +161,12 @@ class Pandas(TransformableWidget):
 
         return sorted
 
-    def add_formatting(self, dimensions, items, pivot_df):
+    def add_formatting(self, dimensions, items, pivot_df, use_raw_values):
         format_df = pivot_df.copy()
 
         def _get_f_display(item):
             return partial(
-                formats.display_value, field=item, nan_value="", null_value=""
+                formats.display_value, field=item, nan_value="", null_value="", use_raw_value=use_raw_values
             )
 
         if (
