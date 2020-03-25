@@ -8,13 +8,14 @@ from fireant.queries.finders import (
     find_field_in_modified_field,
     find_metrics_for_widgets,
     find_share_dimensions,
-    find_operations_for_widgets
-)
+    find_operations_for_widgets,
+    find_share_operations)
+from fireant.queries.sql_transformer import make_slicer_query_with_totals_and_references
 from fireant.reference_helpers import reference_alias
 from fireant.utils import (
     alias_selector,
     listify,
-)
+    ordered_distinct_list_by_attr)
 from fireant.widgets.base import Widget
 from pypika import Query
 
@@ -117,10 +118,17 @@ def _datasets_and_field_maps(blender):
 
 
 class EmptyWidget(Widget):
-    pass
+
+    @property
+    def metrics(self):
+        if 0 == len(self.items):
+            return []
+
+        return super().metrics
 
 
-def _build_dataset_query(dataset, field_map, metrics, dimensions, filters, references):
+def _build_dataset_query(dataset, field_map, metrics, dimensions, filters, references, operations):
+
     @listify
     def _map_fields(fields):
         """
@@ -128,7 +136,6 @@ def _build_dataset_query(dataset, field_map, metrics, dimensions, filters, refer
         """
         for field in fields:
             field_from_blender = find_field_in_modified_field(field)
-
             if field_from_blender in dataset.fields:
                 yield field
                 continue
@@ -137,22 +144,35 @@ def _build_dataset_query(dataset, field_map, metrics, dimensions, filters, refer
 
             yield field.for_(field_map[field_from_blender])
 
-    dataset_metrics = _map_fields(metrics)
-
-    # Important: If no metrics are needed from this data set, then do not query
-    if not dataset_metrics:
-        return None
-
+    dataset_metrics = ordered_distinct_list_by_attr(_map_fields(metrics))
     dataset_dimensions = _map_fields(dimensions)
     dataset_filters = _map_fields(filters)
     dataset_references = _map_fields(references)
 
-    return (
-        dataset.query()
-        .widget(EmptyWidget(*dataset_metrics), mutate=True)
-        .dimension(*dataset_dimensions, mutate=True)
-        .filter(*dataset_filters, mutate=True)
-        .reference(*dataset_references, mutate=True)
+    if not any([dataset_metrics, dataset_dimensions]):
+        return []
+
+    # filter out operations that are relevant for this dataset
+    dataset_operations = []
+    dataset_metrics_aliases = [metric.alias for metric in dataset_metrics]
+    for operation in operations:
+        for metric in operation.metrics:
+            if metric.alias in dataset_metrics_aliases:
+                dataset_operations.append(operation)
+
+    share_dimensions = find_share_dimensions(dataset_dimensions, operations)
+
+    return make_slicer_query_with_totals_and_references(
+        dataset.database,
+        dataset.table,
+        dataset.joins,
+        dataset_dimensions,
+        dataset_metrics,
+        dataset_operations,
+        dataset_filters,
+        dataset_references,
+        [],
+        share_dimensions=share_dimensions,
     )
 
 
@@ -160,7 +180,7 @@ def _blender_join_criteria(
     base_query, join_query, dimensions, base_field_map, join_field_map
 ):
     """
-    Build a criteria for joining this join query to the base query in datset blender queries. This should be a set of
+    Build a criteria for joining this join query to the base query in dataset blender queries. This should be a set of
     equality conditions like A0=B0 AND A1=B1 AND An=Bn for each mapped dimension between dataset from
     `DataSetBlender.dimension_map`.
     """
@@ -184,11 +204,24 @@ def _blender_join_criteria(
 
 
 def _blend_query(dimensions, metrics, orders, field_maps, queries):
-    base_query, *join_queries = queries
-    base_field_map, *join_field_maps = field_maps
+    for i, query in enumerate(queries):
+        if query:
+            queries = queries[i:]
+            field_maps = field_maps[i:]
+            break
+    else:
+        return None
+
+    base_query = queries[0]
+    base_field_map = field_maps[0]
+    join_queries = queries[1:]
+    join_field_maps = field_maps[1:]
 
     blender_query = Query.from_(base_query, immutable=False)
     for join_sql, join_field_map in zip(join_queries, join_field_maps):
+        if join_sql is None:
+            continue
+
         criteria = _blender_join_criteria(
             base_query, join_sql, dimensions, base_field_map, join_field_map
         )
@@ -207,7 +240,7 @@ def _blend_query(dimensions, metrics, orders, field_maps, queries):
 
         # search for the field in each field map to determine which subquery it will be in
         for query, field_map in zip(queries, field_maps):
-            if unmodified_field not in field_map:
+            if query is None or unmodified_field not in field_map:
                 continue
 
             mapped_field = field_map[unmodified_field]
@@ -228,6 +261,7 @@ def _blend_query(dimensions, metrics, orders, field_maps, queries):
 
     # WARNING: In order to make complex fields work, the get_sql for each field is monkey patched in. This must
     # happen here because a complex metric by definition references values selected from the dataset subqueries.
+
     for metric in find_dataset_fields(metrics):
         subquery_field = _get_sq_field_for_blender_field(metric, reference)
         metric.get_sql = subquery_field.get_sql
@@ -267,37 +301,23 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         datasets, field_maps = _datasets_and_field_maps(self.dataset)
         metrics = find_metrics_for_widgets(self._widgets)
         dataset_metrics = find_dataset_fields(metrics)
-        dataset_queries = [
-            _build_dataset_query(
+        operations = find_operations_for_widgets(self._widgets)
+        share_operations = find_share_operations(operations)
+
+        datasets_queries = []
+        for dataset, field_map in zip(datasets, field_maps):
+            datasets_queries.append(_build_dataset_query(
                 dataset,
                 field_map,
                 dataset_metrics,
                 self._dimensions,
                 self._filters,
                 self._references,
-            )
-            for dataset, field_map in zip(datasets, field_maps)
-        ]
-        # If no metrics are needed from a data set, then remove it from the
-        dataset_queries = [q for q in dataset_queries if q is not None]
-
-        # If data blending is unnecessary, then behave just like a regular dataset
-        if len(dataset_queries) == 1:
-            dataset_query_builder = dataset_queries[0]
-
-            # we need to perform some calculation on the operations that are available here
-            operations = find_operations_for_widgets(self._widgets)  # not available on dataset_query_builder
-            metrics = dataset_query_builder._widgets[0].metrics
-            share_dimensions = find_share_dimensions(dataset_query_builder._dimensions, operations)
-
-            return dataset_query_builder.make_query(
-                metrics,
-                operations,
-                share_dimensions,
-            )
+                share_operations
+            ))
 
         """
-        A dataset query can yield one or more sql queries, dependending on how many types of references or dimensions 
+        A dataset query can yield one or more sql queries, depending on how many types of references or dimensions 
         with totals are selected. A blended dataset query must yield the same number and types of sql queries, but each
         blended together. The individual dataset queries built above will always yield the same number of sql queries, 
         so here those lists of sql queries are zipped.
@@ -311,11 +331,27 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         be produced.  This next line converts the list of rows of the table in the diagram to a list of columns. Each 
         set of queries in a column are then reduced to a single data blending sql query. 
         """
-        querysets_tx = list(
-            zip(*[dataset_query.sql for dataset_query in dataset_queries])
-        )
 
-        return [
-            _blend_query(self._dimensions, metrics, self.orders, field_maps, queryset)
-            for queryset in querysets_tx
-        ]
+        # TODO: what if some of the datasets end up doing more reference/total calculations? Make sure to prevent this.
+        per_dataset_queries_count = len(datasets_queries[0])
+        query_sets = [[] for _ in range(per_dataset_queries_count)]
+
+        for dataset_queries in datasets_queries:
+            if len(dataset_queries) != per_dataset_queries_count:
+                # This shouldn't happen but we have it here as sanity check.
+                print("dataset_queries length mismatch")
+
+            for i, dataset_query in enumerate(dataset_queries):
+                if dataset_query:
+                    query_sets[i].append(dataset_query)
+
+        blended_queries = []
+        for queryset in query_sets:
+            if len(queryset) == 1:
+                blended_queries.append(queryset[0])
+            else:
+                blended_query = _blend_query(self._dimensions, metrics, self.orders, field_maps, queryset)
+                if blended_query:
+                    blended_queries.append(blended_query)
+
+        return blended_queries

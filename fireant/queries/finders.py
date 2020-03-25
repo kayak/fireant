@@ -137,6 +137,10 @@ def find_dataset_fields(metrics):
     ]
 
 
+def find_share_operations(operations):
+    return [operation for operation in operations if isinstance(operation, Share)]
+
+
 def find_share_dimensions(dimensions, operations):
     """
     Returns a subset list of dimensions from the list of dimensions that are used as the over-dimension in share
@@ -146,16 +150,12 @@ def find_share_dimensions(dimensions, operations):
     :param operations:
     :return:
     """
-    share_operations_over_dimensions = [
-        operation.over
-        for operation in operations
-        if isinstance(operation, Share) and operation.over is not None
-    ]
-
     dimension_map = {dimension.alias: dimension for dimension in dimensions}
 
     return [
-        dimension_map[dimension.alias] for dimension in share_operations_over_dimensions
+        dimension_map[operation.over.alias]
+        for operation in operations
+        if isinstance(operation, Share) and operation.over is not None and operation.over.alias in dimension_map
     ]
 
 
