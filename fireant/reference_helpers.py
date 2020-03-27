@@ -13,6 +13,21 @@ def reference_alias(metric, reference):
     return '{}_{}'.format(key, reference.alias)
 
 
+def reference_type_alias(metric, reference):
+    """
+    Format a metric key for a subquery selection in case of a reference.
+
+    :return:
+        A string that is used as the selector for a field in a blended subquery.
+    """
+    key = metric.alias
+
+    if reference is None:
+        return key
+
+    return '{}_{}'.format(key, reference.reference_type.alias)
+
+
 def reference_label(metric, reference):
     """
     Format a metric label for a reference.

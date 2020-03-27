@@ -11,7 +11,7 @@ from fireant.queries.finders import (
     find_operations_for_widgets,
     find_share_operations)
 from fireant.queries.sql_transformer import make_slicer_query_with_totals_and_references
-from fireant.reference_helpers import reference_alias
+from fireant.reference_helpers import reference_type_alias
 from fireant.utils import (
     alias_selector,
     listify,
@@ -236,7 +236,7 @@ def _blend_query(dimensions, metrics, orders, field_maps, queries):
 
     def _get_sq_field_for_blender_field(field, reference=None):
         unmodified_field = find_field_in_modified_field(field)
-        field_alias = alias_selector(reference_alias(field, reference))
+        field_alias = alias_selector(reference_type_alias(field, reference))
 
         # search for the field in each field map to determine which subquery it will be in
         for query, field_map in zip(queries, field_maps):
@@ -245,7 +245,7 @@ def _blend_query(dimensions, metrics, orders, field_maps, queries):
 
             mapped_field = field_map[unmodified_field]
             mapped_field_alias = alias_selector(
-                reference_alias(mapped_field, reference)
+                reference_type_alias(mapped_field, reference)
             )
 
             subquery_field = query[mapped_field_alias]
@@ -271,7 +271,7 @@ def _blend_query(dimensions, metrics, orders, field_maps, queries):
     blender_query = blender_query.select(*sq_dimensions).select(*sq_metrics)
 
     for field, orientation in orders:
-        orderby_field = _get_sq_field_for_blender_field(field)
+        orderby_field = _get_sq_field_for_blender_field(field, reference)
         blender_query = blender_query.orderby(orderby_field, order=orientation)
 
     return blender_query
@@ -300,6 +300,14 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
 
         datasets, field_maps = _datasets_and_field_maps(self.dataset)
         metrics = find_metrics_for_widgets(self._widgets)
+        metrics_aliases = {metric.alias for metric in metrics}
+        dimensions_aliases = {dimension.alias for dimension in self._dimensions}
+
+        # Add fields to be ordered on, to metrics if they aren't yet selected in metrics or dimensions
+        for field, orientation in self.orders:
+            if field.alias not in metrics_aliases and field.alias not in dimensions_aliases:
+                metrics.append(field)
+
         dataset_metrics = find_dataset_fields(metrics)
         operations = find_operations_for_widgets(self._widgets)
         share_operations = find_share_operations(operations)
