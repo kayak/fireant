@@ -17,7 +17,7 @@ from fireant.utils import (
     listify,
     ordered_distinct_list_by_attr)
 from fireant.widgets.base import Widget
-from pypika import Query
+from pypika import Query, JoinType
 
 
 @listify
@@ -80,7 +80,6 @@ def _datasets_and_field_maps(blender):
     def _flatten_blend_datasets(dataset) -> List:
         primary = dataset.primary_dataset
         secondary = dataset.secondary_dataset
-        # TODO explain this
         dataset_fields = _find_dataset_fields_needed_to_be_mapped(dataset)
 
         blender2primary_field_map = dict(_map_field(primary, dataset_fields))
@@ -150,7 +149,7 @@ def _build_dataset_query(dataset, field_map, metrics, dimensions, filters, refer
     dataset_references = _map_fields(references)
 
     if not any([dataset_metrics, dataset_dimensions]):
-        return []
+        return [None]
 
     # filter out operations that are relevant for this dataset
     dataset_operations = []
@@ -211,7 +210,6 @@ def _blend_query(dimensions, metrics, orders, field_maps, queries):
             break
     else:
         return None
-
     base_query = queries[0]
     base_field_map = field_maps[0]
     join_queries = queries[1:]
@@ -231,7 +229,7 @@ def _blend_query(dimensions, metrics, orders, field_maps, queries):
         blender_query = (
             blender_query.from_(join_sql)  # <-- no dimensions mapped
             if criteria is None
-            else blender_query.join(join_sql).on(criteria)  # <-- mapped dimensions
+            else blender_query.join(join_sql, JoinType.left).on(criteria)  # <-- mapped dimensions
         )
 
     def _get_sq_field_for_blender_field(field, reference=None):
@@ -341,20 +339,19 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         """
 
         # TODO: what if some of the datasets end up doing more reference/total calculations? Make sure to prevent this.
-        per_dataset_queries_count = len(datasets_queries[0])
+        per_dataset_queries_count = max([len(dataset_queries) for dataset_queries in datasets_queries])
         query_sets = [[] for _ in range(per_dataset_queries_count)]
 
         for dataset_queries in datasets_queries:
-            if len(dataset_queries) != per_dataset_queries_count:
-                # This shouldn't happen but we have it here as sanity check.
-                print("dataset_queries length mismatch")
-
             for i, dataset_query in enumerate(dataset_queries):
-                if dataset_query:
-                    query_sets[i].append(dataset_query)
+                query_sets[i].append(dataset_query)
 
         blended_queries = []
         for queryset in query_sets:
+            # Remove trailing None's
+            while queryset[-1] is None:
+                queryset.pop()
+
             if len(queryset) == 1:
                 blended_queries.append(queryset[0])
             else:

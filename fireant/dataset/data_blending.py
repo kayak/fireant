@@ -13,6 +13,9 @@ from fireant.utils import (
 
 
 def _wrap_dataset_fields(dataset):
+    if isinstance(dataset, DataSetBlender):
+        return dataset.fields
+
     wrapped_fields = []
     for field in dataset.fields:
         wrapped_field = _wrap_field(dataset, field)
