@@ -90,7 +90,7 @@ def adjust_dataframe_for_rolling_window(operations, data_frame):
     )
 
     if isinstance(data_frame.index, pd.DatetimeIndex):
-        return data_frame.iloc[max_rolling_period - 1 :]
+        return data_frame.iloc[max_rolling_period - 1:]
 
     if isinstance(data_frame.index, pd.MultiIndex) and isinstance(
         data_frame.index.levels[0], pd.DatetimeIndex
@@ -107,7 +107,7 @@ def adjust_dataframe_for_rolling_window(operations, data_frame):
 
 
 def apply_to_query_args(
-    database, table, joins, dimensions, metrics, operations, filters, references, orders
+    database, table, joins, dimensions, metrics, operations, filters, references
 ):
     filters = adjust_daterange_filter_for_rolling_window(
         dimensions, operations, filters
@@ -121,7 +121,6 @@ def apply_to_query_args(
         operations,
         filters,
         references,
-        orders,
     )
 
 

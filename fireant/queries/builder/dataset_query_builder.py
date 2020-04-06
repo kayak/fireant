@@ -96,7 +96,7 @@ class DataSetQueryBuilder(
             operations,
             self._filters,
             self._references,
-            self.orders,
+            orders=self.orders,
             share_dimensions=share_dimensions,
         )
 
