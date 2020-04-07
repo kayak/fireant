@@ -154,7 +154,7 @@ def _build_dataset_query(
             if metric.alias in dataset_metrics_aliases:
                 dataset_operations.append(operation)
 
-    share_dimensions = find_share_dimensions(dataset_dimensions, operations)
+    share_dimensions = find_share_dimensions(dataset_dimensions, dataset_operations)
 
     return make_slicer_query_with_totals_and_references(
         dataset.database,
@@ -197,19 +197,31 @@ def _blender_join_criteria(
     return join_criteria
 
 
-def _blend_query(dimensions, metrics, orders, field_maps, queries):
-    for i, query in enumerate(queries):
-        if query:
-            queries = queries[i:]
-            field_maps = field_maps[i:]
-            break
-    else:
-        return None
-    base_query = queries[0]
-    base_field_map = field_maps[0]
-    join_queries = queries[1:]
-    join_field_maps = field_maps[1:]
+def _get_sq_field_for_blender_field(field, queries, field_maps, reference=None):
+    unmodified_field = find_field_in_modified_field(field)
+    field_alias = alias_selector(reference_type_alias(field, reference))
 
+    # search for the field in each field map to determine which subquery it will be in
+    for query, field_map in zip(queries, field_maps):
+        if query is None or unmodified_field not in field_map:
+            continue
+
+        mapped_field = field_map[unmodified_field]
+        mapped_field_alias = alias_selector(
+            reference_type_alias(mapped_field, reference)
+        )
+
+        subquery_field = query[mapped_field_alias]
+        # case #1 modified fields, ex. day(timestamp) or rollup(dimension)
+        return field.for_(subquery_field).as_(field_alias)
+
+    # Need to copy the metrics if there are references so that the `get_sql` monkey patch does not conflict
+    definition = copy.deepcopy(field.definition)
+    # case #2: complex blender fields
+    return definition.as_(field_alias)
+
+
+def _perform_join_operations(dimensions, base_query, base_field_map, join_queries, join_field_maps):
     blender_query = Query.from_(base_query, immutable=False)
     for join_sql, join_field_map in zip(join_queries, join_field_maps):
         if join_sql is None:
@@ -229,49 +241,52 @@ def _blend_query(dimensions, metrics, orders, field_maps, queries):
             )  # <-- mapped dimensions
         )
 
-    def _get_sq_field_for_blender_field(field, reference=None):
-        unmodified_field = find_field_in_modified_field(field)
-        field_alias = alias_selector(reference_type_alias(field, reference))
+    return blender_query
 
-        # search for the field in each field map to determine which subquery it will be in
-        for query, field_map in zip(queries, field_maps):
-            if query is None or unmodified_field not in field_map:
-                continue
 
-            mapped_field = field_map[unmodified_field]
-            mapped_field_alias = alias_selector(
-                reference_type_alias(mapped_field, reference)
-            )
+def _blend_query(dimensions, metrics, orders, field_maps, queries):
+    # Remove trailing None's. This is a separate step as the length of the queries after this filter
+    # determines whether the optimisation step after the filtering can be done.
+    while queries[-1] is None:
+        queries.pop()
 
-            subquery_field = query[mapped_field_alias]
-            # case #1 modified fields, ex. day(timestamp) or rollup(dimension)
-            return field.for_(subquery_field).as_(field_alias)
+    perform_optimization = len(queries) == 1
 
-        # Need to copy the metrics if there are references so that the `get_sql` monkey patch does not conflict
-        definition = copy.deepcopy(field.definition)
-        # case #2: complex blender fields
-        return definition.as_(field_alias)
+    # Remove None's in the beginning
+    for i, query in enumerate(queries):
+        if query:
+            queries = queries[i:]
+            field_maps = field_maps[i:]
+            break
+
+    base_query, *join_queries = queries
+    base_field_map, *join_field_maps = field_maps
 
     reference = base_query._references[0] if base_query._references else None
 
-    # WARNING: In order to make complex fields work, the get_sql for each field is monkey patched in. This must
-    # happen here because a complex metric by definition references values selected from the dataset subqueries.
+    if perform_optimization:
+        # Optimization step, we don't need to do any joining as there is only one query
+        blender_query = base_query
+    else:
+        blender_query = _perform_join_operations(dimensions, base_query, base_field_map, join_queries, join_field_maps)
 
-    for metric in find_dataset_fields(metrics):
-        subquery_field = _get_sq_field_for_blender_field(metric, reference)
-        metric.get_sql = subquery_field.get_sql
+        # WARNING: In order to make complex fields work, the get_sql for each field is monkey patched in. This must
+        # happen here because a complex metric by definition references values selected from the dataset subqueries.
 
-    sq_dimensions = [_get_sq_field_for_blender_field(d) for d in dimensions]
-    sq_metrics = [_get_sq_field_for_blender_field(m, reference) for m in metrics]
-    blender_query = blender_query.select(*sq_dimensions).select(*sq_metrics)
+        for metric in find_dataset_fields(metrics):
+            subquery_field = _get_sq_field_for_blender_field(metric, queries, field_maps, reference)
+            metric.get_sql = subquery_field.get_sql
+
+        sq_dimensions = [_get_sq_field_for_blender_field(d,  queries, field_maps) for d in dimensions]
+        sq_metrics = [_get_sq_field_for_blender_field(m, queries, field_maps, reference) for m in metrics]
+        blender_query = blender_query.select(*sq_dimensions).select(*sq_metrics)
 
     for field, orientation in orders:
-
         if any(dimension is field for dimension in dimensions):
             # Don't add the reference type to dimensions
-            orderby_field = _get_sq_field_for_blender_field(field)
+            orderby_field = _get_sq_field_for_blender_field(field, queries, field_maps)
         else:
-            orderby_field = _get_sq_field_for_blender_field(field, reference)
+            orderby_field = _get_sq_field_for_blender_field(field, queries, field_maps, reference)
 
         blender_query = blender_query.orderby(orderby_field, order=orientation)
 
@@ -346,29 +361,24 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         Each set of queries in a column are then reduced to a single data blending sql query.
         """
 
-        # TODO: what if some of the datasets end up doing more reference/total calculations? Make sure to prevent this.
+        # TODO: There is most likely still a bug when lots of references and total calculations get mixed.
+        # Although I haven't been able to actually find a case
         per_dataset_queries_count = max(
             [len(dataset_queries) for dataset_queries in datasets_queries]
         )
         query_sets = [[] for _ in range(per_dataset_queries_count)]
 
         for dataset_queries in datasets_queries:
-            for i, dataset_query in enumerate(dataset_queries):
-                query_sets[i].append(dataset_query)
+            for i, query_set in enumerate(query_sets):
+                query_set.append(dataset_queries[i] if len(dataset_queries) > i else None)
 
         blended_queries = []
         for queryset in query_sets:
-            # Remove trailing None's
-            while queryset[-1] is None:
-                queryset.pop()
+            blended_query = _blend_query(
+                self._dimensions, metrics, self.orders, field_maps, queryset
+            )
 
-            if len(queryset) == 1:
-                blended_queries.append(queryset[0])
-            else:
-                blended_query = _blend_query(
-                    self._dimensions, metrics, self.orders, field_maps, queryset
-                )
-                if blended_query:
-                    blended_queries.append(blended_query)
+            if blended_query:
+                blended_queries.append(blended_query)
 
         return blended_queries

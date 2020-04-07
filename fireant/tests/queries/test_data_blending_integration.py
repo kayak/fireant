@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+import fireant as f
 from fireant import (
     DataSet,
     DataType,
@@ -8,6 +9,8 @@ from fireant import (
     ReactTable,
 )
 from pypika import Tables
+
+from fireant.tests.database.mock_database import TestDatabase
 
 
 class DataSetBlenderIntegrationTests(TestCase):
@@ -311,6 +314,521 @@ class DataSetBlenderIntegrationTests(TestCase):
             ') "sq1" ON "sq0"."$a"="sq1"."$b" '
             'ORDER BY "$a"',
             str(query),
+        )
+
+    def test_blended_references(self):
+        db = TestDatabase()
+        t0, t1 = Tables("test0", "test1")
+        primary_ds = DataSet(
+            table=t0,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t0.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "account",
+                    label="Account",
+                    definition=t0.account,
+                    data_type=DataType.number,
+                ),
+                Field(
+                    "metric0",
+                    label="Metric0",
+                    definition=t0.metric,
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        secondary_ds = DataSet(
+            table=t1,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t1.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "account",
+                    label="Account",
+                    definition=t1.account,
+                    data_type=DataType.number,
+                ),
+                Field(
+                    "metric1",
+                    label="Metric1",
+                    definition=t1.metric,
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        blend_ds = primary_ds.blend(secondary_ds).on(
+            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
+        )
+
+        sql = (
+            blend_ds.query()
+            .dimension(blend_ds.fields.timestamp, blend_ds.fields.account)
+            .widget(ReactTable(blend_ds.fields.metric1))
+            .reference(f.DayOverDay(blend_ds.fields.timestamp))
+        ).sql
+
+        (query_1, query_2) = sql
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq0"."$account" "$account",'
+            '"sq1"."$metric1" "$metric1" '
+            "FROM ("
+            "SELECT "
+            '"timestamp" "$timestamp",'
+            '"account" "$account" '
+            'FROM "test0" '
+            'GROUP BY "$timestamp","$account"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            '"timestamp" "$timestamp",'
+            '"metric" "$metric1" '
+            'FROM "test1" '
+            'GROUP BY "$timestamp"'
+            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$timestamp","$account"',
+            str(query_1),
+        )
+
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq0"."$account" "$account",'
+            '"sq1"."$metric1_dod" "$metric1_dod" '
+            "FROM ("
+            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
+            '"account" "$account" '
+            'FROM "test0" '
+            'GROUP BY "$timestamp","$account"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
+            '"metric" "$metric1_dod" '
+            'FROM "test1" '
+            'GROUP BY "$timestamp"'
+            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$timestamp","$account"',
+            str(query_2),
+        )
+
+    def test_blended_references_with_order_by_on_metric(self):
+        db = TestDatabase()
+        t0, t1 = Tables("test0", "test1")
+        primary_ds = DataSet(
+            table=t0,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t0.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "account",
+                    label="Account",
+                    definition=t0.account,
+                    data_type=DataType.number,
+                ),
+                Field(
+                    "metric0",
+                    label="Metric0",
+                    definition=t0.metric,
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        secondary_ds = DataSet(
+            table=t1,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t1.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "account",
+                    label="Account",
+                    definition=t1.account,
+                    data_type=DataType.number,
+                ),
+                Field(
+                    "metric1",
+                    label="Metric1",
+                    definition=t1.metric,
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        blend_ds = primary_ds.blend(secondary_ds).on(
+            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
+        )
+
+        sql = (
+            blend_ds.query()
+            .dimension(blend_ds.fields.timestamp, blend_ds.fields.account)
+            .widget(ReactTable(blend_ds.fields.metric1))
+            .reference(f.DayOverDay(blend_ds.fields.timestamp))
+            .orderby(blend_ds.fields.metric1)
+        ).sql
+
+        (query_1, query_2) = sql
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq0"."$account" "$account",'
+            '"sq1"."$metric1" "$metric1" '
+            "FROM ("
+            "SELECT "
+            '"timestamp" "$timestamp",'
+            '"account" "$account" '
+            'FROM "test0" '
+            'GROUP BY "$timestamp","$account"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            '"timestamp" "$timestamp",'
+            '"metric" "$metric1" '
+            'FROM "test1" '
+            'GROUP BY "$timestamp"'
+            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$metric1"',
+            str(query_1),
+        )
+
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq0"."$account" "$account",'
+            '"sq1"."$metric1_dod" "$metric1_dod" '
+            "FROM ("
+            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
+            '"account" "$account" '
+            'FROM "test0" '
+            'GROUP BY "$timestamp","$account"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
+            '"metric" "$metric1_dod" '
+            'FROM "test1" '
+            'GROUP BY "$timestamp"'
+            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$metric1_dod"',
+            str(query_2),
+        )
+
+    def test_blended_references_with_order_by_on_unused_metric(self):
+        db = TestDatabase()
+        t0, t1 = Tables("test0", "test1")
+        primary_ds = DataSet(
+            table=t0,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t0.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "account",
+                    label="Account",
+                    definition=t0.account,
+                    data_type=DataType.number,
+                ),
+                Field(
+                    "metric0",
+                    label="Metric0",
+                    definition=t0.metric,
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        secondary_ds = DataSet(
+            table=t1,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t1.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "account",
+                    label="Account",
+                    definition=t1.account,
+                    data_type=DataType.number,
+                ),
+                Field(
+                    "metric1",
+                    label="Metric1",
+                    definition=t1.metric,
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        blend_ds = primary_ds.blend(secondary_ds).on(
+            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
+        )
+
+        sql = (
+            blend_ds.query()
+            .dimension(blend_ds.fields.timestamp, blend_ds.fields.account)
+            .widget(ReactTable(blend_ds.fields.metric1))
+            .reference(f.DayOverDay(blend_ds.fields.timestamp))
+            .orderby(blend_ds.fields.metric0)
+        ).sql
+
+        (query_1, query_2) = sql
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq0"."$account" "$account",'
+            '"sq1"."$metric1" "$metric1",'
+            '"sq0"."$metric0" "$metric0" '
+            "FROM ("
+            "SELECT "
+            '"timestamp" "$timestamp",'
+            '"account" "$account",'
+            '"metric" "$metric0" '
+            'FROM "test0" '
+            'GROUP BY "$timestamp","$account"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            '"timestamp" "$timestamp",'
+            '"metric" "$metric1" '
+            'FROM "test1" '
+            'GROUP BY "$timestamp"'
+            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$metric0"',
+            str(query_1),
+        )
+
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq0"."$account" "$account",'
+            '"sq1"."$metric1_dod" "$metric1_dod",'
+            '"sq0"."$metric0_dod" "$metric0_dod" '
+            "FROM ("
+            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
+            '"account" "$account",'
+            '"metric" "$metric0_dod" '
+            'FROM "test0" '
+            'GROUP BY "$timestamp","$account"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
+            '"metric" "$metric1_dod" '
+            'FROM "test1" '
+            'GROUP BY "$timestamp"'
+            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$metric0_dod"',
+            str(query_2),
+        )
+
+    def test_blending_with_share_operation_on_primary_metric(self):
+        db = TestDatabase()
+        t0, t1 = Tables("test0", "test1")
+        primary_ds = DataSet(
+            table=t0,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t0.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "account",
+                    label="Account",
+                    definition=t0.account,
+                    data_type=DataType.number,
+                ),
+                Field(
+                    "metric0",
+                    label="Metric0",
+                    definition=t0.metric,
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        secondary_ds = DataSet(
+            table=t1,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t1.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "account",
+                    label="Account",
+                    definition=t1.account,
+                    data_type=DataType.number,
+                ),
+                Field(
+                    "metric1",
+                    label="Metric1",
+                    definition=t1.metric,
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        blend_ds = primary_ds.blend(secondary_ds).on(
+            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
+        )
+
+        sql = (
+            blend_ds.query()
+            .dimension(blend_ds.fields.timestamp)
+            .widget(f.Widget(f.Share(blend_ds.fields.metric0, over=blend_ds.fields.timestamp)))
+        ).sql
+
+        (query_1, query_2) = sql
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq0"."$metric0" "$metric0" '
+            "FROM ("
+            "SELECT "
+            '"timestamp" "$timestamp",'
+            '"metric" "$metric0" '
+            'FROM "test0" '
+            'GROUP BY "$timestamp"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            '"timestamp" "$timestamp" '
+            'FROM "test1" '
+            'GROUP BY "$timestamp"'
+            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$timestamp"',
+            str(query_1),
+        )
+
+        self.assertEqual(
+            "SELECT "
+            'NULL "$timestamp",'
+            '"metric" "$metric0" '
+            'FROM "test0" '
+            'ORDER BY "$timestamp"',
+            str(query_2),
+        )
+
+    def test_blending_with_share_operation_on_secondary_metric(self):
+        db = TestDatabase()
+        t0, t1 = Tables("test0", "test1")
+        primary_ds = DataSet(
+            table=t0,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t0.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "account",
+                    label="Account",
+                    definition=t0.account,
+                    data_type=DataType.number,
+                ),
+                Field(
+                    "metric0",
+                    label="Metric0",
+                    definition=t0.metric,
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        secondary_ds = DataSet(
+            table=t1,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t1.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "account",
+                    label="Account",
+                    definition=t1.account,
+                    data_type=DataType.number,
+                ),
+                Field(
+                    "metric1",
+                    label="Metric1",
+                    definition=t1.metric,
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        blend_ds = primary_ds.blend(secondary_ds).on(
+            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
+        )
+
+        sql = (
+            blend_ds.query()
+            .dimension(blend_ds.fields.timestamp)
+            .widget(f.Widget(f.Share(blend_ds.fields.metric1, over=blend_ds.fields.timestamp)))
+        ).sql
+
+        (query_1, query_2) = sql
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq1"."$metric1" "$metric1" '
+            "FROM ("
+            "SELECT "
+            '"timestamp" "$timestamp" '
+            'FROM "test0" '
+            'GROUP BY "$timestamp"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            '"timestamp" "$timestamp",'
+            '"metric" "$metric1" '
+            'FROM "test1" '
+            'GROUP BY "$timestamp"'
+            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$timestamp"',
+            str(query_1),
+        )
+
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq0"."$metric1" "$metric1" '
+            "FROM ("
+            "SELECT "
+            'NULL "$timestamp",'
+            '"metric" "$metric1" '
+            'FROM "test1") "sq0" '
+            'ORDER BY "$timestamp"',
+            str(query_2),
         )
 
 

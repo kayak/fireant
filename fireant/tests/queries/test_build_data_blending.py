@@ -414,7 +414,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 ') "sq1" '
                 "ON "
                 '"sq0"."$timestamp"="sq1"."$timestamp" '
-                'ORDER BY "sq0"."$timestamp_wow"',
+                'ORDER BY "$timestamp"',
                 str(ref_query),
             )
 
