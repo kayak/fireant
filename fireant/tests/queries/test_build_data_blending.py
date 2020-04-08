@@ -19,12 +19,27 @@ class DataSetBlenderQueryBuilderTests(TestCase):
         ).sql
 
         self.assertEqual(len(queries), 1)
+        # TODO Optimisation opportunity with desired result:
+        # self.assertEqual(
+        #     "SELECT "
+        #     'TRUNC("timestamp",\'DD\') "$timestamp",'
+        #     'SUM("votes") "$votes" '
+        #     'FROM "politics"."politician" '
+        #     'GROUP BY "$timestamp" '
+        #     'ORDER BY "$timestamp"',
+        #     str(queries[0]),
+        # )
         self.assertEqual(
-            "SELECT "
-            'TRUNC("timestamp",\'DD\') "$timestamp",'
-            'SUM("votes") "$votes" '
+            'SELECT "sq0"."$timestamp" "$timestamp","sq0"."$votes" "$votes" '
+            'FROM ('
+            'SELECT TRUNC("timestamp",\'DD\') "$timestamp",SUM("votes") "$votes" '
             'FROM "politics"."politician" '
-            'GROUP BY "$timestamp" '
+            'GROUP BY "$timestamp") "sq0" '
+            'LEFT JOIN ('
+            'SELECT TRUNC("timestamp",\'DD\') "$timestamp" '
+            'FROM "politics"."politician_spend" '
+            'GROUP BY "$timestamp") "sq1" '
+            'ON "sq0"."$timestamp"="sq1"."$timestamp" '
             'ORDER BY "$timestamp"',
             str(queries[0]),
         )
@@ -53,14 +68,14 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             'COUNT("voter"."id") "$voters" '
             'FROM "politics"."politician" '
             'JOIN "politics"."voter" ON "politician"."id"="voter"."politician_id" '
-            'GROUP BY "$timestamp" ORDER BY "$timestamp"'
+            'GROUP BY "$timestamp"'
             ') "sq0" '
-            "JOIN ("
+            "LEFT JOIN ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
             'SUM("candidate_spend") "$candidate-spend" '
             'FROM "politics"."politician_spend" '
-            'GROUP BY "$timestamp" ORDER BY "$timestamp"'
+            'GROUP BY "$timestamp"'
             ') "sq1" '
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
@@ -87,14 +102,14 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             'TRUNC("timestamp",\'DD\') "$timestamp",'
             'SUM("is_winner") "$wins" '
             'FROM "politics"."politician" '
-            'GROUP BY "$timestamp" ORDER BY "$timestamp"'
+            'GROUP BY "$timestamp"'
             ') "sq0" '
-            "JOIN ("
+            "LEFT JOIN ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
             'SUM("candidate_spend") "$candidate-spend" '
             'FROM "politics"."politician_spend" '
-            'GROUP BY "$timestamp" ORDER BY "$timestamp"'
+            'GROUP BY "$timestamp"'
             ') "sq1" '
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
@@ -126,14 +141,14 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             '"political_party" "$political_party",'
             'SUM("is_winner") "$wins" '
             'FROM "politics"."politician" '
-            'GROUP BY "$timestamp","$political_party" ORDER BY "$timestamp","$political_party"'
+            'GROUP BY "$timestamp","$political_party"'
             ') "sq0" '
-            "JOIN ("
+            "LEFT JOIN ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
             'SUM("candidate_spend") "$candidate-spend" '
             'FROM "politics"."politician_spend" '
-            'GROUP BY "$timestamp" ORDER BY "$timestamp"'
+            'GROUP BY "$timestamp"'
             ') "sq1" '
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
@@ -162,15 +177,14 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             'SUM("is_winner") "$wins" '
             'FROM "politics"."politician" '
             'GROUP BY "$timestamp" '
-            'HAVING SUM("votes")>10 '
-            'ORDER BY "$timestamp"'
+            'HAVING SUM("votes")>10'
             ') "sq0" '
-            "JOIN ("
+            "LEFT JOIN ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
             'SUM("candidate_spend") "$candidate-spend" '
             'FROM "politics"."politician_spend" '
-            'GROUP BY "$timestamp" ORDER BY "$timestamp"'
+            'GROUP BY "$timestamp"'
             ') "sq1" '
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
@@ -201,15 +215,15 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             'SUM("is_winner") "$wins" '
             'FROM "politics"."politician" '
             'WHERE "candidate_id"=1 '
-            'GROUP BY "$timestamp" ORDER BY "$timestamp"'
+            'GROUP BY "$timestamp"'
             ') "sq0" '
-            "JOIN ("
+            "LEFT JOIN ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
             'SUM("candidate_spend") "$candidate-spend" '
             'FROM "politics"."politician_spend" '
             'WHERE "candidate_id"=1 '
-            'GROUP BY "$timestamp" ORDER BY "$timestamp"'
+            'GROUP BY "$timestamp"'
             ') "sq1" '
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
@@ -240,14 +254,14 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             'SUM("is_winner") "$wins" '
             'FROM "politics"."politician" '
             "WHERE \"political_party\"='d' "
-            'GROUP BY "$timestamp" ORDER BY "$timestamp"'
+            'GROUP BY "$timestamp"'
             ') "sq0" '
-            "JOIN ("
+            "LEFT JOIN ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
             'SUM("candidate_spend") "$candidate-spend" '
             'FROM "politics"."politician_spend" '
-            'GROUP BY "$timestamp" ORDER BY "$timestamp"'
+            'GROUP BY "$timestamp"'
             ') "sq1" '
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
@@ -282,14 +296,14 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             'TRUNC("timestamp",\'DD\') "$timestamp",'
             'SUM("votes") "$votes" '
             'FROM "politics"."politician" '
-            'GROUP BY "$timestamp" ORDER BY "$timestamp"'
+            'GROUP BY "$timestamp"'
             ') "sq0" '
-            "JOIN ("
+            "LEFT JOIN ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
             'SUM("candidate_spend") "$candidate-spend" '
             'FROM "politics"."politician_spend" '
-            'GROUP BY "$timestamp" ORDER BY "$timestamp"'
+            'GROUP BY "$timestamp"'
             ') "sq1" '
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
@@ -324,15 +338,15 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             'ON "politician"."district_id"="district"."id" '
             'JOIN "locations"."state" '
             'ON "district"."state_id"="state"."id" '
-            'GROUP BY "$timestamp","$state" ORDER BY "$timestamp","$state"'
+            'GROUP BY "$timestamp","$state"'
             ') "sq0" '
-            "JOIN ("
+            "LEFT JOIN ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
             '"state" "$state",'
             'SUM("candidate_spend") "$candidate-spend" '
             'FROM "politics"."politician_spend" '
-            'GROUP BY "$timestamp","$state" ORDER BY "$timestamp","$state"'
+            'GROUP BY "$timestamp","$state"'
             ') "sq1" '
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
@@ -365,14 +379,14 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 'TRUNC("timestamp",\'DD\') "$timestamp",'
                 'SUM("is_winner") "$wins" '
                 'FROM "politics"."politician" '
-                'GROUP BY "$timestamp" ORDER BY "$timestamp"'
+                'GROUP BY "$timestamp"'
                 ') "sq0" '
-                "JOIN ("
+                "LEFT JOIN ("
                 "SELECT "
                 'TRUNC("timestamp",\'DD\') "$timestamp",'
                 'SUM("candidate_spend") "$candidate-spend" '
                 'FROM "politics"."politician_spend" '
-                'GROUP BY "$timestamp" ORDER BY "$timestamp"'
+                'GROUP BY "$timestamp"'
                 ') "sq1" '
                 "ON "
                 '"sq0"."$timestamp"="sq1"."$timestamp" '
@@ -389,14 +403,14 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 "TRUNC(TIMESTAMPADD('week',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("is_winner") "$wins_wow" '
                 'FROM "politics"."politician" '
-                'GROUP BY "$timestamp" ORDER BY "$timestamp"'
+                'GROUP BY "$timestamp"'
                 ') "sq0" '
-                "JOIN ("
+                "LEFT JOIN ("
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('week',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("candidate_spend") "$candidate-spend_wow" '
                 'FROM "politics"."politician_spend" '
-                'GROUP BY "$timestamp" ORDER BY "$timestamp"'
+                'GROUP BY "$timestamp"'
                 ') "sq1" '
                 "ON "
                 '"sq0"."$timestamp"="sq1"."$timestamp" '
@@ -430,17 +444,15 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 '"candidate_id" "$candidate-id",'
                 'SUM("is_winner") "$wins" '
                 'FROM "politics"."politician" '
-                'GROUP BY "$timestamp","$candidate-id" '
-                'ORDER BY "$timestamp","$candidate-id"'
+                'GROUP BY "$timestamp","$candidate-id"'
                 ') "sq0" '
-                "JOIN ("
+                "LEFT JOIN ("
                 "SELECT "
                 'TRUNC("timestamp",\'DD\') "$timestamp",'
                 '"candidate_id" "$candidate-id",'
                 'SUM("candidate_spend") "$candidate-spend" '
                 'FROM "politics"."politician_spend" '
-                'GROUP BY "$timestamp","$candidate-id" '
-                'ORDER BY "$timestamp","$candidate-id"'
+                'GROUP BY "$timestamp","$candidate-id"'
                 ') "sq1" '
                 "ON "
                 '"sq0"."$timestamp"="sq1"."$timestamp" '
@@ -460,17 +472,15 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 'NULL "$candidate-id",'
                 'SUM("is_winner") "$wins" '
                 'FROM "politics"."politician" '
-                'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp","$candidate-id"'
+                'GROUP BY "$timestamp"'
                 ') "sq0" '
-                "JOIN ("
+                "LEFT JOIN ("
                 "SELECT "
                 'TRUNC("timestamp",\'DD\') "$timestamp",'
                 'NULL "$candidate-id",'
                 'SUM("candidate_spend") "$candidate-spend" '
                 'FROM "politics"."politician_spend" '
-                'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp","$candidate-id"'
+                'GROUP BY "$timestamp"'
                 ') "sq1" '
                 "ON "
                 '"sq0"."$timestamp"="sq1"."$timestamp" '
@@ -505,17 +515,15 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             '"candidate_id" "$candidate-id",'
             'SUM("is_winner") "$wins" '
             'FROM "politics"."politician" '
-            'GROUP BY "$timestamp","$candidate-id" '
-            'ORDER BY "$timestamp","$candidate-id"'
+            'GROUP BY "$timestamp","$candidate-id"'
             ') "sq0" '
-            "JOIN ("
+            "LEFT JOIN ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
             '"candidate_id" "$candidate-id",'
             'SUM("candidate_spend") "$candidate-spend" '
             'FROM "politics"."politician_spend" '
-            'GROUP BY "$timestamp","$candidate-id" '
-            'ORDER BY "$timestamp","$candidate-id"'
+            'GROUP BY "$timestamp","$candidate-id"'
             ') "sq1" '
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '

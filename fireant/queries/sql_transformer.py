@@ -81,11 +81,7 @@ def make_slicer_query_with_totals_and_references(
         )
 
         for reference_parts, references in reference_groups_and_none:
-            (
-                dimensions_with_ref,
-                metrics_with_ref,
-                filters_with_ref,
-            ) = adapt_for_reference_query(
+            dimensions_with_ref, metrics_with_ref, filters_with_ref = adapt_for_reference_query(
                 reference_parts,
                 database,
                 dimensions_with_totals,
