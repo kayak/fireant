@@ -4,14 +4,8 @@ from typing import Iterable
 
 from fireant import formats
 from fireant.dataset.fields import Field
-from fireant.utils import (
-    alias_selector,
-    wrap_list,
-)
-from .base import (
-    ReferenceItem,
-    TransformableWidget,
-)
+from fireant.utils import alias_selector, wrap_list
+from .base import ReferenceItem, TransformableWidget
 
 HARD_MAX_COLUMNS = 24
 
@@ -38,16 +32,26 @@ class Pandas(TransformableWidget):
             else HARD_MAX_COLUMNS
         )
 
-    def transform(self, data_frame, slicer, dimensions, references, use_raw_values=False):
+    def transform(
+        self,
+        data_frame,
+        dataset,
+        dimensions,
+        references,
+        annotation_frame=None,
+        use_raw_values=False,
+    ):
         """
         WRITEME
 
         :param data_frame:
-        :param slicer:
+        :param dataset:
         :param dimensions:
         :param references:
-        :param use_raw_values: Don't add prefix or postfix to values
-        :return:
+        :param annotation_frame:
+            A data frame containing the annotation data.
+        :param use_raw_values:
+            Don't add prefix or postfix to values.
         """
         result = data_frame.copy()
 
@@ -166,7 +170,11 @@ class Pandas(TransformableWidget):
 
         def _get_f_display(item):
             return partial(
-                formats.display_value, field=item, nan_value="", null_value="", use_raw_value=use_raw_values
+                formats.display_value,
+                field=item,
+                nan_value="",
+                null_value="",
+                use_raw_value=use_raw_values,
             )
 
         if (

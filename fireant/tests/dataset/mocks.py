@@ -1,22 +1,15 @@
 from collections import OrderedDict
 from datetime import datetime
-from unittest.mock import (
-    MagicMock,
-    Mock,
-)
+from unittest.mock import MagicMock, Mock
 
 import pandas as pd
 
 from fireant import *
+from fireant.dataset.annotations import Annotation
 from fireant.dataset.references import ReferenceType
 from fireant.dataset.totals import get_totals_marker_for_dtype
 from fireant.utils import alias_selector as f
-from pypika import (
-    Case,
-    JoinType,
-    Table,
-    functions as fn,
-)
+from pypika import Case, JoinType, Table, functions as fn
 
 
 class TestDatabase(VerticaDatabase):
@@ -33,6 +26,7 @@ test_database = TestDatabase()
 politicians_table = Table("politician", schema="politics")
 politicians_spend_table = Table("politician_spend", schema="politics")
 politicians_hint_table = Table("hints", schema="politics")
+politicians_annotation_table = Table("annotations", schema="politics")
 voters_table = Table("voter", schema="politics")
 state_table = Table("state", schema="locations")
 district_table = Table("district", schema="locations")
@@ -242,6 +236,82 @@ mock_case = (
     .when(politicians_table.political_party == "Democrat", "Democrat")
     .when(politicians_table.candidate_name == "Bill Clinton", "Bill Clinton")
     .else_("No One")
+)
+
+mock_date_annotation_dataset = DataSet(
+    table=politicians_table,
+    database=test_database,
+    fields=[
+        Field(
+            "timestamp",
+            label="Timestamp",
+            definition=politicians_table.timestamp,
+            data_type=DataType.date,
+        ),
+        Field(
+            "political_party",
+            label="Party",
+            definition=politicians_table.political_party,
+            data_type=DataType.text,
+        ),
+        Field(
+            "votes",
+            label="Votes",
+            definition=fn.Sum(politicians_table.votes),
+            data_type=DataType.number,
+            thousands=",",
+        ),
+    ],
+    annotation=Annotation(
+        table=politicians_annotation_table,
+        field=Field(
+            "district-name",
+            definition=politicians_annotation_table.district_name,
+            data_type=DataType.text,
+        ),
+        alignment_field=Field(
+            "timestamp2",
+            label="Timestamp 2",
+            definition=politicians_annotation_table.timestamp2,
+            data_type=DataType.date,
+        ),
+        dataset_alignment_field_alias="timestamp",
+    ),
+)
+
+mock_category_annotation_dataset = DataSet(
+    table=politicians_table,
+    database=test_database,
+    fields=[
+        Field(
+            "political_party",
+            label="Party",
+            definition=politicians_table.political_party,
+            data_type=DataType.text,
+        ),
+        Field(
+            "votes",
+            label="Votes",
+            definition=fn.Sum(politicians_table.votes),
+            data_type=DataType.number,
+            thousands=",",
+        ),
+    ],
+    annotation=Annotation(
+        table=politicians_annotation_table,
+        field=Field(
+            alias="district-name",
+            definition=politicians_annotation_table.district_name,
+            data_type=DataType.text,
+        ),
+        alignment_field=Field(
+            "political_party",
+            label="Party",
+            definition=politicians_annotation_table.political_party,
+            data_type=DataType.text,
+        ),
+        dataset_alignment_field_alias="political_party",
+    ),
 )
 
 mock_hint_dataset = DataSet(
@@ -481,6 +551,12 @@ dimx1_date_df = (
     mock_politics_database[[f("timestamp")] + metrics].groupby(f("timestamp")).sum()
 )
 
+dimx1_date_meticx1_votes_df = (
+    mock_politics_database[[f("timestamp")] + [f("votes")]]
+    .groupby(f("timestamp"))
+    .sum()
+)
+
 no_index_df = pd.DataFrame(dimx1_date_df.sum()).T
 
 dimx1_str_df = (
@@ -488,6 +564,10 @@ dimx1_str_df = (
     .groupby(f("political_party"))
     .sum()
 )
+
+dimx2_date_index_str_df = mock_politics_database[
+    [f("timestamp"), f("candidate-name")]
+].set_index(f("timestamp"))
 
 dimx1_none_df = pd.DataFrame(mock_politics_database[metrics].sum()).T
 

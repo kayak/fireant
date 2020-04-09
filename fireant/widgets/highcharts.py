@@ -3,10 +3,7 @@ from datetime import timedelta
 import itertools
 import pandas as pd
 
-from fireant import (
-    formats,
-    utils,
-)
+from fireant import formats, utils
 from fireant.dataset.fields import DataType
 from fireant.dataset.totals import TOTALS_MARKERS
 from fireant.reference_helpers import (
@@ -16,10 +13,7 @@ from fireant.reference_helpers import (
     reference_suffix,
 )
 from .base import TransformableWidget
-from .chart_base import (
-    ChartWidget,
-    ContinuousAxisSeries,
-)
+from .chart_base import ChartWidget, ContinuousAxisSeries
 
 DEFAULT_COLORS = (
     "#DDDF0D",
@@ -48,16 +42,14 @@ DASH_STYLES = (
     "ShortDot",
 )
 
-MARKER_SYMBOLS = (
-    "circle",
-    "square",
-    "diamond",
-    "triangle",
-    "triangle-down",
-)
+MARKER_SYMBOLS = ("circle", "square", "diamond", "triangle", "triangle-down")
 
 SERIES_NEEDING_MARKER = (ChartWidget.LineSeries, ChartWidget.AreaSeries)
 TS_UPPER_BOUND = pd.Timestamp.max - timedelta(seconds=1)
+
+
+def has_only_line_series(axis):
+    return all([isinstance(series_, ChartWidget.LineSeries) for series_ in axis])
 
 
 class HighCharts(ChartWidget, TransformableWidget):
@@ -76,7 +68,9 @@ class HighCharts(ChartWidget, TransformableWidget):
     def __repr__(self):
         return ".".join(["HighCharts()"] + [repr(axis) for axis in self.items])
 
-    def transform(self, data_frame, slicer, dimensions, references):
+    def transform(
+        self, data_frame, dataset, dimensions, references, annotation_frame=None
+    ):
         """
         - Main entry point -
 
@@ -86,12 +80,14 @@ class HighCharts(ChartWidget, TransformableWidget):
 
         :param data_frame:
             The data frame containing the data. Index must match the dimensions parameter.
-        :param slicer:
+        :param dataset:
             The slicer that is in use.
         :param dimensions:
             A list of dimensions that are being rendered.
         :param references:
             A list of references that are being rendered.
+        :param annotation_frame:
+            A data frame containing annotation data.
         :return:
             A dict meant to be dumped as JSON.
         """
@@ -147,7 +143,11 @@ class HighCharts(ChartWidget, TransformableWidget):
                 is_timeseries,
             )
 
-        x_axis = self._render_x_axis(data_frame, dimensions, slicer.fields)
+        x_axis = self._render_x_axis(data_frame, dimensions, dataset.fields)
+
+        annotations = []
+        if has_only_line_series(axis) and annotation_frame is not None:
+            annotations = self._render_annotation(annotation_frame, x_axis)
 
         return {
             "title": {"text": self.title},
@@ -161,6 +161,7 @@ class HighCharts(ChartWidget, TransformableWidget):
                 "enabled": self.tooltip_visible,
             },
             "legend": {"useHTML": True},
+            "annotations": annotations,
         }
 
     def _render_x_axis(self, data_frame, dimensions, fields):
@@ -178,10 +179,7 @@ class HighCharts(ChartWidget, TransformableWidget):
 
         is_timeseries = dimensions and dimensions[0].data_type == DataType.date
         if is_timeseries:
-            return {
-                "type": "datetime",
-                "visible": self.x_axis_visible,
-            }
+            return {"type": "datetime", "visible": self.x_axis_visible}
 
         categories = ["All"]
         if first_level.name is not None:
@@ -435,7 +433,7 @@ class HighCharts(ChartWidget, TransformableWidget):
             name = self._format_dimension_values(dimension_fields, dimension_values)
 
             data.append(
-                {"name": name or metric.label, "y": formats.raw_value(y, metric),}
+                {"name": name or metric.label, "y": formats.raw_value(y, metric)}
             )
 
         return {
@@ -450,6 +448,93 @@ class HighCharts(ChartWidget, TransformableWidget):
                 "valueSuffix": reference_suffix(metric, reference),
             },
         }
+
+    def _render_annotation(self, annotation_df, x_axis):
+        """
+        Group data in the annotation data frame and calculate their positions on the x-axis of the main chart.
+
+        :param annotation_df:
+            A data frame containing annotation data.
+        :param x_axis:
+            The x-axis of the chart.
+        :return:
+            A list of annotations with label based on the annotation data frame.
+        """
+        if annotation_df.empty:
+            return []
+
+        annotation_alias = annotation_df.columns[0]
+        annotation_df[annotation_alias] = annotation_df[annotation_alias].astype(str)
+
+        # Group the annotation frame by concatenating the strings in the annotation column for each index value
+        grouped_annotation_df = self._group_annotation_df(
+            annotation_df, annotation_alias
+        ).to_frame()
+
+        # Calculate the annotation label positions for either timeseries or categories
+        annotation_label_positions = self._get_annotation_positions(
+            grouped_annotation_df, annotation_alias, x_axis
+        )
+
+        annotation = {"labels": []}
+        for annotation_position in annotation_label_positions:
+            label = {
+                "point": {"x": annotation_position["position"], "xAxis": 0},
+                "text": annotation_position["label"],
+            }
+
+            annotation["labels"].append(label)
+
+        return [annotation]
+
+    def _get_annotation_positions(self, df, dimension_alias, axis):
+        if axis["type"] == "datetime":
+            return self._get_timeseries_positions(df, dimension_alias)
+
+        return self._get_category_positions(df, dimension_alias, axis)
+
+    @staticmethod
+    def _group_annotation_df(annotation_df, annotation_field_name):
+        def concatenate_row_values(df):
+            df.fillna("None", inplace=True)
+            return ", ".join(df)
+
+        return annotation_df.groupby(annotation_df.index.names)[
+            annotation_field_name
+        ].apply(lambda x: concatenate_row_values(x))
+
+    @staticmethod
+    def _get_timeseries_positions(df, dimension_alias):
+        timeseries_positions = []
+
+        for dimensions, dimension_value in df[dimension_alias].iteritems():
+            datetime = utils.wrap_list(dimensions)[0]
+
+            timeseries_positions.append(
+                {"position": formats.date_as_millis(datetime), "label": dimension_value}
+            )
+
+        return timeseries_positions
+
+    @staticmethod
+    def _get_category_positions(df, dimension_alias, axis):
+        dimension_positions = []
+
+        category_positions = {
+            category: index for index, category in enumerate(axis["categories"])
+        }
+
+        for dimensions, dimension_value in df[dimension_alias].iteritems():
+            category_label = utils.wrap_list(dimensions)[0]
+
+            dimension_positions.append(
+                {
+                    "position": category_positions[category_label],
+                    "label": dimension_value,
+                }
+            )
+
+        return dimension_positions
 
     @staticmethod
     def _remove_date_totals(data_frame):

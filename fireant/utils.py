@@ -3,10 +3,7 @@ import csv
 import inspect
 import tempfile
 from collections import OrderedDict
-from functools import (
-    partial,
-    wraps,
-)
+from functools import partial, wraps
 from types import GeneratorType
 
 
@@ -237,6 +234,15 @@ def alias_for_alias_selector(f_alias):
     if f_alias and f_alias[0] == "$":
         return f_alias[1:]
     return f_alias
+
+
+def unwrapped_dimension_alias(dimension):
+    unwrapped_dimension = dimension
+
+    while hasattr(unwrapped_dimension, "dimension"):
+        unwrapped_dimension = unwrapped_dimension.dimension
+
+    return unwrapped_dimension.alias
 
 
 def reduce_data_frame_levels(data_frame, level):

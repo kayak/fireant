@@ -88,31 +88,36 @@ class DataSet:
         pass
 
     def __init__(
-        self, table, database, joins=(), fields=(), always_query_all_metrics=False
+        self,
+        table,
+        database,
+        joins=(),
+        annotation=None,
+        fields=(),
+        always_query_all_metrics=False,
     ):
         """
         Constructor for a dataset.  Contains all the fields to initialize the dataset.
 
         :param table: (Required)
             A pypika Table reference. The primary table that this dataset will retrieve data from.
-
         :param database:  (Required)
             A Database reference. Holds the connection details used by this dataset to execute queries.
-
         :param fields: (Required: At least one)
             A list of fields mapping definitions of data in the data set. Fields are similar to a column in a database
             query result set. They are the values
-
         :param joins:  (Optional)
             A list of join descriptions for joining additional tables.  Joined tables are only used when querying a
             metric or dimension which requires it.
-
+        :param annotation:  (Optional)
+            Annotation for fetching additional data for a dataset.
         :param always_query_all_metrics: (Default: False)
             When true, all metrics will be included in database queries in order to increase cache hits.
         """
         self.table = table
         self.database = database
         self.joins = list(joins)
+        self.annotation = annotation
 
         self.fields = DataSet.Fields(fields)
 

@@ -4,10 +4,7 @@ from functools import partial
 
 import pandas as pd
 
-from fireant.dataset.fields import (
-    DataType,
-    Field,
-)
+from fireant.dataset.fields import DataType, Field
 from fireant.dataset.totals import (
     DATE_TOTALS,
     NUMBER_TOTALS,
@@ -445,7 +442,15 @@ class ReactTable(Pandas):
 
         return rows
 
-    def transform(self, data_frame, dataset, dimensions, references):
+    def transform(
+        self,
+        data_frame,
+        dataset,
+        dimensions,
+        references,
+        annotation_frame=None,
+        use_raw_values=False,
+    ):
         """
         Transforms a data frame into a format for ReactTable. This is an object containing attributes `columns` and
         `data` which align with the props in ReactTable with the same name.
@@ -458,6 +463,10 @@ class ReactTable(Pandas):
             A list of dimensions that were selected in the data query
         :param references:
             A list of references that were selected in the data query
+        :param annotation_frame:
+            A data frame containing the annotation data.
+        :param use_raw_values:
+            Don't add prefix or postfix to values.
         :return:
             An dict containing attributes `columns` and `data` which align with the props in ReactTable with the same
             names.
@@ -484,7 +493,7 @@ class ReactTable(Pandas):
             DATE_TOTALS: TotalsItem,
             TOTALS_LABEL: TotalsItem,
             alias_selector(METRICS_DIMENSION_ALIAS): Field(
-                METRICS_DIMENSION_ALIAS, None, data_type=DataType.text, label="",
+                METRICS_DIMENSION_ALIAS, None, data_type=DataType.text, label=""
             ),
         }
         all_dimensions_pivoted = (
@@ -508,7 +517,4 @@ class ReactTable(Pandas):
             dimension_hyperlink_templates=self.map_hyperlink_templates(df, dimensions),
         )
 
-        return {
-            "columns": dimension_columns + metric_columns,
-            "data": data,
-        }
+        return {"columns": dimension_columns + metric_columns, "data": data}

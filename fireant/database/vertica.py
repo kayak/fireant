@@ -1,5 +1,5 @@
 from pypika import (
-    Table,
+    Tables,
     VerticaQuery,
     functions as fn,
     terms,
@@ -93,7 +93,12 @@ class VerticaDatabase(Database):
         return fn.TimestampAdd(str(date_part), interval, field)
 
     def get_column_definitions(self, schema, table, connection=None):
-        table_columns = Table("columns")
+        view_columns, table_columns = Tables('view_columns', 'columns')
+
+        view_query = VerticaQuery.from_(view_columns) \
+            .select(view_columns.column_name, view_columns.data_type) \
+            .where((view_columns.table_schema == schema) & (view_columns.field('table_name') == table)) \
+            .distinct()
 
         table_query = (
             VerticaQuery.from_(table_columns, immutable=False)
@@ -105,7 +110,7 @@ class VerticaDatabase(Database):
             .distinct()
         )
 
-        return self.fetch(str(table_query), connection=connection)
+        return self.fetch(str(view_query + table_query), connection=connection)
 
     def import_csv(self, table, file_path, connection=None):
         """
