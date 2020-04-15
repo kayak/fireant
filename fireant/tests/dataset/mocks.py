@@ -569,6 +569,10 @@ dimx2_date_index_str_df = mock_politics_database[
     [f("timestamp"), f("candidate-name")]
 ].set_index(f("timestamp"))
 
+dimx2_category_index_str_df = mock_politics_database[
+    [f("political_party"), f("candidate-name")]
+].set_index(f("political_party"))
+
 dimx1_none_df = pd.DataFrame(mock_politics_database[metrics].sum()).T
 
 dimx1_num_df = (

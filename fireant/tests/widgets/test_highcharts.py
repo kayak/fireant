@@ -22,6 +22,7 @@ from fireant.tests.dataset.mocks import (
     dimx2_date_str_totals_df,
     dimx2_date_str_totalsx2_df,
     dimx2_str_num_df,
+    dimx2_category_index_str_df,
     mock_dataset,
     year,
 )
@@ -3179,7 +3180,7 @@ class HighChartsLineChartAnnotationTransformerTests(TestCase):
     chart_type = "line"
     stacking = None
 
-    def test_dimx1_with_annotation(self):
+    def test_dimx1_timeseries_with_annotation(self):
         result = (
             HighCharts(title="Time Series, Single Metric")
             .axis(self.chart_class(mock_dataset.fields.votes))
@@ -3270,7 +3271,7 @@ class HighChartsLineChartAnnotationTransformerTests(TestCase):
             result,
         )
 
-    def test_dimx2_with_annotation(self):
+    def test_dimx2_timeseries_with_annotation(self):
         result = (
             HighCharts(title="Time Series with Dimension and Single Metric")
             .axis(self.chart_class(mock_dataset.fields.votes))
@@ -3389,6 +3390,89 @@ class HighChartsLineChartAnnotationTransformerTests(TestCase):
                                 "point": {"x": 1451606400000, "xAxis": 0},
                                 "text": "Donald Trump, Hillary Clinton, Donald "
                                 "Trump, Hillary Clinton",
+                            },
+                        ]
+                    }
+                ],
+                "colors": DEFAULT_COLORS,
+            },
+            result,
+        )
+
+    def test_dimx1_category_with_annotation(self):
+        result = (
+            HighCharts(title="Category Series, Single Metric")
+            .axis(self.chart_class(mock_dataset.fields.votes))
+            .transform(
+                dimx1_str_df,
+                mock_dataset,
+                [mock_dataset.fields.political_party],
+                [],
+                dimx2_category_index_str_df,
+            )
+        )
+
+        self.assertEqual(
+            {
+                "title": {"text": "Category Series, Single Metric"},
+                "xAxis": {
+                    "categories": ["Democrat", "Independent", "Republican"],
+                    "type": "category",
+                    "visible": True,
+                },
+                "yAxis": [
+                    {
+                        "id": "0",
+                        "title": {"text": None},
+                        "labels": {"style": {"color": None}},
+                        "visible": True,
+                    }
+                ],
+                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                "legend": {"useHTML": True},
+                "series": [
+                    {
+                        "type": self.chart_type,
+                        "name": "Votes",
+                        "yAxis": "0",
+                        "data": [
+                            {"x": 0, "y": 54551568},
+                            {"x": 1, "y": 1076384},
+                            {"x": 2, "y": 56046384},
+                        ],
+                        "tooltip": {
+                            "valuePrefix": None,
+                            "valueSuffix": None,
+                            "valueDecimals": None,
+                        },
+                        "color": "#DDDF0D",
+                        "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
+                        "dashStyle": "Solid",
+                        "stacking": self.stacking,
+                    }
+                ],
+                "annotations": [
+                    {
+                        "labels": [
+                            {
+                                "point": {"x": 0, "xAxis": 0},
+                                "text": "Bill Clinton, Al Gore, John Kerry, "
+                                "Barrack Obama, Barrack Obama, Hillary "
+                                "Clinton, Bill Clinton, Al Gore, John "
+                                "Kerry, Barrack Obama, Barrack Obama, "
+                                "Hillary Clinton",
+                            },
+                            {
+                                "point": {"x": 1, "xAxis": 0},
+                                "text": "Ross Perot, Ross Perot",
+                            },
+                            {
+                                "point": {"x": 2, "xAxis": 0},
+                                "text": "Bob Dole, George Bush, George Bush, "
+                                "John McCain, Mitt Romney, Donald Trump, "
+                                "Bob Dole, George Bush, George Bush, "
+                                "John McCain, Mitt Romney, Donald "
+                                "Trump",
                             },
                         ]
                     }
