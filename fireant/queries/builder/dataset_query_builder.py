@@ -2,7 +2,7 @@ from typing import Dict, Iterable
 
 from fireant.dataset.totals import scrub_totals_from_share_results
 from fireant.reference_helpers import reference_alias
-from fireant.utils import alias_selector, immutable, unwrapped_dimension_alias
+from fireant.utils import alias_selector, immutable
 from fireant.dataset.fields import DataType
 from fireant.dataset.intervals import DatetimeInterval
 
@@ -20,6 +20,7 @@ from ..finders import (
     find_metrics_for_widgets,
     find_operations_for_widgets,
     find_share_dimensions,
+    find_field_in_modified_field,
 )
 from ..pagination import paginate
 from ..sql_transformer import (
@@ -118,9 +119,9 @@ class DataSetQueryBuilder(
             alignment_dimension_alias = (
                 self.dataset.annotation.dataset_alignment_field_alias
             )
-            first_dimension_alias = unwrapped_dimension_alias(self._dimensions[0])
+            first_dimension = find_field_in_modified_field(self._dimensions[0])
 
-            if first_dimension_alias == alignment_dimension_alias:
+            if first_dimension.alias == alignment_dimension_alias:
                 annotation_frame = self.fetch_annotation()
 
         data_frame = fetch_data(
@@ -246,11 +247,8 @@ class DataSetQueryBuilder(
             A dimension (Field) of this query builder matching the dimension alias.
         """
         for dimension in self._dimensions:
-            unwrapped_dimension = dimension
-            while hasattr(unwrapped_dimension, "dimension"):
-                unwrapped_dimension = unwrapped_dimension.dimension
-
-            if getattr(unwrapped_dimension, "alias", None) == dimension_alias:
+            unwrapped_dimension = find_field_in_modified_field(dimension)
+            if unwrapped_dimension.alias == dimension_alias:
                 return dimension
 
         return None

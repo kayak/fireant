@@ -236,15 +236,6 @@ def alias_for_alias_selector(f_alias):
     return f_alias
 
 
-def unwrapped_dimension_alias(dimension):
-    unwrapped_dimension = dimension
-
-    while hasattr(unwrapped_dimension, "dimension"):
-        unwrapped_dimension = unwrapped_dimension.dimension
-
-    return unwrapped_dimension.alias
-
-
 def reduce_data_frame_levels(data_frame, level):
     reduced = data_frame.reset_index(level=level, drop=True)
     if reduced.size == 1 and reduced.index.names == [None]:
