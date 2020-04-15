@@ -1,28 +1,12 @@
-from collections import (
-    defaultdict,
-    namedtuple,
-)
+from collections import defaultdict, namedtuple
 
-from toposort import (
-    CircularDependencyError,
-    toposort_flatten,
-)
+from toposort import CircularDependencyError, toposort_flatten
 
-from fireant.dataset.intervals import (
-    DATETIME_INTERVALS,
-    DatetimeInterval,
-)
-from fireant.dataset.modifiers import (
-    OmitFromRollup,
-    Rollup,
-)
+from fireant.dataset.intervals import DATETIME_INTERVALS, DatetimeInterval
+from fireant.dataset.modifiers import OmitFromRollup, Rollup
 from fireant.dataset.operations import Share
 from fireant.exceptions import DataSetException
-from fireant.utils import (
-    groupby,
-    ordered_distinct_list,
-    ordered_distinct_list_by_attr,
-)
+from fireant.utils import groupby, ordered_distinct_list, ordered_distinct_list_by_attr
 
 
 class MissingTableJoinException(DataSetException):
@@ -155,7 +139,9 @@ def find_share_dimensions(dimensions, operations):
     return [
         dimension_map[operation.over.alias]
         for operation in operations
-        if isinstance(operation, Share) and operation.over is not None and operation.over.alias in dimension_map
+        if isinstance(operation, Share)
+        and operation.over is not None
+        and operation.over.alias in dimension_map
     ]
 
 
@@ -187,7 +173,8 @@ def find_filters_for_totals(filters):
 
 def find_field_in_modified_field(field):
     """
-    Returns the field from a modified field argument (or just the field argument if it is not modified).
+    Returns the field from a modified field argument (or just the field argument if it is not modified). A modified 
+    field represents either a wrapped dimension (e.g. DatetimeInterval) or a field wrapped in a filter.
     """
     modified_field = field
     while hasattr(modified_field, "dimension"):

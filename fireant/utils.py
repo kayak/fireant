@@ -3,10 +3,7 @@ import csv
 import inspect
 import tempfile
 from collections import OrderedDict
-from functools import (
-    partial,
-    wraps,
-)
+from functools import partial, wraps
 from types import GeneratorType
 
 

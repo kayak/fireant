@@ -62,7 +62,7 @@ class TransformableWidget(Widget):
     # should be applied to the number of series rather than the number of data points.
     group_pagination = False
 
-    def transform(self, data_frame, dataset, dimensions, references):
+    def transform(self, data_frame, dataset, dimensions, references, annotation_frame=None):
         """
         - Main entry point -
 
@@ -77,6 +77,8 @@ class TransformableWidget(Widget):
             A list of dimensions that are being rendered.
         :param references:
             A list of references that are being rendered.
+        :param annotation_frame:
+            A data frame containing the annotation data.
         :return:
             A dict meant to be dumped as JSON.
         """

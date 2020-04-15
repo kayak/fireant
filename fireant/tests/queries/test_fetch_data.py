@@ -1,21 +1,15 @@
 from unittest import TestCase
-from unittest.mock import (
-    ANY,
-    Mock,
-    patch,
-)
+from unittest.mock import ANY, Mock, patch
 
 import fireant as f
 from fireant import Share
-from fireant.tests.dataset.matchers import (
-    FieldMatcher,
-    PypikaQueryMatcher,
+from fireant.tests.dataset.matchers import FieldMatcher, PypikaQueryMatcher
+from fireant.tests.dataset.mocks import (
+    mock_dataset,
+    mock_date_annotation_dataset,
+    mock_category_annotation_dataset,
 )
-from fireant.tests.dataset.mocks import mock_dataset
-from pypika import (
-    Order,
-    functions as fn,
-)
+from pypika import Order, functions as fn
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -194,6 +188,7 @@ class QueryBuilderFetchDataTests(TestCase):
             mock_dataset,
             FieldMatcher(mock_dataset.fields.timestamp),
             [],
+            None,
         )
 
     def test_returns_results_from_widget_transform(
@@ -293,4 +288,314 @@ class QueryBuilderPaginationTests(TestCase):
             limit=None,
             offset=None,
             orders=orders,
+        )
+
+
+@patch("fireant.queries.builder.dataset_query_builder.fetch_data")
+class QueryBuilderAnnotationTests(TestCase):
+    def get_fetch_call_args(self, mock_fetch_data):
+        self.assertEqual(mock_fetch_data.call_count, 2)
+
+        fetch_annotation_data, fetch_data = mock_fetch_data.mock_calls[:2]
+        _, fetch_annotation_args, _ = fetch_annotation_data
+        _, fetch_data_args, _ = fetch_data
+
+        return fetch_annotation_args, fetch_data_args
+
+    @classmethod
+    def setUpClass(cls):
+        cls.mock_widget = f.Widget(mock_date_annotation_dataset.fields.votes)
+        cls.mock_widget.transform = Mock()
+
+    def test_fetch_annotation_single_date_dimension(self, mock_fetch_data: Mock):
+        dims = [mock_date_annotation_dataset.fields.timestamp]
+
+        mock_date_annotation_dataset.query.widget(self.mock_widget).dimension(
+            *dims
+        ).fetch()
+        fetch_annotation_args, fetch_data_args = self.get_fetch_call_args(
+            mock_fetch_data
+        )
+
+        self.assertEqual(
+            (
+                mock_date_annotation_dataset.database,
+                [
+                    PypikaQueryMatcher(
+                        "SELECT "
+                        '"timestamp2" "$timestamp2",'
+                        '"district_name" "$district-name" '
+                        'FROM "politics"."annotations" '
+                        'GROUP BY "$timestamp2","$district-name"'
+                    )
+                ],
+                FieldMatcher(mock_date_annotation_dataset.annotation.alignment_field),
+            ),
+            fetch_annotation_args,
+        )
+
+        self.assertEqual(
+            (
+                mock_date_annotation_dataset.database,
+                [
+                    PypikaQueryMatcher(
+                        "SELECT "
+                        '"timestamp" "$timestamp",'
+                        'SUM("votes") "$votes" '
+                        'FROM "politics"."politician" '
+                        'GROUP BY "$timestamp" '
+                        'ORDER BY "$timestamp"'
+                    )
+                ],
+                FieldMatcher(*dims),
+                [],
+                [],
+            ),
+            fetch_data_args,
+        )
+
+    def test_fetch_annotation_single_category_dimension(self, mock_fetch_data: Mock):
+        dims = [mock_category_annotation_dataset.fields.political_party]
+        widget = f.Widget(mock_category_annotation_dataset.fields.votes)
+        widget.transform = Mock()
+
+        mock_category_annotation_dataset.query.widget(widget).dimension(*dims).fetch()
+        fetch_annotation_args, fetch_data_args = self.get_fetch_call_args(
+            mock_fetch_data
+        )
+
+        self.assertEqual(
+            (
+                mock_date_annotation_dataset.database,
+                [
+                    PypikaQueryMatcher(
+                        "SELECT "
+                        '"political_party" "$political_party",'
+                        '"district_name" "$district-name" '
+                        'FROM "politics"."annotations" '
+                        'GROUP BY "$political_party","$district-name"'
+                    )
+                ],
+                FieldMatcher(
+                    mock_category_annotation_dataset.annotation.alignment_field
+                ),
+            ),
+            fetch_annotation_args,
+        )
+
+        self.assertEqual(
+            (
+                mock_category_annotation_dataset.database,
+                [
+                    PypikaQueryMatcher(
+                        "SELECT "
+                        '"political_party" "$political_party",'
+                        'SUM("votes") "$votes" '
+                        'FROM "politics"."politician" '
+                        'GROUP BY "$political_party" '
+                        'ORDER BY "$political_party"'
+                    )
+                ],
+                FieldMatcher(*dims),
+                [],
+                [],
+            ),
+            fetch_data_args,
+        )
+
+    def test_fetch_annotation_multiple_dimensions(self, mock_fetch_data: Mock):
+        dims = [
+            mock_date_annotation_dataset.fields.timestamp,
+            mock_date_annotation_dataset.fields.political_party,
+        ]
+
+        mock_date_annotation_dataset.query.widget(self.mock_widget).dimension(
+            *dims
+        ).fetch()
+        fetch_annotation_args, fetch_data_args = self.get_fetch_call_args(
+            mock_fetch_data
+        )
+
+        self.assertEqual(
+            (
+                mock_date_annotation_dataset.database,
+                [
+                    PypikaQueryMatcher(
+                        "SELECT "
+                        '"timestamp2" "$timestamp2",'
+                        '"district_name" "$district-name" '
+                        'FROM "politics"."annotations" '
+                        'GROUP BY "$timestamp2","$district-name"'
+                    )
+                ],
+                FieldMatcher(mock_date_annotation_dataset.annotation.alignment_field),
+            ),
+            fetch_annotation_args,
+        )
+
+        self.assertEqual(
+            (
+                mock_date_annotation_dataset.database,
+                [
+                    PypikaQueryMatcher(
+                        "SELECT "
+                        '"timestamp" "$timestamp",'
+                        '"political_party" "$political_party",'
+                        'SUM("votes") "$votes" '
+                        'FROM "politics"."politician" '
+                        'GROUP BY "$timestamp","$political_party" '
+                        'ORDER BY "$timestamp","$political_party"'
+                    )
+                ],
+                FieldMatcher(*dims),
+                [],
+                [],
+            ),
+            fetch_data_args,
+        )
+
+    def test_fetch_annotation_invalid_first_dimension(self, mock_fetch_data: Mock):
+        dims = [mock_date_annotation_dataset.fields.political_party]
+
+        mock_date_annotation_dataset.query.widget(self.mock_widget).dimension(
+            *dims
+        ).fetch()
+
+        mock_fetch_data.assert_called_once_with(
+            mock_date_annotation_dataset.database,
+            [
+                PypikaQueryMatcher(
+                    "SELECT "
+                    '"political_party" "$political_party",'
+                    'SUM("votes") "$votes" '
+                    'FROM "politics"."politician" '
+                    'GROUP BY "$political_party" '
+                    'ORDER BY "$political_party"'
+                )
+            ],
+            FieldMatcher(*dims),
+            [],
+            [],
+        )
+
+    def test_fetch_annotation_no_dimension(self, mock_fetch_data: Mock):
+        dims = []
+
+        mock_date_annotation_dataset.query.widget(self.mock_widget).dimension(
+            *dims
+        ).fetch()
+
+        mock_fetch_data.assert_called_once_with(
+            mock_date_annotation_dataset.database,
+            [
+                PypikaQueryMatcher(
+                    "SELECT " 'SUM("votes") "$votes" ' 'FROM "politics"."politician"'
+                )
+            ],
+            FieldMatcher(*dims),
+            [],
+            [],
+        )
+
+    def test_fetch_annotation_with_filter(self, mock_fetch_data: Mock):
+        dims = [mock_date_annotation_dataset.fields.timestamp]
+
+        mock_date_annotation_dataset.query.widget(self.mock_widget).dimension(
+            *dims
+        ).filter(mock_date_annotation_dataset.fields.timestamp == "2020-01-01").fetch()
+        fetch_annotation_args, fetch_data_args = self.get_fetch_call_args(
+            mock_fetch_data
+        )
+
+        self.assertEqual(
+            (
+                mock_date_annotation_dataset.database,
+                [
+                    PypikaQueryMatcher(
+                        "SELECT "
+                        '"timestamp2" "$timestamp2",'
+                        '"district_name" "$district-name" '
+                        'FROM "politics"."annotations" '
+                        "WHERE \"timestamp2\"='2020-01-01' "
+                        'GROUP BY "$timestamp2","$district-name"'
+                    )
+                ],
+                FieldMatcher(mock_date_annotation_dataset.annotation.alignment_field),
+            ),
+            fetch_annotation_args,
+        )
+
+        self.assertEqual(
+            (
+                mock_date_annotation_dataset.database,
+                [
+                    PypikaQueryMatcher(
+                        "SELECT "
+                        '"timestamp" "$timestamp",'
+                        'SUM("votes") "$votes" '
+                        'FROM "politics"."politician" '
+                        "WHERE \"timestamp\"='2020-01-01' "
+                        'GROUP BY "$timestamp" '
+                        'ORDER BY "$timestamp"'
+                    )
+                ],
+                FieldMatcher(*dims),
+                [],
+                [],
+            ),
+            fetch_data_args,
+        )
+
+    def test_fetch_annotation_invalid_filter(self, mock_fetch_data: Mock):
+        dims = [
+            mock_date_annotation_dataset.fields.timestamp,
+            mock_date_annotation_dataset.fields.political_party,
+        ]
+
+        mock_date_annotation_dataset.query.widget(self.mock_widget).dimension(
+            *dims
+        ).filter(
+            mock_date_annotation_dataset.fields.political_party == "Democrat"
+        ).fetch()
+        fetch_annotation_args, fetch_data_args = self.get_fetch_call_args(
+            mock_fetch_data
+        )
+
+        self.assertEqual(
+            (
+                mock_date_annotation_dataset.database,
+                [
+                    PypikaQueryMatcher(
+                        "SELECT "
+                        '"timestamp2" "$timestamp2",'
+                        '"district_name" "$district-name" '
+                        'FROM "politics"."annotations" '
+                        'GROUP BY "$timestamp2","$district-name"'
+                    )
+                ],
+                FieldMatcher(mock_date_annotation_dataset.annotation.alignment_field),
+            ),
+            fetch_annotation_args,
+        )
+
+        self.assertEqual(
+            (
+                mock_date_annotation_dataset.database,
+                [
+                    PypikaQueryMatcher(
+                        "SELECT "
+                        '"timestamp" "$timestamp",'
+                        '"political_party" "$political_party",'
+                        'SUM("votes") "$votes" '
+                        'FROM "politics"."politician" '
+                        "WHERE \"political_party\"='Democrat' "
+                        'GROUP BY "$timestamp","$political_party" '
+                        'ORDER BY "$timestamp","$political_party"'
+                    )
+                ],
+                FieldMatcher(*dims),
+                [],
+                [],
+            ),
+            fetch_data_args,
         )

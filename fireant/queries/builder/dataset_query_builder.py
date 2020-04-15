@@ -1,14 +1,10 @@
-from typing import (
-    Dict,
-    Iterable,
-)
+from typing import Dict, Iterable
 
 from fireant.dataset.totals import scrub_totals_from_share_results
 from fireant.reference_helpers import reference_alias
-from fireant.utils import (
-    alias_selector,
-    immutable,
-)
+from fireant.utils import alias_selector, immutable
+from fireant.dataset.fields import DataType
+from fireant.dataset.intervals import DatetimeInterval
 
 from .query_builder import (
     QueryBuilder,
@@ -24,9 +20,13 @@ from ..finders import (
     find_metrics_for_widgets,
     find_operations_for_widgets,
     find_share_dimensions,
+    find_field_in_modified_field,
 )
 from ..pagination import paginate
-from ..sql_transformer import make_slicer_query_with_totals_and_references
+from ..sql_transformer import (
+    make_slicer_query_with_totals_and_references,
+    make_slicer_query,
+)
 
 
 class DataSetQueryBuilder(
@@ -114,6 +114,16 @@ class DataSetQueryBuilder(
         operations = find_operations_for_widgets(self._widgets)
         share_dimensions = find_share_dimensions(self._dimensions, operations)
 
+        annotation_frame = None
+        if self._dimensions and self.dataset.annotation:
+            alignment_dimension_alias = (
+                self.dataset.annotation.dataset_alignment_field_alias
+            )
+            first_dimension = find_field_in_modified_field(self._dimensions[0])
+
+            if first_dimension.alias == alignment_dimension_alias:
+                annotation_frame = self.fetch_annotation()
+
         data_frame = fetch_data(
             self.dataset.database,
             queries,
@@ -143,10 +153,105 @@ class DataSetQueryBuilder(
         # Apply transformations
         return [
             widget.transform(
-                data_frame, self.dataset, self._dimensions, self._references
+                data_frame,
+                self.dataset,
+                self._dimensions,
+                self._references,
+                annotation_frame,
             )
             for widget in self._widgets
         ]
+
+    def fetch_annotation(self):
+        """
+        Fetch annotation data for this query builder.
+
+        :return:
+            A data frame containing the annotation data.
+        """
+        annotation = self.dataset.annotation
+
+        # Fetch filters for the dataset's alignment dimension from this query builder
+        dataset_alignment_dimension_filters = self.fetch_query_filters(
+            annotation.dataset_alignment_field_alias
+        )
+
+        # Update fields in filters for the dataset's alignment dimension to the annotation's alignment field
+        annotation_alignment_dimension_filters = [
+            dataset_alignment_filter.for_(annotation.alignment_field)
+            for dataset_alignment_filter in dataset_alignment_dimension_filters
+        ]
+
+        annotation_alignment_field = annotation.alignment_field
+        if annotation_alignment_field.data_type == DataType.date:
+            dataset_alignment_dimension = self.fetch_query_dimension(
+                annotation.dataset_alignment_field_alias
+            )
+
+            if hasattr(dataset_alignment_dimension, "interval_key"):
+                # Use the interval key of the dataset's alignment dimension for the annotation's alignment field
+                # Otherwise we would need to copy it to prevent issues from patching directly
+                annotation_alignment_field = DatetimeInterval(
+                    annotation.alignment_field, dataset_alignment_dimension.interval_key
+                )
+
+        annotation_dimensions = [annotation_alignment_field, annotation.field]
+
+        annotation_query = make_slicer_query(
+            database=self.dataset.database,
+            base_table=annotation.table,
+            dimensions=annotation_dimensions,
+            filters=annotation_alignment_dimension_filters,
+        )
+
+        annotation_df = fetch_data(
+            self.dataset.database, [annotation_query], [annotation.alignment_field]
+        )
+
+        return annotation_df
+
+    def fetch_query_filters(self, dimension_alias):
+        """
+        Fetch all filters matching the given dimension alias from this query builder. All fields of a filter
+        (e.g. complex fields) have to match the alias and use the base table of the dataset.
+
+        :param dimension_alias:
+            An alias of a dimension.
+        :return:
+            A list of filters for the given dimension alias.
+        """
+        dimension_filters = []
+
+        for filter_ in self._filters:
+            filter_fields = [
+                field
+                for field in filter_.definition.fields_()
+                if all(table == self.dataset.table for table in field.tables_)
+            ]
+
+            if not filter_fields:
+                continue
+
+            if all(field.name == dimension_alias for field in filter_fields):
+                dimension_filters.append(filter_)
+
+        return dimension_filters
+
+    def fetch_query_dimension(self, dimension_alias):
+        """
+        Fetch a dimension matching the given dimension alias from this query builder.
+
+        :param dimension_alias:
+            An alias of a dimension.
+        :return:
+            A dimension (Field) of this query builder matching the dimension alias.
+        """
+        for dimension in self._dimensions:
+            unwrapped_dimension = find_field_in_modified_field(dimension)
+            if unwrapped_dimension.alias == dimension_alias:
+                return dimension
+
+        return None
 
     def plot(self):
         try:
@@ -192,5 +297,5 @@ class DataSetQueryBuilder(
                     "orderby({}, {})".format(definition.alias, orientation)
                     for (definition, orientation) in self.orders
                 ],
-            ],
+            ]
         )

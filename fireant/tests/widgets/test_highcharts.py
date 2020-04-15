@@ -9,10 +9,12 @@ from fireant.tests.dataset.mocks import (
     dimx0_metricx1_df,
     dimx0_metricx2_df,
     dimx1_date_df,
+    dimx1_date_meticx1_votes_df,
     dimx1_date_operation_df,
     dimx1_num_df,
     dimx1_str_df,
     dimx1_str_totals_df,
+    dimx2_date_index_str_df,
     dimx2_date_num_df,
     dimx2_date_str_df,
     dimx2_date_str_ref_delta_df,
@@ -20,6 +22,7 @@ from fireant.tests.dataset.mocks import (
     dimx2_date_str_totals_df,
     dimx2_date_str_totalsx2_df,
     dimx2_str_num_df,
+    dimx2_category_index_str_df,
     mock_dataset,
     year,
 )
@@ -78,6 +81,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                         "stacking": self.stacking,
                     }
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -130,6 +134,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                         "stacking": self.stacking,
                     }
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -180,6 +185,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                         "stacking": self.stacking,
                     }
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -230,6 +236,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                         "stacking": self.stacking,
                     }
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -285,6 +292,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                         "stacking": self.stacking,
                     }
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -375,6 +383,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                         "yAxis": "0",
                     },
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -531,6 +540,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                         "yAxis": "0",
                     },
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -693,22 +703,27 @@ class HighChartsLineChartTransformerTests(TestCase):
                         "yAxis": "1",
                     },
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
         )
 
     def test_multi_dim_with_totals_line_chart_and_empty_data(self):
-        dataframe = pd.DataFrame().from_dict(
-            {
-                "$timestamp": ["~~totals"],
-                "$political_party": ["~~totals"],
-                "$votes": [None],
-                "$wins": [None],
-                "$wins_with_style": [None],
-                "$turnout": [None],
-            }
-        ).set_index(dimx2_date_str_totals_df.index.names)
+        dataframe = (
+            pd.DataFrame()
+            .from_dict(
+                {
+                    "$timestamp": ["~~totals"],
+                    "$political_party": ["~~totals"],
+                    "$votes": [None],
+                    "$wins": [None],
+                    "$wins_with_style": [None],
+                    "$turnout": [None],
+                }
+            )
+            .set_index(dimx2_date_str_totals_df.index.names)
+        )
 
         result = (
             HighCharts(
@@ -745,6 +760,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                         "visible": True,
                     },
                 ],
+                "annotations": [],
                 "colors": (
                     "#DDDF0D",
                     "#55BF3B",
@@ -995,6 +1011,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                         "yAxis": "1",
                     },
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -1204,6 +1221,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                         "yAxis": "1",
                     },
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -1320,6 +1338,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                         "yAxis": "0",
                     },
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -1447,6 +1466,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                         "yAxis": "0_eoe_delta",
                     },
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -1497,6 +1517,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                         "stacking": self.stacking,
                     }
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -1624,6 +1645,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                         "yAxis": "0_eoe_delta",
                     },
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -1673,6 +1695,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                         "stacking": self.stacking,
                     }
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -1730,6 +1753,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                         "stacking": self.stacking,
                     },
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -1781,6 +1805,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                         "stacking": self.stacking,
                     }
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -1848,6 +1873,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                         "stacking": self.stacking,
                     },
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -1930,6 +1956,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                         "yAxis": "0",
                     },
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -2068,6 +2095,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                         "yAxis": "0",
                     },
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -2210,6 +2238,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                         "yAxis": "1",
                     },
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -2265,6 +2294,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                     }
                 ],
                 "tooltip": {"enabled": True, "shared": True, "useHTML": True},
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -2411,6 +2441,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                     },
                 ],
                 "tooltip": {"enabled": True, "shared": True, "useHTML": True},
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -2452,6 +2483,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                         "stacking": self.stacking,
                     }
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -2533,6 +2565,7 @@ class HighChartsPieChartTransformerTests(TestCase):
                         "visible": True,
                     }
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -2588,6 +2621,7 @@ class HighChartsPieChartTransformerTests(TestCase):
                         "visible": True,
                     }
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -2602,6 +2636,7 @@ class HighChartsPieChartTransformerTests(TestCase):
 
         self.assertEqual(
             {
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
                 "legend": {"useHTML": True},
                 "series": [
@@ -2653,6 +2688,7 @@ class HighChartsPieChartTransformerTests(TestCase):
 
         self.assertEqual(
             {
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
                 "legend": {"useHTML": True},
                 "series": [
@@ -2738,6 +2774,7 @@ class HighChartsPieChartTransformerTests(TestCase):
                     "categories": ["Democrat", "Independent", "Republican"],
                     "visible": True,
                 },
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
             result,
@@ -2780,6 +2817,7 @@ class HighChartsPieChartTransformerTests(TestCase):
                         "visible": True,
                     }
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
                 "series": [
                     {
@@ -2837,6 +2875,7 @@ class HighChartsPieChartTransformerTests(TestCase):
                         "visible": True,
                     }
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
                 "series": [
                     {
@@ -2896,6 +2935,7 @@ class HighChartsPieChartTransformerTests(TestCase):
                         "visible": True,
                     }
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
                 "series": [
                     {
@@ -2954,6 +2994,7 @@ class HighChartsPieChartTransformerTests(TestCase):
                         "visible": True,
                     }
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
                 "series": [
                     {
@@ -3013,6 +3054,7 @@ class HighChartsPieChartTransformerTests(TestCase):
                         "visible": True,
                     }
                 ],
+                "annotations": [],
                 "colors": DEFAULT_COLORS,
                 "series": [
                     {
@@ -3061,7 +3103,8 @@ class HighChartsPieChartTransformerTests(TestCase):
                             {"name": "2016-01-01, Republican", "y": 13438835},
                         ],
                         "tooltip": {
-                            "pointFormat": '<span style="color:{point.color}">\u25cf</span> {series.name}: <b>{point.y} ({'
+                            "pointFormat": '<span style="color:{point.color}">\u25cf</span> {series.name}: <b>{'
+                            "point.y} ({"
                             "point.percentage:.1f}%)</b><br/>",
                             "valueDecimals": None,
                             "valuePrefix": None,
@@ -3087,7 +3130,8 @@ class HighChartsPieChartTransformerTests(TestCase):
                             {"name": "2016-01-01, Republican", "y": 2},
                         ],
                         "tooltip": {
-                            "pointFormat": '<span style="color:{point.color}">\u25cf</span> {series.name}: <b>{point.y} ({'
+                            "pointFormat": '<span style="color:{point.color}">\u25cf</span> {series.name}: <b>{'
+                            "point.y} ({"
                             "point.percentage:.1f}%)</b><br/>",
                             "valueDecimals": None,
                             "valuePrefix": None,
@@ -3113,7 +3157,8 @@ class HighChartsPieChartTransformerTests(TestCase):
                             {"name": "2016-01-01, Republican", "y": 2},
                         ],
                         "tooltip": {
-                            "pointFormat": '<span style="color:{point.color}">\u25cf</span> {series.name}: <b>{point.y} ({'
+                            "pointFormat": '<span style="color:{point.color}">\u25cf</span> {series.name}: <b>{'
+                            "point.y} ({"
                             "point.percentage:.1f}%)</b><br/>",
                             "valueDecimals": None,
                             "valuePrefix": None,
@@ -3123,6 +3168,316 @@ class HighChartsPieChartTransformerTests(TestCase):
                 ],
                 "tooltip": {"shared": True, "useHTML": True, "enabled": True},
                 "legend": {"useHTML": True},
+            },
+            result,
+        )
+
+
+class HighChartsLineChartAnnotationTransformerTests(TestCase):
+    maxDiff = None
+
+    chart_class = HighCharts.LineSeries
+    chart_type = "line"
+    stacking = None
+
+    def test_dimx1_timeseries_with_annotation(self):
+        result = (
+            HighCharts(title="Time Series, Single Metric")
+            .axis(self.chart_class(mock_dataset.fields.votes))
+            .transform(
+                dimx1_date_meticx1_votes_df,
+                mock_dataset,
+                [mock_dataset.fields.timestamp],
+                [],
+                dimx2_date_index_str_df,
+            )
+        )
+
+        self.assertEqual(
+            {
+                "title": {"text": "Time Series, Single Metric"},
+                "xAxis": {"type": "datetime", "visible": True},
+                "yAxis": [
+                    {
+                        "id": "0",
+                        "title": {"text": None},
+                        "labels": {"style": {"color": None}},
+                        "visible": True,
+                    }
+                ],
+                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                "legend": {"useHTML": True},
+                "series": [
+                    {
+                        "type": self.chart_type,
+                        "name": "Votes",
+                        "yAxis": "0",
+                        "data": [
+                            (820454400000, 15220449),
+                            (946684800000, 16662017),
+                            (1072915200000, 19614932),
+                            (1199145600000, 21294215),
+                            (1325376000000, 20572210),
+                            (1451606400000, 18310513),
+                        ],
+                        "tooltip": {
+                            "valuePrefix": None,
+                            "valueSuffix": None,
+                            "valueDecimals": None,
+                        },
+                        "color": "#DDDF0D",
+                        "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
+                        "dashStyle": "Solid",
+                        "stacking": self.stacking,
+                    }
+                ],
+                "annotations": [
+                    {
+                        "labels": [
+                            {
+                                "point": {"x": 820454400000, "xAxis": 0},
+                                "text": "Bill Clinton, Bob Dole, Ross Perot, "
+                                "Bill Clinton, Bob Dole, Ross Perot",
+                            },
+                            {
+                                "point": {"x": 946684800000, "xAxis": 0},
+                                "text": "George Bush, Al Gore, George Bush, Al Gore",
+                            },
+                            {
+                                "point": {"x": 1072915200000, "xAxis": 0},
+                                "text": "George Bush, John Kerry, George Bush, "
+                                "John Kerry",
+                            },
+                            {
+                                "point": {"x": 1199145600000, "xAxis": 0},
+                                "text": "Barrack Obama, John McCain, Barrack "
+                                "Obama, John McCain",
+                            },
+                            {
+                                "point": {"x": 1325376000000, "xAxis": 0},
+                                "text": "Barrack Obama, Mitt Romney, Barrack "
+                                "Obama, Mitt Romney",
+                            },
+                            {
+                                "point": {"x": 1451606400000, "xAxis": 0},
+                                "text": "Donald Trump, Hillary Clinton, Donald "
+                                "Trump, Hillary Clinton",
+                            },
+                        ]
+                    }
+                ],
+                "colors": DEFAULT_COLORS,
+            },
+            result,
+        )
+
+    def test_dimx2_timeseries_with_annotation(self):
+        result = (
+            HighCharts(title="Time Series with Dimension and Single Metric")
+            .axis(self.chart_class(mock_dataset.fields.votes))
+            .transform(
+                dimx2_date_str_df,
+                mock_dataset,
+                [mock_dataset.fields.timestamp, mock_dataset.fields.political_party],
+                [],
+                dimx2_date_index_str_df,
+            )
+        )
+
+        self.assertEqual(
+            {
+                "title": {"text": "Time Series with Dimension and Single Metric"},
+                "xAxis": {"type": "datetime", "visible": True},
+                "yAxis": [
+                    {
+                        "id": "0",
+                        "title": {"text": None},
+                        "labels": {"style": {"color": None}},
+                        "visible": True,
+                    }
+                ],
+                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                "legend": {"useHTML": True},
+                "series": [
+                    {
+                        "type": self.chart_type,
+                        "name": "Votes (Democrat)",
+                        "yAxis": "0",
+                        "data": [
+                            (820454400000, 7579518),
+                            (946684800000, 8294949),
+                            (1072915200000, 9578189),
+                            (1199145600000, 11803106),
+                            (1325376000000, 12424128),
+                            (1451606400000, 4871678),
+                        ],
+                        "tooltip": {
+                            "valuePrefix": None,
+                            "valueSuffix": None,
+                            "valueDecimals": None,
+                        },
+                        "color": "#DDDF0D",
+                        "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
+                        "dashStyle": "Solid",
+                        "stacking": self.stacking,
+                    },
+                    {
+                        "color": "#55BF3B",
+                        "dashStyle": "Solid",
+                        "data": [(820454400000, 1076384)],
+                        "marker": {"fillColor": "#DDDF0D", "symbol": "square"},
+                        "name": "Votes (Independent)",
+                        "stacking": None,
+                        "tooltip": {
+                            "valueDecimals": None,
+                            "valuePrefix": None,
+                            "valueSuffix": None,
+                        },
+                        "type": "line",
+                        "yAxis": "0",
+                    },
+                    {
+                        "color": "#DF5353",
+                        "dashStyle": "Solid",
+                        "data": [
+                            (820454400000, 6564547),
+                            (946684800000, 8367068),
+                            (1072915200000, 10036743),
+                            (1199145600000, 9491109),
+                            (1325376000000, 8148082),
+                            (1451606400000, 13438835),
+                        ],
+                        "marker": {"fillColor": "#DDDF0D", "symbol": "diamond"},
+                        "name": "Votes (Republican)",
+                        "stacking": None,
+                        "tooltip": {
+                            "valueDecimals": None,
+                            "valuePrefix": None,
+                            "valueSuffix": None,
+                        },
+                        "type": "line",
+                        "yAxis": "0",
+                    },
+                ],
+                "annotations": [
+                    {
+                        "labels": [
+                            {
+                                "point": {"x": 820454400000, "xAxis": 0},
+                                "text": "Bill Clinton, Bob Dole, Ross Perot, "
+                                "Bill Clinton, Bob Dole, Ross Perot",
+                            },
+                            {
+                                "point": {"x": 946684800000, "xAxis": 0},
+                                "text": "George Bush, Al Gore, George Bush, Al Gore",
+                            },
+                            {
+                                "point": {"x": 1072915200000, "xAxis": 0},
+                                "text": "George Bush, John Kerry, George Bush, "
+                                "John Kerry",
+                            },
+                            {
+                                "point": {"x": 1199145600000, "xAxis": 0},
+                                "text": "Barrack Obama, John McCain, Barrack "
+                                "Obama, John McCain",
+                            },
+                            {
+                                "point": {"x": 1325376000000, "xAxis": 0},
+                                "text": "Barrack Obama, Mitt Romney, Barrack "
+                                "Obama, Mitt Romney",
+                            },
+                            {
+                                "point": {"x": 1451606400000, "xAxis": 0},
+                                "text": "Donald Trump, Hillary Clinton, Donald "
+                                "Trump, Hillary Clinton",
+                            },
+                        ]
+                    }
+                ],
+                "colors": DEFAULT_COLORS,
+            },
+            result,
+        )
+
+    def test_dimx1_category_with_annotation(self):
+        result = (
+            HighCharts(title="Category Series, Single Metric")
+            .axis(self.chart_class(mock_dataset.fields.votes))
+            .transform(
+                dimx1_str_df,
+                mock_dataset,
+                [mock_dataset.fields.political_party],
+                [],
+                dimx2_category_index_str_df,
+            )
+        )
+
+        self.assertEqual(
+            {
+                "title": {"text": "Category Series, Single Metric"},
+                "xAxis": {
+                    "categories": ["Democrat", "Independent", "Republican"],
+                    "type": "category",
+                    "visible": True,
+                },
+                "yAxis": [
+                    {
+                        "id": "0",
+                        "title": {"text": None},
+                        "labels": {"style": {"color": None}},
+                        "visible": True,
+                    }
+                ],
+                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                "legend": {"useHTML": True},
+                "series": [
+                    {
+                        "type": self.chart_type,
+                        "name": "Votes",
+                        "yAxis": "0",
+                        "data": [
+                            {"x": 0, "y": 54551568},
+                            {"x": 1, "y": 1076384},
+                            {"x": 2, "y": 56046384},
+                        ],
+                        "tooltip": {
+                            "valuePrefix": None,
+                            "valueSuffix": None,
+                            "valueDecimals": None,
+                        },
+                        "color": "#DDDF0D",
+                        "marker": {"symbol": "circle", "fillColor": "#DDDF0D"},
+                        "dashStyle": "Solid",
+                        "stacking": self.stacking,
+                    }
+                ],
+                "annotations": [
+                    {
+                        "labels": [
+                            {
+                                "point": {"x": 0, "xAxis": 0},
+                                "text": "Bill Clinton, Al Gore, John Kerry, "
+                                "Barrack Obama, Barrack Obama, Hillary "
+                                "Clinton, Bill Clinton, Al Gore, John "
+                                "Kerry, Barrack Obama, Barrack Obama, "
+                                "Hillary Clinton",
+                            },
+                            {
+                                "point": {"x": 1, "xAxis": 0},
+                                "text": "Ross Perot, Ross Perot",
+                            },
+                            {
+                                "point": {"x": 2, "xAxis": 0},
+                                "text": "Bob Dole, George Bush, George Bush, "
+                                "John McCain, Mitt Romney, Donald Trump, "
+                                "Bob Dole, George Bush, George Bush, "
+                                "John McCain, Mitt Romney, Donald "
+                                "Trump",
+                            },
+                        ]
+                    }
+                ],
+                "colors": DEFAULT_COLORS,
             },
             result,
         )

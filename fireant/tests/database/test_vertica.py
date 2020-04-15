@@ -106,9 +106,14 @@ class TestVertica(TestCase):
     def test_get_column_definitions(self, mock_fetch):
         VerticaDatabase().get_column_definitions('test_schema', 'test_table')
 
+        expected_query = ('(SELECT DISTINCT "column_name","data_type" FROM "view_columns" '
+                          'WHERE "table_schema"=\'test_schema\' AND "table_name"=\'test_table\') '
+                          'UNION '
+                          '(SELECT DISTINCT "column_name","data_type" FROM "columns" '
+                          'WHERE "table_schema"=\'test_schema\' AND "table_name"=\'test_table\')')
+
         mock_fetch.assert_called_once_with(
-              'SELECT DISTINCT "column_name","data_type" FROM "columns" '
-              'WHERE "table_schema"=\'test_schema\' AND "table_name"=\'test_table\'',
+              expected_query,
               connection=None
         )
 
