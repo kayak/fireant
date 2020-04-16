@@ -13,7 +13,7 @@ import pandas as pd
 import pandas.testing
 
 from fireant import DayOverDay
-from fireant.dataset.modifiers import Rollup
+from fireant.dataset.modifiers import Rollup, RollupValue
 from fireant.dataset.totals import get_totals_marker_for_dtype
 from fireant.queries.execution import (
     fetch_data,
@@ -195,7 +195,7 @@ class ReduceResultSetsWithTotalsTests(TestCase):
         expected = dimx1_str_totals_df
         raw_df = replace_totals(dimx1_str_df)
         totals_df = pd.merge(
-            pd.DataFrame([None], columns=["$political_party"]),
+            pd.DataFrame([RollupValue.CONSTANT], columns=["$political_party"]),
             pd.DataFrame([raw_df[metrics].sum(axis=0)]),
             how="outer",
             left_index=True,
@@ -213,7 +213,7 @@ class ReduceResultSetsWithTotalsTests(TestCase):
         ].append(dimx2_date_str_totalsx2_df.iloc[-1])
         raw_df = replace_totals(dimx2_date_str_df)
         totals_df = pd.merge(
-            pd.DataFrame([[None, None]], columns=["$timestamp", "$political_party"]),
+            pd.DataFrame([[RollupValue.CONSTANT, RollupValue.CONSTANT]], columns=["$timestamp", "$political_party"]),
             pd.DataFrame([raw_df[metrics].sum(axis=0)]),
             how="outer",
             left_index=True,
@@ -232,7 +232,7 @@ class ReduceResultSetsWithTotalsTests(TestCase):
         expected = dimx2_date_str_totals_df
         raw_df = replace_totals(dimx2_date_str_df)
         totals_df = raw_df.groupby("$timestamp").sum().reset_index()
-        totals_df["$political_party"] = None
+        totals_df["$political_party"] = '_FIREANT_ROLLUP_VALUE_'
         totals_df = totals_df[["$timestamp", "$political_party"] + metrics]
 
         dimensions = (
@@ -256,7 +256,7 @@ class ReduceResultSetsWithTotalsTests(TestCase):
         raw_df = replace_totals(dimx3_date_str_str_df)
         totals_df = pd.merge(
             pd.DataFrame(
-                [[None, None, None]],
+                [[RollupValue.CONSTANT, RollupValue.CONSTANT, RollupValue.CONSTANT]],
                 columns=["$timestamp", "$political_party", "$state"],
             ),
             pd.DataFrame([raw_df[metrics].sum(axis=0)]),
@@ -290,8 +290,8 @@ class ReduceResultSetsWithTotalsTests(TestCase):
 
         raw_df = replace_totals(dimx3_date_str_str_df)
         totals_df = raw_df.groupby("$timestamp").sum().reset_index()
-        totals_df["$political_party"] = None
-        totals_df["$state"] = None
+        totals_df["$political_party"] = RollupValue.CONSTANT
+        totals_df["$state"] = RollupValue.CONSTANT
         totals_df = totals_df[["$timestamp", "$political_party", "$state"] + metrics]
 
         dimensions = (
@@ -311,7 +311,7 @@ class ReduceResultSetsWithTotalsTests(TestCase):
         totals_df = (
             raw_df.groupby(["$timestamp", "$political_party"]).sum().reset_index()
         )
-        totals_df["$state"] = None
+        totals_df["$state"] = RollupValue.CONSTANT
         totals_df = totals_df[["$timestamp", "$political_party", "$state"] + metrics]
 
         dimensions = (
@@ -368,8 +368,8 @@ class ReduceResultSetsWithTotalsTests(TestCase):
         )
         null_totals_df["$timestamp"] = None
         totals_df = totals_df.append(null_totals_df)
-        totals_df["$political_party"] = None
-        totals_df["$state"] = None
+        totals_df["$political_party"] = RollupValue.CONSTANT
+        totals_df["$state"] = RollupValue.CONSTANT
         totals_df = totals_df[["$timestamp", "$political_party", "$state"] + metrics]
 
         dimensions = (

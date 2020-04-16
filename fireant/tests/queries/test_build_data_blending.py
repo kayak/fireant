@@ -469,7 +469,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 "FROM ("
                 "SELECT "
                 'TRUNC("timestamp",\'DD\') "$timestamp",'
-                'NULL "$candidate-id",'
+                '\'_FIREANT_ROLLUP_VALUE_\' "$candidate-id",'
                 'SUM("is_winner") "$wins" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp"'
@@ -477,7 +477,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 "LEFT JOIN ("
                 "SELECT "
                 'TRUNC("timestamp",\'DD\') "$timestamp",'
-                'NULL "$candidate-id",'
+                '\'_FIREANT_ROLLUP_VALUE_\' "$candidate-id",'
                 'SUM("candidate_spend") "$candidate-spend" '
                 'FROM "politics"."politician_spend" '
                 'GROUP BY "$timestamp"'

@@ -1053,7 +1053,7 @@ class QueryBuilderReferencesWithRollupTests(TestCase):
         with self.subTest("totals query selects NULL for timestamp dimension"):
             self.assertEqual(
                 "SELECT "
-                'NULL "$timestamp",'
+                '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp",'
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 "WHERE \"timestamp\" BETWEEN '2018-01-01' AND '2018-01-31' "
@@ -1066,7 +1066,7 @@ class QueryBuilderReferencesWithRollupTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                'NULL "$timestamp",'
+                '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp",'
                 'SUM("votes") "$votes_wow" '
                 'FROM "politics"."politician" '
                 "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('week',-1,'2018-01-01') "
