@@ -1,8 +1,10 @@
+from pypika.terms import Term
+from pypika.utils import format_alias_sql
+
 from fireant.utils import (
     deepcopy,
     immutable,
 )
-from pypika import NullValue
 
 
 class Modifier:
@@ -78,10 +80,18 @@ class FilterModifier(Modifier):
     wrapped_key = "filter"
 
 
+class RollupValue(Term):
+    CONSTANT = "_FIREANT_ROLLUP_VALUE_"
+
+    def get_sql(self, **kwargs):
+        sql = f"'{self.CONSTANT}'"
+        return format_alias_sql(sql, self.alias, **kwargs)
+
+
 class Rollup(DimensionModifier):
     @property
     def definition(self):
-        return NullValue()
+        return RollupValue()
 
 
 class OmitFromRollup(FilterModifier):

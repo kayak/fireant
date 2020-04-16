@@ -18,6 +18,7 @@ from fireant.utils import (
 )
 from .finders import find_totals_dimensions
 from .pandas_workaround import df_subtract
+from ..dataset.modifiers import RollupValue
 
 
 def fetch_data(
@@ -103,8 +104,8 @@ def _replace_nans_for_totals_values(data_frame, dtypes):
     data_frame.reset_index(inplace=True)
 
     for dimension_key, dtype in dtypes.items():
-        data_frame[dimension_key] = data_frame[dimension_key].fillna(
-            get_totals_marker_for_dtype(dtype)
+        data_frame[dimension_key] = data_frame[dimension_key].replace(
+            RollupValue.CONSTANT, get_totals_marker_for_dtype(dtype)
         )
 
     return data_frame.set_index(index_names)

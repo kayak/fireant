@@ -19,11 +19,10 @@ def adapt_for_totals_query(totals_dimension, dimensions, filters):
                       else dimension
                       for dimension in dimensions]
 
-    # Get an index to split the dimensions before and after the totals dimension
-
     if not is_totals_query:
         return raw_dimensions, filters
 
+    # Get an index to split the dimensions before and after the totals dimension
     index = [i
              for i, dimension in enumerate(dimensions)
              if dimension is totals_dimension][0]

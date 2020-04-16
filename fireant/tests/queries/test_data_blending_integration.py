@@ -728,7 +728,7 @@ class DataSetBlenderIntegrationTests(TestCase):
 
         self.assertEqual(
             "SELECT "
-            'NULL "$timestamp",'
+            '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp",'
             '"metric" "$metric0" '
             'FROM "test0" '
             'ORDER BY "$timestamp"',
@@ -824,7 +824,7 @@ class DataSetBlenderIntegrationTests(TestCase):
             '"sq0"."$metric1" "$metric1" '
             "FROM ("
             "SELECT "
-            'NULL "$timestamp",'
+            '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp",'
             '"metric" "$metric1" '
             'FROM "test1") "sq0" '
             'ORDER BY "$timestamp"',
