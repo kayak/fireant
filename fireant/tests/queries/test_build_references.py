@@ -1050,19 +1050,20 @@ class QueryBuilderReferencesWithRollupTests(TestCase):
                 str(reference),
             )
 
-        with self.subTest("totals query selects NULL for timestamp dimension"):
+        with self.subTest("totals query selects _FIREANT_ROLLUP_VALUE_ for timestamp dimension"):
             self.assertEqual(
                 "SELECT "
                 '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp",'
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 "WHERE \"timestamp\" BETWEEN '2018-01-01' AND '2018-01-31' "
+                'GROUP BY "$timestamp" '
                 'ORDER BY "$timestamp"',
                 str(base_rollup),
             )
 
         with self.subTest(
-            "reference totals query selects NULL for timestamp dimension and shifts date range filter"
+            "reference totals query selects _FIREANT_ROLLUP_VALUE_ for timestamp dimension and shifts date range filter"
         ):
             self.assertEqual(
                 "SELECT "
@@ -1071,6 +1072,7 @@ class QueryBuilderReferencesWithRollupTests(TestCase):
                 'FROM "politics"."politician" '
                 "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('week',-1,'2018-01-01') "
                 "AND TIMESTAMPADD('week',-1,'2018-01-31') "
+                'GROUP BY "$timestamp" '
                 'ORDER BY "$timestamp"',
                 str(reference_rollup),
             )

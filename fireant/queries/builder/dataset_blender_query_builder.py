@@ -8,8 +8,7 @@ from fireant.queries.finders import (
     find_field_in_modified_field,
     find_metrics_for_widgets,
     find_share_dimensions,
-    find_operations_for_widgets,
-    find_share_operations,
+    find_operations_for_widgets
 )
 from fireant.queries.sql_transformer import make_slicer_query_with_totals_and_references
 from fireant.reference_helpers import reference_type_alias
@@ -121,7 +120,7 @@ class EmptyWidget(Widget):
 
 
 def _build_dataset_query(
-    dataset, field_map, metrics, dimensions, filters, references, operations
+    dataset, field_map, metrics, dimensions, filters, references, operations, share_dimensions
 ):
     @listify
     def _map_fields(fields):
@@ -142,19 +141,13 @@ def _build_dataset_query(
     dataset_dimensions = _map_fields(dimensions)
     dataset_filters = _map_fields(filters)
     dataset_references = _map_fields(references)
+    dataset_share_dimensions = _map_fields(share_dimensions)
 
     if not any([dataset_metrics, dataset_dimensions]):
         return [None]
 
-    # filter out operations that are not relevant for this dataset
-    dataset_operations = []
-    dataset_metrics_aliases = [metric.alias for metric in dataset_metrics]
-    for operation in operations:
-        for metric in operation.metrics:
-            if metric.alias in dataset_metrics_aliases:
-                dataset_operations.append(operation)
-
-    share_dimensions = find_share_dimensions(dataset_dimensions, dataset_operations)
+    # TODO: It's possible that we have to adapt/map the operations for @apply_special_cases
+    dataset_operations = operations
 
     return make_slicer_query_with_totals_and_references(
         dataset.database,
@@ -166,7 +159,7 @@ def _build_dataset_query(
         dataset_filters,
         dataset_references,
         orders=[],
-        share_dimensions=share_dimensions,
+        share_dimensions=dataset_share_dimensions,
     )
 
 
@@ -181,7 +174,8 @@ def _blender_join_criteria(
     join_criteria = None
     for dimension in dimensions:
         dimension = find_field_in_modified_field(dimension)
-        if not all([dimension in base_field_map, dimension in join_field_map]):
+        # dimension has to be in both field maps:
+        if dimension not in base_field_map or dimension not in join_field_map:
             continue
 
         alias0, alias1 = [
@@ -245,26 +239,17 @@ def _perform_join_operations(dimensions, base_query, base_field_map, join_querie
 
 
 def _blend_query(dimensions, metrics, orders, field_maps, queries):
-    # Remove trailing None's. This is a separate step as the length of the queries after this filter
-    # determines whether the optimisation step after the filtering can be done.
-    while queries[-1] is None:
-        queries.pop()
 
-    perform_optimization = len(queries) == 1
-
-    # Remove None's in the beginning
+    # Remove None's in the beginning and take the first non-empty query as base query
     for i, query in enumerate(queries):
         if query:
-            queries = queries[i:]
-            field_maps = field_maps[i:]
+            base_query, *join_queries = queries[i:]
+            base_field_map, *join_field_maps = field_maps[i:]
             break
-
-    base_query, *join_queries = queries
-    base_field_map, *join_field_maps = field_maps
 
     reference = base_query._references[0] if base_query._references else None
 
-    if perform_optimization:
+    if len(queries) == 1:
         # Optimization step, we don't need to do any joining as there is only one query
         blender_query = base_query
     else:
@@ -277,7 +262,7 @@ def _blend_query(dimensions, metrics, orders, field_maps, queries):
             subquery_field = _get_sq_field_for_blender_field(metric, queries, field_maps, reference)
             metric.get_sql = subquery_field.get_sql
 
-        sq_dimensions = [_get_sq_field_for_blender_field(d,  queries, field_maps) for d in dimensions]
+        sq_dimensions = [_get_sq_field_for_blender_field(d, queries, field_maps) for d in dimensions]
         sq_metrics = [_get_sq_field_for_blender_field(m, queries, field_maps, reference) for m in metrics]
         blender_query = blender_query.select(*sq_dimensions).select(*sq_metrics)
 
@@ -329,7 +314,7 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
 
         dataset_metrics = find_dataset_fields(metrics)
         operations = find_operations_for_widgets(self._widgets)
-        share_operations = find_share_operations(operations)
+        share_dimensions = find_share_dimensions(self._dimensions, operations)
 
         datasets_queries = []
         for dataset, field_map in zip(datasets, field_maps):
@@ -341,7 +326,8 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
                     self._dimensions,
                     self._filters,
                     self._references,
-                    share_operations,
+                    operations,
+                    share_dimensions
                 )
             )
 
@@ -370,7 +356,8 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
 
         for dataset_queries in datasets_queries:
             for i, query_set in enumerate(query_sets):
-                query_set.append(dataset_queries[i] if len(dataset_queries) > i else None)
+                if len(dataset_queries) > i:
+                    query_set.append(dataset_queries[i])
 
         blended_queries = []
         for queryset in query_sets:

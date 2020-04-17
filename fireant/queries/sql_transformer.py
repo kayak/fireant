@@ -160,8 +160,7 @@ def make_slicer_query(
     for dimension in dimensions:
         dimension_term = make_term_for_field(dimension, database.trunc_date)
         query = query.select(dimension_term)
-        if not isinstance(dimension, Rollup):
-            query = query.groupby(dimension_term)
+        query = query.groupby(dimension_term)
 
     # Add filters
     for fltr in filters:
