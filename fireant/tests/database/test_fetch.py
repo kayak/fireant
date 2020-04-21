@@ -28,12 +28,12 @@ class FetchDataTests(TestCase):
 
     def test_do_fetch_data_calls_database_fetch_data(self):
         with patch('fireant.queries.execution.pd.read_sql', return_value=self.mock_data_frame) as mock_read_sql:
-            self.database.fetch_dataframe(self.mock_query)
+            self.database.fetch_dataframe(self.mock_query, parse_dates="hi")
 
             mock_read_sql.assert_called_once_with(self.mock_query,
                                                   self.mock_connection,
                                                   coerce_float=True,
-                                                  parse_dates=True)
+                                                  parse_dates="hi")
 
 
 @patch('fireant.queries.execution.pd.read_sql')

@@ -8,7 +8,7 @@ from typing import (
 import pandas as pd
 
 from fireant.database import Database
-from fireant.dataset.fields import Field
+from fireant.dataset.fields import Field, DataType
 from fireant.dataset.references import calculate_delta_percent
 from fireant.dataset.totals import get_totals_marker_for_dtype
 
@@ -16,7 +16,7 @@ from fireant.utils import (
     alias_selector,
     chunks,
 )
-from .finders import find_totals_dimensions
+from .finders import find_totals_dimensions, find_field_in_modified_field
 from .pandas_workaround import df_subtract
 from ..dataset.modifiers import RollupValue
 
@@ -34,7 +34,15 @@ def fetch_data(
         )
         for query in queries
     ]
-    results = database.fetch_dataframes(*queries)
+
+    date_dimensions = []
+    for dimension in dimensions:
+        unmodified_dimension = find_field_in_modified_field(dimension)
+        if unmodified_dimension.data_type == DataType.date:
+            date_dimensions.append(alias_selector(unmodified_dimension.alias))
+
+    results = database.fetch_dataframes(*queries, parse_dates=date_dimensions)
+
     return reduce_result_set(results, reference_groups, dimensions, share_dimensions)
 
 
@@ -54,7 +62,6 @@ def reduce_result_set(
     :param share_dimensions: A list of dimensions from which the totals are used for calculating share operations.
     :return:
     """
-
     # One result group for each rolled up dimension. Groups contain one member plus one for each reference type used.
     result_groups = chunks(results, 1 + len(reference_groups))
 

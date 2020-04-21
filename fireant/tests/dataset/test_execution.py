@@ -35,6 +35,7 @@ from .mocks import (
     politicians_hint_table,
     politicians_table,
 )
+from ..test_formats import date_field, text_field, boolean_field, number_field
 
 pd.set_option("display.expand_frame_repr", False)
 metrics = ["$votes", "$wins", "$wins_with_style", "$turnout"]
@@ -81,9 +82,24 @@ class TestFetchData(TestCase):
         database.fetch_dataframes.assert_called_with(
             'SELECT * FROM "politics"."politician" LIMIT 5',
             'SELECT * FROM "politics"."hints" LIMIT 5',
+            parse_dates=[]
         )
         reduce_mock.assert_called_once_with(
             [self.test_result_a, self.test_result_b], (), self.test_dimensions, ()
+        )
+
+    @patch("fireant.queries.execution.reduce_result_set")
+    def test_fetch_data_with_date_dimensions(self, reduce_mock):
+        database = MagicMock()
+        database.max_result_set_size = 5
+        dimensions = [number_field, date_field, boolean_field, text_field]
+
+        fetch_data(database, self.test_queries, dimensions)
+
+        database.fetch_dataframes.assert_called_with(
+            'SELECT * FROM "politics"."politician" LIMIT 5',
+            'SELECT * FROM "politics"."hints" LIMIT 5',
+            parse_dates=['$date']
         )
 
 

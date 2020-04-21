@@ -11,7 +11,7 @@ class ThreadPoolConcurrencyMiddleware:
         @wraps(func)
         def wrapper(database, *queries, **kwargs):
             with ThreadPool(processes=self.max_processes) as pool:
-                results = pool.map(lambda query: func(database, query)[0], queries)
+                results = pool.map(lambda query: func(database, query, **kwargs)[0], queries)
                 pool.close()
 
             return results
