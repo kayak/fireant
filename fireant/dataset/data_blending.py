@@ -86,6 +86,7 @@ class DataSetBlender:
         # add query builder entry points
         self.query = DataSetBlenderQueryBuilder(self)
         self.latest = self.primary_dataset.latest
+        self.annotation = None
 
     def __eq__(self, other):
         return isinstance(other, DataSetBlender) and self.fields == other.fields

@@ -728,9 +728,21 @@ class DataSetBlenderIntegrationTests(TestCase):
 
         self.assertEqual(
             "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq0"."$metric0" "$metric0" '
+            "FROM ("
+            "SELECT "
             '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp",'
             '"metric" "$metric0" '
             'FROM "test0" '
+            'GROUP BY "$timestamp"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp" '
+            'FROM "test1" '
+            'GROUP BY "$timestamp"'
+            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
             'ORDER BY "$timestamp"',
             str(query_2),
         )
@@ -821,12 +833,122 @@ class DataSetBlenderIntegrationTests(TestCase):
         self.assertEqual(
             "SELECT "
             '"sq0"."$timestamp" "$timestamp",'
-            '"sq0"."$metric1" "$metric1" '
+            '"sq1"."$metric1" "$metric1" '
             "FROM ("
+            "SELECT "
+            '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp" '
+            'FROM "test0" '
+            'GROUP BY "$timestamp"'
+            ') "sq0" '
+            "LEFT JOIN ("
             "SELECT "
             '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp",'
             '"metric" "$metric1" '
-            'FROM "test1") "sq0" '
+            'FROM "test1" '
+            'GROUP BY "$timestamp"'
+            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$timestamp"',
+            str(query_2),
+        )
+
+    def test_share_on_blended_metric(self):
+        db = TestDatabase()
+        t0, t1 = Tables("test0", "test1")
+        primary_ds = DataSet(
+            table=t0,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t0.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "metric0",
+                    label="Metric0",
+                    definition=t0.metric,
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        secondary_ds = DataSet(
+            table=t1,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t1.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "metric1",
+                    label="Metric1",
+                    definition=t1.metric,
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+
+        blend_ds = primary_ds.blend(secondary_ds).on(
+            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
+        ).extra_fields(
+            Field(
+                "sum",
+                label="sum of two metrics in different datasets",
+                definition=(primary_ds.fields["metric0"] + secondary_ds.fields["metric1"]),
+                data_type=DataType.number,
+            ),
+        )
+
+        sql = (
+            blend_ds.query()
+            .dimension(blend_ds.fields.timestamp)
+            .widget(f.Widget(f.Share(blend_ds.fields.sum, over=blend_ds.fields.timestamp)))
+        ).sql
+
+        (query_1, query_2) = sql
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq0"."$metric0"+"sq1"."$metric1" "$sum" '
+            "FROM ("
+            "SELECT "
+            '"timestamp" "$timestamp",'
+            '"metric" "$metric0" '
+            'FROM "test0" '
+            'GROUP BY "$timestamp"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            '"timestamp" "$timestamp",'
+            '"metric" "$metric1" '
+            'FROM "test1" '
+            'GROUP BY "$timestamp"'
+            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$timestamp"',
+            str(query_1),
+        )
+
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq0"."$metric0"+"sq1"."$metric1" "$sum" '
+            "FROM ("
+            "SELECT "
+            '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp",'
+            '"metric" "$metric0" '
+            'FROM "test0" '
+            'GROUP BY "$timestamp"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp",'
+            '"metric" "$metric1" '
+            'FROM "test1" '
+            'GROUP BY "$timestamp"'
+            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
             'ORDER BY "$timestamp"',
             str(query_2),
         )
