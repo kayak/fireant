@@ -17,7 +17,7 @@ def log_middleware(func):
             start_time = time.time()
             query_logger.debug(query)
 
-            results.append(func(database, query)[0])
+            results.append(func(database, query, **kwargs)[0])
 
             duration = round(time.time() - start_time, 4)
             query_log_msg = '[{duration} seconds]: {query}'.format(duration=duration,
@@ -36,11 +36,11 @@ def connection_middleware(func):
 
     @wraps(func)
     def wrapper(database, *queries, **kwargs):
-        connection = kwargs.get('connection', None)
+        connection = kwargs.pop('connection', None)
         if connection:
-            return func(database, *queries, connection=connection)
+            return func(database, *queries, connection=connection, **kwargs)
         with database.connect() as connection:
-            return func(database, *queries, connection=connection)
+            return func(database, *queries, connection=connection, **kwargs)
 
     return wrapper
 

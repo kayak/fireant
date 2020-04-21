@@ -92,12 +92,12 @@ class Database(object):
             connection.commit()
 
     @apply_middlewares
-    def fetch_dataframes(self, *queries, **kwargs):
+    def fetch_dataframes(self, *queries, parse_dates=None, **kwargs):
         connection = kwargs.get("connection")
         dataframes = []
         for query in queries:
             dataframes.append(
-                pd.read_sql(query, connection, coerce_float=True, parse_dates=True)
+                pd.read_sql(query, connection, coerce_float=True, parse_dates=parse_dates)
             )
         return dataframes
 
