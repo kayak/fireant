@@ -82,7 +82,7 @@ class TestFetchData(TestCase):
         database.fetch_dataframes.assert_called_with(
             'SELECT * FROM "politics"."politician" LIMIT 5',
             'SELECT * FROM "politics"."hints" LIMIT 5',
-            parse_dates=[]
+            parse_dates={}
         )
         reduce_mock.assert_called_once_with(
             [self.test_result_a, self.test_result_b], (), self.test_dimensions, ()
@@ -99,7 +99,7 @@ class TestFetchData(TestCase):
         database.fetch_dataframes.assert_called_with(
             'SELECT * FROM "politics"."politician" LIMIT 5',
             'SELECT * FROM "politics"."hints" LIMIT 5',
-            parse_dates=['$date']
+            parse_dates={'$date': {}}
         )
 
 

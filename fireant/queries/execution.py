@@ -20,6 +20,10 @@ from .finders import find_totals_dimensions, find_field_in_modified_field
 from .pandas_workaround import df_subtract
 from ..dataset.modifiers import RollupValue
 
+# Passing in an empty dictionary as format option to pandas' parse_dates causes errors to be ignored instead of
+# being coerced into NaT.
+PANDAS_TO_DATETIME_FORMAT = {}
+
 
 def fetch_data(
     database: Database,
@@ -35,13 +39,15 @@ def fetch_data(
         for query in queries
     ]
 
-    date_dimensions = []
+    # Indicate which dimensions need to be parsed as date types
+    # For this we create a dictionary with the dimension alias as key and PANDAS_TO_DATETIME_FORMAT as value
+    pandas_parse_dates = {}
     for dimension in dimensions:
         unmodified_dimension = find_field_in_modified_field(dimension)
         if unmodified_dimension.data_type == DataType.date:
-            date_dimensions.append(alias_selector(unmodified_dimension.alias))
+            pandas_parse_dates[alias_selector(unmodified_dimension.alias)] = PANDAS_TO_DATETIME_FORMAT
 
-    results = database.fetch_dataframes(*queries, parse_dates=date_dimensions)
+    results = database.fetch_dataframes(*queries, parse_dates=pandas_parse_dates)
 
     return reduce_result_set(results, reference_groups, dimensions, share_dimensions)
 
