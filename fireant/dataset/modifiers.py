@@ -79,6 +79,10 @@ class DimensionModifier(Modifier):
 class FilterModifier(Modifier):
     wrapped_key = "filter"
 
+    @immutable
+    def for_(self, field):
+        self.filter.field = field
+
 
 class RollupValue(Term):
     CONSTANT = "_FIREANT_ROLLUP_VALUE_"
