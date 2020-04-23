@@ -643,6 +643,108 @@ class DataSetBlenderIntegrationTests(TestCase):
             str(query_2),
         )
 
+    def test_blending_with_omit_from_rollup_filter_of_blended_field(self):
+        db = TestDatabase()
+        t0, t1 = Tables("test0", "test1")
+        primary_ds = DataSet(
+            table=t0,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t0.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "account",
+                    label="Account",
+                    definition=t0.account,
+                    data_type=DataType.number,
+                ),
+                Field(
+                    "metric0",
+                    label="Metric0",
+                    definition=t0.metric,
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        secondary_ds = DataSet(
+            table=t1,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t1.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "metric1",
+                    label="Metric1",
+                    definition=t1.metric,
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        blend_ds = primary_ds.blend(secondary_ds).on(
+            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
+        )
+
+        sql = (
+            blend_ds.query()
+            .dimension(blend_ds.fields.timestamp)
+            .widget(f.Widget(f.Share(blend_ds.fields.metric0, over=blend_ds.fields.timestamp)))
+            .filter(
+                f.OmitFromRollup(blend_ds.fields.account.between(10, 20))
+            )
+        ).sql
+
+        (query_1, query_2) = sql
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq0"."$metric0" "$metric0" '
+            "FROM ("
+            "SELECT "
+            '"timestamp" "$timestamp",'
+            '"metric" "$metric0" '
+            'FROM "test0" '
+            'WHERE "account" BETWEEN 10 AND 20 '
+            'GROUP BY "$timestamp"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            '"timestamp" "$timestamp" '
+            'FROM "test1" '
+            'GROUP BY "$timestamp"'
+            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$timestamp"',
+            str(query_1),
+        )
+
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq0"."$metric0" "$metric0" '
+            "FROM ("
+            "SELECT "
+            '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp",'
+            '"metric" "$metric0" '
+            'FROM "test0" '
+            'GROUP BY "$timestamp"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp" '
+            'FROM "test1" '
+            'GROUP BY "$timestamp"'
+            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$timestamp"',
+            str(query_2),
+        )
+
     def test_blending_with_share_operation_on_primary_metric(self):
         db = TestDatabase()
         t0, t1 = Tables("test0", "test1")
