@@ -136,15 +136,17 @@ def _make_reference_data_frame(base_df, ref_df, reference):
     :param reference:
     :return:
     """
-    mertric_column_indices = [
+    metric_column_indices = [
         i for i, column in enumerate(ref_df.columns) if column not in base_df.columns
     ]
-    ref_columns = [ref_df.columns[i] for i in mertric_column_indices]
+    ref_columns = [ref_df.columns[i] for i in metric_column_indices]
 
     if not (reference.delta or reference.delta_percent):
         return ref_df[ref_columns]
 
-    base_columns = [base_df.columns[i] for i in mertric_column_indices]
+    original_ref_df = ref_df
+
+    base_columns = [base_df.columns[i] for i in metric_column_indices]
 
     # Select just the metric columns from the DF and rename them with the reference key as a suffix
     base_df, ref_df = base_df[base_columns].copy(), ref_df[ref_columns].copy()
@@ -157,5 +159,11 @@ def _make_reference_data_frame(base_df, ref_df, reference):
     ref_delta_df = df_subtract(base_df, ref_df, fill_value=0)
 
     if reference.delta_percent:
-        return calculate_delta_percent(ref_df, ref_delta_df)
+        ref_delta_df = calculate_delta_percent(ref_df, ref_delta_df)
+
+    # Add original reference values back to df
+    ref_delta_df[ref_columns] = original_ref_df[ref_columns]
+    # Alternative for the above line but with copying:
+    # ref_delta_df = ref_delta_df.join(original_ref_df[ref_columns])
+
     return ref_delta_df

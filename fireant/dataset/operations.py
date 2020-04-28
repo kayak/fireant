@@ -11,7 +11,7 @@ from .fields import (
     DataType,
     Field,
 )
-from ..reference_helpers import reference_alias
+from ..reference_helpers import reference_alias, reference_type_alias
 
 
 def _extract_key_or_arg(data_frame, key):
@@ -97,42 +97,30 @@ class _Cumulative(_BaseOperation):
             precision=getattr(arg, "precision"),
         )
 
+    @property
+    def metric(self):
+        return self.args[0]
+
     def apply(self, data_frame, reference):
         if reference and reference.delta_percent:
-            return self.apply_cumulative_for_delta_percent(data_frame, reference)
-        return self.apply_cumulative(data_frame, reference)
+            return self._apply_cumulative_for_reference_delta_percent(data_frame, reference)
 
-    def apply_cumulative(self, data_frame, reference):
+        f_metric_alias = alias_selector(reference_alias(self.metric, reference))
+        return self._apply_cumulative(data_frame, f_metric_alias)
+
+    def _apply_cumulative(self, data_frame, reference):
         raise NotImplementedError()
 
-    def apply_cumulative_for_delta_percent(self, data_frame, reference):
+    def _apply_cumulative_for_reference_delta_percent(self, data_frame, reference):
         """
         When a delta percent reference is combined with a cumulative operation, the delta percent values need to be
         calculated based on the result of performing the operation on both the base values as well as
         the reference values. The correct result can not be obtained by simply applying the operation to the delta
         percent values.
-
-        This function could be simplified if the passed in data_frame also contained the original reference values
-        instead of only the delta percent values. Currently this function recalculates those original values using the
-        delta percent values.
         """
-        operation_metric = self.args[0]
-
-        # get the base values on which this reference is based on
-        base_df_key = alias_selector(operation_metric.alias)
-        base_values = data_frame[base_df_key]
-
-        # get references delta percent values
-        reference_df_key = alias_selector(reference_alias(operation_metric, reference))
-        reference_delta_percent_values = data_frame[reference_df_key] / 100
-
-        # overwrite the percentage values with the original values (by recalculating them using the delta_percent value)
-        data_frame[reference_df_key] = base_values / (
-            reference_delta_percent_values + 1
-        )
-
-        # now apply the operation on the restored original reference values
-        reference_values_after_operation = self.apply_cumulative(data_frame, reference)
+        # apply the operation on the original reference values
+        original_reference_alias = alias_selector(reference_type_alias(self.metric, reference))
+        reference_values_after_operation = self._apply_cumulative(data_frame, original_reference_alias)
 
         # get the base values on which the operation is already performed
         base_values_after_operation_key = alias_selector(self.alias)
@@ -147,29 +135,23 @@ class _Cumulative(_BaseOperation):
 
 
 class CumSum(_Cumulative):
-    def apply_cumulative(self, data_frame, reference):
-        (arg,) = self.args
-        df_key = alias_selector(reference_alias(arg, reference))
-
+    def _apply_cumulative(self, data_frame, f_metric_alias):
         if isinstance(data_frame.index, pd.MultiIndex) and not data_frame.empty:
             levels = self._group_levels(data_frame.index)
 
-            return data_frame[df_key].groupby(level=levels).cumsum()
+            return data_frame[f_metric_alias].groupby(level=levels).cumsum()
 
-        return data_frame[df_key].cumsum()
+        return data_frame[f_metric_alias].cumsum()
 
 
 class CumProd(_Cumulative):
-    def apply_cumulative(self, data_frame, reference):
-        (arg,) = self.args
-        df_key = alias_selector(reference_alias(arg, reference))
-
+    def _apply_cumulative(self, data_frame, f_metric_alias):
         if isinstance(data_frame.index, pd.MultiIndex) and not data_frame.empty:
             levels = self._group_levels(data_frame.index)
 
-            return data_frame[df_key].groupby(level=levels).cumprod()
+            return data_frame[f_metric_alias].groupby(level=levels).cumprod()
 
-        return data_frame[df_key].cumprod()
+        return data_frame[f_metric_alias].cumprod()
 
 
 class CumMean(_Cumulative):
@@ -177,16 +159,13 @@ class CumMean(_Cumulative):
     def cummean(x):
         return x.cumsum() / np.arange(1, len(x) + 1)
 
-    def apply_cumulative(self, data_frame, reference):
-        arg = self.args[0]
-        df_key = alias_selector(reference_alias(arg, reference))
-
+    def _apply_cumulative(self, data_frame, f_metric_alias):
         if isinstance(data_frame.index, pd.MultiIndex) and not data_frame.empty:
             levels = self._group_levels(data_frame.index)
 
-            return data_frame[df_key].groupby(level=levels).apply(self.cummean)
+            return data_frame[f_metric_alias].groupby(level=levels).apply(self.cummean)
 
-        return self.cummean(data_frame[df_key])
+        return self.cummean(data_frame[f_metric_alias])
 
 
 class RollingOperation(_BaseOperation):
@@ -262,11 +241,37 @@ class Share(_BaseOperation):
     def over(self):
         return self.args[1]
 
-    def apply(self, data_frame, reference):
-        metric, over = self.args
-        f_metric_alias = alias_selector(reference_alias(metric, reference))
+    def _get_metric_alias(self, reference):
+        return alias_selector(reference_alias(self.metric, reference))
 
-        if over is None:
+    def apply(self, data_frame, reference):
+        if reference and reference.delta:
+            return self._apply_share_for_reference_delta(data_frame, reference)
+
+        f_metric_alias = alias_selector(reference_alias(self.metric, reference))
+        return self._apply_share(data_frame, f_metric_alias)
+
+    def _apply_share_for_reference_delta(self, data_frame, reference):
+        # apply the operation on the original reference values
+        original_reference_alias = alias_selector(reference_type_alias(self.metric, reference))
+        reference_values_after_operation = self._apply_share(data_frame, original_reference_alias)
+
+        # get the base values on which the operation is already performed
+        base_values_after_operation_key = alias_selector(self.alias)
+        base_values_after_operation = data_frame[base_values_after_operation_key]
+
+        # recalculate the delta using the values on which the operation is already performed
+        ref_delta_df = base_values_after_operation.subtract(
+            reference_values_after_operation, fill_value=0
+        )
+        if reference.delta_percent:
+            # recalculate the delta percent
+            ref_delta_df = calculate_delta_percent(reference_values_after_operation, ref_delta_df)
+
+        return ref_delta_df
+
+    def _apply_share(self, data_frame, f_metric_alias):
+        if self.over is None:
             df = data_frame[f_metric_alias]
             return 100 * df / df
 
@@ -277,7 +282,7 @@ class Share(_BaseOperation):
                 return np.nan
             return 100 * data_frame[f_metric_alias] / totals
 
-        f_over_alias = alias_selector(over.alias)
+        f_over_alias = alias_selector(self.over.alias)
         idx = data_frame.index.names.index(f_over_alias)
         group_levels = data_frame.index.names[idx:]
         over_dim_value = get_totals_marker_for_dtype(data_frame.index.levels[idx].dtype)
