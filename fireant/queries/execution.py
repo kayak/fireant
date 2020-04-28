@@ -91,21 +91,23 @@ def reduce_result_set(
             for reference in reference_group
         ]
 
-        reduced = reduce(
-            lambda left, right: pd.merge(
-                left, right, how="outer", left_index=True, right_index=True
-            ),
-            [base_df] + reference_dfs,
-        )
+        # Merge the different reference dataframes into 1
+        merged_df = base_df
+        for reference_df in reference_dfs:
+            merged_df = pd.merge(
+                merged_df, reference_df, how="outer", left_index=True, right_index=True, suffixes=('', '_delete')
+            )
+            # Drop duplicate columns from the merge (indicate by suffix _delete)
+            merged_df.drop(merged_df.filter(regex='_delete$').columns.tolist(), axis=1, inplace=True)
 
         # If there are rolled up dimensions in this result set then replace the NaNs for that dimension value with a
         # marker to indicate totals.
         # The data frames will be ordered so that the first group will contain the data without any rolled up
         # dimensions, then followed by the groups with them, ordered by the last rollup dimension first.
         if totals_dimension_keys[:i]:
-            reduced = _replace_nans_for_totals_values(reduced, dimension_dtypes)
+            merged_df = _replace_nans_for_totals_values(merged_df, dimension_dtypes)
 
-        group_data_frames.append(reduced)
+        group_data_frames.append(merged_df)
 
     return pd.concat(group_data_frames, sort=False).sort_index(na_position="first")
 
