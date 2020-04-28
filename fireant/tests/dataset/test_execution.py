@@ -207,6 +207,33 @@ class ReduceResultSetsWithReferencesTests(TestCase):
 
         pandas.testing.assert_frame_equal(expected, result)
 
+    def test_reduce_with_multiple_references_of_the_same_type_over_the_same_dimension(self):
+        raw_df = pd.DataFrame(
+            [[date(2019, 1, 2), 1], [date(2019, 1, 3), 2]],
+            columns=["$timestamp", "$metric"],
+        )
+        ref_df = pd.DataFrame(
+            [[date(2019, 1, 2), 2], [date(2019, 1, 3), 0]],
+            columns=["$timestamp", "$metric_dod"],
+        )
+
+        expected = raw_df.copy()
+        expected["$metric_dod"] = pd.Series([2, 0])
+        expected["$metric_dod_delta"] = pd.Series([-1, 2], dtype=object)
+        expected["$metric_dod_delta_percent"] = pd.Series([-50, np.nan], dtype=object)
+        expected.set_index("$timestamp", inplace=True)
+
+        timestamp = mock_dataset.fields.timestamp
+        reference_groups = ([
+            DayOverDay(timestamp),
+            DayOverDay(timestamp, delta=True),
+            DayOverDay(timestamp, delta_percent=True)
+        ],)
+        dimensions = (timestamp,)
+        result = reduce_result_set([raw_df, ref_df], reference_groups, dimensions, ())
+
+        pandas.testing.assert_frame_equal(expected, result)
+
 
 class ReduceResultSetsWithTotalsTests(TestCase):
     def test_reduce_single_result_set_with_str_dimension(self):
