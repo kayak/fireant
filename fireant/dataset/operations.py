@@ -11,7 +11,7 @@ from .fields import (
     DataType,
     Field,
 )
-from ..reference_helpers import reference_alias
+from ..reference_helpers import reference_alias, reference_type_alias
 
 
 def _extract_key_or_arg(data_frame, key):
@@ -262,11 +262,37 @@ class Share(_BaseOperation):
     def over(self):
         return self.args[1]
 
-    def apply(self, data_frame, reference):
-        metric, over = self.args
-        f_metric_alias = alias_selector(reference_alias(metric, reference))
+    def _get_metric_alias(self, reference):
+        return alias_selector(reference_alias(self.metric, reference))
 
-        if over is None:
+    def apply(self, data_frame, reference):
+        if reference and reference.delta:
+            return self._apply_share_for_reference_delta(data_frame, reference)
+
+        f_metric_alias = alias_selector(reference_alias(self.metric, reference))
+        return self._apply_share(data_frame, f_metric_alias)
+
+    def _apply_share_for_reference_delta(self, data_frame, reference):
+        # apply the operation on the original reference values
+        original_reference_alias = alias_selector(reference_type_alias(self.metric, reference))
+        reference_values_after_operation = self._apply_share(data_frame, original_reference_alias)
+
+        # get the base values on which the operation is already performed
+        base_values_after_operation_key = alias_selector(self.alias)
+        base_values_after_operation = data_frame[base_values_after_operation_key]
+
+        # recalculate the delta using the values on which the operation is already performed
+        ref_delta_df = base_values_after_operation.subtract(
+            reference_values_after_operation, fill_value=0
+        )
+        if reference.delta_percent:
+            # recalculate the delta percent
+            ref_delta_df = calculate_delta_percent(reference_values_after_operation, ref_delta_df)
+
+        return ref_delta_df
+
+    def _apply_share(self, data_frame, f_metric_alias):
+        if self.over is None:
             df = data_frame[f_metric_alias]
             return 100 * df / df
 
@@ -277,7 +303,7 @@ class Share(_BaseOperation):
                 return np.nan
             return 100 * data_frame[f_metric_alias] / totals
 
-        f_over_alias = alias_selector(over.alias)
+        f_over_alias = alias_selector(self.over.alias)
         idx = data_frame.index.names.index(f_over_alias)
         group_levels = data_frame.index.names[idx:]
         over_dim_value = get_totals_marker_for_dtype(data_frame.index.levels[idx].dtype)

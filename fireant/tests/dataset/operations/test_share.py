@@ -1,9 +1,12 @@
 from unittest import TestCase
+from unittest.mock import MagicMock
 
 import pandas as pd
+import numpy as np
 import pandas.testing
 
-from fireant import Share
+from fireant import Share, Field
+from fireant.dataset.references import Reference, WeekOverWeek
 from fireant.tests.dataset.mocks import (
     dimx0_metricx1_df,
     dimx1_str_df,
@@ -117,3 +120,41 @@ class ShareTests(TestCase):
                              name=f_metric_key,
                              index=dimx2_date_str_df.index)
         pandas.testing.assert_series_equal(expected, result, check_less_precise=True)
+
+    def test_share_for_references_with_delta_percent(self):
+        dataset = MagicMock()
+        dataset.table._table_name = "table"
+        value_field = Field("value", None)
+        over_field = Field("dim-over", None)
+        share = Share(value_field, over_field)
+        reference = Reference(value_field, WeekOverWeek, delta=True, delta_percent=True)
+
+        df = pd.DataFrame.from_dict({
+            "$value_wow": [10, 15, 20, 5, 50],
+            "$value": [12, 16, 14, 8, 50],
+            "$share(value,dim-over)": [24, 32, 28, 16, 100],
+            "$dim-over": ["A", "B", "C", "D", "~~totals"]
+        }).set_index('$dim-over')
+
+        result = share.apply(df, reference)
+
+        np.testing.assert_array_equal(([20.0, 6 + (2 / 3), -30.0, 60, 0]), result.values)
+
+    def test_share_for_references_with_delta(self):
+        dataset = MagicMock()
+        dataset.table._table_name = "table"
+        value_field = Field("value", None)
+        over_field = Field("dim-over", None)
+        share = Share(value_field, over_field)
+        reference = Reference(value_field, WeekOverWeek, delta=True, delta_percent=False)
+
+        df = pd.DataFrame.from_dict({
+            "$value_wow": [10, 15, 20, 5, 50],
+            "$value": [12, 16, 14, 8, 50],
+            "$share(value,dim-over)": [24, 32, 28, 16, 100],
+            "$dim-over": ["A", "B", "C", "D", "~~totals"]
+        }).set_index('$dim-over')
+
+        result = share.apply(df, reference)
+
+        np.testing.assert_array_equal(([4, 2, -12, 6, 0]), result.values)

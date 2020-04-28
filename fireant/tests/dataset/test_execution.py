@@ -176,6 +176,7 @@ class ReduceResultSetsWithReferencesTests(TestCase):
 
         expected = raw_df.copy()
         expected["$metric_dod_delta_percent"] = pd.Series([-50, np.nan], dtype=object)
+        expected["$metric_dod"] = pd.Series([2, 0])
         expected.set_index("$timestamp", inplace=True)
 
         timestamp = mock_dataset.fields.timestamp
@@ -196,6 +197,7 @@ class ReduceResultSetsWithReferencesTests(TestCase):
 
         expected = raw_df.copy()
         expected["$metric_dod_delta"] = pd.Series([-1.0, 2.0], dtype=object)
+        expected["$metric_dod"] = pd.Series([2.0, np.nan])
         expected.set_index("$timestamp", inplace=True)
 
         timestamp = mock_dataset.fields.timestamp
