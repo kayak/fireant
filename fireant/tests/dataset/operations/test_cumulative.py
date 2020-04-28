@@ -56,6 +56,7 @@ class CumSumTests(TestCase):
 
         df = pd.DataFrame.from_dict({
                 "$value": [55, 60, 108],
+                "$value_wow": [50, 50, 100],
                 "$cumsum(value)": [55, 115, 223],
                 "$value_wow_delta_percent": [10, 20, 8],
             }
@@ -102,6 +103,7 @@ class CumProdTests(TestCase):
 
         df = pd.DataFrame.from_dict({
             "$value": [55, 60, 108],
+            "$value_wow": [50, 50, 100],
             "$cumprod(value)": [55, 3300, 356400],
             "$value_wow_delta_percent": [10, 20, 8],
         }
@@ -148,6 +150,7 @@ class CumMeanTests(TestCase):
 
         df = pd.DataFrame.from_dict({
             "$value": [55, 60, 108],
+            "$value_wow": [50, 50, 100],
             "$cummean(value)": [55, 57.5, 74 + (1/3)],
             "$value_wow_delta_percent": [10, 20, 8],
         })
