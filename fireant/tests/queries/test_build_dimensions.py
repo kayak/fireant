@@ -271,7 +271,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
         with self.subTest("totals dimension is replaced with _FIREANT_ROLLUP_VALUE_"):
             self.assertEqual(
                 "SELECT "
-                '\'_FIREANT_ROLLUP_VALUE_\' "$political_party",'
+                "'_FIREANT_ROLLUP_VALUE_' \"$political_party\","
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$political_party" '
@@ -306,12 +306,14 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest("all dimensions after the rolled up dimension are _FIREANT_ROLLUP_VALUE_"):
+        with self.subTest(
+            "all dimensions after the rolled up dimension are _FIREANT_ROLLUP_VALUE_"
+        ):
             self.assertEqual(
                 "SELECT "
                 'TRUNC("timestamp",\'DD\') "$timestamp",'
-                '\'_FIREANT_ROLLUP_VALUE_\' "$candidate-id",'
-                '\'_FIREANT_ROLLUP_VALUE_\' "$political_party",'
+                "'_FIREANT_ROLLUP_VALUE_' \"$candidate-id\","
+                "'_FIREANT_ROLLUP_VALUE_' \"$political_party\","
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp","$candidate-id","$political_party" '
@@ -353,7 +355,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 "SELECT "
                 'TRUNC("timestamp",\'DD\') "$timestamp",'
                 '"candidate_id" "$candidate-id",'
-                '\'_FIREANT_ROLLUP_VALUE_\' "$political_party",'
+                "'_FIREANT_ROLLUP_VALUE_' \"$political_party\","
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp","$candidate-id","$political_party" '
@@ -368,8 +370,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
             self.assertEqual(
                 "SELECT "
                 'TRUNC("timestamp",\'DD\') "$timestamp",'
-                '\'_FIREANT_ROLLUP_VALUE_\' "$candidate-id",'
-                '\'_FIREANT_ROLLUP_VALUE_\' "$political_party",'
+                "'_FIREANT_ROLLUP_VALUE_' \"$candidate-id\","
+                "'_FIREANT_ROLLUP_VALUE_' \"$political_party\","
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp","$candidate-id","$political_party" '
@@ -406,7 +408,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
         with self.subTest("reference query is shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
                 '"political_party" "$political_party",'
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
@@ -421,7 +423,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
             self.assertEqual(
                 "SELECT "
                 'TRUNC("timestamp",\'DD\') "$timestamp",'
-                '\'_FIREANT_ROLLUP_VALUE_\' "$political_party",'
+                "'_FIREANT_ROLLUP_VALUE_' \"$political_party\","
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp","$political_party" '
@@ -434,8 +436,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
-                '\'_FIREANT_ROLLUP_VALUE_\' "$political_party",'
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "'_FIREANT_ROLLUP_VALUE_' \"$political_party\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp","$political_party" '
@@ -478,7 +480,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
         with self.subTest("reference query is shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
                 '"political_party" "$political_party",'
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
@@ -495,7 +497,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
             self.assertEqual(
                 "SELECT "
                 'TRUNC("timestamp",\'DD\') "$timestamp",'
-                '\'_FIREANT_ROLLUP_VALUE_\' "$political_party",'
+                "'_FIREANT_ROLLUP_VALUE_' \"$political_party\","
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 "WHERE \"timestamp\" BETWEEN '2018-01-01' AND '2019-01-01' "
@@ -509,8 +511,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
-                '\'_FIREANT_ROLLUP_VALUE_\' "$political_party",'
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "'_FIREANT_ROLLUP_VALUE_' \"$political_party\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('day',-1,'2018-01-01') "
@@ -559,7 +561,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
             self.assertEqual(
                 "SELECT "
                 '"political_party" "$political_party",'
-                '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp",'
+                "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$political_party","$timestamp" '
@@ -612,7 +614,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
             self.assertEqual(
                 "SELECT "
                 '"political_party" "$political_party",'
-                '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp",'
+                "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 "WHERE \"timestamp\" BETWEEN '2018-03-01' AND '2019-09-01' "
@@ -662,7 +664,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
             self.assertEqual(
                 "SELECT "
                 '"political_party" "$political_party",'
-                '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp",'
+                "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$political_party","$timestamp" '
@@ -675,8 +677,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                '\'_FIREANT_ROLLUP_VALUE_\' "$political_party",'
-                '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp",'
+                "'_FIREANT_ROLLUP_VALUE_' \"$political_party\","
+                "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$political_party","$timestamp" '

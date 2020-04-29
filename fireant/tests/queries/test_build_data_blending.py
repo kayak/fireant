@@ -1,10 +1,7 @@
 from unittest import TestCase
 
 import fireant as f
-from fireant.tests.dataset.mocks import (
-    Rollup,
-    mock_dataset_blender,
-)
+from fireant.tests.dataset.mocks import Rollup, mock_dataset_blender
 from pypika import Order
 
 
@@ -14,7 +11,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
     def test_using_fields_from_single_dataset_reduced_to_dataset_query(self):
         queries = (
             mock_dataset_blender.query()
-            .widget(f.ReactTable(mock_dataset_blender.fields["votes"],))
+            .widget(f.ReactTable(mock_dataset_blender.fields["votes"]))
             .dimension(f.day(mock_dataset_blender.fields.timestamp))
         ).sql
 
@@ -31,11 +28,11 @@ class DataSetBlenderQueryBuilderTests(TestCase):
         # )
         self.assertEqual(
             'SELECT "sq0"."$timestamp" "$timestamp","sq0"."$votes" "$votes" '
-            'FROM ('
+            "FROM ("
             'SELECT TRUNC("timestamp",\'DD\') "$timestamp",SUM("votes") "$votes" '
             'FROM "politics"."politician" '
             'GROUP BY "$timestamp") "sq0" '
-            'LEFT JOIN ('
+            "LEFT JOIN ("
             'SELECT TRUNC("timestamp",\'DD\') "$timestamp" '
             'FROM "politics"."politician_spend" '
             'GROUP BY "$timestamp") "sq1" '
@@ -400,14 +397,14 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 '"sq1"."$candidate-spend_wow"/"sq0"."$wins_wow" "$candidate-spend-per-wins_wow" '
                 "FROM ("
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('week',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('week',1,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
                 'SUM("is_winner") "$wins_wow" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp"'
                 ') "sq0" '
                 "LEFT JOIN ("
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('week',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('week',1,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
                 'SUM("candidate_spend") "$candidate-spend_wow" '
                 'FROM "politics"."politician_spend" '
                 'GROUP BY "$timestamp"'
@@ -469,7 +466,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 "FROM ("
                 "SELECT "
                 'TRUNC("timestamp",\'DD\') "$timestamp",'
-                '\'_FIREANT_ROLLUP_VALUE_\' "$candidate-id",'
+                "'_FIREANT_ROLLUP_VALUE_' \"$candidate-id\","
                 'SUM("is_winner") "$wins" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp","$candidate-id"'
@@ -477,7 +474,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 "LEFT JOIN ("
                 "SELECT "
                 'TRUNC("timestamp",\'DD\') "$timestamp",'
-                '\'_FIREANT_ROLLUP_VALUE_\' "$candidate-id",'
+                "'_FIREANT_ROLLUP_VALUE_' \"$candidate-id\","
                 'SUM("candidate_spend") "$candidate-spend" '
                 'FROM "politics"."politician_spend" '
                 'GROUP BY "$timestamp","$candidate-id"'
