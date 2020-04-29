@@ -1,13 +1,7 @@
 from unittest import TestCase
 
 import fireant as f
-from fireant import (
-    DataSet,
-    DataType,
-    Database,
-    Field,
-    ReactTable,
-)
+from fireant import DataSet, DataType, Database, Field, ReactTable
 from pypika import Tables
 
 from fireant.tests.database.mock_database import TestDatabase
@@ -66,7 +60,7 @@ class DataSetBlenderIntegrationTests(TestCase):
                     label="Metric Share",
                     definition=primary_ds.fields.metric / secondary_ds.fields.metric,
                     data_type=DataType.number,
-                ),
+                )
             )
         )
 
@@ -131,7 +125,7 @@ class DataSetBlenderIntegrationTests(TestCase):
                     label="Metric2",
                     definition=t1.metric,
                     data_type=DataType.number,
-                ),
+                )
             ],
         )
         blend_ds = primary_ds.blend(secondary_ds).on({})
@@ -260,7 +254,7 @@ class DataSetBlenderIntegrationTests(TestCase):
             table=t0,
             database=db,
             fields=[
-                Field("a", label="A", definition=t0.a, data_type=DataType.number,),
+                Field("a", label="A", definition=t0.a, data_type=DataType.number),
                 Field(
                     "metric0",
                     label="Metric0",
@@ -273,7 +267,7 @@ class DataSetBlenderIntegrationTests(TestCase):
             table=t1,
             database=db,
             fields=[
-                Field("b", label="B", definition=t1.b, data_type=DataType.number,),
+                Field("b", label="B", definition=t1.b, data_type=DataType.number),
                 Field(
                     "metric1",
                     label="Metric1",
@@ -408,13 +402,13 @@ class DataSetBlenderIntegrationTests(TestCase):
             '"sq0"."$account" "$account",'
             '"sq1"."$metric1_dod" "$metric1_dod" '
             "FROM ("
-            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
+            'SELECT TIMESTAMPADD(\'day\',1,"timestamp" "$timestamp") "$timestamp",'
             '"account" "$account" '
             'FROM "test0" '
             'GROUP BY "$timestamp","$account"'
             ') "sq0" '
             "LEFT JOIN ("
-            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
+            'SELECT TIMESTAMPADD(\'day\',1,"timestamp" "$timestamp") "$timestamp",'
             '"metric" "$metric1_dod" '
             'FROM "test1" '
             'GROUP BY "$timestamp"'
@@ -516,13 +510,13 @@ class DataSetBlenderIntegrationTests(TestCase):
             '"sq0"."$account" "$account",'
             '"sq1"."$metric1_dod" "$metric1_dod" '
             "FROM ("
-            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
+            'SELECT TIMESTAMPADD(\'day\',1,"timestamp" "$timestamp") "$timestamp",'
             '"account" "$account" '
             'FROM "test0" '
             'GROUP BY "$timestamp","$account"'
             ') "sq0" '
             "LEFT JOIN ("
-            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
+            'SELECT TIMESTAMPADD(\'day\',1,"timestamp" "$timestamp") "$timestamp",'
             '"metric" "$metric1_dod" '
             'FROM "test1" '
             'GROUP BY "$timestamp"'
@@ -627,14 +621,14 @@ class DataSetBlenderIntegrationTests(TestCase):
             '"sq1"."$metric1_dod" "$metric1_dod",'
             '"sq0"."$metric0_dod" "$metric0_dod" '
             "FROM ("
-            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
+            'SELECT TIMESTAMPADD(\'day\',1,"timestamp" "$timestamp") "$timestamp",'
             '"account" "$account",'
             '"metric" "$metric0_dod" '
             'FROM "test0" '
             'GROUP BY "$timestamp","$account"'
             ') "sq0" '
             "LEFT JOIN ("
-            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
+            'SELECT TIMESTAMPADD(\'day\',1,"timestamp" "$timestamp") "$timestamp",'
             '"metric" "$metric1_dod" '
             'FROM "test1" '
             'GROUP BY "$timestamp"'
@@ -695,10 +689,12 @@ class DataSetBlenderIntegrationTests(TestCase):
         sql = (
             blend_ds.query()
             .dimension(blend_ds.fields.timestamp)
-            .widget(f.Widget(f.Share(blend_ds.fields.metric0, over=blend_ds.fields.timestamp)))
-            .filter(
-                f.OmitFromRollup(blend_ds.fields.account.between(10, 20))
+            .widget(
+                f.Widget(
+                    f.Share(blend_ds.fields.metric0, over=blend_ds.fields.timestamp)
+                )
             )
+            .filter(f.OmitFromRollup(blend_ds.fields.account.between(10, 20)))
         ).sql
 
         (query_1, query_2) = sql
@@ -730,14 +726,14 @@ class DataSetBlenderIntegrationTests(TestCase):
             '"sq0"."$metric0" "$metric0" '
             "FROM ("
             "SELECT "
-            '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp",'
+            "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
             '"metric" "$metric0" '
             'FROM "test0" '
             'GROUP BY "$timestamp"'
             ') "sq0" '
             "LEFT JOIN ("
             "SELECT "
-            '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp" '
+            "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\" "
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
@@ -803,7 +799,11 @@ class DataSetBlenderIntegrationTests(TestCase):
         sql = (
             blend_ds.query()
             .dimension(blend_ds.fields.timestamp)
-            .widget(f.Widget(f.Share(blend_ds.fields.metric0, over=blend_ds.fields.timestamp)))
+            .widget(
+                f.Widget(
+                    f.Share(blend_ds.fields.metric0, over=blend_ds.fields.timestamp)
+                )
+            )
         ).sql
 
         (query_1, query_2) = sql
@@ -834,14 +834,14 @@ class DataSetBlenderIntegrationTests(TestCase):
             '"sq0"."$metric0" "$metric0" '
             "FROM ("
             "SELECT "
-            '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp",'
+            "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
             '"metric" "$metric0" '
             'FROM "test0" '
             'GROUP BY "$timestamp"'
             ') "sq0" '
             "LEFT JOIN ("
             "SELECT "
-            '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp" '
+            "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\" "
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
@@ -907,7 +907,11 @@ class DataSetBlenderIntegrationTests(TestCase):
         sql = (
             blend_ds.query()
             .dimension(blend_ds.fields.timestamp)
-            .widget(f.Widget(f.Share(blend_ds.fields.metric1, over=blend_ds.fields.timestamp)))
+            .widget(
+                f.Widget(
+                    f.Share(blend_ds.fields.metric1, over=blend_ds.fields.timestamp)
+                )
+            )
         ).sql
 
         (query_1, query_2) = sql
@@ -938,13 +942,13 @@ class DataSetBlenderIntegrationTests(TestCase):
             '"sq1"."$metric1" "$metric1" '
             "FROM ("
             "SELECT "
-            '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp" '
+            "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\" "
             'FROM "test0" '
             'GROUP BY "$timestamp"'
             ') "sq0" '
             "LEFT JOIN ("
             "SELECT "
-            '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp",'
+            "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
             '"metric" "$metric1" '
             'FROM "test1" '
             'GROUP BY "$timestamp"'
@@ -993,21 +997,27 @@ class DataSetBlenderIntegrationTests(TestCase):
             ],
         )
 
-        blend_ds = primary_ds.blend(secondary_ds).on(
-            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
-        ).extra_fields(
-            Field(
-                "sum",
-                label="sum of two metrics in different datasets",
-                definition=(primary_ds.fields["metric0"] + secondary_ds.fields["metric1"]),
-                data_type=DataType.number,
-            ),
+        blend_ds = (
+            primary_ds.blend(secondary_ds)
+            .on({primary_ds.fields.timestamp: secondary_ds.fields.timestamp})
+            .extra_fields(
+                Field(
+                    "sum",
+                    label="sum of two metrics in different datasets",
+                    definition=(
+                        primary_ds.fields["metric0"] + secondary_ds.fields["metric1"]
+                    ),
+                    data_type=DataType.number,
+                )
+            )
         )
 
         sql = (
             blend_ds.query()
             .dimension(blend_ds.fields.timestamp)
-            .widget(f.Widget(f.Share(blend_ds.fields.sum, over=blend_ds.fields.timestamp)))
+            .widget(
+                f.Widget(f.Share(blend_ds.fields.sum, over=blend_ds.fields.timestamp))
+            )
         ).sql
 
         (query_1, query_2) = sql
@@ -1039,14 +1049,14 @@ class DataSetBlenderIntegrationTests(TestCase):
             '"sq0"."$metric0"+"sq1"."$metric1" "$sum" '
             "FROM ("
             "SELECT "
-            '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp",'
+            "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
             '"metric" "$metric0" '
             'FROM "test0" '
             'GROUP BY "$timestamp"'
             ') "sq0" '
             "LEFT JOIN ("
             "SELECT "
-            '\'_FIREANT_ROLLUP_VALUE_\' "$timestamp",'
+            "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
             '"metric" "$metric1" '
             'FROM "test1" '
             'GROUP BY "$timestamp"'
@@ -1119,7 +1129,10 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
         )
         cls.tertiary_ds.id = 2
         cls.blend_ds = (
-            cls.primary_ds.blend(cls.secondary_ds).on_dimensions().blend(cls.tertiary_ds).on_dimensions()
+            cls.primary_ds.blend(cls.secondary_ds)
+            .on_dimensions()
+            .blend(cls.tertiary_ds)
+            .on_dimensions()
         )
 
     def test_selecting_just_one_metric_in_non_primary_dataset(self):
@@ -1129,7 +1142,7 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
                 label="Metric Two",
                 definition=self.tertiary_ds.fields.metric2,
                 data_type=DataType.number,
-            ),
+            )
         )
 
         (query,) = blender.query().widget(ReactTable(blender.fields.only_metric2)).sql
@@ -1278,7 +1291,7 @@ class DataSetBlenderMultipleDatasetsTests(TestCase):
                     / self.tertiary_ds.fields.metric2
                     / self.quaternary_ds.fields.metric3,
                     data_type=DataType.number,
-                ),
+                )
             )
         )
 
@@ -1293,6 +1306,6 @@ class DataSetBlenderMultipleDatasetsTests(TestCase):
                     / self.blend_ds.fields.metric2
                     / self.blend_ds.fields.metric3,
                     data_type=DataType.number,
-                ),
+                )
             )
         )
