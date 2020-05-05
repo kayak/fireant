@@ -192,11 +192,17 @@ def ordered_distinct_list(l):
     return [x for x in l if not x in seen and not seen.add(x)]
 
 
-def ordered_distinct_list_by_attr(l, attr="alias"):
-    seen = set()
-    return [
-        x for x in l if not getattr(x, attr) in seen and not seen.add(getattr(x, attr))
-    ]
+def ordered_distinct_list_by_attr(l, attr="alias", keep_last=False):
+    mapping = {}  # will contain mapping from attr_value to item
+    for item in l:
+        attr_value = getattr(item, attr)
+        if not keep_last and attr_value in mapping:
+            # only keep the first occurrence in the result so skip the item if the attribute value is already present
+            continue
+
+        mapping[attr_value] = item
+
+    return list(mapping.values())
 
 
 def groupby(items, by):
