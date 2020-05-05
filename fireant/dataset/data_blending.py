@@ -77,9 +77,10 @@ class DataSetBlender:
         self.fields = DataSet.Fields(
             ordered_distinct_list_by_attr(
                 [
-                    *_wrap_dataset_fields(primary_dataset),
                     *_wrap_dataset_fields(secondary_dataset),
-                ]
+                    *_wrap_dataset_fields(primary_dataset)
+                ],
+                keep_last=True  # This makes sure we keep the blended field if there are fields with the same name
             )
         )
 

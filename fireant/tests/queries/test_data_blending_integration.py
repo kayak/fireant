@@ -1077,6 +1077,12 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
                     definition=t0.metric,
                     data_type=DataType.number,
                 ),
+                Field(
+                    "duplicate_metric",
+                    label="DuplicateMetricSet0",
+                    definition=t0.duplicate,
+                    data_type=DataType.number,
+                ),
             ],
         )
         cls.primary_ds.id = 0
@@ -1115,6 +1121,12 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
                     definition=t2.metric,
                     data_type=DataType.number,
                 ),
+                Field(
+                    "duplicate_metric",
+                    label="DuplicateMetricSet2",
+                    definition=t2.duplicate,
+                    data_type=DataType.number,
+                ),
             ],
         )
         cls.tertiary_ds.id = 2
@@ -1136,6 +1148,25 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
 
         self.assertEqual(
             'SELECT "sq0"."$metric2" "$only_metric2" FROM (SELECT "metric" "$metric2" FROM "test2") "sq0"',
+            str(query),
+        )
+
+    def test_selecting_metric_with_duplicate_name_picks_blended_one(self):
+        blender = self.blend_ds.extra_fields(
+            Field(
+                "duplicate_metric",
+                label="BlendedDuplicateMetric",
+                definition=self.primary_ds.fields.duplicate_metric + self.tertiary_ds.fields.metric2,
+                data_type=DataType.number,
+            ),
+        )
+
+        (query,) = blender.query().widget(ReactTable(blender.fields.duplicate_metric)).sql
+
+        self.assertEqual(
+            'SELECT "sq0"."$duplicate_metric"+"sq1"."$metric2" "$duplicate_metric" '
+            'FROM (SELECT "duplicate" "$duplicate_metric" FROM "test0") "sq0",'
+            '(SELECT "metric" "$metric2" FROM "test2") "sq1"',
             str(query),
         )
 
