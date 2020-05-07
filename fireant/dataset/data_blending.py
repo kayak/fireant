@@ -77,10 +77,9 @@ class DataSetBlender:
         self.fields = DataSet.Fields(
             ordered_distinct_list_by_attr(
                 [
-                    *_wrap_dataset_fields(secondary_dataset),
-                    *_wrap_dataset_fields(primary_dataset)
+                    *_wrap_dataset_fields(primary_dataset),
+                    *_wrap_dataset_fields(secondary_dataset)
                 ],
-                keep_last=True  # This makes sure we keep the blended field if there are fields with the same name
             )
         )
 
@@ -116,7 +115,7 @@ class DataSetBlender:
     @immutable
     def extra_fields(self, *fields):
         for field in fields:
-            self.fields.append(field)
+            self.fields.add(field)
 
     def blend(self, other):
         """

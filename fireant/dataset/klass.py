@@ -28,11 +28,19 @@ class _Container(object):
         )
         dataset.dimensions.my_dimension1
     """
+    def __new__(cls, *args, **kwargs):
+        """
+        Because we override __getattr__ we need to implement __new__ in order for pickling to work correctly:
+        https://docs.python.org/3/library/pickle.html#object.__getstate__
+        """
+        new_instance = super().__new__(cls)
+        new_instance._items = {}
+        return new_instance
 
-    def __init__(self, items=()):
-        self._items = ordered_distinct_list_by_attr(items)
-        for item in self._items:
-            setattr(self, item.alias, item)
+    def __init__(self, items=(), key_attribute="alias"):
+        self._key_attribute = key_attribute
+        for item in items:
+            self.add(item)
 
     def __deepcopy__(self, memodict={}):
         for field in self:
@@ -40,25 +48,32 @@ class _Container(object):
         return deepcopy(self, memodict)
 
     def __iter__(self):
-        return iter(self._items)
+        return iter(self._items.values())
 
     def __getitem__(self, item):
         return getattr(self, item)
+
+    def __getattr__(self, key):
+        result = self._items.get(key)
+        if result is not None:
+            return result
+        raise AttributeError
 
     def __contains__(self, item):
         from .fields import Field
 
         if isinstance(item, str):
-            return hasattr(self, item)
+            return item in self._items
 
         if not isinstance(item, Field):
             return False
 
-        self_item = getattr(self, item.alias, None)
+        key = getattr(item, self._key_attribute)
+        self_item = self._items.get(key)
         return item is self_item
 
     def __hash__(self):
-        return hash((item for item in self._items))
+        return hash((item for item in self._items.values()))
 
     def __eq__(self, other):
         """
@@ -68,14 +83,21 @@ class _Container(object):
             [
                 a is not None and b is not None and a.alias == b.alias
                 for a, b in itertools.zip_longest(
-                    self._items, getattr(other, "_items", ())
+                    self._items.values(), getattr(other, "_items", {}).values()
                 )
             ]
         )
 
-    def append(self, item):
-        self._items.append(item)
-        setattr(self, item.alias, item)
+    def add(self, item):
+        key = getattr(item, self._key_attribute)
+        if key in self._items:
+            raise ValueError(f"Item with key {key} already exists.")
+
+        # A very effective way to not allow reserved words but maybe not too great for performance
+        if key in dir(self):
+            raise ValueError(f"Reserved name {key} can not be used.")
+
+        self._items[key] = item
 
 
 class DataSet:
@@ -150,7 +172,7 @@ class DataSet:
     @immutable
     def extra_fields(self, *fields):
         for field in fields:
-            self.fields.append(field)
+            self.fields.add(field)
 
     def blend(self, other):
         """
