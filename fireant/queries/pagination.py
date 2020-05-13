@@ -1,4 +1,6 @@
 import pandas as pd
+from pandas.core.dtypes.common import is_datetime64_ns_dtype
+
 from fireant.utils import alias_selector
 
 from pypika import Order
@@ -79,6 +81,15 @@ def _index_isnull(data_frame):
     return pd.isnull(data_frame.index)
 
 
+def _aggregate_dimension_groups(group):
+    # FIXME this should aggregate according to field definition, instead of sum/max
+    # Need a way to interpret definitions in python code in order to do that
+    if is_datetime64_ns_dtype(group):
+        # sum aggregation doesn't work on the datetime type so use max instead
+        return group.max()
+    return group.sum()
+
+
 def _group_paginate(data_frame, start=None, end=None, orders=()):
     """
     Applies pagination which limits the number of rows in the data frame grouped by the zeroth index level. This will
@@ -106,10 +117,7 @@ def _group_paginate(data_frame, start=None, end=None, orders=()):
     ]
 
     if orders:
-        # FIXME this should aggregate according to field definition, instead of sum
-        # Need a way to interpret definitions in python code in order to do that
-        aggregated_df = dimension_groups.sum()
-
+        aggregated_df = dimension_groups.aggregate(_aggregate_dimension_groups)
         sort, ascending = _apply_sorting(orders)
         sorted_df = aggregated_df.sort_values(by=sort, ascending=ascending)
         sorted_dimension_values = tuple(sorted_df.index)[start:end]
