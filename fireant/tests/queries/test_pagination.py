@@ -295,3 +295,29 @@ class GroupPaginationTests(TestCase):
         paginated = paginate(dimx2_date_bool_df, [mock_chart_widget], limit=1)
         expected = dimx2_date_bool_df.loc[(slice(None), False), :]
         assert_frame_equal(expected, paginated)
+
+    def test_group_pagination_with_order_on_non_selected_datetime_metric(self):
+        index_values = [['2016-10-03', '2016-10-04', '2016-10-05'], ['General', 'City']]
+        # City values have the highest aggregated $updated_time timestamp (as paginate uses MAX for datetimes):
+        data_values = [
+            (10, '2018-08-10'),  # General
+            (2, '2018-08-11'),  # City
+            (44, '2018-08-09'),  # General
+            (6, '2018-08-06'),  # City
+            (18, '2018-08-04'),  # General
+            (21, '2018-08-20')  # City
+        ]
+        idx = pd.MultiIndex.from_product(index_values, names=['$created_time', '$category'])
+        df = pd.DataFrame(data_values, idx, ['$seeds', '$updated_time'])
+        df["$updated_time"] = pd.to_datetime(df["$updated_time"])
+
+        result = paginate(df, [mock_chart_widget], [(Mock(alias="updated_time"), Order.desc)])
+
+        # We order descending on $updated_time, which puts City values first.
+        # So we sort the original dataframe on #category ascending so that it would put the City values first
+        expected = df.sort_values(
+            by=['$created_time', '$category'],
+            ascending=[True, True],
+        )
+        # This created expected dataframe should match the result
+        assert_frame_equal(expected, result)
