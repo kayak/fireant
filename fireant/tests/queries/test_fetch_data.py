@@ -1,15 +1,19 @@
+import pandas as pd
 from unittest import TestCase
 from unittest.mock import ANY, Mock, patch
 
 import fireant as f
-from fireant import Share
+from fireant import Share, DataSet, DataType, Field
+from fireant.dataset.filters import ComparisonOperator
+from fireant.dataset.references import ReferenceFilter
+from fireant.tests.database.mock_database import TestDatabase
 from fireant.tests.dataset.matchers import FieldMatcher, PypikaQueryMatcher
 from fireant.tests.dataset.mocks import (
     mock_dataset,
     mock_date_annotation_dataset,
     mock_category_annotation_dataset,
 )
-from pypika import Order, functions as fn
+from pypika import Order, Table
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -97,11 +101,58 @@ class FindShareDimensionsTests(TestCase):
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
+@patch("fireant.queries.builder.dataset_query_builder.apply_reference_filters")
 @patch("fireant.queries.builder.dataset_query_builder.paginate")
 @patch("fireant.queries.builder.dataset_query_builder.fetch_data")
 class QueryBuilderFetchDataTests(TestCase):
+
+    def test_reference_filters_are_applied(self, mock_fetch: Mock, mock_2: Mock, mock_apply_reference_filters: Mock):
+        db = TestDatabase()
+        t0 = Table("test0")
+        dataset = DataSet(
+            table=t0,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t0.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "metric0",
+                    label="Metric0",
+                    definition=t0.metric,
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        mock_widget = f.Widget(dataset.fields.metric0)
+        mock_widget.transform = Mock()
+        reference_filter = ReferenceFilter(
+            dataset.fields.metric0,
+            ComparisonOperator.gt,
+            5
+        )
+        reference = f.DayOverDay(dataset.fields.timestamp, filters=[reference_filter])
+
+        df = pd.DataFrame.from_dict({"$value": [1]})
+        mock_fetch.return_value = df
+        mock_apply_reference_filters.return_value = df
+
+        (
+            dataset.query()
+            .dimension(dataset.fields.timestamp)
+            .widget(mock_widget)
+            .reference(reference)
+        ).fetch()
+
+        mock_apply_reference_filters.assert_called_once_with(df, reference)
+
+
+
     def test_pass_slicer_database_as_arg(
-        self, mock_fetch_data: Mock, mock_paginate: Mock
+        self, mock_fetch_data: Mock, *args
     ):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
@@ -113,7 +164,7 @@ class QueryBuilderFetchDataTests(TestCase):
         )
 
     def test_pass_query_from_builder_as_arg(
-        self, mock_fetch_data: Mock, mock_paginate: Mock
+        self, mock_fetch_data: Mock, *args
     ):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
@@ -133,7 +184,7 @@ class QueryBuilderFetchDataTests(TestCase):
         )
 
     def test_builder_dimensions_as_arg_with_zero_dimensions(
-        self, mock_fetch_data: Mock, mock_paginate: Mock
+        self, mock_fetch_data: Mock, *args
     ):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
@@ -143,7 +194,7 @@ class QueryBuilderFetchDataTests(TestCase):
         mock_fetch_data.assert_called_once_with(ANY, ANY, [], ANY, ANY)
 
     def test_builder_dimensions_as_arg_with_one_dimension(
-        self, mock_fetch_data: Mock, mock_paginate: Mock
+        self, mock_fetch_data: Mock, *args
     ):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
@@ -157,7 +208,7 @@ class QueryBuilderFetchDataTests(TestCase):
         )
 
     def test_builder_dimensions_as_arg_with_multiple_dimensions(
-        self, mock_fetch_data: Mock, mock_paginate: Mock
+        self, mock_fetch_data: Mock, *args
     ):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
@@ -174,7 +225,7 @@ class QueryBuilderFetchDataTests(TestCase):
             ANY, ANY, FieldMatcher(*dimensions), ANY, ANY
         )
 
-    def test_call_transform_on_widget(self, mock_fetch_data: Mock, mock_paginate: Mock):
+    def test_call_transform_on_widget(self, mock_fetch_data: Mock, mock_paginate: Mock, *args):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
 
@@ -192,7 +243,7 @@ class QueryBuilderFetchDataTests(TestCase):
         )
 
     def test_returns_results_from_widget_transform(
-        self, mock_fetch_data: Mock, mock_paginate: Mock
+        self, *args
     ):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()

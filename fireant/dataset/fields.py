@@ -13,6 +13,7 @@ from .filters import (
     AntiPatternFilter,
     BooleanFilter,
     ComparatorFilter,
+    ComparisonOperator,
     ContainsFilter,
     ExcludesFilter,
     PatternFilter,
@@ -120,26 +121,26 @@ class Field(Node):
         return self.definition.is_aggregate
 
     def eq(self, other):
-        return ComparatorFilter(self, ComparatorFilter.Operator.eq, other)
+        return ComparatorFilter(self, ComparisonOperator.eq, other)
 
     def ne(self, other):
-        return ComparatorFilter(self, ComparatorFilter.Operator.ne, other)
+        return ComparatorFilter(self, ComparisonOperator.ne, other)
 
     @restrict_types(CONTINUOUS_TYPES)
     def gt(self, other):
-        return ComparatorFilter(self, ComparatorFilter.Operator.gt, other)
+        return ComparatorFilter(self, ComparisonOperator.gt, other)
 
     @restrict_types(CONTINUOUS_TYPES)
     def ge(self, other):
-        return ComparatorFilter(self, ComparatorFilter.Operator.gte, other)
+        return ComparatorFilter(self, ComparisonOperator.gte, other)
 
     @restrict_types(CONTINUOUS_TYPES)
     def lt(self, other):
-        return ComparatorFilter(self, ComparatorFilter.Operator.lt, other)
+        return ComparatorFilter(self, ComparisonOperator.lt, other)
 
     @restrict_types(CONTINUOUS_TYPES)
     def le(self, other):
-        return ComparatorFilter(self, ComparatorFilter.Operator.lte, other)
+        return ComparatorFilter(self, ComparisonOperator.lte, other)
 
     @restrict_types(CONTINUOUS_TYPES)
     def between(self, lower, upper):

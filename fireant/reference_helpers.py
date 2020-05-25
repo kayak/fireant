@@ -1,3 +1,7 @@
+from fireant.dataset.filters import ComparisonOperator
+from fireant.utils import alias_selector
+
+
 def reference_alias(metric, reference):
     """
     Format a metric key for a reference.
@@ -65,3 +69,33 @@ def reference_suffix(metric, reference):
     if reference is not None and reference.delta_percent:
         return '%'
     return metric.suffix
+
+
+def _comparator_filter(column, operator, value):
+    if operator == ComparisonOperator.eq:
+        return column == value
+
+    if operator == ComparisonOperator.ne:
+        return column != value
+
+    if operator == ComparisonOperator.lt:
+        return column < value
+
+    if operator == ComparisonOperator.lte:
+        return column <= value
+
+    if operator == ComparisonOperator.gt:
+        return column > value
+
+    if operator == ComparisonOperator.gte:
+        return column >= value
+
+
+def apply_reference_filters(df, reference):
+    for reference_filter in reference.filters:
+        df_column_key = alias_selector(reference_alias(reference_filter.metric, reference))
+        column = df[df_column_key]
+        dataframe_filter = _comparator_filter(column, reference_filter.operator, reference_filter.value)
+        df = df.loc[dataframe_filter]
+
+    return df

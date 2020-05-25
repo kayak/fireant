@@ -1,7 +1,7 @@
 from typing import Dict, Iterable
 
 from fireant.dataset.totals import scrub_totals_from_share_results
-from fireant.reference_helpers import reference_alias
+from fireant.reference_helpers import reference_alias, apply_reference_filters
 from fireant.utils import alias_selector, immutable
 from fireant.dataset.fields import DataType
 from fireant.dataset.intervals import DatetimeInterval
@@ -131,6 +131,10 @@ class DataSetQueryBuilder(
             share_dimensions,
             self.reference_groups,
         )
+
+        # Apply reference filters
+        for reference in self._references:
+            data_frame = apply_reference_filters(data_frame, reference)
 
         # Apply operations
         for operation in operations:

@@ -7,6 +7,15 @@ from pypika.functions import Lower
 from .modifiers import FieldModifier
 
 
+class ComparisonOperator:
+    eq = "eq"
+    ne = "ne"
+    gt = "gt"
+    lt = "lt"
+    gte = "gte"
+    lte = "lte"
+
+
 class Filter(FieldModifier):
     @property
     def definition(self):
@@ -29,13 +38,6 @@ class Filter(FieldModifier):
 
 
 class ComparatorFilter(Filter):
-    class Operator(object):
-        eq = "eq"
-        ne = "ne"
-        gt = "gt"
-        lt = "lt"
-        gte = "gte"
-        lte = "lte"
 
     def __init__(self, field, operator, value):
         self.operator = operator
