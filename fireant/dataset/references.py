@@ -7,8 +7,15 @@ from pypika.queries import QueryBuilder
 from .modifiers import FieldModifier
 
 
+class ReferenceFilter:
+    def __init__(self, metric, operator, value):
+        self.metric = metric
+        self.operator = operator
+        self.value = value
+
+
 class Reference(FieldModifier):
-    def __init__(self, field, reference_type, delta=False, delta_percent=False):
+    def __init__(self, field, reference_type, delta=False, delta_percent=False, filters=[]):
         super().__init__(field)
 
         self.reference_type = reference_type
@@ -33,6 +40,8 @@ class Reference(FieldModifier):
 
         self.delta = delta_percent or delta
         self.delta_percent = delta_percent
+
+        self.filters = filters
 
     def __eq__(self, other):
         return (
@@ -60,8 +69,8 @@ class ReferenceType(object):
         self.time_unit = time_unit
         self.interval = interval
 
-    def __call__(self, dimension, delta=False, delta_percent=False):
-        return Reference(dimension, self, delta=delta, delta_percent=delta_percent)
+    def __call__(self, dimension, delta=False, delta_percent=False, filters=[]):
+        return Reference(dimension, self, delta=delta, delta_percent=delta_percent, filters=filters)
 
     def __eq__(self, other):
         return (
