@@ -3,7 +3,7 @@ from collections import defaultdict, namedtuple
 from toposort import CircularDependencyError, toposort_flatten
 
 from fireant.dataset.intervals import DATETIME_INTERVALS, DatetimeInterval
-from fireant.dataset.modifiers import OmitFromRollup, Rollup
+from fireant.dataset.modifiers import OmitFromRollup, Rollup, ResultSet
 from fireant.dataset.operations import Share
 from fireant.exceptions import DataSetException
 from fireant.utils import groupby, ordered_distinct_list, ordered_distinct_list_by_attr
@@ -165,15 +165,25 @@ def find_filters_for_totals(filters):
     """
     :param filters:
     :return:
-        a list of filters that should be applied to totals queries. This removes any filters from the list that have the
-        `OmitFromRollup` modifier applied to them.
+        a list of filters that should be applied to totals queries. This removes any filters from the list that have
+        the `OmitFromRollup` modifier applied to them.
     """
     return [fltr for fltr in filters if not isinstance(fltr, OmitFromRollup)]
 
 
+def find_filters_for_sets(filters):
+    """
+    :param filters:
+    :return:
+        a list of filters sets. This removes any filters from the list that have not the
+        `ResultSet` modifier applied to them.
+    """
+    return [fltr for fltr in filters if isinstance(fltr, ResultSet)]
+
+
 def find_field_in_modified_field(field):
     """
-    Returns the field from a modified field argument (or just the field argument if it is not modified). A modified 
+    Returns the field from a modified field argument (or just the field argument if it is not modified). A modified
     field represents either a wrapped dimension (e.g. DatetimeInterval) or a field wrapped in a filter.
     """
     modified_field = field

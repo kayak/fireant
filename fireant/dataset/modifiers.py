@@ -100,3 +100,11 @@ class Rollup(DimensionModifier):
 
 class OmitFromRollup(FilterModifier):
     pass
+
+
+class ResultSet(FilterModifier):
+    def __init__(self, *args, set_label=None, complement_label=None, will_ignore_dimensions=True, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.set_label = set_label
+        self.complement_label = complement_label
+        self.will_ignore_dimensions = will_ignore_dimensions
