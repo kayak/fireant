@@ -15,7 +15,7 @@ class ReferenceFilter:
 
 
 class Reference(FieldModifier):
-    def __init__(self, field, reference_type, delta=False, delta_percent=False, filters=[]):
+    def __init__(self, field, reference_type, delta=False, delta_percent=False, filters=()):
         super().__init__(field)
 
         self.reference_type = reference_type
@@ -69,7 +69,7 @@ class ReferenceType(object):
         self.time_unit = time_unit
         self.interval = interval
 
-    def __call__(self, dimension, delta=False, delta_percent=False, filters=[]):
+    def __call__(self, dimension, delta=False, delta_percent=False, filters=()):
         return Reference(dimension, self, delta=delta, delta_percent=delta_percent, filters=filters)
 
     def __eq__(self, other):
