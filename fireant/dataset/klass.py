@@ -127,7 +127,7 @@ class DataSet:
             A Database reference. Holds the connection details used by this dataset to execute queries.
         :param fields: (Required: At least one)
             A list of fields mapping definitions of data in the data set. Fields are similar to a column in a database
-            query result set. They are the values
+            query result set. They are the values.
         :param joins:  (Optional)
             A list of join descriptions for joining additional tables.  Joined tables are only used when querying a
             metric or dimension which requires it.

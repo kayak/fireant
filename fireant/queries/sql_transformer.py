@@ -4,7 +4,6 @@ from fireant.database import Database
 from fireant.dataset.fields import Field
 from fireant.dataset.filters import Filter
 from fireant.dataset.joins import Join
-from fireant.dataset.modifiers import Rollup
 from fireant.utils import (
     alias_selector,
     flatten,
@@ -23,6 +22,7 @@ from .finders import (
 from .references import adapt_for_reference_query
 from .special_cases import apply_special_cases
 from .totals_helper import adapt_for_totals_query
+from .sets import adapt_for_sets_query
 
 
 @apply_special_cases
@@ -68,20 +68,34 @@ def make_slicer_query_with_totals_and_references(
         #test_build_query_with_totals_cat_dimension_with_references
     ```
     """
-    totals_dimensions = find_totals_dimensions(dimensions, share_dimensions)
+    (
+        dimensions_with_set_categories,
+        orders_with_set_categories,
+        where_and_having_filters,
+    ) = adapt_for_sets_query(dimensions, orders, filters,)
+
+    totals_dimensions = find_totals_dimensions(
+        dimensions_with_set_categories, share_dimensions
+    )
     totals_dimensions_and_none = [None] + totals_dimensions[::-1]
 
-    reference_groups = find_and_group_references_for_dimensions(dimensions, references)
+    reference_groups = find_and_group_references_for_dimensions(
+        dimensions_with_set_categories, references
+    )
     reference_groups_and_none = [(None, None)] + list(reference_groups.items())
 
     queries = []
     for totals_dimension in totals_dimensions_and_none:
         (dimensions_with_totals, filters_with_totals) = adapt_for_totals_query(
-            totals_dimension, dimensions, filters
+            totals_dimension, dimensions_with_set_categories, where_and_having_filters,
         )
 
         for reference_parts, references in reference_groups_and_none:
-            dimensions_with_ref, metrics_with_ref, filters_with_ref = adapt_for_reference_query(
+            (
+                dimensions_with_ref,
+                metrics_with_ref,
+                filters_with_ref,
+            ) = adapt_for_reference_query(
                 reference_parts,
                 database,
                 dimensions_with_totals,
@@ -96,7 +110,7 @@ def make_slicer_query_with_totals_and_references(
                 dimensions_with_ref,
                 metrics_with_ref,
                 filters_with_ref,
-                orders,
+                orders_with_set_categories,
             )
 
             # Add these to the query instance so when the data frames are joined together, the correct references and

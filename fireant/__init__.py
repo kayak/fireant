@@ -19,6 +19,7 @@ from .dataset.klass import DataSet
 from .dataset.modifiers import (
     OmitFromRollup,
     Rollup,
+    ResultSet,
 )
 from .dataset.operations import (
     CumMean,
