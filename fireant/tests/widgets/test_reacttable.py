@@ -1,10 +1,11 @@
+import pandas as pd
 from unittest import TestCase
 
-from fireant import (
-    DataType,
-    Rollup,
-    day,
-)
+from pypika import Table
+
+from fireant import DataType, Rollup, day, DataSet, Field
+from fireant.dataset.filters import ComparisonOperator
+from fireant.tests.database.mock_database import TestDatabase
 from fireant.tests.dataset.mocks import (
     CumSum,
     ElectionOverElection,
@@ -23,7 +24,85 @@ from fireant.tests.dataset.mocks import (
     dimx2_str_str_df,
 )
 from fireant.widgets.base import ReferenceItem
-from fireant.widgets.reacttable import ReactTable
+from fireant.widgets.reacttable import ReactTable, FormattingConditionRule
+
+
+class FormattingRulesTests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        db = TestDatabase()
+        t0 = Table("test0")
+        cls.dataset = DataSet(
+            table=t0,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t0.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "metric0",
+                    label="Metric0",
+                    definition=t0.metric,
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+
+        cls.df = pd.DataFrame.from_dict(
+            {"$metric0": [1, 2, 3, 4], "$metric0_dod": [1, 5, 9, 12]}
+        )
+
+    def test_single_formatting_condition_rule(self):
+        result = ReactTable(
+            self.dataset.fields.metric0,
+            formatting_rules=[
+                FormattingConditionRule(
+                    self.dataset.fields.metric0, ComparisonOperator.gt, 2, "#EEEEEE"
+                )
+            ],
+        ).transform(self.df, mock_dataset, [], [])
+
+        self.assertEqual(
+            {
+                "columns": [{"Header": "Metric0", "accessor": "$metric0"}],
+                "data": [
+                    {"$metric0": {"display": "1", "raw": 1}},
+                    {"$metric0": {"display": "2", "raw": 2}},
+                    {"$metric0": {"display": "3", "raw": 3, "color": "#EEEEEE"}},
+                    {"$metric0": {"display": "4", "raw": 4, "color": "#EEEEEE"}},
+                ],
+            },
+            result,
+        )
+
+    def test_multiple_formatting_condition_rule(self):
+        result = ReactTable(
+            self.dataset.fields.metric0,
+            formatting_rules=[
+                FormattingConditionRule(
+                    self.dataset.fields.metric0, ComparisonOperator.gt, 3, "#EEEEEE"
+                ),
+                FormattingConditionRule(
+                    self.dataset.fields.metric0, ComparisonOperator.lt, 2, "#AAAAAA"
+                ),
+            ],
+        ).transform(self.df, mock_dataset, [], [])
+
+        self.assertEqual(
+            {
+                "columns": [{"Header": "Metric0", "accessor": "$metric0"}],
+                "data": [
+                    {"$metric0": {"display": "1", "raw": 1, "color": "#AAAAAA"}},
+                    {"$metric0": {"display": "2", "raw": 2}},
+                    {"$metric0": {"display": "3", "raw": 3}},
+                    {"$metric0": {"display": "4", "raw": 4, "color": "#EEEEEE"}},
+                ],
+            },
+            result,
+        )
 
 
 class ReactTableTransformerTests(TestCase):

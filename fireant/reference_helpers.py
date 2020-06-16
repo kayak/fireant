@@ -71,31 +71,11 @@ def reference_suffix(metric, reference):
     return metric.suffix
 
 
-def _comparator_filter(column, operator, value):
-    if operator == ComparisonOperator.eq:
-        return column == value
-
-    if operator == ComparisonOperator.ne:
-        return column != value
-
-    if operator == ComparisonOperator.lt:
-        return column < value
-
-    if operator == ComparisonOperator.lte:
-        return column <= value
-
-    if operator == ComparisonOperator.gt:
-        return column > value
-
-    if operator == ComparisonOperator.gte:
-        return column >= value
-
-
 def apply_reference_filters(df, reference):
     for reference_filter in reference.filters:
         df_column_key = alias_selector(reference_alias(reference_filter.metric, reference))
         column = df[df_column_key]
-        dataframe_filter = _comparator_filter(column, reference_filter.operator, reference_filter.value)
+        dataframe_filter = ComparisonOperator.eval(column, reference_filter.operator, reference_filter.value)
         df = df.loc[dataframe_filter]
 
     return df

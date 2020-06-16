@@ -1,5 +1,5 @@
 import re
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from functools import partial
 
 import pandas as pd
@@ -29,11 +29,32 @@ from fireant.utils import (
 )
 from .base import ReferenceItem
 from .pandas import Pandas
+from fireant.dataset.filters import ComparisonOperator
 
 TOTALS_LABEL = "Totals"
 METRICS_DIMENSION_ALIAS = "metrics"
 F_METRICS_DIMENSION_ALIAS = alias_selector(METRICS_DIMENSION_ALIAS)
 _display_value = partial(display_value, nan_value="", null_value="")
+
+
+class FormattingConditionRule:
+    def __init__(self, metric, operator, value, color):
+        self.metric = metric
+        self.operator = operator
+        self.value = value
+        self.color = color
+
+    def apply(self, value):
+        return self.color if ComparisonOperator.eval(value, self.operator, self.value) else None
+
+
+def apply_formatting_rules(rules, value):
+    color = None
+    for rule in rules:
+        if color is None:
+            color = rule.apply(value)
+
+    return color
 
 
 def map_index_level(index, level, func):
@@ -94,7 +115,8 @@ class ReactTable(Pandas):
         transpose=False,
         sort=None,
         ascending=None,
-        max_columns=None
+        max_columns=None,
+        formatting_rules=(),
     ):
         super(ReactTable, self).__init__(
             metric,
@@ -105,6 +127,10 @@ class ReactTable(Pandas):
             ascending=ascending,
             max_columns=max_columns
         )
+        self.formatting_rules_map = defaultdict(list)
+        for formatting_rule in formatting_rules:
+            metric_alias_selector = alias_selector(formatting_rule.metric.alias)
+            self.formatting_rules_map[metric_alias_selector].append(formatting_rule)
 
     def __repr__(self):
         return "{}({})".format(
@@ -353,8 +379,7 @@ class ReactTable(Pandas):
 
         return row
 
-    @staticmethod
-    def transform_row_values(series, fields, is_transposed):
+    def transform_row_values(self, series, fields, is_transposed):
         # Add the values to the row
         index_names = series.index.names or []
 
@@ -365,8 +390,13 @@ class ReactTable(Pandas):
             # Get the field for the metric
             metric_alias = wrap_list(series.name)[0] if is_transposed else key[0]
             field = fields[metric_alias]
+            data = {
+                RAW_VALUE: raw_value(value, field),
+            }
+            color = apply_formatting_rules(self.formatting_rules_map[metric_alias], value)
+            if color is not None:
+                data["color"] = color
 
-            data = {RAW_VALUE: raw_value(value, field)}
             display = _display_value(value, field, date_as=return_none)
             if display is not None:
                 data["display"] = display
@@ -385,9 +415,8 @@ class ReactTable(Pandas):
 
         return row
 
-    @staticmethod
     def transform_data(
-        data_frame, field_map, dimension_hyperlink_templates, is_transposed
+        self, data_frame, field_map, dimension_hyperlink_templates, is_transposed
     ):
         """
         Builds a list of dicts containing the data for ReactTable. This aligns with the accessors set by
@@ -431,12 +460,15 @@ class ReactTable(Pandas):
             )
             index_display_values = OrderedDict(zip(index_names, index_values))
 
+            row_index = ReactTable.transform_row_index(
+                index_display_values, field_map, dimension_hyperlink_templates
+            )
+            row_values = self.transform_row_values(series, field_map, is_transposed)
+
             rows.append(
                 {
-                    **ReactTable.transform_row_index(
-                        index_display_values, field_map, dimension_hyperlink_templates
-                    ),
-                    **ReactTable.transform_row_values(series, field_map, is_transposed),
+                    **row_index,
+                    **row_values,
                 }
             )
 
@@ -496,9 +528,8 @@ class ReactTable(Pandas):
                 METRICS_DIMENSION_ALIAS, None, data_type=DataType.text, label=""
             ),
         }
-        all_dimensions_pivoted = (
-            0 < len(dimensions) == len(self.pivot)
-        )  # has at least 1 dim and all are pivoted
+        # has at least 1 dim and all are pivoted
+        all_dimensions_pivoted = len(dimensions) and (len(dimensions) == len(self.pivot))
 
         metric_aliases = list(metric_map.keys())
         dimension_aliases = [

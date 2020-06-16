@@ -15,6 +15,35 @@ class ComparisonOperator:
     gte = "gte"
     lte = "lte"
 
+    mapping = {
+        '=': eq,
+        '!=': ne,
+        '>': gt,
+        '<': lt,
+        '>=': gte,
+        '<=': lte,
+    }
+
+    @staticmethod
+    def eval(value_1, operator, value_2):
+        if operator == ComparisonOperator.eq:
+            return value_1 == value_2
+
+        if operator == ComparisonOperator.ne:
+            return value_1 != value_2
+
+        if operator == ComparisonOperator.lt:
+            return value_1 < value_2
+
+        if operator == ComparisonOperator.lte:
+            return value_1 <= value_2
+
+        if operator == ComparisonOperator.gt:
+            return value_1 > value_2
+
+        if operator == ComparisonOperator.gte:
+            return value_1 >= value_2
+
 
 class Filter(FieldModifier):
     @property
