@@ -408,7 +408,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
         with self.subTest("reference query is shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 '"political_party" "$political_party",'
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
@@ -436,7 +436,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 "'_FIREANT_ROLLUP_VALUE_' \"$political_party\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
@@ -480,7 +480,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
         with self.subTest("reference query is shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 '"political_party" "$political_party",'
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
@@ -511,7 +511,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 "'_FIREANT_ROLLUP_VALUE_' \"$political_party\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '

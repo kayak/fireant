@@ -110,7 +110,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -146,7 +146,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('week',1,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('week',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_wow" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -182,7 +182,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('week',4,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('week',4,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_mom" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -218,7 +218,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('week',12,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('week',12,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_qoq" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -254,7 +254,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('week',52,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('week',52,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_yoy" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -290,7 +290,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('month',1,TRUNC(\"timestamp\",'MM') \"$timestamp\"),'MM') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('month',1,TRUNC(\"timestamp\",'MM')),'MM') \"$timestamp\","
                 'SUM("votes") "$votes_mom" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -326,7 +326,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('quarter',1,TRUNC(\"timestamp\",'MM') \"$timestamp\"),'MM') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('quarter',1,TRUNC(\"timestamp\",'MM')),'MM') \"$timestamp\","
                 'SUM("votes") "$votes_qoq" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -362,7 +362,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('year',1,TRUNC(\"timestamp\",'MM') \"$timestamp\"),'MM') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('year',1,TRUNC(\"timestamp\",'MM')),'MM') \"$timestamp\","
                 'SUM("votes") "$votes_yoy" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -403,7 +403,7 @@ class QueryBuilderDatetimeReferenceWithDeltaTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -439,7 +439,7 @@ class QueryBuilderDatetimeReferenceWithDeltaTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -481,7 +481,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'IW') \"$timestamp\"),'IW') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'IW')),'IW') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -517,7 +517,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'IW') \"$timestamp\"),'IW') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'IW')),'IW') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -553,7 +553,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'MM') \"$timestamp\"),'MM') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'MM')),'MM') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -589,7 +589,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'Q') \"$timestamp\"),'Q') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'Q')),'Q') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -625,7 +625,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'Y') \"$timestamp\"),'Y') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'Y')),'Y') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -669,7 +669,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -682,7 +682,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('week',52,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('week',52,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_yoy" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -721,7 +721,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -763,7 +763,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -805,7 +805,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
         with self.subTest("second query for all DoD references"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -816,7 +816,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
         with self.subTest("third query for all YoY references"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('week',52,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('week',52,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_yoy" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -859,7 +859,7 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('week',52,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('week',52,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 '"political_party" "$political_party",'
                 'SUM("votes") "$votes_yoy" '
                 'FROM "politics"."politician" '
@@ -900,7 +900,7 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('week',52,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('week',52,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 '"candidate_name" "$candidate-name",'
                 'SUM("votes") "$votes_yoy" '
                 'FROM "politics"."politician" '
@@ -943,7 +943,7 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('day',-1,'2018-01-01') "
@@ -989,7 +989,7 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('day',-1,'2018-01-01') AND TIMESTAMPADD('day',-1,'2018-01-31') "
@@ -1040,7 +1040,7 @@ class QueryBuilderReferencesWithRollupTests(TestCase):
         ):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('week',1,TRUNC(\"timestamp\",'DD') \"$timestamp\"),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD('week',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_wow" '
                 'FROM "politics"."politician" '
                 "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('week',-1,'2018-01-01') "
