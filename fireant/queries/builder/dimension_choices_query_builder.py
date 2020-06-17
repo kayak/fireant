@@ -23,12 +23,12 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
         super(DimensionChoicesQueryBuilder, self).__init__(dataset, dataset.table)
 
         self.hint_table = getattr(dimension, "hint_table", None)
-        self._dimensions.append(dimension)
+        self.dimensions.append(dimension)
 
         # TODO remove after 3.0.0
         display_alias = dimension.alias + "_display"
         if display_alias in dataset.fields:
-            self._dimensions.append(dataset.fields[display_alias])
+            self.dimensions.append(dataset.fields[display_alias])
 
     def _extract_hint_filters(self):
         """
@@ -41,7 +41,7 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
         hint_column_names = get_column_names(self.dataset.database, self.hint_table)
 
         filters = []
-        for filter_ in self._filters:
+        for filter_ in self.filters:
             base_fields = [
                 field
                 for field in filter_.definition.fields_()
@@ -81,7 +81,7 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
             A list of pypika terms.
         """
         dimension_terms = []
-        for dimension in self._dimensions:
+        for dimension in self.dimensions:
             dimension_term = make_term_for_field(
                 dimension, self.dataset.database.trunc_date
             )
@@ -100,9 +100,9 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
 
         The dataset query extends this with metrics, references, and totals.
         """
-        dimensions = [] if self.hint_table else self._dimensions
+        dimensions = [] if self.hint_table else self.dimensions
 
-        filters = self._extract_hint_filters() if self.hint_table else self._filters
+        filters = self._extract_hint_filters() if self.hint_table else self.filters
 
         query = (
             make_slicer_query(
@@ -137,7 +137,7 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
             A list of dict (JSON) objects containing the widget configurations.
         """
         query = add_hints(self.sql, hint)[0]
-        dimension = self._dimensions[0]
+        dimension = self.dimensions[0]
         alias_definition = dimension.definition.as_(alias_selector(dimension.alias))
         dimension_definition = dimension.definition
 
@@ -163,7 +163,7 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
         # Order by the dimension definition that the choices are for
         query = query.orderby(alias_definition)
 
-        data = fetch_data(self.dataset.database, [query], self._dimensions)
+        data = fetch_data(self.dataset.database, [query], self.dimensions)
 
         if len(data.index.names) > 1:
             display_alias = data.index.names[1]
@@ -174,7 +174,7 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
             data["display"] = data.index.tolist()
             choices = data["display"]
 
-        dimension_display = self._dimensions[-1]
+        dimension_display = self.dimensions[-1]
         return choices.map(lambda raw: display_value(raw, dimension_display) or raw)
 
     def __repr__(self):

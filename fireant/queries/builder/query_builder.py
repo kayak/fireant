@@ -1,12 +1,18 @@
+from pypika import Order
+
 from fireant.dataset.fields import Field
 from fireant.exceptions import DataSetException
 from fireant.utils import (
-    immutable,
     deepcopy,
+    immutable,
 )
-from pypika import Order
 from ..execution import fetch_data
 from ..finders import find_field_in_modified_field
+from ..sets import (
+    apply_set_dimensions,
+    omit_set_filters,
+)
+from ...dataset.modifiers import DimensionModifier
 
 
 class QueryException(DataSetException):
@@ -150,10 +156,52 @@ class QueryBuilder(object):
         self._offset = offset
 
     @property
+    def dimensions(self):
+        """
+        Returns a list of Field instances, that might include newly created set dimensions.
+
+        Set dimensions are generated at this level because the `ResultSet` filter modifier can artificially
+        create dimensions, which widgets need to be aware in order to properly render the data. Moving this to
+        `make_slicer_query_with_totals_and_references` function is not possible, even if we defaulted to using
+        same alias as the referenced dimension/metric, given that would cause aliases clashes. Dimensions can
+        be mostly replaced, but that's not the case for metrics.
+
+        :return: A list of Field instances.
+        """
+        return apply_set_dimensions(self._dimensions, self._filters)
+
+    @property
+    def filters(self):
+        """
+        Returns a list of Filter instances, that might omit filters wrapped with `ResultSet` filter modifier.
+
+        :return: A list of Filter instances.
+        """
+        return omit_set_filters(self._filters)
+
+    @property
     def orders(self):
-        if self._orders is None:
-            return [(dimension, None) for dimension in self._dimensions]
+        """
+        Return orders.
+
+        :return: None or a list of tuples shaped as Field instance and ordering.
+        """
         return self._orders
+
+    @property
+    def default_orders(self):
+        """
+        Return orders based on the provided dimensions.
+
+        :return: A list of tuples shaped as Field instance and ordering.
+        """
+        dimension_orders = []
+
+        for dimension in self.dimensions:
+            if not dimension.is_aggregate:
+                dimension_orders.append((dimension, None))
+
+        return dimension_orders
 
     @property
     def sql(self):
@@ -180,7 +228,7 @@ class QueryBuilder(object):
         """
         queries = add_hints(self.sql, hint)
 
-        return fetch_data(self.dataset.database, queries, self._dimensions)
+        return fetch_data(self.dataset.database, queries, self.dimensions)
 
 
 class ReferenceQueryBuilderMixin:

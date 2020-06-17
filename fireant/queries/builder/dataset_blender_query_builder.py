@@ -302,10 +302,14 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         datasets, field_maps = _datasets_and_field_maps(self.dataset)
         metrics = find_metrics_for_widgets(self._widgets)
         metrics_aliases = {metric.alias for metric in metrics}
-        dimensions_aliases = {dimension.alias for dimension in self._dimensions}
+        dimensions_aliases = {dimension.alias for dimension in self.dimensions}
+
+        orders = self.orders
+        if orders is None:
+            orders = self.default_orders
 
         # Add fields to be ordered on, to metrics if they aren't yet selected in metrics or dimensions
-        for field, orientation in self.orders:
+        for field, orientation in orders:
             if (
                 field.alias not in metrics_aliases
                 and field.alias not in dimensions_aliases
@@ -314,7 +318,7 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
 
         dataset_metrics = find_dataset_fields(metrics)
         operations = find_operations_for_widgets(self._widgets)
-        share_dimensions = find_share_dimensions(self._dimensions, operations)
+        share_dimensions = find_share_dimensions(self.dimensions, operations)
 
         datasets_queries = []
         for dataset, field_map in zip(datasets, field_maps):
@@ -323,8 +327,8 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
                     dataset,
                     field_map,
                     dataset_metrics,
-                    self._dimensions,
-                    self._filters,
+                    self.dimensions,
+                    self.filters,
                     self._references,
                     operations,
                     share_dimensions
@@ -362,7 +366,7 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         blended_queries = []
         for queryset in query_sets:
             blended_query = _blend_query(
-                self._dimensions, metrics, self.orders, field_maps, queryset
+                self.dimensions, metrics, orders, field_maps, queryset
             )
 
             if blended_query:

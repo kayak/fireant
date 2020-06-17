@@ -64,7 +64,7 @@ class DataSetQueryBuilder(
     def reference_groups(self):
         return list(
             find_and_group_references_for_dimensions(
-                self._dimensions, self._references
+                self.dimensions, self._references
             ).values()
         )
 
@@ -85,16 +85,16 @@ class DataSetQueryBuilder(
 
         metrics = find_metrics_for_widgets(self._widgets)
         operations = find_operations_for_widgets(self._widgets)
-        share_dimensions = find_share_dimensions(self._dimensions, operations)
+        share_dimensions = find_share_dimensions(self.dimensions, operations)
 
         return make_slicer_query_with_totals_and_references(
             self.dataset.database,
             self.table,
             self.dataset.joins,
-            self._dimensions,
+            self.dimensions,
             metrics,
             operations,
-            self._filters,
+            self.filters,
             self._references,
             orders=self.orders,
             share_dimensions=share_dimensions,
@@ -112,14 +112,14 @@ class DataSetQueryBuilder(
         queries = add_hints(self.sql, hint)
 
         operations = find_operations_for_widgets(self._widgets)
-        share_dimensions = find_share_dimensions(self._dimensions, operations)
+        share_dimensions = find_share_dimensions(self.dimensions, operations)
 
         annotation_frame = None
-        if self._dimensions and self.dataset.annotation:
+        if self.dimensions and self.dataset.annotation:
             alignment_dimension_alias = (
                 self.dataset.annotation.dataset_alignment_field_alias
             )
-            first_dimension = find_field_in_modified_field(self._dimensions[0])
+            first_dimension = find_field_in_modified_field(self.dimensions[0])
 
             if first_dimension.alias == alignment_dimension_alias:
                 annotation_frame = self.fetch_annotation()
@@ -127,7 +127,7 @@ class DataSetQueryBuilder(
         data_frame = fetch_data(
             self.dataset.database,
             queries,
-            self._dimensions,
+            self.dimensions,
             share_dimensions,
             self.reference_groups,
         )
@@ -142,14 +142,19 @@ class DataSetQueryBuilder(
                 df_key = alias_selector(reference_alias(operation, reference))
                 data_frame[df_key] = operation.apply(data_frame, reference)
 
-        data_frame = scrub_totals_from_share_results(data_frame, self._dimensions)
+        data_frame = scrub_totals_from_share_results(data_frame, self.dimensions)
         data_frame = special_cases.apply_operations_to_data_frame(
             operations, data_frame
         )
+
+        orders = self.orders
+        if orders is None:
+            orders = self.default_orders
+
         data_frame = paginate(
             data_frame,
             self._widgets,
-            orders=self.orders,
+            orders=orders,
             limit=self._limit,
             offset=self._offset,
         )
@@ -159,7 +164,7 @@ class DataSetQueryBuilder(
             widget.transform(
                 data_frame,
                 self.dataset,
-                self._dimensions,
+                self.dimensions,
                 self._references,
                 annotation_frame,
             )
@@ -226,7 +231,7 @@ class DataSetQueryBuilder(
         """
         dimension_filters = []
 
-        for filter_ in self._filters:
+        for filter_ in self.filters:
             filter_fields = [
                 field
                 for field in filter_.definition.fields_()
@@ -250,7 +255,7 @@ class DataSetQueryBuilder(
         :return:
             A dimension (Field) of this query builder matching the dimension alias.
         """
-        for dimension in self._dimensions:
+        for dimension in self.dimensions:
             unwrapped_dimension = find_field_in_modified_field(dimension)
             if unwrapped_dimension.alias == dimension_alias:
                 return dimension

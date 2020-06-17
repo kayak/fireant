@@ -77,6 +77,10 @@ class ComparatorFilter(Filter):
     def definition(self):
         return getattr(self.field.definition, self.operator)(self.value)
 
+    @property
+    def is_aggregate(self):
+        return self.field.is_aggregate
+
 
 class BooleanFilter(Filter):
     def __init__(self, field, value):

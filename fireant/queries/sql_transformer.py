@@ -1,5 +1,10 @@
 from typing import Iterable
 
+from pypika import (
+    Table,
+    functions as fn,
+)
+
 from fireant.database import Database
 from fireant.dataset.fields import Field
 from fireant.dataset.filters import Filter
@@ -7,10 +12,6 @@ from fireant.dataset.joins import Join
 from fireant.utils import (
     alias_selector,
     flatten,
-)
-from pypika import (
-    Table,
-    functions as fn,
 )
 from .field_helper import make_term_for_field
 from .finders import (
@@ -22,7 +23,6 @@ from .finders import (
 from .references import adapt_for_reference_query
 from .special_cases import apply_special_cases
 from .totals_helper import adapt_for_totals_query
-from .sets import adapt_for_sets_query
 
 
 @apply_special_cases
@@ -68,26 +68,20 @@ def make_slicer_query_with_totals_and_references(
         #test_build_query_with_totals_cat_dimension_with_references
     ```
     """
-    (
-        dimensions_with_set_categories,
-        orders_with_set_categories,
-        where_and_having_filters,
-    ) = adapt_for_sets_query(dimensions, orders, filters,)
-
     totals_dimensions = find_totals_dimensions(
-        dimensions_with_set_categories, share_dimensions
+        dimensions, share_dimensions,
     )
     totals_dimensions_and_none = [None] + totals_dimensions[::-1]
 
     reference_groups = find_and_group_references_for_dimensions(
-        dimensions_with_set_categories, references
+        dimensions, references
     )
     reference_groups_and_none = [(None, None)] + list(reference_groups.items())
 
     queries = []
     for totals_dimension in totals_dimensions_and_none:
         (dimensions_with_totals, filters_with_totals) = adapt_for_totals_query(
-            totals_dimension, dimensions_with_set_categories, where_and_having_filters,
+            totals_dimension, dimensions, filters,
         )
 
         for reference_parts, references in reference_groups_and_none:
@@ -110,7 +104,7 @@ def make_slicer_query_with_totals_and_references(
                 dimensions_with_ref,
                 metrics_with_ref,
                 filters_with_ref,
-                orders_with_set_categories,
+                orders,
             )
 
             # Add these to the query instance so when the data frames are joined together, the correct references and
@@ -170,11 +164,19 @@ def make_slicer_query(
     for join in find_joins_for_tables(joins, base_table, join_tables_needed_for_query):
         query = query.join(join.table, how=join.join_type).on(join.criterion)
 
+    default_orders =  []
+
     # Add dimensions
     for dimension in dimensions:
         dimension_term = make_term_for_field(dimension, database.trunc_date)
         query = query.select(dimension_term)
-        query = query.groupby(dimension_term)
+
+        if not dimension.is_aggregate:
+            query = query.groupby(dimension_term)
+            default_orders.append((dimension, None))
+
+    if orders is None:
+        orders = default_orders
 
     # Add filters
     for fltr in filters:

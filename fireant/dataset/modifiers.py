@@ -73,10 +73,16 @@ class FieldModifier:
 
 
 class DimensionModifier(Modifier):
+    """
+    Base class for all dimension modifiers.
+    """
     wrapped_key = "dimension"
 
 
 class FilterModifier(Modifier):
+    """
+    Base class for all filter modifiers.
+    """
     wrapped_key = "filter"
 
     @immutable
@@ -93,18 +99,47 @@ class RollupValue(Term):
 
 
 class Rollup(DimensionModifier):
+    """
+    A field modifier that will make totals be calculated for the wrapped dimension.
+    """
     @property
     def definition(self):
         return RollupValue()
 
 
 class OmitFromRollup(FilterModifier):
+    """
+    A filter modifier that will make the wrapped filter not apply for any total calculations, which might be
+    available if an affected field has a `Rollup` dimension modifier set.
+    """
     pass
 
 
 class ResultSet(FilterModifier):
-    def __init__(self, *args, set_label=None, complement_label=None, will_ignore_dimensions=True, **kwargs):
+    """
+    A filter modifier that will make the wrapped filter not filter the data. Instead, it will create new dimensions
+    for representing membership of a set, given the wrapped filter's conditional.
+    """
+    def __init__(
+        self, *args, set_label=None, complement_label=None, will_replace_referenced_dimension=True,
+        will_group_complement=True, **kwargs
+    ):
+        """
+        :param set_label: A string that will be used for naming the sub-set of the data, for which the
+                          provided conditional evaluates to True (i.e the set itself). If not set,
+                          a placeholder containing the conditional will be used instead.
+        :param complement_label: A string that will be used for naming the sub-set of the data, for which the
+                                 provided conditional evaluates to False (i.e the complement of the set). If not
+                                 set, a placeholder containing the conditional will be used instead.
+        :param will_replace_referenced_dimension: Whether a dimension referenced in the wrapped filter, if any,
+                                                  should be replaced with the new dimension stating set membership.
+                                                  If False, the wrapped filter's dimension will be kept as the
+                                                  dimension right after the new set dimension. Defaults to True.
+        :param will_group_complement: Whether the complement set should be broken down into its elements.
+                                      Defaults to True.
+        """
         super().__init__(*args, **kwargs)
         self.set_label = set_label
         self.complement_label = complement_label
-        self.will_ignore_dimensions = will_ignore_dimensions
+        self.will_replace_referenced_dimension = will_replace_referenced_dimension
+        self.will_group_complement = will_group_complement

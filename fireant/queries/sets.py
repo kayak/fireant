@@ -2,7 +2,10 @@ from copy import deepcopy
 
 from pypika import Case
 
-from .finders import find_filters_for_sets
+from fireant.dataset.modifiers import (
+    DimensionModifier,
+    ResultSet,
+)
 from ..utils import (
     alias_selector,
     flatten,
@@ -14,78 +17,113 @@ def _make_set_dimension(set_filter):
     Returns a dimension that uses a CASE statement as its definition, in order to represent membership to a set,
     given the provided conditional.
 
-    :param set_filter:
-    :return:
+    :param set_filter: A ResultSet instance.
+    :return: A Field instance.
     """
     old_definition = set_filter.filter.definition
     old_definition_sql = old_definition.get_sql(quote_char="")
 
-    new_dimension = deepcopy(set_filter.filter.field)
-    has_no_in_and_out_labels_sets = not set_filter.set_label and not set_filter.complement_label
+    set_dimension = deepcopy(set_filter.filter.field)
 
-    new_dimension.alias = alias_selector('set({})'.format(old_definition_sql))
-    new_dimension.label = 'Set({})'.format(old_definition_sql) if has_no_in_and_out_labels_sets else set_filter.set_label
-    new_dimension.definition = Case().when(
-        old_definition, "set({})".format(old_definition_sql) if has_no_in_and_out_labels_sets else set_filter.set_label
-    ).else_("complement({})".format(old_definition_sql) if has_no_in_and_out_labels_sets else set_filter.complement_label)
+    set_term = set_filter.set_label
+    complement_term = set_filter.complement_label
 
-    return new_dimension
+    if not set_term and not complement_term:
+        set_term = "set({})".format(old_definition_sql)
+        complement_term = "complement({})".format(old_definition_sql)
+
+    if not set_filter.will_group_complement:
+        complement_term = set_filter.filter.field.definition
+
+    # Only terms wrapped with aggregate functions, such as SUM, will evaluate is_aggregate to True in Pypika.
+    # This is a good way to validate that the set dimension, in question, is actually encompassing a metric.
+    is_metric = set_dimension.is_aggregate
+
+    if is_metric or not set_filter.will_replace_referenced_dimension:
+        # When keeping a referenced dimension, we name the set dimension with a custom alias, so as to have no
+        # alias clashes. That prevents issues with rollups/share dimensions, given the original dimension
+        # is maintained. Also, metrics need to have the same treatment, given that, unlike dimensions, they are
+        # never replaced.
+        set_dimension.alias = alias_selector("set({})".format(old_definition_sql))
+
+    set_dimension.label = (
+        "Set({})".format(old_definition_sql)
+        if not set_filter.set_label
+        else set_filter.set_label
+    )
+    set_dimension.definition = (
+        Case().when(old_definition, set_term).else_(complement_term)
+    )
+
+    return set_dimension
 
 
-def _replace_dimension_if_needed(dimension, dimensions_per_set_filter):
-    set_filter = dimensions_per_set_filter.get(dimension)
+def _unwrap_field(field):
+    if isinstance(field, DimensionModifier):
+        return field.dimension
+
+    return field
+
+
+def _replace_field_if_needed(field, fields_per_set_filter):
+    set_filter = fields_per_set_filter.get(_unwrap_field(field))
 
     if not set_filter:
-        return (dimension,)
+        return (field,)
 
     set_dimension = _make_set_dimension(set_filter)
 
-    if set_filter.will_ignore_dimensions:
+    if isinstance(field, DimensionModifier):
+        modified_set_dimension = deepcopy(field)
+        modified_set_dimension.dimension = set_dimension
+        set_dimension = modified_set_dimension
+
+    if set_filter.will_replace_referenced_dimension:
         return (set_dimension,)
     else:
-        return (set_dimension, dimension)
+        return (set_dimension, field)
 
 
-def adapt_for_sets_query(dimensions, orders, filters):
+def apply_set_dimensions(fields, filters):
     """
-    Adapt filters for sets query. This function will select filters with `ResultSet` modifier. A `ResultSet` modifier
-    operates as a special kind of filter, which won't actually filter the data. Instead it will create
-    dimensions so as to represent membership to a set, given the provided conditional. If will_ignore_dimensions
-    kwarg is False, which is the case by default, it will replace the dimension used in the conditional, if selected.
+    A transformed list of Field instances, in case `ResultSet` instances are present among the provided filters.
 
-    :param dimensions:
-    :param orders:
-    :param filters:
-    :return:
+    :param dimensions: A list of Field instances.
+    :param filters: A list of Filter instances.
+    :return: A list of Field instances.
     """
-    set_filters = find_filters_for_sets(filters)
+    set_filters = [fltr for fltr in filters if isinstance(fltr, ResultSet)]
 
     if not set_filters:
-        return dimensions, orders, filters
+        return fields
 
-    dimensions_per_set_filter = {
-        set_filter.field: set_filter
-        for set_filter in set_filters
+    fields_per_set_filter = {
+        set_filter.field: set_filter for set_filter in set_filters
     }
-    dimensions_that_are_not_selected = set(dimensions_per_set_filter.keys())
+    fields_that_are_not_selected = set(fields_per_set_filter.keys())
 
-    current_dimensions = []
-    for dimension in dimensions:
-        current_dimensions.append(_replace_dimension_if_needed(dimension, dimensions_per_set_filter))
-        dimensions_that_are_not_selected.discard(dimension)
-    current_dimensions = flatten(current_dimensions)
+    fields_with_set_dimensions = []
+    for dimension_or_metric in fields:
+        fields_with_set_dimensions.append(
+            _replace_field_if_needed(dimension_or_metric, fields_per_set_filter)
+        )
+        unwrapped_field = _unwrap_field(dimension_or_metric)
+        fields_that_are_not_selected.discard(unwrapped_field)
+    fields_with_set_dimensions = flatten(fields_with_set_dimensions)
 
-    current_orders = []
-    for (dimension, ordering) in orders:
-        current_orders.append([(dim, ordering) for dim in _replace_dimension_if_needed(dimension, dimensions_per_set_filter)])
-    current_orders = flatten(current_orders)
+    for dimension_or_metric in fields_that_are_not_selected:
+        set_filter = fields_per_set_filter[dimension_or_metric]
+        set_dimension = _make_set_dimension(set_filter)
+        fields_with_set_dimensions.append(set_dimension)
 
-    for dimension in dimensions_that_are_not_selected:
-        set_filter = dimensions_per_set_filter[dimension]
-        new_dimension = _make_set_dimension(set_filter)
-        current_dimensions.append(new_dimension)
-        current_orders.append((new_dimension, None))
+    return fields_with_set_dimensions
 
-    other_filters = [fltr for fltr in filters if fltr not in set_filters]
 
-    return current_dimensions, current_orders, other_filters
+def omit_set_filters(filters):
+    """
+    Returns all filters but the ones that are `ResultSet` instances.
+
+    :param filters: A list of Filter instances.
+    :return: A list of Filter instances.
+    """
+    return [fltr for fltr in filters if not isinstance(fltr, ResultSet)]

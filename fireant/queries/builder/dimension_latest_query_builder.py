@@ -22,16 +22,14 @@ class DimensionLatestQueryBuilder(QueryBuilder):
     def sql(self):
         """
         Serializes this query builder as a set of SQL queries.  This method will always return a list of one
-        query since
-        only one query is required to retrieve dimension choices.
+        query since only one query is required to retrieve dimension choices.
 
         This function only handles dimensions (select+group by) and filtering (where/having), which is everything
-        needed
-        for the query to fetch choices for dimensions.
+        needed for the query to fetch choices for dimensions.
 
         The dataset query extends this with metrics, references, and totals.
         """
-        if not self._dimensions:
+        if not self.dimensions:
             raise QueryException(
                 "Must select at least one dimension to query latest values"
             )
@@ -40,7 +38,7 @@ class DimensionLatestQueryBuilder(QueryBuilder):
             database=self.dataset.database,
             base_table=self.table,
             joins=self.dataset.joins,
-            dimensions=self._dimensions,
+            dimensions=self.dimensions,
         )
         return [query]
 
