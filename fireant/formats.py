@@ -1,3 +1,4 @@
+import math
 import re
 from datetime import (
     date,
@@ -28,13 +29,20 @@ DATE_FORMATS = {
     "day": "%Y-%m-%d",
     "week": "W%W %Y-%m-%d",
     "month": "%b %Y",
-    "quarter": "%Y-%q",
     "year": "%Y",
 }
 
 
+def quarter_from_month(month):
+    return math.ceil(month / 3)
+
+
 @filter_kwargs
 def date_as_string(value, interval_key=None):
+    if interval_key == 'quarter':
+        # strftime does not support a quarter format placeholder
+        return 'Q{quarter} {year}'.format(year=value.year, quarter=quarter_from_month(value.month))
+
     f = DATE_FORMATS.get(interval_key, "%Y-%m-%d")
     return value.strftime(f)
 

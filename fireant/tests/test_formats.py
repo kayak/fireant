@@ -13,6 +13,7 @@ from fireant import (
     formats,
     hour,
     month,
+    quarter,
     week,
     year,
 )
@@ -21,7 +22,6 @@ from fireant.dataset.totals import (
     NUMBER_TOTALS,
     TEXT_TOTALS,
 )
-from fireant.tests.dataset.mocks import mock_dataset
 
 text_field = Field("text", None, data_type=DataType.text)
 number_field = Field("number", None, data_type=DataType.number)
@@ -227,6 +227,11 @@ class FormatDisplayValueTests(TestCase):
                 self.assertEqual(
                     "Jan 2019", formats.display_value(d, month(date_field))
                 )
+
+    def test_date_value_with_quarter_interval_is_returned_as_date_string_to_the_quarter_and_year(self):
+        dates = (date(2019, m, 1) for m in range(1, 13))
+        result = [formats.display_value(d, quarter(date_field)) for d in dates]
+        self.assertEqual(result, ['Q1 2019'] * 3 + ['Q2 2019'] * 3 + ['Q3 2019'] * 3 + ['Q4 2019'] * 3)
 
     def test_date_value_with_year_interval_is_returned_as_date_string_to_the_year(self):
         for d in (date(2019, 1, 1), datetime(2019, 1, 1, 12, 30, 2)):
