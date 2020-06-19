@@ -6,6 +6,7 @@ import fireant as f
 from fireant import Share, DataSet, DataType, Field
 from fireant.dataset.filters import ComparisonOperator
 from fireant.dataset.references import ReferenceFilter
+from fireant.queries.sets import _make_set_dimension
 from fireant.tests.database.mock_database import TestDatabase
 from fireant.tests.dataset.matchers import FieldMatcher, PypikaQueryMatcher
 from fireant.tests.dataset.mocks import (
@@ -105,7 +106,6 @@ class FindShareDimensionsTests(TestCase):
 @patch("fireant.queries.builder.dataset_query_builder.paginate")
 @patch("fireant.queries.builder.dataset_query_builder.fetch_data")
 class QueryBuilderFetchDataTests(TestCase):
-
     def test_reference_filters_are_applied(self, mock_fetch: Mock, mock_2: Mock, mock_apply_reference_filters: Mock):
         db = TestDatabase()
         t0 = Table("test0")
@@ -205,6 +205,38 @@ class QueryBuilderFetchDataTests(TestCase):
 
         mock_fetch_data.assert_called_once_with(
             ANY, ANY, FieldMatcher(*dimensions), ANY, ANY
+        )
+
+    def test_builder_dimensions_as_arg_with_one_replaced_set_dimension(
+        self, mock_fetch_data: Mock, *args
+    ):
+        mock_widget = f.Widget(mock_dataset.fields.votes)
+        mock_widget.transform = Mock()
+
+        dimensions = [mock_dataset.fields.state]
+
+        set_filter = f.ResultSet(dimensions[0]=='On')
+        mock_dataset.query.widget(mock_widget).dimension(*dimensions).filter(set_filter).fetch()
+
+        set_dimension = _make_set_dimension(set_filter)
+        mock_fetch_data.assert_called_once_with(
+            ANY, ANY, FieldMatcher(set_dimension), ANY, ANY
+        )
+
+    def test_builder_dimensions_as_arg_with_a_non_replaced_set_dimension(
+        self, mock_fetch_data: Mock, *args
+    ):
+        mock_widget = f.Widget(mock_dataset.fields.votes)
+        mock_widget.transform = Mock()
+
+        dimensions = [mock_dataset.fields.state]
+
+        set_filter = f.ResultSet(dimensions[0]=='On', will_replace_referenced_dimension=False)
+        mock_dataset.query.widget(mock_widget).dimension(*dimensions).filter(set_filter).fetch()
+
+        set_dimension = _make_set_dimension(set_filter)
+        mock_fetch_data.assert_called_once_with(
+            ANY, ANY, FieldMatcher(set_dimension, dimensions[0]), ANY, ANY
         )
 
     def test_builder_dimensions_as_arg_with_multiple_dimensions(

@@ -402,13 +402,13 @@ class DataSetBlenderIntegrationTests(TestCase):
             '"sq0"."$account" "$account",'
             '"sq1"."$metric1_dod" "$metric1_dod" '
             "FROM ("
-            'SELECT TIMESTAMPADD(\'day\',1,"timestamp" "$timestamp") "$timestamp",'
+            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
             '"account" "$account" '
             'FROM "test0" '
             'GROUP BY "$timestamp","$account"'
             ') "sq0" '
             "LEFT JOIN ("
-            'SELECT TIMESTAMPADD(\'day\',1,"timestamp" "$timestamp") "$timestamp",'
+            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
             '"metric" "$metric1_dod" '
             'FROM "test1" '
             'GROUP BY "$timestamp"'
@@ -510,13 +510,13 @@ class DataSetBlenderIntegrationTests(TestCase):
             '"sq0"."$account" "$account",'
             '"sq1"."$metric1_dod" "$metric1_dod" '
             "FROM ("
-            'SELECT TIMESTAMPADD(\'day\',1,"timestamp" "$timestamp") "$timestamp",'
+            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
             '"account" "$account" '
             'FROM "test0" '
             'GROUP BY "$timestamp","$account"'
             ') "sq0" '
             "LEFT JOIN ("
-            'SELECT TIMESTAMPADD(\'day\',1,"timestamp" "$timestamp") "$timestamp",'
+            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
             '"metric" "$metric1_dod" '
             'FROM "test1" '
             'GROUP BY "$timestamp"'
@@ -621,14 +621,14 @@ class DataSetBlenderIntegrationTests(TestCase):
             '"sq1"."$metric1_dod" "$metric1_dod",'
             '"sq0"."$metric0_dod" "$metric0_dod" '
             "FROM ("
-            'SELECT TIMESTAMPADD(\'day\',1,"timestamp" "$timestamp") "$timestamp",'
+            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
             '"account" "$account",'
             '"metric" "$metric0_dod" '
             'FROM "test0" '
             'GROUP BY "$timestamp","$account"'
             ') "sq0" '
             "LEFT JOIN ("
-            'SELECT TIMESTAMPADD(\'day\',1,"timestamp" "$timestamp") "$timestamp",'
+            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
             '"metric" "$metric1_dod" '
             'FROM "test1" '
             'GROUP BY "$timestamp"'

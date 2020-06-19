@@ -38,7 +38,7 @@ class APITests(TestCase):
                 self.assertIn(element, vars(fireant))
 
     def test_package_exports_modifiers(self):
-        for element in ("Rollup", "OmitFromRollup"):
+        for element in ("Rollup", "OmitFromRollup", "ResultSet"):
             with self.subTest(element):
                 self.assertIn(element, vars(fireant))
 
