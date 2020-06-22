@@ -62,7 +62,7 @@ class TransformableWidget(Widget):
     # should be applied to the number of series rather than the number of data points.
     group_pagination = False
 
-    def transform(self, data_frame, dataset, dimensions, references, annotation_frame=None):
+    def transform(self, data_frame, dimensions, references, annotation_frame=None):
         """
         - Main entry point -
 
@@ -71,8 +71,6 @@ class TransformableWidget(Widget):
 
         :param data_frame:
             The data frame containing the data. Index must match the dimensions parameter.
-        :param dataset:
-            The dataset that is in use.
         :param dimensions:
             A list of dimensions that are being rendered.
         :param references:

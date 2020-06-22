@@ -21,7 +21,7 @@ try:
         def test_single_metric_line_chart(self):
             result = Matplotlib(title="Time Series, Single Metric") \
                 .axis(self.chart_class(mock_dataset.fields.votes)) \
-                .transform(dimx1_date_df, mock_dataset, [mock_dataset.fields.timestamp], [])
+                .transform(dimx1_date_df, [mock_dataset.fields.timestamp], [])
 
             self.assertEqual(1, len(result))
 
