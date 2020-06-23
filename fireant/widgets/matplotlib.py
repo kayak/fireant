@@ -26,7 +26,7 @@ class Matplotlib(ChartWidget, TransformableWidget):
         super(Matplotlib, self).__init__()
         self.title = title
 
-    def transform(self, data_frame, dataset, dimensions, references, annotation_frame=None):
+    def transform(self, data_frame, dimensions, references, annotation_frame=None):
         import matplotlib.pyplot as plt
         data_frame = data_frame.copy()
 

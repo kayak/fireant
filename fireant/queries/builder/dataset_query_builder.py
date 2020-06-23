@@ -163,7 +163,6 @@ class DataSetQueryBuilder(
         return [
             widget.transform(
                 data_frame,
-                self.dataset,
                 self.dimensions,
                 self._references,
                 annotation_frame,
@@ -304,7 +303,7 @@ class DataSetQueryBuilder(
                 ],
                 *[
                     "orderby({}, {})".format(definition.alias, orientation)
-                    for (definition, orientation) in self.orders
+                    for (definition, orientation) in (self.orders or self.default_orders)
                 ],
             ]
         )

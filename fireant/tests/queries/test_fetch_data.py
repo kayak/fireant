@@ -268,7 +268,6 @@ class QueryBuilderFetchDataTests(TestCase):
 
         mock_widget.transform.assert_called_once_with(
             mock_paginate.return_value,
-            mock_dataset,
             FieldMatcher(mock_dataset.fields.timestamp),
             [],
             None,

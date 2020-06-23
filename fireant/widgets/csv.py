@@ -16,14 +16,13 @@ class CSV(Pandas):
     def transform(
         self,
         data_frame,
-        slicer,
         dimensions,
         references,
         annotation_frame=None,
         use_raw_values=None,
     ):
         result_df = super(CSV, self).transform(
-            data_frame, slicer, dimensions, references, use_raw_values=True
+            data_frame, dimensions, references, use_raw_values=True
         )
         # Unset the column level names because they're a bit confusing in a csv file
         result_df.columns.names = [None] * len(result_df.columns.names)

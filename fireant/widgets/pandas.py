@@ -35,7 +35,6 @@ class Pandas(TransformableWidget):
     def transform(
         self,
         data_frame,
-        dataset,
         dimensions,
         references,
         annotation_frame=None,
@@ -45,7 +44,6 @@ class Pandas(TransformableWidget):
         WRITEME
 
         :param data_frame:
-        :param dataset:
         :param dimensions:
         :param references:
         :param annotation_frame:

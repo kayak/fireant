@@ -40,7 +40,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         result = (
             HighCharts(title="Time Series, Single Metric")
             .axis(self.chart_class(mock_dataset.fields.votes))
-            .transform(dimx1_date_df, mock_dataset, [mock_dataset.fields.timestamp], [])
+            .transform(dimx1_date_df, [mock_dataset.fields.timestamp], [])
         )
 
         self.assertEqual(
@@ -92,7 +92,7 @@ class HighChartsLineChartTransformerTests(TestCase):
             HighCharts(title="Time Series, Single Metric")
             .axis(self.chart_class(mock_dataset.fields.votes))
             .transform(
-                dimx1_date_df, mock_dataset, [year(mock_dataset.fields.timestamp)], []
+                dimx1_date_df, [year(mock_dataset.fields.timestamp)], []
             )
         )
 
@@ -144,7 +144,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         result = (
             HighCharts(title="Time Series, Single Metric")
             .axis(self.chart_class(mock_dataset.fields.turnout))
-            .transform(dimx1_date_df, mock_dataset, [mock_dataset.fields.timestamp], [])
+            .transform(dimx1_date_df, [mock_dataset.fields.timestamp], [])
         )
 
         self.assertEqual(
@@ -195,7 +195,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         result = (
             HighCharts(title="Time Series, Single Metric")
             .axis(self.chart_class(mock_dataset.fields.wins_with_style))
-            .transform(dimx1_date_df, mock_dataset, [mock_dataset.fields.timestamp], [])
+            .transform(dimx1_date_df, [mock_dataset.fields.timestamp], [])
         )
 
         self.assertEqual(
@@ -248,7 +248,6 @@ class HighChartsLineChartTransformerTests(TestCase):
             .axis(self.chart_class(CumSum(mock_dataset.fields.votes)))
             .transform(
                 dimx1_date_operation_df,
-                mock_dataset,
                 [mock_dataset.fields.timestamp],
                 [],
             )
@@ -303,7 +302,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         result = (
             HighCharts(title="Time Series with Unique Dimension and Single Metric")
             .axis(self.chart_class(mock_dataset.fields.votes))
-            .transform(dimx2_date_str_df, mock_dataset, dimensions, [])
+            .transform(dimx2_date_str_df, dimensions, [])
         )
 
         self.assertEqual(
@@ -398,7 +397,6 @@ class HighChartsLineChartTransformerTests(TestCase):
             )
             .transform(
                 dimx2_date_str_df,
-                mock_dataset,
                 [mock_dataset.fields.timestamp, mock_dataset.fields.state],
                 [],
             )
@@ -555,7 +553,6 @@ class HighChartsLineChartTransformerTests(TestCase):
             .axis(self.chart_class(mock_dataset.fields.wins))
             .transform(
                 dimx2_date_str_df,
-                mock_dataset,
                 [mock_dataset.fields.timestamp, mock_dataset.fields.state],
                 [],
             )
@@ -733,7 +730,6 @@ class HighChartsLineChartTransformerTests(TestCase):
             .axis(self.chart_class(mock_dataset.fields.wins))
             .transform(
                 dataframe,
-                mock_dataset,
                 [mock_dataset.fields.timestamp, Rollup(mock_dataset.fields.state)],
                 [],
             )
@@ -819,7 +815,6 @@ class HighChartsLineChartTransformerTests(TestCase):
             .axis(self.chart_class(mock_dataset.fields.wins))
             .transform(
                 dimx2_date_str_totals_df,
-                mock_dataset,
                 [mock_dataset.fields.timestamp, Rollup(mock_dataset.fields.state)],
                 [],
             )
@@ -1026,7 +1021,6 @@ class HighChartsLineChartTransformerTests(TestCase):
             .axis(self.chart_class(mock_dataset.fields.wins))
             .transform(
                 dimx2_date_str_totalsx2_df,
-                mock_dataset,
                 [
                     Rollup(mock_dataset.fields.timestamp),
                     Rollup(mock_dataset.fields.state),
@@ -1233,7 +1227,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         result = (
             HighCharts(title="Time Series with Unique Dimension and Reference")
             .axis(self.chart_class(mock_dataset.fields.votes))
-            .transform(dimx2_date_str_ref_df, mock_dataset, dimensions, references)
+            .transform(dimx2_date_str_ref_df, dimensions, references)
         )
 
         self.assertEqual(
@@ -1351,7 +1345,7 @@ class HighChartsLineChartTransformerTests(TestCase):
             HighCharts(title="Time Series with Unique Dimension and Delta Reference")
             .axis(self.chart_class(mock_dataset.fields.votes))
             .transform(
-                dimx2_date_str_ref_delta_df, mock_dataset, dimensions, references
+                dimx2_date_str_ref_delta_df, dimensions, references
             )
         )
 
@@ -1476,7 +1470,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         result = (
             HighCharts(title="Time Series, Single Metric")
             .axis(self.chart_class(mock_dataset.fields.votes), y_axis_visible=False)
-            .transform(dimx1_date_df, mock_dataset, [mock_dataset.fields.timestamp], [])
+            .transform(dimx1_date_df, [mock_dataset.fields.timestamp], [])
         )
 
         self.assertEqual(
@@ -1530,7 +1524,7 @@ class HighChartsLineChartTransformerTests(TestCase):
             HighCharts(title="Time Series with Unique Dimension and Delta Reference")
             .axis(self.chart_class(mock_dataset.fields.votes), y_axis_visible=False)
             .transform(
-                dimx2_date_str_ref_delta_df, mock_dataset, dimensions, references
+                dimx2_date_str_ref_delta_df, dimensions, references
             )
         )
 
@@ -1663,7 +1657,7 @@ class HighChartsBarChartTransformerTests(TestCase):
         result = (
             HighCharts(title="All Votes")
             .axis(self.chart_class(mock_dataset.fields.votes))
-            .transform(dimx0_metricx1_df, mock_dataset, [], [])
+            .transform(dimx0_metricx1_df, [], [])
         )
 
         self.assertEqual(
@@ -1708,7 +1702,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                 self.chart_class(mock_dataset.fields.votes),
                 self.chart_class(mock_dataset.fields.wins),
             )
-            .transform(dimx0_metricx2_df, mock_dataset, [], [])
+            .transform(dimx0_metricx2_df, [], [])
         )
 
         self.assertEqual(
@@ -1764,7 +1758,7 @@ class HighChartsBarChartTransformerTests(TestCase):
             HighCharts("Votes and Wins")
             .axis(self.chart_class(mock_dataset.fields.votes))
             .transform(
-                dimx1_str_df, mock_dataset, [mock_dataset.fields.political_party], []
+                dimx1_str_df, [mock_dataset.fields.political_party], []
             )
         )
 
@@ -1819,7 +1813,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                 self.chart_class(mock_dataset.fields.wins),
             )
             .transform(
-                dimx1_str_df, mock_dataset, [mock_dataset.fields.political_party], []
+                dimx1_str_df, [mock_dataset.fields.political_party], []
             )
         )
 
@@ -1884,7 +1878,7 @@ class HighChartsBarChartTransformerTests(TestCase):
         result = (
             HighCharts("Election Votes by State")
             .axis(self.chart_class(mock_dataset.fields.votes))
-            .transform(dimx2_date_str_df, mock_dataset, dimensions, [])
+            .transform(dimx2_date_str_df, dimensions, [])
         )
 
         self.assertEqual(
@@ -1970,7 +1964,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                 self.chart_class(mock_dataset.fields.votes),
                 self.chart_class(mock_dataset.fields.wins),
             )
-            .transform(dimx2_date_str_df, mock_dataset, dimensions, [])
+            .transform(dimx2_date_str_df, dimensions, [])
         )
 
         self.assertEqual(
@@ -2107,7 +2101,7 @@ class HighChartsBarChartTransformerTests(TestCase):
             HighCharts(title="Election Votes by State")
             .axis(self.chart_class(mock_dataset.fields.votes))
             .axis(self.chart_class(mock_dataset.fields.wins))
-            .transform(dimx2_date_str_df, mock_dataset, dimensions, [])
+            .transform(dimx2_date_str_df, dimensions, [])
         )
 
         self.assertEqual(
@@ -2250,7 +2244,6 @@ class HighChartsBarChartTransformerTests(TestCase):
             .axis(self.chart_class(mock_dataset.fields.votes))
             .transform(
                 dimx1_str_totals_df,
-                mock_dataset,
                 [Rollup(mock_dataset.fields.political_party)],
                 [],
             )
@@ -2314,7 +2307,7 @@ class HighChartsBarChartTransformerTests(TestCase):
         result = (
             HighCharts(title="Categorical Dimension with Totals")
             .axis(self.chart_class(mock_dataset.fields.votes))
-            .transform(df, mock_dataset, dimensions, [])
+            .transform(df, dimensions, [])
         )
 
         self.assertEqual(
@@ -2451,7 +2444,7 @@ class HighChartsBarChartTransformerTests(TestCase):
         result = (
             HighCharts(title="All Votes")
             .axis(self.chart_class(mock_dataset.fields.votes), y_axis_visible=False)
-            .transform(dimx0_metricx1_df, mock_dataset, [], [])
+            .transform(dimx0_metricx1_df, [], [])
         )
 
         self.assertEqual(
@@ -2534,7 +2527,7 @@ class HighChartsPieChartTransformerTests(TestCase):
         result = (
             HighCharts(title="All Votes")
             .axis(self.chart_class(mock_dataset.fields.votes))
-            .transform(dimx0_metricx1_df, mock_dataset, [], [])
+            .transform(dimx0_metricx1_df, [], [])
         )
 
         self.assertEqual(
@@ -2578,7 +2571,7 @@ class HighChartsPieChartTransformerTests(TestCase):
                 self.chart_class(mock_dataset.fields.votes),
                 self.chart_class(mock_dataset.fields.wins),
             )
-            .transform(dimx0_metricx2_df, mock_dataset, [], [])
+            .transform(dimx0_metricx2_df, [], [])
         )
 
         self.assertEqual(
@@ -2631,7 +2624,7 @@ class HighChartsPieChartTransformerTests(TestCase):
         result = (
             HighCharts("Votes and Wins By Day")
             .axis(self.chart_class(mock_dataset.fields.votes))
-            .transform(dimx1_date_df, mock_dataset, [mock_dataset.fields.timestamp], [])
+            .transform(dimx1_date_df, [mock_dataset.fields.timestamp], [])
         )
 
         self.assertEqual(
@@ -2682,7 +2675,7 @@ class HighChartsPieChartTransformerTests(TestCase):
             HighCharts("Votes and Wins By Day")
             .axis(self.chart_class(mock_dataset.fields.votes))
             .transform(
-                dimx1_date_df, mock_dataset, [year(mock_dataset.fields.timestamp)], []
+                dimx1_date_df, [year(mock_dataset.fields.timestamp)], []
             )
         )
 
@@ -2734,7 +2727,7 @@ class HighChartsPieChartTransformerTests(TestCase):
             HighCharts("Votes and Wins By Party")
             .axis(self.chart_class(mock_dataset.fields.votes))
             .transform(
-                dimx1_str_df, mock_dataset, [mock_dataset.fields.political_party], []
+                dimx1_str_df, [mock_dataset.fields.political_party], []
             )
         )
 
@@ -2785,7 +2778,7 @@ class HighChartsPieChartTransformerTests(TestCase):
             HighCharts(title="Votes and Wins By Election")
             .axis(self.chart_class(mock_dataset.fields.votes))
             .transform(
-                dimx1_num_df, mock_dataset, [mock_dataset.fields["candidate-id"]], []
+                dimx1_num_df, [mock_dataset.fields["candidate-id"]], []
             )
         )
 
@@ -2860,7 +2853,7 @@ class HighChartsPieChartTransformerTests(TestCase):
         result = (
             HighCharts(title="Votes by Date, Party")
             .axis(self.chart_class(mock_dataset.fields.votes))
-            .transform(dimx2_date_str_df, mock_dataset, dimensions, [])
+            .transform(dimx2_date_str_df, dimensions, [])
         )
 
         self.assertEqual(
@@ -2920,7 +2913,7 @@ class HighChartsPieChartTransformerTests(TestCase):
         result = (
             HighCharts(title="Election Votes by Day and Candidate ID")
             .axis(self.chart_class(mock_dataset.fields.votes))
-            .transform(dimx2_date_num_df, mock_dataset, dimensions, [])
+            .transform(dimx2_date_num_df, dimensions, [])
         )
 
         self.assertEqual(
@@ -2979,7 +2972,7 @@ class HighChartsPieChartTransformerTests(TestCase):
         result = (
             HighCharts(title="Election Votes by Day and Candidate ID")
             .axis(self.chart_class(mock_dataset.fields.votes))
-            .transform(dimx2_date_num_df, mock_dataset, dimensions, [])
+            .transform(dimx2_date_num_df, dimensions, [])
         )
 
         self.assertEqual(
@@ -3039,7 +3032,7 @@ class HighChartsPieChartTransformerTests(TestCase):
                 self.chart_class(mock_dataset.fields.votes),
                 self.chart_class(mock_dataset.fields.wins),
             )
-            .transform(dimx2_date_str_df, mock_dataset, dimensions, references)
+            .transform(dimx2_date_str_df, dimensions, references)
         )
 
         self.assertEqual(
@@ -3186,7 +3179,6 @@ class HighChartsLineChartAnnotationTransformerTests(TestCase):
             .axis(self.chart_class(mock_dataset.fields.votes))
             .transform(
                 dimx1_date_meticx1_votes_df,
-                mock_dataset,
                 [mock_dataset.fields.timestamp],
                 [],
                 dimx2_date_index_str_df,
@@ -3277,7 +3269,6 @@ class HighChartsLineChartAnnotationTransformerTests(TestCase):
             .axis(self.chart_class(mock_dataset.fields.votes))
             .transform(
                 dimx2_date_str_df,
-                mock_dataset,
                 [mock_dataset.fields.timestamp, mock_dataset.fields.political_party],
                 [],
                 dimx2_date_index_str_df,
@@ -3405,7 +3396,6 @@ class HighChartsLineChartAnnotationTransformerTests(TestCase):
             .axis(self.chart_class(mock_dataset.fields.votes))
             .transform(
                 dimx1_str_df,
-                mock_dataset,
                 [mock_dataset.fields.political_party],
                 [],
                 dimx2_category_index_str_df,

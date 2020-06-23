@@ -477,7 +477,6 @@ class ReactTable(Pandas):
     def transform(
         self,
         data_frame,
-        dataset,
         dimensions,
         references,
         annotation_frame=None,
@@ -489,8 +488,6 @@ class ReactTable(Pandas):
 
         :param data_frame:
             The result set data frame
-        :param dataset:
-            The dataset that generated the data query
         :param dimensions:
             A list of dimensions that were selected in the data query
         :param references:

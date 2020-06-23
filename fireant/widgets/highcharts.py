@@ -69,7 +69,7 @@ class HighCharts(ChartWidget, TransformableWidget):
         return ".".join(["HighCharts()"] + [repr(axis) for axis in self.items])
 
     def transform(
-        self, data_frame, dataset, dimensions, references, annotation_frame=None
+        self, data_frame, dimensions, references, annotation_frame=None
     ):
         """
         - Main entry point -
@@ -80,8 +80,6 @@ class HighCharts(ChartWidget, TransformableWidget):
 
         :param data_frame:
             The data frame containing the data. Index must match the dimensions parameter.
-        :param dataset:
-            The slicer that is in use.
         :param dimensions:
             A list of dimensions that are being rendered.
         :param references:
@@ -143,7 +141,7 @@ class HighCharts(ChartWidget, TransformableWidget):
                 is_timeseries,
             )
 
-        x_axis = self._render_x_axis(data_frame, dimensions, dataset.fields)
+        x_axis = self._render_x_axis(data_frame, dimensions, dimension_map)
 
         annotations = []
         if has_only_line_series(axis) and annotation_frame is not None:
@@ -164,7 +162,7 @@ class HighCharts(ChartWidget, TransformableWidget):
             "annotations": annotations,
         }
 
-    def _render_x_axis(self, data_frame, dimensions, fields):
+    def _render_x_axis(self, data_frame, dimensions, dimension_map):
         """
         Renders the xAxis configuration.
 
@@ -172,6 +170,7 @@ class HighCharts(ChartWidget, TransformableWidget):
 
         :param data_frame:
         :param dimensions:
+        :param dimension_map:
         :return:
         """
         is_mi = isinstance(data_frame.index, pd.MultiIndex)
@@ -183,8 +182,8 @@ class HighCharts(ChartWidget, TransformableWidget):
 
         categories = ["All"]
         if first_level.name is not None:
-            dimension_alias = utils.alias_for_alias_selector(first_level.name)
-            dimension = fields[dimension_alias]
+            dimension_alias = first_level.name
+            dimension = dimension_map[dimension_alias]
             categories = [
                 formats.display_value(category, dimension) or category
                 for category in first_level
