@@ -3,7 +3,7 @@ from unittest import TestCase
 
 from pypika import Table
 
-from fireant import DataType, Rollup, day, DataSet, Field
+from fireant import DataType, Rollup, day, DataSet, Field, DayOverDay
 from fireant.dataset.filters import ComparisonOperator
 from fireant.tests.database.mock_database import TestDatabase
 from fireant.tests.dataset.mocks import (
@@ -24,7 +24,11 @@ from fireant.tests.dataset.mocks import (
     dimx2_str_str_df,
 )
 from fireant.widgets.base import ReferenceItem
-from fireant.widgets.reacttable import ReactTable, FormattingConditionRule
+from fireant.widgets.reacttable import (
+    ReactTable,
+    FormattingConditionRule,
+    FormattingField,
+)
 
 
 class FormattingRulesTests(TestCase):
@@ -52,7 +56,11 @@ class FormattingRulesTests(TestCase):
         )
 
         cls.df = pd.DataFrame.from_dict(
-            {"$metric0": [1, 2, 3, 4], "$metric0_dod": [1, 5, 9, 12]}
+            {
+                "$metric0": [1, 2, 3, 4],
+                "$metric0_dod": [1, 5, 9, 12],
+                "$cumsum(metric0)": [1, 3, 6, 10],
+            }
         )
 
     def test_single_formatting_condition_rule(self):
@@ -60,7 +68,10 @@ class FormattingRulesTests(TestCase):
             self.dataset.fields.metric0,
             formatting_rules=[
                 FormattingConditionRule(
-                    self.dataset.fields.metric0, ComparisonOperator.gt, 2, "#EEEEEE"
+                    FormattingField(metric=self.dataset.fields.metric0),
+                    ComparisonOperator.gt,
+                    2,
+                    "#EEEEEE",
                 )
             ],
         ).transform(self.df, [], [])
@@ -78,15 +89,113 @@ class FormattingRulesTests(TestCase):
             result,
         )
 
+    def test_formatting_a_reference(self):
+        reference = DayOverDay(self.dataset.fields.timestamp)
+        result = ReactTable(
+            self.dataset.fields.metric0,
+            formatting_rules=[
+                FormattingConditionRule(
+                    FormattingField(
+                        metric=self.dataset.fields.metric0,
+                        reference=DayOverDay(self.dataset.fields.timestamp),
+                    ),
+                    ComparisonOperator.gt,
+                    6,
+                    "#EEEEEE",
+                )
+            ],
+        ).transform(self.df, [], [reference])
+
+        self.assertEqual(
+            {
+                "columns": [
+                    {"Header": "Metric0", "accessor": "$metric0"},
+                    {"Header": "Metric0 DoD", "accessor": "$metric0_dod"},
+                ],
+                "data": [
+                    {
+                        "$metric0": {"display": "1", "raw": 1},
+                        "$metric0_dod": {"display": "1", "raw": 1},
+                    },
+                    {
+                        "$metric0": {"display": "2", "raw": 2},
+                        "$metric0_dod": {"display": "5", "raw": 5},
+                    },
+                    {
+                        "$metric0": {"display": "3", "raw": 3},
+                        "$metric0_dod": {"display": "9", "raw": 9, "color": "#EEEEEE"},
+                    },
+                    {
+                        "$metric0": {"display": "4", "raw": 4},
+                        "$metric0_dod": {
+                            "display": "12",
+                            "raw": 12,
+                            "color": "#EEEEEE",
+                        },
+                    },
+                ],
+            },
+            result,
+        )
+
+    def test_formatting_an_operation(self):
+        operation = CumSum(self.dataset.fields.metric0)
+        result = ReactTable(
+            operation,
+            formatting_rules=[
+                FormattingConditionRule(
+                    FormattingField(operation=operation),
+                    ComparisonOperator.gt,
+                    5,
+                    "#EEEEEE",
+                )
+            ],
+        ).transform(self.df, [], [])
+
+        self.assertEqual(
+            {
+                "columns": [
+                    {"Header": "CumSum(Metric0)", "accessor": "$cumsum(metric0)"}
+                ],
+                "data": [
+                    {"$cumsum(metric0)": {"display": "1", "raw": 1}},
+                    {"$cumsum(metric0)": {"display": "3", "raw": 3}},
+                    {
+                        "$cumsum(metric0)": {
+                            "display": "6",
+                            "raw": 6,
+                            "color": "#EEEEEE",
+                        }
+                    },
+                    {
+                        "$cumsum(metric0)": {
+                            "display": "10",
+                            "raw": 10,
+                            "color": "#EEEEEE",
+                        }
+                    },
+                ],
+            },
+            result,
+        )
+
+    CumSum(mock_dataset.fields.votes)
+
     def test_multiple_formatting_condition_rule(self):
         result = ReactTable(
             self.dataset.fields.metric0,
             formatting_rules=[
                 FormattingConditionRule(
-                    self.dataset.fields.metric0, ComparisonOperator.gt, 3, "#EEEEEE"
+                    FormattingField(metric=self.dataset.fields.metric0),
+                    ComparisonOperator.gt,
+                    3,
+                    "#EEEEEE",
                 ),
                 FormattingConditionRule(
-                    self.dataset.fields.metric0, ComparisonOperator.lt, 2, "#AAAAAA"
+                    FormattingField(metric=self.dataset.fields.metric0),
+                    ComparisonOperator.lt,
+                    2,
+                    "#AAAAAA",
                 ),
             ],
         ).transform(self.df, [], [])
@@ -224,9 +333,7 @@ class ReactTableTransformerTests(TestCase):
 
     def test_time_series_dim_with_operation(self):
         result = ReactTable(CumSum(mock_dataset.fields.votes)).transform(
-            dimx1_date_operation_df,
-            [day(mock_dataset.fields.timestamp)],
-            [],
+            dimx1_date_operation_df, [day(mock_dataset.fields.timestamp)], []
         )
 
         self.assertEqual(
@@ -1070,9 +1177,7 @@ class ReactTableTransformerTests(TestCase):
     def test_dimx1_int_metricx1_pivot_dim1_same_as_transpose(self):
         result = ReactTable(
             mock_dataset.fields.wins, pivot=[mock_dataset.fields["candidate-id"]]
-        ).transform(
-            dimx1_num_df, [mock_dataset.fields["candidate-id"]], []
-        )
+        ).transform(dimx1_num_df, [mock_dataset.fields["candidate-id"]], [])
 
         self.assertEqual(
             {
@@ -1115,9 +1220,7 @@ class ReactTableTransformerTests(TestCase):
             mock_dataset.fields.wins,
             pivot=[mock_dataset.fields["candidate-id"]],
             transpose=True,
-        ).transform(
-            dimx1_num_df, [mock_dataset.fields["candidate-id"]], []
-        )
+        ).transform(dimx1_num_df, [mock_dataset.fields["candidate-id"]], [])
 
         self.assertEqual(
             {
@@ -1180,9 +1283,7 @@ class ReactTableTransformerTests(TestCase):
             mock_dataset.fields.wins,
             mock_dataset.fields.votes,
             pivot=[mock_dataset.fields["candidate-id"]],
-        ).transform(
-            dimx1_num_df, [mock_dataset.fields["candidate-id"]], []
-        )
+        ).transform(dimx1_num_df, [mock_dataset.fields["candidate-id"]], [])
 
         self.assertEqual(
             {
@@ -1825,7 +1926,10 @@ class ReactTableHyperlinkTransformerTests(TestCase):
     ):
         result = ReactTable(mock_dataset.fields.wins).transform(
             dimx2_str_str_df,
-            [mock_dataset.fields.political_party, mock_dataset.fields["candidate-name"]],
+            [
+                mock_dataset.fields.political_party,
+                mock_dataset.fields["candidate-name"],
+            ],
             [],
         )
 

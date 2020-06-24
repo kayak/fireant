@@ -37,9 +37,25 @@ F_METRICS_DIMENSION_ALIAS = alias_selector(METRICS_DIMENSION_ALIAS)
 _display_value = partial(display_value, nan_value="", null_value="")
 
 
-class FormattingConditionRule:
-    def __init__(self, metric, operator, value, color):
+class FormattingField:
+    def __init__(self, metric=None, reference=None, operation=None):
         self.metric = metric
+        self.reference = reference
+        self.operation = operation
+
+    def get_alias(self):
+        if self.operation:
+            return self.operation.alias
+
+        if self.reference:
+            return reference_alias(self.metric, self.reference)
+
+        return self.metric.alias
+
+
+class FormattingConditionRule:
+    def __init__(self, field, operator, value, color):
+        self.field = field
         self.operator = operator
         self.value = value
         self.color = color
@@ -129,8 +145,8 @@ class ReactTable(Pandas):
         )
         self.formatting_rules_map = defaultdict(list)
         for formatting_rule in formatting_rules:
-            metric_alias_selector = alias_selector(formatting_rule.metric.alias)
-            self.formatting_rules_map[metric_alias_selector].append(formatting_rule)
+            field_selector = alias_selector(formatting_rule.field.get_alias())
+            self.formatting_rules_map[field_selector].append(formatting_rule)
 
     def __repr__(self):
         return "{}({})".format(
