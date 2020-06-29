@@ -28,7 +28,7 @@ class Matplotlib(ChartWidget, TransformableWidget):
 
     def transform(self, data_frame, dimensions, references, annotation_frame=None):
         import matplotlib.pyplot as plt
-        data_frame = data_frame.copy()
+        result_df = data_frame.copy()
 
         n_axes = len(self.items)
         figsize = (14, 5 * n_axes)
@@ -51,7 +51,7 @@ class Matplotlib(ChartWidget, TransformableWidget):
                     f_metric_key = utils.alias_selector(reference_alias(metric, reference))
                     f_metric_label = reference_label(metric, reference)
 
-                    plot = self.get_plot_func_for_series_type(data_frame[f_metric_key], f_metric_label, series)
+                    plot = self.get_plot_func_for_series_type(result_df[f_metric_key], f_metric_label, series)
                     plot(ax=plt_axis,
                          label=axis.label,
                          color=series_color,

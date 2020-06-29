@@ -95,7 +95,7 @@ def apply_set_dimensions(fields, filters):
     set_filters = [fltr for fltr in filters if isinstance(fltr, ResultSet)]
 
     if not set_filters:
-        return fields
+        return [*fields]
 
     fields_per_set_filter = {
         set_filter.field: set_filter for set_filter in set_filters

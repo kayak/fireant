@@ -1,9 +1,12 @@
+import itertools
 from datetime import timedelta
 
-import itertools
 import pandas as pd
 
-from fireant import formats, utils
+from fireant import (
+    formats,
+    utils,
+)
 from fireant.dataset.fields import DataType
 from fireant.dataset.totals import TOTALS_MARKERS
 from fireant.reference_helpers import (
@@ -12,8 +15,12 @@ from fireant.reference_helpers import (
     reference_prefix,
     reference_suffix,
 )
+from fireant.utils import alias_selector
 from .base import TransformableWidget
-from .chart_base import ChartWidget, ContinuousAxisSeries
+from .chart_base import (
+    ChartWidget,
+    ContinuousAxisSeries,
+)
 
 DEFAULT_COLORS = (
     "#DDDF0D",
@@ -89,29 +96,25 @@ class HighCharts(ChartWidget, TransformableWidget):
         :return:
             A dict meant to be dumped as JSON.
         """
+        result_df = data_frame.copy()
+
+        dimension_map = {
+            alias_selector(dimension.alias): dimension for dimension in dimensions
+        }
+
         colors = itertools.cycle(self.colors)
 
         is_timeseries = dimensions and dimensions[0].data_type == DataType.date
 
-        dimension_map = {
-            dimension_alias: dimension
-            for dimension_alias, dimension in zip(data_frame.index.names, dimensions)
-        }
-        num_dimensions = len(dimension_map)
-        dimension_fields = [
-            dimension_map[field_alias]
-            for field_alias in data_frame.index.names[:num_dimensions]
-        ]
-
         # Timestamp.max is used as a marker for rolled up dimensions (totals). Filter out the totals value for the
         # dimension used for the x-axis
         if is_timeseries and len(data_frame) > 0:
-            data_frame = self._remove_date_totals(data_frame)
+            result_df = self._remove_date_totals(result_df)
 
         # Group the results by index levels after the 0th, one for each series
         # This will result in a series for every combination of dimension values and each series will contain a data set
         # across the 0th dimension (used for the x-axis)
-        series_data_frames = self._group_by_series(data_frame)
+        series_data_frames = self._group_by_series(result_df)
 
         total_num_series = sum([len(axis) for axis in self.items])
 
@@ -134,14 +137,14 @@ class HighCharts(ChartWidget, TransformableWidget):
                 axis_idx,
                 axis_color,
                 colors,
-                data_frame,
+                result_df,
                 series_data_frames,
-                dimension_fields,
+                dimensions,
                 references,
                 is_timeseries,
             )
 
-        x_axis = self._render_x_axis(data_frame, dimensions, dimension_map)
+        x_axis = self._render_x_axis(result_df, dimensions, dimension_map)
 
         annotations = []
         if has_only_line_series(axis) and annotation_frame is not None:

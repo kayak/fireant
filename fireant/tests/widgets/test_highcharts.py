@@ -23,6 +23,8 @@ from fireant.tests.dataset.mocks import (
     dimx2_date_str_totalsx2_df,
     dimx2_str_num_df,
     dimx2_category_index_str_df,
+    dimx2_str_str_df,
+    dimx3_date_str_str_df,
     mock_dataset,
     year,
 )
@@ -298,7 +300,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         )
 
     def test_single_metric_with_uni_dim_line_chart(self):
-        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.state]
+        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
         result = (
             HighCharts(title="Time Series with Unique Dimension and Single Metric")
             .axis(self.chart_class(mock_dataset.fields.votes))
@@ -397,7 +399,7 @@ class HighChartsLineChartTransformerTests(TestCase):
             )
             .transform(
                 dimx2_date_str_df,
-                [mock_dataset.fields.timestamp, mock_dataset.fields.state],
+                [mock_dataset.fields.timestamp, mock_dataset.fields.political_party],
                 [],
             )
         )
@@ -553,7 +555,7 @@ class HighChartsLineChartTransformerTests(TestCase):
             .axis(self.chart_class(mock_dataset.fields.wins))
             .transform(
                 dimx2_date_str_df,
-                [mock_dataset.fields.timestamp, mock_dataset.fields.state],
+                [mock_dataset.fields.timestamp, mock_dataset.fields.political_party],
                 [],
             )
         )
@@ -730,7 +732,7 @@ class HighChartsLineChartTransformerTests(TestCase):
             .axis(self.chart_class(mock_dataset.fields.wins))
             .transform(
                 dataframe,
-                [mock_dataset.fields.timestamp, Rollup(mock_dataset.fields.state)],
+                [mock_dataset.fields.timestamp, Rollup(mock_dataset.fields.political_party)],
                 [],
             )
         )
@@ -815,7 +817,7 @@ class HighChartsLineChartTransformerTests(TestCase):
             .axis(self.chart_class(mock_dataset.fields.wins))
             .transform(
                 dimx2_date_str_totals_df,
-                [mock_dataset.fields.timestamp, Rollup(mock_dataset.fields.state)],
+                [mock_dataset.fields.timestamp, Rollup(mock_dataset.fields.political_party)],
                 [],
             )
         )
@@ -1023,7 +1025,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                 dimx2_date_str_totalsx2_df,
                 [
                     Rollup(mock_dataset.fields.timestamp),
-                    Rollup(mock_dataset.fields.state),
+                    Rollup(mock_dataset.fields.political_party),
                 ],
                 [],
             )
@@ -1222,7 +1224,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         )
 
     def test_uni_dim_with_ref_line_chart(self):
-        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.state]
+        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
         references = [ElectionOverElection(mock_dataset.fields.timestamp)]
         result = (
             HighCharts(title="Time Series with Unique Dimension and Reference")
@@ -1339,7 +1341,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         )
 
     def test_uni_dim_with_ref_delta_line_chart(self):
-        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.state]
+        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
         references = [ElectionOverElection(mock_dataset.fields.timestamp, delta=True)]
         result = (
             HighCharts(title="Time Series with Unique Dimension and Delta Reference")
@@ -1518,7 +1520,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         )
 
     def test_ref_axes_set_to_same_visibility_as_parent_axis(self):
-        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.state]
+        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
         references = [ElectionOverElection(mock_dataset.fields.timestamp, delta=True)]
         result = (
             HighCharts(title="Time Series with Unique Dimension and Delta Reference")
@@ -1874,7 +1876,7 @@ class HighChartsBarChartTransformerTests(TestCase):
         )
 
     def test_cont_uni_dims_single_metric_bar_chart(self):
-        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.state]
+        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
         result = (
             HighCharts("Election Votes by State")
             .axis(self.chart_class(mock_dataset.fields.votes))
@@ -1957,7 +1959,7 @@ class HighChartsBarChartTransformerTests(TestCase):
         )
 
     def test_cont_uni_dims_multi_metric_single_axis_bar_chart(self):
-        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.state]
+        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
         result = (
             HighCharts(title="Election Votes by State")
             .axis(
@@ -2096,7 +2098,7 @@ class HighChartsBarChartTransformerTests(TestCase):
         )
 
     def test_cont_uni_dims_multi_metric_multi_axis_bar_chart(self):
-        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.state]
+        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
         result = (
             HighCharts(title="Election Votes by State")
             .axis(self.chart_class(mock_dataset.fields.votes))
@@ -3024,7 +3026,7 @@ class HighChartsPieChartTransformerTests(TestCase):
         )
 
     def test_pie_chart_dimx2_date_str_reference(self):
-        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.state]
+        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
         references = [ElectionOverElection(mock_dataset.fields.timestamp)]
         result = (
             HighCharts(title="Election Votes by State")

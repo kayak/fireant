@@ -12,7 +12,7 @@ class QueryBuilderOrderTests(TestCase):
 
     def test_build_query_order_by(self):
         queries = mock_dataset.query \
-            .widget(f.ReactTable(mock_dataset.fields.votes)) \
+            .widget(f.Pandas(mock_dataset.fields.votes)) \
             .dimension(timestamp_daily) \
             .orderby(timestamp_daily) \
             .sql
@@ -28,7 +28,7 @@ class QueryBuilderOrderTests(TestCase):
 
     def test_build_query_order_by_asc(self):
         queries = mock_dataset.query \
-            .widget(f.ReactTable(mock_dataset.fields.votes)) \
+            .widget(f.Pandas(mock_dataset.fields.votes)) \
             .dimension(timestamp_daily) \
             .orderby(timestamp_daily, orientation=Order.asc) \
             .sql
@@ -44,7 +44,7 @@ class QueryBuilderOrderTests(TestCase):
 
     def test_build_query_order_by_desc(self):
         queries = mock_dataset.query \
-            .widget(f.ReactTable(mock_dataset.fields.votes)) \
+            .widget(f.Pandas(mock_dataset.fields.votes)) \
             .dimension(timestamp_daily) \
             .orderby(timestamp_daily, orientation=Order.desc) \
             .sql
@@ -60,7 +60,7 @@ class QueryBuilderOrderTests(TestCase):
 
     def test_build_query_order_by_aggregate_field(self):
         queries = mock_dataset.query \
-            .widget(f.ReactTable(mock_dataset.fields.votes)) \
+            .widget(f.Pandas(mock_dataset.fields.votes)) \
             .dimension(timestamp_daily) \
             .orderby(mock_dataset.fields.votes) \
             .sql
@@ -76,7 +76,7 @@ class QueryBuilderOrderTests(TestCase):
 
     def test_build_query_order_by_aggregate_field_asc(self):
         queries = mock_dataset.query \
-            .widget(f.ReactTable(mock_dataset.fields.votes)) \
+            .widget(f.Pandas(mock_dataset.fields.votes)) \
             .dimension(timestamp_daily) \
             .orderby(mock_dataset.fields.votes, orientation=Order.asc) \
             .sql
@@ -92,7 +92,7 @@ class QueryBuilderOrderTests(TestCase):
 
     def test_build_query_order_by_aggregate_field_desc(self):
         queries = mock_dataset.query \
-            .widget(f.ReactTable(mock_dataset.fields.votes)) \
+            .widget(f.Pandas(mock_dataset.fields.votes)) \
             .dimension(timestamp_daily) \
             .orderby(mock_dataset.fields.votes, orientation=Order.desc) \
             .sql
@@ -108,7 +108,7 @@ class QueryBuilderOrderTests(TestCase):
 
     def test_build_query_order_by_multiple_dimensions(self):
         queries = mock_dataset.query \
-            .widget(f.ReactTable(mock_dataset.fields.votes)) \
+            .widget(f.Pandas(mock_dataset.fields.votes)) \
             .dimension(timestamp_daily, mock_dataset.fields['candidate-name']) \
             .orderby(timestamp_daily) \
             .orderby(mock_dataset.fields['candidate-name']) \
@@ -126,7 +126,7 @@ class QueryBuilderOrderTests(TestCase):
 
     def test_build_query_order_by_multiple_dimensions_with_different_orientations(self):
         queries = mock_dataset.query \
-            .widget(f.ReactTable(mock_dataset.fields.votes)) \
+            .widget(f.Pandas(mock_dataset.fields.votes)) \
             .dimension(timestamp_daily, mock_dataset.fields['candidate-name']) \
             .orderby(timestamp_daily, orientation=Order.desc) \
             .orderby(mock_dataset.fields['candidate-name'], orientation=Order.asc) \
@@ -144,7 +144,7 @@ class QueryBuilderOrderTests(TestCase):
 
     def test_build_query_order_by_aggregate_fields_and_fields(self):
         queries = mock_dataset.query \
-            .widget(f.ReactTable(mock_dataset.fields.votes)) \
+            .widget(f.Pandas(mock_dataset.fields.votes)) \
             .dimension(timestamp_daily) \
             .orderby(timestamp_daily) \
             .orderby(mock_dataset.fields.votes) \
@@ -161,7 +161,7 @@ class QueryBuilderOrderTests(TestCase):
 
     def test_build_query_order_by_aggregate_fields_and_fields_with_different_orientations(self):
         queries = mock_dataset.query \
-            .widget(f.ReactTable(mock_dataset.fields.votes)) \
+            .widget(f.Pandas(mock_dataset.fields.votes)) \
             .dimension(timestamp_daily) \
             .orderby(timestamp_daily, orientation=Order.asc) \
             .orderby(mock_dataset.fields.votes, orientation=Order.desc) \
@@ -178,7 +178,7 @@ class QueryBuilderOrderTests(TestCase):
 
     def test_build_query_order_by_field_not_selected_in_query_added_to_selects(self):
         queries = mock_dataset.query \
-            .widget(f.ReactTable(mock_dataset.fields.votes)) \
+            .widget(f.Pandas(mock_dataset.fields.votes)) \
             .dimension(timestamp_daily) \
             .orderby(mock_dataset.fields.wins) \
             .sql

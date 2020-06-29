@@ -15,7 +15,7 @@ class BaseWidgetTests(TestCase):
         widget = Widget(0, 1, 2).item(3)
         self.assertListEqual(widget.items, [0, 1, 2, 3])
 
-    def test_item_func_immuatable(self):
+    def test_item_func_immutable(self):
         widget1 = Widget(0, 1, 2)
         widget2 = widget1.item(3)
         self.assertIsNot(widget1, widget2)

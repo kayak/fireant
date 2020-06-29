@@ -23,12 +23,12 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
         super(DimensionChoicesQueryBuilder, self).__init__(dataset, dataset.table)
 
         self.hint_table = getattr(dimension, "hint_table", None)
-        self.dimensions.append(dimension)
+        self._dimensions.append(dimension)
 
         # TODO remove after 3.0.0
         display_alias = dimension.alias + "_display"
         if display_alias in dataset.fields:
-            self.dimensions.append(dataset.fields[display_alias])
+            self._dimensions.append(dataset.fields[display_alias])
 
     def _extract_hint_filters(self):
         """

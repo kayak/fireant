@@ -12,9 +12,11 @@ from fireant.tests.dataset.mocks import (
     dimx0_metricx2_df,
     dimx1_date_df,
     dimx1_date_operation_df,
+    dimx1_num_df,
     dimx1_str_df,
     dimx2_date_str_df,
     dimx2_date_str_ref_df,
+    dimx2_str_str_df,
     mock_dataset,
     no_index_df,
 )
@@ -108,9 +110,9 @@ class PandasTransformerTests(TestCase):
 
     def test_dimx1_int(self):
         result = Pandas(mock_dataset.fields.wins) \
-            .transform(dimx1_str_df, [mock_dataset.fields['candidate-id']], [])
+            .transform(dimx1_num_df, [mock_dataset.fields['candidate-id']], [])
 
-        expected = dimx1_str_df.copy()[[f('wins')]]
+        expected = dimx1_num_df.copy()[[f('wins')]]
         expected.index.names = ['Candidate ID']
         expected.columns = ['Wins']
         expected.columns.name = 'Metrics'
@@ -167,6 +169,20 @@ class PandasTransformerTests(TestCase):
         expected.index.names = ['Timestamp']
         expected.columns = ['Democrat', 'Independent', 'Republican']
         expected.columns.names = ['Party']
+        expected = expected.applymap(_format_float)
+
+        pandas.testing.assert_frame_equal(expected, result)
+
+    def test_hidden_dimx2_date_str(self):
+        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
+        result = Pandas(mock_dataset.fields.wins, hide=[mock_dataset.fields.political_party]) \
+            .transform(dimx2_date_str_df, dimensions, [])
+
+        expected = dimx2_date_str_df.copy()[[f('wins')]]
+        expected.reset_index('$political_party', inplace=True, drop=True)
+        expected.index.names = ['Timestamp']
+        expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
         expected = expected.applymap(_format_float)
 
         pandas.testing.assert_frame_equal(expected, result)

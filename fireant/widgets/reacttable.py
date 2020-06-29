@@ -4,7 +4,11 @@ from functools import partial
 
 import pandas as pd
 
-from fireant.dataset.fields import DataType, Field
+from fireant.dataset.fields import (
+    DataType,
+    Field,
+)
+from fireant.dataset.filters import ComparisonOperator
 from fireant.dataset.totals import (
     DATE_TOTALS,
     NUMBER_TOTALS,
@@ -29,7 +33,6 @@ from fireant.utils import (
 )
 from .base import ReferenceItem
 from .pandas import Pandas
-from fireant.dataset.filters import ComparisonOperator
 
 TOTALS_LABEL = "Totals"
 METRICS_DIMENSION_ALIAS = "metrics"
@@ -122,12 +125,12 @@ class ReactTable(Pandas):
                         defaultSortMethod={(a, b, desc) => ReactTableDefaults.defaultSortMethod(a.raw, b.raw, desc)}>
             </ReactTable>;
     """
-
     def __init__(
         self,
         metric,
         *metrics: Field,
         pivot=(),
+        hide=(),
         transpose=False,
         sort=None,
         ascending=None,
@@ -138,6 +141,7 @@ class ReactTable(Pandas):
             metric,
             *metrics,
             pivot=pivot,
+            hide=hide,
             transpose=transpose,
             sort=sort,
             ascending=ascending,
@@ -224,13 +228,16 @@ class ReactTable(Pandas):
         return data_frame
 
     @staticmethod
-    def transform_index_column_headers(data_frame, field_map):
+    def transform_index_column_headers(data_frame, field_map, hide_dimension_aliases):
         """
         Convert the un-pivoted dimensions into ReactTable column header definitions.
 
         :param data_frame:
-            The result set data frame
+            The result set data frame.
         :param field_map:
+            A map to find metrics/operations based on their keys found in the data frame.
+        :param hide_dimension_aliases:
+            A set with hide dimension aliases.
         :return:
             A list of column header definitions with the following structure.
 
@@ -252,6 +259,9 @@ class ReactTable(Pandas):
             return columns
 
         for f_dimension_alias in data_frame.index.names:
+            if f_dimension_alias not in field_map or f_dimension_alias in hide_dimension_aliases:
+                continue
+
             dimension = field_map[f_dimension_alias]
             header = getattr(dimension, "label", dimension.alias)
 
@@ -272,7 +282,7 @@ class ReactTable(Pandas):
 
         :return:
         :param data_frame:
-            The result set data frame
+            The result set data frame.
         :param field_map:
             A map to find metrics/operations based on their keys found in the data frame.
         :return:
@@ -367,11 +377,11 @@ class ReactTable(Pandas):
         return _make_columns(data_frame.columns.to_frame(), dropped_metric_level_name)
 
     @staticmethod
-    def transform_row_index(index_values, field_map, dimension_hyperlink_templates):
+    def transform_row_index(index_values, field_map, dimension_hyperlink_templates, hide_dimension_aliases):
         # Add the index to the row
         row = {}
         for key, value in index_values.items():
-            if key is None:
+            if key is None or key not in field_map:
                 continue
 
             field_alias = key
@@ -386,12 +396,18 @@ class ReactTable(Pandas):
             # values for this row. The values contained in `index_values` will always contain all of the required values
             # at this point, otherwise the hyperlink template will not be included.
             if key in dimension_hyperlink_templates:
-                data["hyperlink"] = dimension_hyperlink_templates[key].format(
-                    **index_values
-                )
+                try:
+                    data["hyperlink"] = dimension_hyperlink_templates[key].format(
+                        **index_values
+                    )
+                except KeyError:
+                    pass
 
             safe_key = safe_value(key)
             row[safe_key] = data
+
+        for dimension_alias in hide_dimension_aliases:
+            del row[dimension_alias]
 
         return row
 
@@ -432,18 +448,22 @@ class ReactTable(Pandas):
         return row
 
     def transform_data(
-        self, data_frame, field_map, dimension_hyperlink_templates, is_transposed
+        self, data_frame, field_map, hide_dimension_aliases, dimension_hyperlink_templates, is_transposed,
     ):
         """
         Builds a list of dicts containing the data for ReactTable. This aligns with the accessors set by
         #transform_dimension_column_headers and #transform_metric_column_headers
 
         :param data_frame:
-            The result set data frame
+            The result set data frame.
         :param field_map:
             A mapping to all the fields in the dataset used for this query.
+        :param hide_dimension_aliases:
+            A set with hide dimension aliases.
         :param dimension_hyperlink_templates:
+            A mapping to fields and its hyperlink dimension, if any.
         :param is_transposed:
+            Whether the table is transposed or not.
         """
         index_names = data_frame.index.names
 
@@ -477,7 +497,7 @@ class ReactTable(Pandas):
             index_display_values = OrderedDict(zip(index_names, index_values))
 
             row_index = ReactTable.transform_row_index(
-                index_display_values, field_map, dimension_hyperlink_templates
+                index_display_values, field_map, dimension_hyperlink_templates, hide_dimension_aliases,
             )
             row_values = self.transform_row_values(series, field_map, is_transposed)
 
@@ -503,11 +523,11 @@ class ReactTable(Pandas):
         `data` which align with the props in ReactTable with the same name.
 
         :param data_frame:
-            The result set data frame
+            The result set data frame.
         :param dimensions:
-            A list of dimensions that were selected in the data query
+            A list of dimensions that were selected in the data query.
         :param references:
-            A list of references that were selected in the data query
+            A list of references that were selected in the data query.
         :param annotation_frame:
             A data frame containing the annotation data.
         :param use_raw_values:
@@ -516,6 +536,12 @@ class ReactTable(Pandas):
             An dict containing attributes `columns` and `data` which align with the props in ReactTable with the same
             names.
         """
+        result_df = data_frame.copy()
+
+        dimension_map = {
+            alias_selector(dimension.alias): dimension for dimension in dimensions
+        }
+
         metric_map = OrderedDict(
             [
                 (
@@ -526,9 +552,7 @@ class ReactTable(Pandas):
                 for ref in [None] + references
             ]
         )
-        dimension_map = {
-            alias_selector(dimension.alias): dimension for dimension in dimensions
-        }
+
         field_map = {
             **metric_map,
             **dimension_map,
@@ -543,22 +567,29 @@ class ReactTable(Pandas):
         }
         # has at least 1 dim and all are pivoted
         all_dimensions_pivoted = len(dimensions) and (len(dimensions) == len(self.pivot))
-
         metric_aliases = list(metric_map.keys())
-        dimension_aliases = [
-            alias_selector(dimension.alias) for dimension in self.pivot
+
+        hide_dimension_aliases = {
+            alias_selector(dimension.alias) for dimension in self.hide
+        }
+
+        pivot_dimension_aliases = [
+            alias_selector(dimension.alias)
+            for dimension in self.pivot
+            if alias_selector(dimension.alias) not in hide_dimension_aliases
         ]
 
-        df = self.format_data_frame(data_frame[metric_aliases])
-        df = self.pivot_data_frame(df, dimension_aliases, self.transpose)
+        result_df = self.format_data_frame(result_df[metric_aliases])
+        result_df = self.pivot_data_frame(result_df, pivot_dimension_aliases, self.transpose)
+        dimension_columns = self.transform_index_column_headers(result_df, field_map, hide_dimension_aliases)
+        metric_columns = self.transform_data_column_headers(result_df, field_map)
 
-        dimension_columns = self.transform_index_column_headers(df, field_map)
-        metric_columns = self.transform_data_column_headers(df, field_map)
         data = self.transform_data(
-            df,
+            result_df,
             field_map,
             is_transposed=self.transpose ^ all_dimensions_pivoted,
-            dimension_hyperlink_templates=self.map_hyperlink_templates(df, dimensions),
+            hide_dimension_aliases=hide_dimension_aliases,
+            dimension_hyperlink_templates=self.map_hyperlink_templates(result_df, dimensions),
         )
 
         return {"columns": dimension_columns + metric_columns, "data": data}

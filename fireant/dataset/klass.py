@@ -1,15 +1,13 @@
 import itertools
 
-from fireant.utils import (
-    immutable,
-    deepcopy,
-    ordered_distinct_list,
-    ordered_distinct_list_by_attr,
-)
 from fireant.queries.builder import (
     DataSetQueryBuilder,
     DimensionChoicesQueryBuilder,
     DimensionLatestQueryBuilder,
+)
+from fireant.utils import (
+    deepcopy,
+    immutable,
 )
 
 
