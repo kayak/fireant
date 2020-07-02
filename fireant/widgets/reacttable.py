@@ -44,11 +44,14 @@ class FormattingField:
         self.operation = operation
 
     def get_alias(self):
+        if self.reference:
+            if self.operation:
+                return reference_alias(self.operation, self.reference)
+            else:
+                return reference_alias(self.metric, self.reference)
+
         if self.operation:
             return self.operation.alias
-
-        if self.reference:
-            return reference_alias(self.metric, self.reference)
 
         return self.metric.alias
 

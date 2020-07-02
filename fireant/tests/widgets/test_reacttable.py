@@ -60,6 +60,7 @@ class FormattingRulesTests(TestCase):
                 "$metric0": [1, 2, 3, 4],
                 "$metric0_dod": [1, 5, 9, 12],
                 "$cumsum(metric0)": [1, 3, 6, 10],
+                "$cumsum(metric0)_dod": [1, 6, 15, 27],
             }
         )
 
@@ -97,7 +98,7 @@ class FormattingRulesTests(TestCase):
                 FormattingConditionRule(
                     FormattingField(
                         metric=self.dataset.fields.metric0,
-                        reference=DayOverDay(self.dataset.fields.timestamp),
+                        reference=reference,
                     ),
                     ComparisonOperator.gt,
                     6,
@@ -171,6 +172,59 @@ class FormattingRulesTests(TestCase):
                         "$cumsum(metric0)": {
                             "display": "10",
                             "raw": 10,
+                            "color": "#EEEEEE",
+                        }
+                    },
+                ],
+            },
+            result,
+        )
+
+    CumSum(mock_dataset.fields.votes)
+
+    def test_formatting_a_reference_with_an_operation(self):
+        reference = DayOverDay(self.dataset.fields.timestamp)
+        operation = CumSum(self.dataset.fields.metric0)
+        result = ReactTable(
+            operation,
+            formatting_rules=[
+                FormattingConditionRule(
+                    FormattingField(operation=operation, reference=reference),
+                    ComparisonOperator.gt,
+                    10,
+                    "#EEEEEE",
+                )
+            ],
+        ).transform(self.df, [], [reference])
+
+        self.assertEqual(
+            {
+                "columns": [
+                    {"Header": "CumSum(Metric0)", "accessor": "$cumsum(metric0)"},
+                    {"Header": "CumSum(Metric0) DoD", "accessor": "$cumsum(metric0)_dod"},
+                ],
+                "data": [
+                    {
+                        "$cumsum(metric0)": {"display": "1", "raw": 1},
+                        "$cumsum(metric0)_dod": {"display": "1", "raw": 1},
+                    },
+                    {
+                        "$cumsum(metric0)": {"display": "3", "raw": 3},
+                        "$cumsum(metric0)_dod": {"display": "6", "raw": 6},
+                    },
+                    {
+                        "$cumsum(metric0)": {"display": "6", "raw": 6},
+                        "$cumsum(metric0)_dod": {
+                            "display": "15",
+                            "raw": 15,
+                            "color": "#EEEEEE",
+                        }
+                    },
+                    {
+                        "$cumsum(metric0)": {"display": "10", "raw": 10},
+                        "$cumsum(metric0)_dod": {
+                            "display": "27",
+                            "raw": 27,
                             "color": "#EEEEEE",
                         }
                     },
