@@ -16,6 +16,7 @@ class Pandas(TransformableWidget):
         metric: Field,
         *metrics: Iterable[Field],
         pivot=(),
+        hide=(),
         transpose=False,
         sort=None,
         ascending=None,
@@ -23,6 +24,7 @@ class Pandas(TransformableWidget):
     ):
         super(Pandas, self).__init__(metric, *metrics)
         self.pivot = pivot
+        self.hide = hide
         self.transpose = transpose
         self.sort = sort
         self.ascending = ascending
@@ -31,6 +33,17 @@ class Pandas(TransformableWidget):
             if max_columns is not None
             else HARD_MAX_COLUMNS
         )
+
+    @staticmethod
+    def hide_data_frame_indexes(data_frame, dimensions_to_hide):
+        data_frame_indexes = (
+            [data_frame.index.name] if not isinstance(data_frame.index, pd.MultiIndex) else data_frame.index.names
+        )
+
+        for dimension in dimensions_to_hide:
+            dimesion_alias = alias_selector(dimension.alias)
+            if dimesion_alias in data_frame_indexes:
+                data_frame.reset_index(level=dimesion_alias, drop=True, inplace=True)
 
     def transform(
         self,
@@ -51,7 +64,11 @@ class Pandas(TransformableWidget):
         :param use_raw_values:
             Don't add prefix or postfix to values.
         """
-        result = data_frame.copy()
+        result_df = data_frame.copy()
+
+        dimension_aliases = [
+            alias_selector(dimension.alias) for dimension in dimensions
+        ]
 
         items = [
             item if reference is None else ReferenceItem(item, reference)
@@ -59,25 +76,32 @@ class Pandas(TransformableWidget):
             for reference in [None] + references
         ]
 
-        if isinstance(data_frame.index, pd.MultiIndex):
-            index_levels = [alias_selector(dimension.alias) for dimension in dimensions]
-            result = result.reorder_levels(index_levels)
+        if isinstance(result_df.index, pd.MultiIndex):
+            result_df = result_df.reorder_levels(dimension_aliases)
 
-        result = result[[alias_selector(item.alias) for item in items]]
+        result_df = result_df[[alias_selector(item.alias) for item in items]]
+        self.hide_data_frame_indexes(result_df, self.hide)
+
+        hide_dimension_aliases = {
+            dimension.alias for dimension in self.hide
+        }
 
         if dimensions:
-            result.index.names = [
-                dimension.label or dimension.alias for dimension in dimensions
+            result_df.index.names = [
+                dimension.label or dimension.alias
+                for dimension in dimensions
+                if dimension.alias not in hide_dimension_aliases
             ]
 
-        result.columns = pd.Index([item.label for item in items], name="Metrics")
+        result_df.columns = pd.Index([item.label for item in items], name="Metrics")
 
         pivot_dimensions = [
-            dimension.label or dimension.alias for dimension in self.pivot
+            dimension.label or dimension.alias
+            for dimension in self.pivot
+            if dimension.alias not in hide_dimension_aliases
         ]
-        pivot_df = self.pivot_data_frame(result, pivot_dimensions, self.transpose)
-
-        return self.add_formatting(dimensions, items, pivot_df, use_raw_values).fillna(
+        result_df = self.pivot_data_frame(result_df, pivot_dimensions, self.transpose)
+        return self.add_formatting(dimensions, items, result_df, use_raw_values).fillna(
             value=formats.BLANK_VALUE
         )
 

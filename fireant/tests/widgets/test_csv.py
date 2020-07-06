@@ -16,6 +16,7 @@ from fireant.tests.dataset.mocks import (
     dimx2_date_num_df,
     dimx2_date_str_df,
     dimx2_date_str_ref_df,
+    dimx2_str_str_df,
     mock_dataset,
 )
 from fireant.tests.widgets.test_pandas import _format_float
@@ -108,6 +109,19 @@ class CSVWidgetTests(TestCase):
         expected = dimx2_date_str_df.copy()[[f('wins')]]
         expected.index.names = ['Timestamp', 'Party']
         expected.columns = ['Wins']
+
+        self.assertEqual(expected.to_csv(**csv_options), result)
+
+    def test_hidden_dimx2_date_str(self):
+        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
+        result = CSV(mock_dataset.fields.wins, hide=[mock_dataset.fields.political_party]) \
+            .transform(dimx2_date_str_df, dimensions, [])
+
+        expected = dimx2_date_str_df.copy()[[f('wins')]]
+        expected.reset_index('$political_party', inplace=True, drop=True)
+        expected.index.names = ['Timestamp']
+        expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
 
         self.assertEqual(expected.to_csv(**csv_options), result)
 

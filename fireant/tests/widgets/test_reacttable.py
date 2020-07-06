@@ -879,6 +879,46 @@ class ReactTableTransformerTests(TestCase):
             result,
         )
 
+    def test_dimx2_hide_dim1(self):
+        dimensions = [
+            day(mock_dataset.fields.timestamp),
+            mock_dataset.fields.political_party,
+        ]
+        result = ReactTable(
+            mock_dataset.fields.wins, hide=[mock_dataset.fields.political_party]
+        ).transform(dimx2_date_str_df, dimensions, [])
+
+        self.assertIn("data", result)
+        result["data"] = result["data"][
+            :2
+        ]  # shorten the results to make the test easier to read
+
+        self.assertEqual(
+            {
+                'columns': [
+                    {'Header': 'Timestamp', 'accessor': '$timestamp'},
+                    {'Header': 'Wins', 'accessor': '$wins'},
+                ],
+                'data': [
+                    {
+                         '$timestamp': {
+                             'display': '1996-01-01',
+                             'raw': '1996-01-01T00:00:00'
+                         },
+                         '$wins': {'display': '2', 'raw': 2}
+                     },
+                     {
+                         '$timestamp': {
+                             'display': '1996-01-01',
+                             'raw': '1996-01-01T00:00:00'
+                         },
+                         '$wins': {'display': '0', 'raw': 0}
+                     }
+                ]
+            },
+            result,
+        )
+
     def test_dimx2_pivot_dim1(self):
         dimensions = [
             day(mock_dataset.fields.timestamp),
@@ -2019,6 +2059,49 @@ class ReactTableHyperlinkTransformerTests(TestCase):
                         "$political_party": {
                             "raw": "Democrat",
                             "hyperlink": "http://example.com/Democrat",
+                        },
+                        "$wins": {"display": "4", "raw": 4},
+                    },
+                ],
+            },
+            result,
+        )
+
+    def test_dim_with_hyperlink_depending_on_another_dim_included_if_other_dim_is_selected_even_if_hidden(
+        self,
+    ):
+        result = ReactTable(mock_dataset.fields.wins, hide=[mock_dataset.fields.political_party]).transform(
+            dimx2_str_str_df,
+            [
+                mock_dataset.fields.political_party,
+                mock_dataset.fields["candidate-name"],
+            ],
+            [],
+        )
+
+        self.assertIn("data", result)
+        result["data"] = result["data"][
+            :2
+        ]  # shorten the results to make the test easier to read
+
+        self.assertEqual(
+            {
+                "columns": [
+                    {"Header": "Candidate Name", "accessor": "$candidate-name"},
+                    {"Header": "Wins", "accessor": "$wins"},
+                ],
+                "data": [
+                    {
+                        "$candidate-name": {
+                            "hyperlink": "http://example.com/Democrat/Al Gore",
+                            "raw": "Al Gore",
+                        },
+                        "$wins": {"display": "0", "raw": 0},
+                    },
+                    {
+                        "$candidate-name": {
+                            "hyperlink": "http://example.com/Democrat/Barrack Obama",
+                            "raw": "Barrack Obama",
                         },
                         "$wins": {"display": "4", "raw": 4},
                     },

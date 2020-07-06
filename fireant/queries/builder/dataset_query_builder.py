@@ -1,11 +1,19 @@
-from typing import Dict, Iterable
+from typing import (
+    Dict,
+    Iterable,
+)
 
-from fireant.dataset.totals import scrub_totals_from_share_results
-from fireant.reference_helpers import reference_alias, apply_reference_filters
-from fireant.utils import alias_selector, immutable
 from fireant.dataset.fields import DataType
 from fireant.dataset.intervals import DatetimeInterval
-
+from fireant.dataset.totals import scrub_totals_from_share_results
+from fireant.reference_helpers import (
+    apply_reference_filters,
+    reference_alias,
+)
+from fireant.utils import (
+    alias_selector,
+    immutable,
+)
 from .query_builder import (
     QueryBuilder,
     QueryException,
@@ -17,15 +25,15 @@ from .. import special_cases
 from ..execution import fetch_data
 from ..finders import (
     find_and_group_references_for_dimensions,
+    find_field_in_modified_field,
     find_metrics_for_widgets,
     find_operations_for_widgets,
     find_share_dimensions,
-    find_field_in_modified_field,
 )
 from ..pagination import paginate
 from ..sql_transformer import (
-    make_slicer_query_with_totals_and_references,
     make_slicer_query,
+    make_slicer_query_with_totals_and_references,
 )
 
 
@@ -83,15 +91,17 @@ class DataSetQueryBuilder(
         # First run validation for the query on all widgets
         self._validate()
 
+        dimensions = self.dimensions
+
         metrics = find_metrics_for_widgets(self._widgets)
         operations = find_operations_for_widgets(self._widgets)
-        share_dimensions = find_share_dimensions(self.dimensions, operations)
+        share_dimensions = find_share_dimensions(dimensions, operations)
 
         return make_slicer_query_with_totals_and_references(
             self.dataset.database,
             self.table,
             self.dataset.joins,
-            self.dimensions,
+            dimensions,
             metrics,
             operations,
             self.filters,
@@ -112,14 +122,16 @@ class DataSetQueryBuilder(
         queries = add_hints(self.sql, hint)
 
         operations = find_operations_for_widgets(self._widgets)
-        share_dimensions = find_share_dimensions(self.dimensions, operations)
+        dimensions = self.dimensions
+
+        share_dimensions = find_share_dimensions(dimensions, operations)
 
         annotation_frame = None
-        if self.dimensions and self.dataset.annotation:
+        if dimensions and self.dataset.annotation:
             alignment_dimension_alias = (
                 self.dataset.annotation.dataset_alignment_field_alias
             )
-            first_dimension = find_field_in_modified_field(self.dimensions[0])
+            first_dimension = find_field_in_modified_field(dimensions[0])
 
             if first_dimension.alias == alignment_dimension_alias:
                 annotation_frame = self.fetch_annotation()
@@ -127,7 +139,7 @@ class DataSetQueryBuilder(
         data_frame = fetch_data(
             self.dataset.database,
             queries,
-            self.dimensions,
+            dimensions,
             share_dimensions,
             self.reference_groups,
         )
@@ -142,7 +154,7 @@ class DataSetQueryBuilder(
                 df_key = alias_selector(reference_alias(operation, reference))
                 data_frame[df_key] = operation.apply(data_frame, reference)
 
-        data_frame = scrub_totals_from_share_results(data_frame, self.dimensions)
+        data_frame = scrub_totals_from_share_results(data_frame, dimensions)
         data_frame = special_cases.apply_operations_to_data_frame(
             operations, data_frame
         )
@@ -163,7 +175,7 @@ class DataSetQueryBuilder(
         return [
             widget.transform(
                 data_frame,
-                self.dimensions,
+                dimensions,
                 self._references,
                 annotation_frame,
             )
