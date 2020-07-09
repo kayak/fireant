@@ -28,6 +28,7 @@ from fireant.reference_helpers import reference_alias
 from fireant.utils import (
     alias_for_alias_selector,
     alias_selector,
+    getdeepattr,
     setdeepattr,
     wrap_list,
 )
@@ -60,23 +61,23 @@ class FormattingField:
 
 
 class FormattingConditionRule:
-    def __init__(self, field, operator, value, color):
+    def __init__(self, field, operator, value, color, covers_row=False):
         self.field = field
         self.operator = operator
         self.value = value
         self.color = color
+        self.covers_row = covers_row
 
-    def apply(self, value):
-        return self.color if ComparisonOperator.eval(value, self.operator, self.value) else None
+    def applies(self, value):
+        return ComparisonOperator.eval(value, self.operator, self.value)
 
 
-def apply_formatting_rules(rules, value):
-    color = None
+def find_rule_to_apply(rules, value):
     for rule in rules:
-        if color is None:
-            color = rule.apply(value)
+        if rule.applies(value):
+            return rule
 
-    return color
+    return None
 
 
 def map_index_level(index, level, func):
@@ -380,7 +381,7 @@ class ReactTable(Pandas):
         return _make_columns(data_frame.columns.to_frame(), dropped_metric_level_name)
 
     @staticmethod
-    def transform_row_index(index_values, field_map, dimension_hyperlink_templates, hide_dimension_aliases):
+    def transform_row_index(index_values, field_map, dimension_hyperlink_templates, hide_dimension_aliases, row_color):
         # Add the index to the row
         row = {}
         for key, value in index_values.items():
@@ -394,6 +395,8 @@ class ReactTable(Pandas):
             display = _display_value(value, field)
             if display is not None:
                 data["display"] = display
+            if row_color is not None:
+                data["color"] = row_color
 
             # If the dimension has a hyperlink template, then apply the template by formatting it with the dimension
             # values for this row. The values contained in `index_values` will always contain all of the required values
@@ -414,12 +417,26 @@ class ReactTable(Pandas):
 
         return row
 
-    def transform_row_values(self, series, fields, is_transposed):
-        # Add the values to the row
+    @staticmethod
+    def _get_row_value_accessor(series, fields, key):
         index_names = series.index.names or []
 
+        accessor_fields = [
+            fields[field_alias]
+            for field_alias in index_names
+            if field_alias is not None
+        ]
+        accessor = [
+            safe_value(value) for value, field in zip(key, accessor_fields)
+        ] or key
+
+        return accessor
+
+    def transform_row_values(self, series, fields, is_transposed, is_pivoted):
         row = {}
-        for key, value in series.iteritems():
+        row_color = None
+
+        for key, value in series.items():
             key = wrap_list(key)
 
             # Get the field for the metric
@@ -428,30 +445,34 @@ class ReactTable(Pandas):
             data = {
                 RAW_VALUE: raw_value(value, field),
             }
-            color = apply_formatting_rules(self.formatting_rules_map[metric_alias], value)
-            if color is not None:
-                data["color"] = color
+            if not row_color:
+                # No color for this field yet
+                rule = find_rule_to_apply(self.formatting_rules_map[metric_alias], value)
+                if rule is not None:
+                    data["color"] = rule.color
+                    if not is_transposed and not is_pivoted and rule.covers_row:
+                        # No transposing or pivoting going on so set as row color if it's specified for the rule
+                        row_color = rule.color
 
             display = _display_value(value, field, date_as=return_none)
             if display is not None:
                 data["display"] = display
 
-            accessor_fields = [
-                fields[field_alias]
-                for field_alias in index_names
-                if field_alias is not None
-            ]
-
-            accessor = [
-                safe_value(value) for value, field in zip(key, accessor_fields)
-            ] or key
-
+            accessor = self._get_row_value_accessor(series, fields, key)
             setdeepattr(row, accessor, data)
 
-        return row
+        # Assign the row color to fields that don't have a color yet
+        if row_color:
+            for key in series.keys():
+                accessor = self._get_row_value_accessor(series, fields, wrap_list(key))
+                data = getdeepattr(row, accessor)
+                if "color" not in data:
+                    data["color"] = row_color
+
+        return row, row_color
 
     def transform_data(
-        self, data_frame, field_map, hide_dimension_aliases, dimension_hyperlink_templates, is_transposed,
+        self, data_frame, field_map, hide_dimensions, dimension_hyperlink_templates, is_transposed, is_pivoted,
     ):
         """
         Builds a list of dicts containing the data for ReactTable. This aligns with the accessors set by
@@ -461,12 +482,14 @@ class ReactTable(Pandas):
             The result set data frame.
         :param field_map:
             A mapping to all the fields in the dataset used for this query.
-        :param hide_dimension_aliases:
+        :param hide_dimensions:
             A set with hide dimension aliases.
         :param dimension_hyperlink_templates:
             A mapping to fields and its hyperlink dimension, if any.
         :param is_transposed:
             Whether the table is transposed or not.
+        :param is_pivoted:
+            Whether the table is pivoted or not.
         """
         index_names = data_frame.index.names
 
@@ -499,11 +522,10 @@ class ReactTable(Pandas):
             )
             index_display_values = OrderedDict(zip(index_names, index_values))
 
-            row_index = ReactTable.transform_row_index(
-                index_display_values, field_map, dimension_hyperlink_templates, hide_dimension_aliases,
+            row_values, row_color = self.transform_row_values(series, field_map, is_transposed, is_pivoted)
+            row_index = self.transform_row_index(
+                index_display_values, field_map, dimension_hyperlink_templates, hide_dimensions, row_color
             )
-            row_values = self.transform_row_values(series, field_map, is_transposed)
-
             rows.append(
                 {
                     **row_index,
@@ -568,31 +590,30 @@ class ReactTable(Pandas):
                 METRICS_DIMENSION_ALIAS, None, data_type=DataType.text, label=""
             ),
         }
-        # has at least 1 dim and all are pivoted
-        all_dimensions_pivoted = len(dimensions) and (len(dimensions) == len(self.pivot))
         metric_aliases = list(metric_map.keys())
 
-        hide_dimension_aliases = {
+        hide_dimensions = {
             alias_selector(dimension.alias) for dimension in self.hide
         }
 
-        pivot_dimension_aliases = [
+        pivot_dimensions = [
             alias_selector(dimension.alias)
             for dimension in self.pivot
-            if alias_selector(dimension.alias) not in hide_dimension_aliases
+            if alias_selector(dimension.alias) not in hide_dimensions
         ]
 
         result_df = self.format_data_frame(result_df[metric_aliases])
-        result_df = self.pivot_data_frame(result_df, pivot_dimension_aliases, self.transpose)
-        dimension_columns = self.transform_index_column_headers(result_df, field_map, hide_dimension_aliases)
+        result_df, is_pivoted, is_transposed = self.pivot_data_frame(result_df, pivot_dimensions, self.transpose)
+        dimension_columns = self.transform_index_column_headers(result_df, field_map, hide_dimensions)
         metric_columns = self.transform_data_column_headers(result_df, field_map)
 
         data = self.transform_data(
             result_df,
             field_map,
-            is_transposed=self.transpose ^ all_dimensions_pivoted,
-            hide_dimension_aliases=hide_dimension_aliases,
+            hide_dimensions=hide_dimensions,
             dimension_hyperlink_templates=self.map_hyperlink_templates(result_df, dimensions),
+            is_transposed=is_transposed,
+            is_pivoted=is_pivoted,
         )
 
         return {"columns": dimension_columns + metric_columns, "data": data}
