@@ -143,11 +143,7 @@ def getdeepattr(d, keys, default_value=None):
     d_level = d
 
     for key in keys:
-        if (
-            isinstance(d_level, dict)
-            and key not in d_level
-            or not hasattr(d_level, key)
-        ):
+        if key not in d_level:
             return default_value
 
         d_level = d_level[key]

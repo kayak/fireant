@@ -82,7 +82,7 @@ class Pandas(TransformableWidget):
         result_df = result_df[[alias_selector(item.alias) for item in items]]
         self.hide_data_frame_indexes(result_df, self.hide)
 
-        hide_dimension_aliases = {
+        hide_dimensions = {
             dimension.alias for dimension in self.hide
         }
 
@@ -90,7 +90,7 @@ class Pandas(TransformableWidget):
             result_df.index.names = [
                 dimension.label or dimension.alias
                 for dimension in dimensions
-                if dimension.alias not in hide_dimension_aliases
+                if dimension.alias not in hide_dimensions
             ]
 
         result_df.columns = pd.Index([item.label for item in items], name="Metrics")
@@ -98,14 +98,25 @@ class Pandas(TransformableWidget):
         pivot_dimensions = [
             dimension.label or dimension.alias
             for dimension in self.pivot
-            if dimension.alias not in hide_dimension_aliases
+            if dimension.alias not in hide_dimensions
         ]
-        result_df = self.pivot_data_frame(result_df, pivot_dimensions, self.transpose)
+        result_df, _, _ = self.pivot_data_frame(result_df, pivot_dimensions, self.transpose)
         return self.add_formatting(dimensions, items, result_df, use_raw_values).fillna(
             value=formats.BLANK_VALUE
         )
 
-    def pivot_data_frame(self, data_frame, pivot=(), transpose=False):
+    @staticmethod
+    def _should_data_frame_be_transformed(data_frame, pivot_dimensions, transpose):
+        if not pivot_dimensions and not transpose:
+            return False
+
+        if transpose and len(pivot_dimensions) == len(data_frame.index.names):
+            # Pivot and transpose cancel each other out
+            return False
+
+        return True
+
+    def pivot_data_frame(self, data_frame, pivot_dimensions, transpose):
         """
         Pivot and transpose the data frame. Dimensions including in the `pivot` arg will be unshifted to columns. If
         `transpose` is True the data frame will be transposed. If there is only index level in the data frame (ie. one
@@ -115,29 +126,30 @@ class Pandas(TransformableWidget):
 
         :param data_frame:
             The result set data frame
-        :param pivot:
+        :param pivot_dimensions:
             A list of index aliases for `data_frame` of levels to shift
         :param transpose:
             A boolean true or false whether to transpose the data frame.
         :return:
-            The shifted/transposed data frame
+            Tuple(The shifted/transposed data frame, is_pivoted, is_transposed)
         """
-        not_transforming_df = not (pivot or transpose)
-        pivot_and_transpose_cancel_out = transpose and len(pivot) == len(
-            data_frame.index.names
-        )
-        if not_transforming_df or pivot_and_transpose_cancel_out:
-            return self.sort_data_frame(data_frame)
+        is_pivoted = False
+        is_transposed = False
+
+        if not self._should_data_frame_be_transformed(data_frame, pivot_dimensions, transpose):
+            return self.sort_data_frame(data_frame), is_pivoted, is_transposed
 
         # NOTE: Don't pivot a single dimension data frame. This turns the data frame into a series and pivots the
         # metrics anyway. Instead, transpose the data frame.
-        should_transpose_instead_of_pivot = len(pivot) == len(data_frame.index.names)
+        should_transpose_instead_of_pivot = len(pivot_dimensions) == len(data_frame.index.names)
 
-        if pivot and not should_transpose_instead_of_pivot:
-            data_frame = data_frame.unstack(level=pivot)
+        if pivot_dimensions and not should_transpose_instead_of_pivot:
+            data_frame = data_frame.unstack(level=pivot_dimensions)
+            is_pivoted = True
 
         if transpose or should_transpose_instead_of_pivot:
             data_frame = data_frame.transpose()
+            is_transposed = True
 
         # If there are more than one column levels and the last level is a single metric, drop the level
         if isinstance(data_frame.columns, pd.MultiIndex) and 1 == len(
@@ -150,7 +162,7 @@ class Pandas(TransformableWidget):
                 0
             )  # drop the metrics level
 
-        return self.sort_data_frame(data_frame)
+        return self.sort_data_frame(data_frame), is_pivoted, is_transposed
 
     def sort_data_frame(self, data_frame):
         if not self.sort or len(data_frame) == 1:

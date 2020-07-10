@@ -44,7 +44,7 @@ class FormattingRulesTests(TestCase):
                     "timestamp",
                     label="Timestamp",
                     definition=t0.timestamp,
-                    data_type=DataType.date,
+                    data_type=DataType.number,
                 ),
                 Field(
                     "metric0",
@@ -57,12 +57,13 @@ class FormattingRulesTests(TestCase):
 
         cls.df = pd.DataFrame.from_dict(
             {
+                "$timestamp": [100, 200, 300, 400],
                 "$metric0": [1, 2, 3, 4],
                 "$metric0_dod": [1, 5, 9, 12],
                 "$cumsum(metric0)": [1, 3, 6, 10],
                 "$cumsum(metric0)_dod": [1, 6, 15, 27],
             }
-        )
+        ).set_index('$timestamp')
 
     def test_single_formatting_condition_rule(self):
         result = ReactTable(
@@ -85,6 +86,83 @@ class FormattingRulesTests(TestCase):
                     {"$metric0": {"display": "2", "raw": 2}},
                     {"$metric0": {"display": "3", "raw": 3, "color": "#EEEEEE"}},
                     {"$metric0": {"display": "4", "raw": 4, "color": "#EEEEEE"}},
+                ],
+            },
+            result,
+        )
+
+    def test_rule_covers_row(self):
+        result = ReactTable(
+            self.dataset.fields.metric0,
+            formatting_rules=[
+                FormattingConditionRule(
+                    FormattingField(metric=self.dataset.fields.metric0),
+                    ComparisonOperator.gt,
+                    2,
+                    "#EEEEEE",
+                    covers_row=True,
+                )
+            ],
+        ).transform(self.df, [self.dataset.fields.timestamp], [])
+
+        self.assertEqual(
+            {
+                "columns": [
+                    {"Header": "Timestamp", "accessor": "$timestamp"},
+                    {"Header": "Metric0", "accessor": "$metric0"},
+                ],
+                "data": [
+                    {
+                        "$metric0": {"display": "1", "raw": 1},
+                        "$timestamp": {"display": "100", "raw": 100},
+                    },
+                    {
+                        "$metric0": {"display": "2", "raw": 2},
+                        "$timestamp": {"display": "200", "raw": 200},
+                    },
+                    {
+                        "$metric0": {"display": "3", "raw": 3, "color": "#EEEEEE"},
+                        "$timestamp": {"display": "300", "raw": 300, "color": "#EEEEEE"},
+                    },
+                    {
+                        "$metric0": {"display": "4", "raw": 4, "color": "#EEEEEE"},
+                        "$timestamp": {"display": "400", "raw": 400, "color": "#EEEEEE"},
+                    },
+                ],
+            },
+            result,
+        )
+
+    def test_rule_covers_row_does_not_apply_when_pivoted(self):
+        result = ReactTable(
+            self.dataset.fields.metric0,
+            formatting_rules=[
+                FormattingConditionRule(
+                    FormattingField(metric=self.dataset.fields.metric0),
+                    ComparisonOperator.gt,
+                    2,
+                    "#EEEEEE",
+                    covers_row=True,
+                )
+            ],
+            pivot=[self.dataset.fields.timestamp],
+        ).transform(self.df, [self.dataset.fields.timestamp], [])
+
+        self.assertEqual(
+            {
+                "columns": [
+                    {'Header': '', 'accessor': '$metrics'},
+                    {'Header': '100', 'accessor': '100'},
+                    {'Header': '200', 'accessor': '200'},
+                    {'Header': '300', 'accessor': '300'},
+                    {'Header': '400', 'accessor': '400'}
+                ],
+                "data": [
+                    {'$metrics': {'raw': 'Metric0'},
+                     '100': {'display': '1', 'raw': 1},
+                     '200': {'display': '2', 'raw': 2},
+                     '300': {'color': '#EEEEEE', 'display': '3', 'raw': 3},
+                     '400': {'color': '#EEEEEE', 'display': '4', 'raw': 4}}
                 ],
             },
             result,
@@ -180,8 +258,6 @@ class FormattingRulesTests(TestCase):
             result,
         )
 
-    CumSum(mock_dataset.fields.votes)
-
     def test_formatting_a_reference_with_an_operation(self):
         reference = DayOverDay(self.dataset.fields.timestamp)
         operation = CumSum(self.dataset.fields.metric0)
@@ -232,8 +308,6 @@ class FormattingRulesTests(TestCase):
             },
             result,
         )
-
-    CumSum(mock_dataset.fields.votes)
 
     def test_multiple_formatting_condition_rule(self):
         result = ReactTable(
@@ -551,9 +625,7 @@ class ReactTableTransformerTests(TestCase):
         )
 
         self.assertIn("data", result)
-        result["data"] = result["data"][
-            :2
-        ]  # shorten the results to make the test easier to read
+        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
@@ -600,9 +672,7 @@ class ReactTableTransformerTests(TestCase):
         )
 
         self.assertIn("data", result)
-        result["data"] = result["data"][
-            -3:
-        ]  # shorten the results to make the test easier to read
+        result["data"] = result["data"][-3:]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
@@ -730,9 +800,7 @@ class ReactTableTransformerTests(TestCase):
         )
 
         self.assertIn("data", result)
-        result["data"] = result["data"][
-            :2
-        ]  # shorten the results to make the test easier to read
+        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
@@ -783,9 +851,7 @@ class ReactTableTransformerTests(TestCase):
         ).transform(dimx2_date_str_ref_df, dimensions, references)
 
         self.assertIn("data", result)
-        result["data"] = result["data"][
-            :2
-        ]  # shorten the results to make the test easier to read
+        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
@@ -889,9 +955,7 @@ class ReactTableTransformerTests(TestCase):
         ).transform(dimx2_date_str_df, dimensions, [])
 
         self.assertIn("data", result)
-        result["data"] = result["data"][
-            :2
-        ]  # shorten the results to make the test easier to read
+        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
@@ -901,19 +965,19 @@ class ReactTableTransformerTests(TestCase):
                 ],
                 'data': [
                     {
-                         '$timestamp': {
-                             'display': '1996-01-01',
-                             'raw': '1996-01-01T00:00:00'
-                         },
-                         '$wins': {'display': '2', 'raw': 2}
-                     },
-                     {
-                         '$timestamp': {
-                             'display': '1996-01-01',
-                             'raw': '1996-01-01T00:00:00'
-                         },
-                         '$wins': {'display': '0', 'raw': 0}
-                     }
+                        '$timestamp': {
+                            'display': '1996-01-01',
+                            'raw': '1996-01-01T00:00:00'
+                        },
+                        '$wins': {'display': '2', 'raw': 2}
+                    },
+                    {
+                        '$timestamp': {
+                            'display': '1996-01-01',
+                            'raw': '1996-01-01T00:00:00'
+                        },
+                        '$wins': {'display': '0', 'raw': 0}
+                    }
                 ]
             },
             result,
@@ -929,9 +993,7 @@ class ReactTableTransformerTests(TestCase):
         ).transform(dimx2_date_str_df, dimensions, [])
 
         self.assertIn("data", result)
-        result["data"] = result["data"][
-            :2
-        ]  # shorten the results to make the test easier to read
+        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
@@ -988,9 +1050,7 @@ class ReactTableTransformerTests(TestCase):
         ).transform(dimx2_date_str_df, dimensions, [])
 
         self.assertIn("data", result)
-        result["data"] = result["data"][
-            :2
-        ]  # shorten the results to make the test easier to read
+        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
@@ -1047,9 +1107,7 @@ class ReactTableTransformerTests(TestCase):
         ).transform(dimx2_date_str_df, dimensions, [])
 
         self.assertIn("data", result)
-        result["data"] = result["data"][
-            :2
-        ]  # shorten the results to make the test easier to read
+        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
@@ -1099,9 +1157,7 @@ class ReactTableTransformerTests(TestCase):
         ).transform(dimx2_date_str_df, dimensions, [])
 
         self.assertIn("data", result)
-        result["data"] = result["data"][
-            :2
-        ]  # shorten the results to make the test easier to read
+        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
@@ -1175,9 +1231,7 @@ class ReactTableTransformerTests(TestCase):
         ).transform(dimx2_date_str_ref_df, dimensions, references)
 
         self.assertIn("data", result)
-        result["data"] = result["data"][
-            :2
-        ]  # shorten the results to make the test easier to read
+        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
@@ -1662,9 +1716,7 @@ class ReactTableTransformerTests(TestCase):
         ).transform(dimx2_date_str_totalsx2_df, dimensions, [])
 
         self.assertIn("data", result)
-        result["data"] = result["data"][
-            :4
-        ]  # shorten the results to make the test easier to read
+        result["data"] = result["data"][:4]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
@@ -1786,9 +1838,7 @@ class ReactTableTransformerTests(TestCase):
         ).transform(dimx2_date_str_totalsx2_df, dimensions, [])
 
         self.assertIn("data", result)
-        result["data"] = result["data"][
-            :2
-        ]  # shorten the results to make the test easier to read
+        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
@@ -1854,9 +1904,7 @@ class ReactTableTransformerTests(TestCase):
         ).transform(dimx2_date_str_totalsx2_df, dimensions, [])
 
         self.assertIn("data", result)
-        result["data"] = result["data"][
-            :2
-        ]  # shorten the results to make the test easier to read
+        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
@@ -1977,17 +2025,13 @@ class ReactTableHyperlinkTransformerTests(TestCase):
             result,
         )
 
-    def test_dim_with_hyperlink_depending_on_another_dim_not_included_if_other_dim_is_not_selected(
-        self,
-    ):
+    def test_dim_with_hyperlink_depending_on_another_dim_not_included_if_other_dim_is_not_selected(self):
         result = ReactTable(mock_dataset.fields.wins).transform(
             dimx1_str_df, [mock_dataset.fields.political_party], []
         )
 
         self.assertIn("data", result)
-        result["data"] = result["data"][
-            :2
-        ]  # shorten the results to make the test easier to read
+        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
@@ -2015,9 +2059,7 @@ class ReactTableHyperlinkTransformerTests(TestCase):
             result,
         )
 
-    def test_dim_with_hyperlink_depending_on_another_dim_included_if_other_dim_is_selected(
-        self,
-    ):
+    def test_dim_with_hyperlink_depending_on_another_dim_included_if_other_dim_is_selected(self):
         result = ReactTable(mock_dataset.fields.wins).transform(
             dimx2_str_str_df,
             [
@@ -2028,9 +2070,7 @@ class ReactTableHyperlinkTransformerTests(TestCase):
         )
 
         self.assertIn("data", result)
-        result["data"] = result["data"][
-            :2
-        ]  # shorten the results to make the test easier to read
+        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
@@ -2067,9 +2107,7 @@ class ReactTableHyperlinkTransformerTests(TestCase):
             result,
         )
 
-    def test_dim_with_hyperlink_depending_on_another_dim_included_if_other_dim_is_selected_even_if_hidden(
-        self,
-    ):
+    def test_dim_with_hyperlink_depending_on_another_dim_included_if_other_dim_is_selected_even_if_hidden(self):
         result = ReactTable(mock_dataset.fields.wins, hide=[mock_dataset.fields.political_party]).transform(
             dimx2_str_str_df,
             [
@@ -2080,9 +2118,7 @@ class ReactTableHyperlinkTransformerTests(TestCase):
         )
 
         self.assertIn("data", result)
-        result["data"] = result["data"][
-            :2
-        ]  # shorten the results to make the test easier to read
+        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {

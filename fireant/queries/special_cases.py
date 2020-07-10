@@ -54,7 +54,6 @@ def adjust_daterange_filter_for_rolling_window(dimensions, operations, filters):
 
     for filter_ in filters_on_dim0:
         # Monkey patch the update start date on the date filter
-        print("stop")
         args = (
             {dim0.interval_key + "s": max_rolling_period}
             if isinstance(dim0, DatetimeInterval) and "quarter" != dim0.interval_key
