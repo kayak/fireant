@@ -1,7 +1,11 @@
 from unittest import TestCase
 
 import fireant as f
-from fireant.tests.dataset.mocks import Rollup, mock_dataset_blender
+from fireant.tests.dataset.mocks import (
+    Rollup,
+    mock_dataset_blender,
+    mock_staff_dataset,
+)
 from pypika import Order
 
 
@@ -189,6 +193,318 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             str(queries[0]),
         )
 
+    def test_apply_set_filter_for_metric_in_primary_dataset_query(self):
+        queries = (
+            mock_dataset_blender.query()
+            .widget(
+                f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"])
+            )
+            .dimension(f.day(mock_dataset_blender.fields.timestamp))
+            .filter(f.ResultSet(mock_dataset_blender.fields["votes"].gt(10)))
+        ).sql
+
+        self.assertEqual(len(queries), 1)
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq0"."$set(SUM(votes)>10)" "$set(SUM(votes)>10)",'
+            '"sq1"."$candidate-spend"/"sq0"."$wins" "$candidate-spend-per-wins" '
+            "FROM ("
+            "SELECT "
+            'TRUNC("timestamp",\'DD\') "$timestamp",'
+            'CASE WHEN SUM("votes")>10 THEN \'set(SUM(votes)>10)\' ELSE \'complement(SUM(votes)>10)\' END "$set(SUM(votes)>10)",'
+            'SUM("is_winner") "$wins" '
+            'FROM "politics"."politician" '
+            'GROUP BY "$timestamp"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            'TRUNC("timestamp",\'DD\') "$timestamp",'
+            'SUM("candidate_spend") "$candidate-spend" '
+            'FROM "politics"."politician_spend" '
+            'GROUP BY "$timestamp"'
+            ') "sq1" '
+            "ON "
+            '"sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$timestamp"',
+            str(queries[0]),
+        )
+
+    def test_apply_set_filter_for_metric_in_secondary_dataset_query(self):
+        queries = (
+            mock_dataset_blender.query()
+            .widget(
+                f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"])
+            )
+            .dimension(f.day(mock_dataset_blender.fields.timestamp))
+            .filter(f.ResultSet(mock_dataset_blender.fields["candidate-spend"].gt(500)))
+        ).sql
+
+        self.assertEqual(len(queries), 1)
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq1"."$set(SUM(candidate_spend)>500)" "$set(SUM(candidate_spend)>500)",'
+            '"sq1"."$candidate-spend"/"sq0"."$wins" "$candidate-spend-per-wins" '
+            "FROM ("
+            "SELECT "
+            'TRUNC("timestamp",\'DD\') "$timestamp",'
+            'SUM("is_winner") "$wins" '
+            'FROM "politics"."politician" '
+            'GROUP BY "$timestamp"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            'TRUNC("timestamp",\'DD\') "$timestamp",'
+            'CASE WHEN SUM("candidate_spend")>500 THEN \'set(SUM(candidate_spend)>500)\' ELSE \'complement(SUM(candidate_spend)>500)\' END "$set(SUM(candidate_spend)>500)",'
+            'SUM("candidate_spend") "$candidate-spend" '
+            'FROM "politics"."politician_spend" '
+            'GROUP BY "$timestamp"'
+            ') "sq1" '
+            "ON "
+            '"sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$timestamp"',
+            str(queries[0]),
+        )
+
+    def test_apply_set_filter_for_dimension_in_tertiary_dataset_query(self):
+        blender_dataset_with_staff = mock_dataset_blender.blend(mock_staff_dataset).on_dimensions()
+
+        queries = (
+            blender_dataset_with_staff.query()
+            .widget(
+                f.ReactTable(blender_dataset_with_staff.fields.num_staff)
+            )
+            .dimension(blender_dataset_with_staff.fields['political_party'])
+            .filter(f.ResultSet(blender_dataset_with_staff.fields["candidate-id"] == 12))
+        ).sql
+
+        self.assertEqual(len(queries), 1)
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$political_party" "$political_party",'
+            '"sq0"."$candidate-id" "$candidate-id",'
+            '"sq2"."$num_staff" "$num_staff" '
+            "FROM ("
+            "SELECT "
+            '"political_party" "$political_party",'
+            'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' ELSE \'complement(candidate_id=12)\' END "$candidate-id" '
+            'FROM "politics"."politician" '
+            'GROUP BY "$political_party","$candidate-id"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' ELSE \'complement(candidate_id=12)\' END "$candidate-id" '
+            'FROM "politics"."politician_spend" '
+            'GROUP BY "$candidate-id"'
+            ') "sq1" '
+            "ON "
+            '"sq0"."$candidate-id"="sq1"."$candidate-id" '
+            "LEFT JOIN ("
+            "SELECT "
+            'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' ELSE \'complement(candidate_id=12)\' END "$candidate-id",'
+            'COUNT("staff_id") "$num_staff" '
+            'FROM "politics"."politician_staff" '
+            'GROUP BY "$candidate-id"'
+            ') "sq2" '
+            "ON "
+            '"sq0"."$candidate-id"="sq2"."$candidate-id" '
+            'ORDER BY "$political_party","$candidate-id"',
+            str(queries[0]),
+        )
+
+    def test_apply_set_filter_for_dimension_that_is_also_being_fetched_in_tertiary_dataset_query(self):
+        blender_dataset_with_staff = mock_dataset_blender.blend(mock_staff_dataset).on_dimensions()
+
+        queries = (
+            blender_dataset_with_staff.query()
+            .widget(
+                f.ReactTable(blender_dataset_with_staff.fields.num_staff)
+            )
+            .dimension(blender_dataset_with_staff.fields['candidate-id'])
+            .filter(f.ResultSet(blender_dataset_with_staff.fields["candidate-id"] == 12))
+        ).sql
+
+        self.assertEqual(len(queries), 1)
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$candidate-id" "$candidate-id",'
+            '"sq2"."$num_staff" "$num_staff" '
+            "FROM ("
+            "SELECT "
+            'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' ELSE \'complement(candidate_id=12)\' END "$candidate-id" '
+            'FROM "politics"."politician" '
+            'GROUP BY "$candidate-id"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' ELSE \'complement(candidate_id=12)\' END "$candidate-id" '
+            'FROM "politics"."politician_spend" '
+            'GROUP BY "$candidate-id"'
+            ') "sq1" '
+            "ON "
+            '"sq0"."$candidate-id"="sq1"."$candidate-id" '
+            "LEFT JOIN ("
+            "SELECT "
+            'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' ELSE \'complement(candidate_id=12)\' END "$candidate-id",'
+            'COUNT("staff_id") "$num_staff" '
+            'FROM "politics"."politician_staff" '
+            'GROUP BY "$candidate-id"'
+            ') "sq2" '
+            "ON "
+            '"sq0"."$candidate-id"="sq2"."$candidate-id" '
+            'ORDER BY "$candidate-id"',
+            str(queries[0]),
+        )
+
+    def test_apply_set_filter_for_metric_in_blender_dataset_query(self):
+        queries = (
+            mock_dataset_blender.query()
+            .widget(
+                f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"])
+            )
+            .dimension(f.day(mock_dataset_blender.fields.timestamp))
+            .filter(f.ResultSet(mock_dataset_blender.fields["candidate-spend-per-wins"].gt(1000)))
+        ).sql
+
+        self.assertEqual(len(queries), 1)
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            'CASE WHEN "sq1"."$candidate-spend"/"sq0"."$wins">1000 THEN \'set(sq1.$candidate-spend/sq0.$wins>1000)\' ELSE \'complement(sq1.$candidate-spend/sq0.$wins>1000)\' END \"$set(sq1.$candidate-spend/sq0.$wins>1000)\",'
+            '"sq1"."$candidate-spend"/"sq0"."$wins" "$candidate-spend-per-wins" '
+            "FROM ("
+            "SELECT "
+            'TRUNC("timestamp",\'DD\') "$timestamp",'
+            'SUM("is_winner") "$wins" '
+            'FROM "politics"."politician" '
+            'GROUP BY "$timestamp"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            'TRUNC("timestamp",\'DD\') "$timestamp",'
+            'SUM("candidate_spend") "$candidate-spend" '
+            'FROM "politics"."politician_spend" '
+            'GROUP BY "$timestamp"'
+            ') "sq1" '
+            "ON "
+            '"sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$timestamp"',
+            str(queries[0]),
+        )
+
+    def test_apply_set_filter_for_metric_that_is_also_being_fetched_in_blender_dataset_query(self):
+        queries = (
+            mock_dataset_blender.query()
+            .widget(
+                f.ReactTable(mock_dataset_blender.fields["votes"], mock_dataset_blender.fields["candidate-spend"]),
+            )
+            .dimension(f.day(mock_dataset_blender.fields.timestamp))
+            .filter(f.ResultSet(mock_dataset_blender.fields['votes'] > 10000))
+        ).sql
+
+        self.assertEqual(len(queries), 1)
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq0"."$set(SUM(votes)>10000)" "$set(SUM(votes)>10000)",'
+            '"sq0"."$votes" "$votes",'
+            '"sq1"."$candidate-spend" "$candidate-spend" '
+            "FROM ("
+            "SELECT "
+            'TRUNC("timestamp",\'DD\') "$timestamp",'
+            'CASE WHEN SUM("votes")>10000 THEN \'set(SUM(votes)>10000)\' ELSE \'complement(SUM(votes)>10000)\' END "$set(SUM(votes)>10000)",'
+            'SUM("votes") "$votes" '
+            'FROM "politics"."politician" '
+            'GROUP BY "$timestamp"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            'TRUNC("timestamp",\'DD\') "$timestamp",'
+            'SUM("candidate_spend") "$candidate-spend" '
+            'FROM "politics"."politician_spend" '
+            'GROUP BY "$timestamp"'
+            ') "sq1" '
+            "ON "
+            '"sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$timestamp"',
+            str(queries[0]),
+        )
+
+    def test_apply_set_filter_for_dimension_in_both_dataset_queries(self):
+        queries = (
+            mock_dataset_blender.query()
+            .widget(
+                f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"])
+            )
+            .dimension(f.day(mock_dataset_blender.fields.timestamp))
+            .filter(f.ResultSet(mock_dataset_blender.fields['candidate-id'] == 12))
+        ).sql
+
+        self.assertEqual(len(queries), 1)
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq0"."$candidate-id" "$candidate-id",'
+            '"sq1"."$candidate-spend"/"sq0"."$wins" "$candidate-spend-per-wins" '
+            "FROM ("
+            "SELECT "
+            'TRUNC("timestamp",\'DD\') "$timestamp",'
+            'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' ELSE \'complement(candidate_id=12)\' END "$candidate-id",'
+            'SUM("is_winner") "$wins" '
+            'FROM "politics"."politician" '
+            'GROUP BY "$timestamp","$candidate-id"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            'TRUNC("timestamp",\'DD\') "$timestamp",'
+            'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' ELSE \'complement(candidate_id=12)\' END "$candidate-id",'
+            'SUM("candidate_spend") "$candidate-spend" '
+            'FROM "politics"."politician_spend" '
+            'GROUP BY "$timestamp","$candidate-id"'
+            ') "sq1" '
+            "ON "
+            '"sq0"."$timestamp"="sq1"."$timestamp" '
+            'AND "sq0"."$candidate-id"="sq1"."$candidate-id" '
+            'ORDER BY "$timestamp","$candidate-id"',
+            str(queries[0]),
+        )
+
+    def test_apply_set_filter_for_dimension_that_is_also_being_fetched_in_both_dataset_queries(self):
+        queries = (
+            mock_dataset_blender.query()
+            .widget(
+                f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"])
+            )
+            .dimension(mock_dataset_blender.fields['candidate-id'])
+            .filter(f.ResultSet(mock_dataset_blender.fields['candidate-id'] == 12))
+        ).sql
+
+        self.assertEqual(len(queries), 1)
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$candidate-id" "$candidate-id",'
+            '"sq1"."$candidate-spend"/"sq0"."$wins" "$candidate-spend-per-wins" '
+            "FROM ("
+            "SELECT "
+            'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' ELSE \'complement(candidate_id=12)\' END "$candidate-id",'
+            'SUM("is_winner") "$wins" '
+            'FROM "politics"."politician" '
+            'GROUP BY "$candidate-id"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' ELSE \'complement(candidate_id=12)\' END "$candidate-id",'
+            'SUM("candidate_spend") "$candidate-spend" '
+            'FROM "politics"."politician_spend" '
+            'GROUP BY "$candidate-id"'
+            ') "sq1" '
+            "ON "
+            '"sq0"."$candidate-id"="sq1"."$candidate-id" '
+            'ORDER BY "$candidate-id"',
+            str(queries[0]),
+        )
+
     def test_apply_dimension_filter_on_mapped_dimension_field_filters_in_both_nested_query(
         self,
     ):
@@ -228,7 +544,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             str(queries[0]),
         )
 
-    def test_apply_dimension_filter_on_UNmapped_dimension_field_filters_in_dataset_nested_query(
+    def test_apply_dimension_filter_on_unmapped_dimension_field_filters_in_dataset_nested_query(
         self,
     ):
         queries = (
