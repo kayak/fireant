@@ -1,8 +1,10 @@
+import colorsys
 import re
 from collections import OrderedDict, defaultdict
 from functools import partial
 
 import pandas as pd
+import numpy as np
 
 from fireant.dataset.fields import (
     DataType,
@@ -41,6 +43,20 @@ F_METRICS_DIMENSION_ALIAS = alias_selector(METRICS_DIMENSION_ALIAS)
 _display_value = partial(display_value, nan_value="", null_value="")
 
 
+def hex_to_rgb(hex_val):
+    """
+    https://stackoverflow.com/questions/29643352/converting-hex-to-rgb-value-in-python
+    """
+    return tuple(int(hex_val[i:i + 2], 16) for i in (0, 2, 4))
+
+
+def rgb_to_hex(rgb_val):
+    """
+    https://stackoverflow.com/questions/3380726/converting-a-rgb-color-tuple-to-a-six-digit-code-in-python
+    """
+    return "{0:02x}{1:02x}{2:02x}".format(*rgb_val)
+
+
 class FormattingField:
     def __init__(self, metric=None, reference=None, operation=None):
         self.metric = metric
@@ -60,16 +76,69 @@ class FormattingField:
         return self.metric.alias
 
 
-class FormattingConditionRule:
-    def __init__(self, field, operator, value, color, covers_row=False):
+class FormattingRule:
+    def __init__(self, field, color, covers_row):
         self.field = field
-        self.operator = operator
-        self.value = value
         self.color = color
         self.covers_row = covers_row
 
     def applies(self, value):
+        return True
+
+    def determine_color(self, value, *args, **kwargs):
+        return self.color
+
+    def get_field_selector(self):
+        return alias_selector(self.field.get_alias())
+
+
+class FormattingConditionRule(FormattingRule):
+    def __init__(self, field, operator, value, color, covers_row=False):
+        super().__init__(field, color, covers_row)
+        self.operator = operator
+        self.value = value
+
+    def applies(self, value):
         return ComparisonOperator.eval(value, self.operator, self.value)
+
+
+class FormattingHeatMapRule(FormattingRule):
+    """
+    The colors of the heatmap are calculated using the HSV color format.
+    The Hue (position in the color spectrum) and Value (brightness) of the final color are the same as the rule color.
+    The Saturation (color purity) of the final color depends on both the submitted value and the saturation of the rule
+    color. We calculate a saturation_spread which is either the saturation of the rule minus 0.05 or 0.50, whatever is
+    highest. This we will multiply with the ratio of the value compared to the min and max values which should be set
+    with set_min_max. The final value we increase with 0.05 to not have any white values.
+    This will result in for instance a final saturation range of [0.05; 1.00] if the rule color is very saturated
+    and in [0.05; 0.55] for a low saturated rule color.
+    """
+
+    WHITE = 'FFFFFF'
+
+    def __init__(self, field, color, covers_row=False):
+        super().__init__(field, color, covers_row)
+        rgb_color = hex_to_rgb(self.color)
+        self.hsv_color = colorsys.rgb_to_hsv(*(val / 255 for val in rgb_color))
+        self.saturation_spread = max(0.50, self.hsv_color[1] - 0.05)
+        self.min_val, self.max_val = None, None
+
+    def set_min_max(self, min_val, max_val):
+        self.min_val, self.max_val = min_val, max_val
+
+    @staticmethod
+    def _is_invalid(val):
+        return pd.isna(val) or np.isinf(val)
+
+    def determine_color(self, value):
+        if self._is_invalid(value) or self._is_invalid(self.min_val) or self._is_invalid(self.max_val):
+            return self.WHITE
+
+        val_ratio = (value - self.min_val) / (self.max_val - self.min_val)
+        saturation = val_ratio * self.saturation_spread + 0.05
+
+        calculated_hsv_color = colorsys.hsv_to_rgb(self.hsv_color[0], saturation, self.hsv_color[2])
+        return rgb_to_hex((round(val * 255) for val in calculated_hsv_color))
 
 
 def find_rule_to_apply(rules, value):
@@ -152,9 +221,12 @@ class ReactTable(Pandas):
             max_columns=max_columns
         )
         self.formatting_rules_map = defaultdict(list)
+        self.min_max_map = {}
         for formatting_rule in formatting_rules:
-            field_selector = alias_selector(formatting_rule.field.get_alias())
+            field_selector = formatting_rule.get_field_selector()
             self.formatting_rules_map[field_selector].append(formatting_rule)
+            if isinstance(formatting_rule, FormattingHeatMapRule):
+                self.min_max_map[field_selector] = [np.inf, -np.inf]
 
     def __repr__(self):
         return "{}({})".format(
@@ -449,10 +521,10 @@ class ReactTable(Pandas):
                 # No color for this field yet
                 rule = find_rule_to_apply(self.formatting_rules_map[metric_alias], value)
                 if rule is not None:
-                    data["color"] = rule.color
+                    data["color"] = rule.determine_color(value)
                     if not is_transposed and not is_pivoted and rule.covers_row:
                         # No transposing or pivoting going on so set as row color if it's specified for the rule
-                        row_color = rule.color
+                        row_color = data["color"]
 
             display = _display_value(value, field, date_as=return_none)
             if display is not None:
@@ -470,6 +542,25 @@ class ReactTable(Pandas):
                     data["color"] = row_color
 
         return row, row_color
+
+    def calculate_min_max(self, df, is_transposed):
+        if not self.min_max_map:
+            return
+
+        for index, series in df.iterrows():
+            for key, value in series.items():
+                metric_alias = wrap_list(series.name)[0] if is_transposed else wrap_list(key)[0]
+                min_max = self.min_max_map.get(metric_alias)
+                if min_max is not None:  # we need to calculate the min and max values for this metric.
+                    if value < min_max[0]:
+                        min_max[0] = value  # value is smaller than stored smallest value, replace it.
+                    if value > min_max[1]:
+                        min_max[1] = value  # value is bigger than stored biggest value, replace it.
+
+        for rule_list in self.formatting_rules_map.values():
+            for rule in rule_list:
+                if isinstance(rule, FormattingHeatMapRule):
+                    rule.set_min_max(*self.min_max_map[rule.get_field_selector()])
 
     def transform_data(
         self, data_frame, field_map, hide_dimensions, dimension_hyperlink_templates, is_transposed, is_pivoted,
@@ -511,18 +602,19 @@ class ReactTable(Pandas):
                 axis=1,
             )
 
+        self.calculate_min_max(data_frame, is_transposed)
+
         rows = []
         for index, series in data_frame.iterrows():
-            index = wrap_list(index)
+            row_values, row_color = self.transform_row_values(series, field_map, is_transposed, is_pivoted)
 
+            index = wrap_list(index)
             # Get a list of values from the index. These can be metrics or dimensions so it checks in the item map if
             # there is a display value for the value
             index_values = (
                 [_get_field_label(value) for value in index] if is_transposed else index
             )
             index_display_values = OrderedDict(zip(index_names, index_values))
-
-            row_values, row_color = self.transform_row_values(series, field_map, is_transposed, is_pivoted)
             row_index = self.transform_row_index(
                 index_display_values, field_map, dimension_hyperlink_templates, hide_dimensions, row_color
             )

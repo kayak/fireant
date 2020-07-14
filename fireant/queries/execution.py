@@ -105,16 +105,16 @@ def reduce_result_set(
         # The data frames will be ordered so that the first group will contain the data without any rolled up
         # dimensions, then followed by the groups with them, ordered by the last rollup dimension first.
         if totals_dimension_keys[:i]:
-            merged_df = _replace_nans_for_totals_values(merged_df, dimension_dtypes)
+            merged_df = _replace_rollup_constants_for_totals_markers(merged_df, dimension_dtypes)
 
         group_data_frames.append(merged_df)
 
     return pd.concat(group_data_frames, sort=False).sort_index(na_position="first")
 
 
-def _replace_nans_for_totals_values(data_frame, dtypes):
-    # some things are just easier to do without an index. Reset it temporarily to replace NaN values with the rollup
-    # marker values
+def _replace_rollup_constants_for_totals_markers(data_frame, dtypes):
+    # some things are just easier to do without an index. Reset it temporarily to replace Rollup constants with the
+    # rollup marker values
     index_names = data_frame.index.names
     data_frame.reset_index(inplace=True)
 
