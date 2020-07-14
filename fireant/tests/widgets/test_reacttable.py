@@ -28,6 +28,7 @@ from fireant.widgets.reacttable import (
     ReactTable,
     FormattingConditionRule,
     FormattingField,
+    FormattingHeatMapRule,
 )
 
 
@@ -65,6 +66,30 @@ class FormattingRulesTests(TestCase):
             }
         ).set_index('$timestamp')
 
+    def test_formatting_heatmap_rule(self):
+        result = ReactTable(
+            self.dataset.fields.metric0,
+            formatting_rules=[
+                FormattingHeatMapRule(
+                    FormattingField(metric=self.dataset.fields.metric0),
+                    "ff0000",
+                )
+            ],
+        ).transform(self.df, [], [])
+
+        self.assertEqual(
+            {
+                "columns": [{"Header": "Metric0", "accessor": "$metric0"}],
+                "data": [
+                    {"$metric0": {"display": "1", "raw": 1, "color": "fff2f2"}},
+                    {"$metric0": {"display": "2", "raw": 2, "color": "ffa2a2"}},
+                    {"$metric0": {"display": "3", "raw": 3, "color": "ff5151"}},
+                    {"$metric0": {"display": "4", "raw": 4, "color": "ff0000"}},
+                ],
+            },
+            result,
+        )
+
     def test_single_formatting_condition_rule(self):
         result = ReactTable(
             self.dataset.fields.metric0,
@@ -73,7 +98,7 @@ class FormattingRulesTests(TestCase):
                     FormattingField(metric=self.dataset.fields.metric0),
                     ComparisonOperator.gt,
                     2,
-                    "#EEEEEE",
+                    "EEEEEE",
                 )
             ],
         ).transform(self.df, [], [])
@@ -84,8 +109,8 @@ class FormattingRulesTests(TestCase):
                 "data": [
                     {"$metric0": {"display": "1", "raw": 1}},
                     {"$metric0": {"display": "2", "raw": 2}},
-                    {"$metric0": {"display": "3", "raw": 3, "color": "#EEEEEE"}},
-                    {"$metric0": {"display": "4", "raw": 4, "color": "#EEEEEE"}},
+                    {"$metric0": {"display": "3", "raw": 3, "color": "EEEEEE"}},
+                    {"$metric0": {"display": "4", "raw": 4, "color": "EEEEEE"}},
                 ],
             },
             result,
@@ -99,7 +124,7 @@ class FormattingRulesTests(TestCase):
                     FormattingField(metric=self.dataset.fields.metric0),
                     ComparisonOperator.gt,
                     2,
-                    "#EEEEEE",
+                    "EEEEEE",
                     covers_row=True,
                 )
             ],
@@ -121,12 +146,12 @@ class FormattingRulesTests(TestCase):
                         "$timestamp": {"display": "200", "raw": 200},
                     },
                     {
-                        "$metric0": {"display": "3", "raw": 3, "color": "#EEEEEE"},
-                        "$timestamp": {"display": "300", "raw": 300, "color": "#EEEEEE"},
+                        "$metric0": {"display": "3", "raw": 3, "color": "EEEEEE"},
+                        "$timestamp": {"display": "300", "raw": 300, "color": "EEEEEE"},
                     },
                     {
-                        "$metric0": {"display": "4", "raw": 4, "color": "#EEEEEE"},
-                        "$timestamp": {"display": "400", "raw": 400, "color": "#EEEEEE"},
+                        "$metric0": {"display": "4", "raw": 4, "color": "EEEEEE"},
+                        "$timestamp": {"display": "400", "raw": 400, "color": "EEEEEE"},
                     },
                 ],
             },
@@ -141,7 +166,7 @@ class FormattingRulesTests(TestCase):
                     FormattingField(metric=self.dataset.fields.metric0),
                     ComparisonOperator.gt,
                     2,
-                    "#EEEEEE",
+                    "EEEEEE",
                     covers_row=True,
                 )
             ],
@@ -161,8 +186,8 @@ class FormattingRulesTests(TestCase):
                     {'$metrics': {'raw': 'Metric0'},
                      '100': {'display': '1', 'raw': 1},
                      '200': {'display': '2', 'raw': 2},
-                     '300': {'color': '#EEEEEE', 'display': '3', 'raw': 3},
-                     '400': {'color': '#EEEEEE', 'display': '4', 'raw': 4}}
+                     '300': {'color': 'EEEEEE', 'display': '3', 'raw': 3},
+                     '400': {'color': 'EEEEEE', 'display': '4', 'raw': 4}}
                 ],
             },
             result,
@@ -180,7 +205,7 @@ class FormattingRulesTests(TestCase):
                     ),
                     ComparisonOperator.gt,
                     6,
-                    "#EEEEEE",
+                    "EEEEEE",
                 )
             ],
         ).transform(self.df, [], [reference])
@@ -202,14 +227,14 @@ class FormattingRulesTests(TestCase):
                     },
                     {
                         "$metric0": {"display": "3", "raw": 3},
-                        "$metric0_dod": {"display": "9", "raw": 9, "color": "#EEEEEE"},
+                        "$metric0_dod": {"display": "9", "raw": 9, "color": "EEEEEE"},
                     },
                     {
                         "$metric0": {"display": "4", "raw": 4},
                         "$metric0_dod": {
                             "display": "12",
                             "raw": 12,
-                            "color": "#EEEEEE",
+                            "color": "EEEEEE",
                         },
                     },
                 ],
@@ -226,7 +251,7 @@ class FormattingRulesTests(TestCase):
                     FormattingField(operation=operation),
                     ComparisonOperator.gt,
                     5,
-                    "#EEEEEE",
+                    "EEEEEE",
                 )
             ],
         ).transform(self.df, [], [])
@@ -243,14 +268,14 @@ class FormattingRulesTests(TestCase):
                         "$cumsum(metric0)": {
                             "display": "6",
                             "raw": 6,
-                            "color": "#EEEEEE",
+                            "color": "EEEEEE",
                         }
                     },
                     {
                         "$cumsum(metric0)": {
                             "display": "10",
                             "raw": 10,
-                            "color": "#EEEEEE",
+                            "color": "EEEEEE",
                         }
                     },
                 ],
@@ -268,7 +293,7 @@ class FormattingRulesTests(TestCase):
                     FormattingField(operation=operation, reference=reference),
                     ComparisonOperator.gt,
                     10,
-                    "#EEEEEE",
+                    "EEEEEE",
                 )
             ],
         ).transform(self.df, [], [reference])
@@ -293,7 +318,7 @@ class FormattingRulesTests(TestCase):
                         "$cumsum(metric0)_dod": {
                             "display": "15",
                             "raw": 15,
-                            "color": "#EEEEEE",
+                            "color": "EEEEEE",
                         }
                     },
                     {
@@ -301,7 +326,7 @@ class FormattingRulesTests(TestCase):
                         "$cumsum(metric0)_dod": {
                             "display": "27",
                             "raw": 27,
-                            "color": "#EEEEEE",
+                            "color": "EEEEEE",
                         }
                     },
                 ],
@@ -317,13 +342,13 @@ class FormattingRulesTests(TestCase):
                     FormattingField(metric=self.dataset.fields.metric0),
                     ComparisonOperator.gt,
                     3,
-                    "#EEEEEE",
+                    "EEEEEE",
                 ),
                 FormattingConditionRule(
                     FormattingField(metric=self.dataset.fields.metric0),
                     ComparisonOperator.lt,
                     2,
-                    "#AAAAAA",
+                    "AAAAAA",
                 ),
             ],
         ).transform(self.df, [], [])
@@ -332,10 +357,10 @@ class FormattingRulesTests(TestCase):
             {
                 "columns": [{"Header": "Metric0", "accessor": "$metric0"}],
                 "data": [
-                    {"$metric0": {"display": "1", "raw": 1, "color": "#AAAAAA"}},
+                    {"$metric0": {"display": "1", "raw": 1, "color": "AAAAAA"}},
                     {"$metric0": {"display": "2", "raw": 2}},
                     {"$metric0": {"display": "3", "raw": 3}},
-                    {"$metric0": {"display": "4", "raw": 4, "color": "#EEEEEE"}},
+                    {"$metric0": {"display": "4", "raw": 4, "color": "EEEEEE"}},
                 ],
             },
             result,
