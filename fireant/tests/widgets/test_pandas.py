@@ -16,7 +16,6 @@ from fireant.tests.dataset.mocks import (
     dimx1_str_df,
     dimx2_date_str_df,
     dimx2_date_str_ref_df,
-    dimx2_str_str_df,
     mock_dataset,
     no_index_df,
 )
@@ -177,6 +176,21 @@ class PandasTransformerTests(TestCase):
         dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
         result = Pandas(mock_dataset.fields.wins, hide=[mock_dataset.fields.political_party]) \
             .transform(dimx2_date_str_df, dimensions, [])
+
+        expected = dimx2_date_str_df.copy()[[f('wins')]]
+        expected.reset_index('$political_party', inplace=True, drop=True)
+        expected.index.names = ['Timestamp']
+        expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
+        expected = expected.applymap(_format_float)
+
+        pandas.testing.assert_frame_equal(expected, result)
+
+    def test_fetch_only_dimx2_date_str(self):
+        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
+        dimensions[1].fetch_only = True
+        result = Pandas(mock_dataset.fields.wins).transform(dimx2_date_str_df, dimensions, [])
+        dimensions[1].fetch_only = False
 
         expected = dimx2_date_str_df.copy()[[f('wins')]]
         expected.reset_index('$political_party', inplace=True, drop=True)

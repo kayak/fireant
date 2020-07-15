@@ -1,9 +1,16 @@
-import pandas as pd
 from unittest import TestCase
 
+import pandas as pd
 from pypika import Table
 
-from fireant import DataType, Rollup, day, DataSet, Field, DayOverDay
+from fireant import (
+    DataSet,
+    DataType,
+    DayOverDay,
+    Field,
+    Rollup,
+    day,
+)
 from fireant.dataset.filters import ComparisonOperator
 from fireant.tests.database.mock_database import TestDatabase
 from fireant.tests.dataset.mocks import (
@@ -20,15 +27,15 @@ from fireant.tests.dataset.mocks import (
     dimx2_date_str_ref_df,
     dimx2_date_str_totals_df,
     dimx2_date_str_totalsx2_df,
-    mock_dataset,
     dimx2_str_str_df,
+    mock_dataset,
 )
 from fireant.widgets.base import ReferenceItem
 from fireant.widgets.reacttable import (
-    ReactTable,
     FormattingConditionRule,
     FormattingField,
     FormattingHeatMapRule,
+    ReactTable,
 )
 
 
@@ -733,7 +740,6 @@ class ReactTableTransformerTests(TestCase):
                         "$political_party": {
                             "display": "Totals",
                             "raw": "$totals",
-                            "hyperlink": "http://example.com/~~totals",
                         },
                         "$timestamp": {
                             "display": "2016-01-01",
@@ -804,7 +810,6 @@ class ReactTableTransformerTests(TestCase):
                         "$political_party": {
                             "display": "Totals",
                             "raw": "$totals",
-                            "hyperlink": "http://example.com/~~totals",
                         },
                         "$timestamp": {"display": "Totals", "raw": "$totals"},
                         "$wins": {"display": "12", "raw": 12.0},
@@ -978,6 +983,44 @@ class ReactTableTransformerTests(TestCase):
         result = ReactTable(
             mock_dataset.fields.wins, hide=[mock_dataset.fields.political_party]
         ).transform(dimx2_date_str_df, dimensions, [])
+
+        self.assertIn("data", result)
+        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
+
+        self.assertEqual(
+            {
+                'columns': [
+                    {'Header': 'Timestamp', 'accessor': '$timestamp'},
+                    {'Header': 'Wins', 'accessor': '$wins'},
+                ],
+                'data': [
+                    {
+                        '$timestamp': {
+                            'display': '1996-01-01',
+                            'raw': '1996-01-01T00:00:00'
+                        },
+                        '$wins': {'display': '2', 'raw': 2}
+                    },
+                    {
+                        '$timestamp': {
+                            'display': '1996-01-01',
+                            'raw': '1996-01-01T00:00:00'
+                        },
+                        '$wins': {'display': '0', 'raw': 0}
+                    }
+                ]
+            },
+            result,
+        )
+
+    def test_dimx2_fetch_only_dim1(self):
+        dimensions = [
+            day(mock_dataset.fields.timestamp),
+            mock_dataset.fields.political_party,
+        ]
+        dimensions[1].fetch_only = True
+        result = ReactTable(mock_dataset.fields.wins).transform(dimx2_date_str_df, dimensions, [])
+        dimensions[1].fetch_only = False
 
         self.assertIn("data", result)
         result["data"] = result["data"][:2]  # shorten the results to make the test easier to read

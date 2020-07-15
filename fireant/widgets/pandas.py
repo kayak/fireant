@@ -34,17 +34,6 @@ class Pandas(TransformableWidget):
             else HARD_MAX_COLUMNS
         )
 
-    @staticmethod
-    def hide_data_frame_indexes(data_frame, dimensions_to_hide):
-        data_frame_indexes = (
-            [data_frame.index.name] if not isinstance(data_frame.index, pd.MultiIndex) else data_frame.index.names
-        )
-
-        for dimension in dimensions_to_hide:
-            dimesion_alias = alias_selector(dimension.alias)
-            if dimesion_alias in data_frame_indexes:
-                data_frame.reset_index(level=dimesion_alias, drop=True, inplace=True)
-
     def transform(
         self,
         data_frame,
@@ -80,17 +69,21 @@ class Pandas(TransformableWidget):
             result_df = result_df.reorder_levels(dimension_aliases)
 
         result_df = result_df[[alias_selector(item.alias) for item in items]]
-        self.hide_data_frame_indexes(result_df, self.hide)
 
-        hide_dimensions = {
-            dimension.alias for dimension in self.hide
+        hide_dimensions = set(self.hide) | {
+            dimension for dimension in dimensions if dimension.fetch_only
+        }
+        self.hide_data_frame_indexes(result_df, hide_dimensions)
+
+        hide_aliases = {
+            dimension.alias for dimension in hide_dimensions
         }
 
         if dimensions:
             result_df.index.names = [
                 dimension.label or dimension.alias
                 for dimension in dimensions
-                if dimension.alias not in hide_dimensions
+                if dimension.alias not in hide_aliases
             ]
 
         result_df.columns = pd.Index([item.label for item in items], name="Metrics")
@@ -98,7 +91,7 @@ class Pandas(TransformableWidget):
         pivot_dimensions = [
             dimension.label or dimension.alias
             for dimension in self.pivot
-            if dimension.alias not in hide_dimensions
+            if dimension.alias not in hide_aliases
         ]
         result_df, _, _ = self.pivot_data_frame(result_df, pivot_dimensions, self.transpose)
         return self.add_formatting(dimensions, items, result_df, use_raw_values).fillna(

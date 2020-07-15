@@ -125,6 +125,20 @@ class CSVWidgetTests(TestCase):
 
         self.assertEqual(expected.to_csv(**csv_options), result)
 
+    def test_fetch_only_dimx2_date_str(self):
+        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
+        dimensions[1].fetch_only = True
+        result = CSV(mock_dataset.fields.wins).transform(dimx2_date_str_df, dimensions, [])
+        dimensions[1].fetch_only = False
+
+        expected = dimx2_date_str_df.copy()[[f('wins')]]
+        expected.reset_index('$political_party', inplace=True, drop=True)
+        expected.index.names = ['Timestamp']
+        expected.columns = ['Wins']
+        expected.columns.name = 'Metrics'
+
+        self.assertEqual(expected.to_csv(**csv_options), result)
+
     def test_pivoted_single_dimension_transposes_data_frame(self):
         result = CSV(mock_dataset.fields.wins, pivot=[mock_dataset.fields.political_party]) \
             .transform(dimx1_str_df, [mock_dataset.fields.political_party], [])
