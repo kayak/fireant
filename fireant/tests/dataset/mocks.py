@@ -25,6 +25,7 @@ class TestDatabase(VerticaDatabase):
 test_database = TestDatabase()
 politicians_table = Table("politician", schema="politics")
 politicians_spend_table = Table("politician_spend", schema="politics")
+politicians_staff_table = Table("politician_staff", schema="politics")
 politicians_hint_table = Table("hints", schema="politics")
 politicians_annotation_table = Table("annotations", schema="politics")
 voters_table = Table("voter", schema="politics")
@@ -204,6 +205,25 @@ mock_spend_dataset = DataSet(
         definition=politicians_spend_table.id_of_the_district,
         data_type=DataType.number,
     )
+)
+
+mock_staff_dataset = DataSet(
+    table=politicians_staff_table,
+    database=test_database,
+    fields=[
+        Field(
+            "candidate-id",
+            label="Candidate ID",
+            definition=politicians_staff_table.candidate_id,
+            data_type=DataType.number,
+        ),
+        Field(
+            "num_staff",
+            label="Num. Staff",
+            definition=fn.Count(politicians_staff_table.staff_id),
+            data_type=DataType.number,
+        ),
+    ],
 )
 
 mock_dataset_blender = (

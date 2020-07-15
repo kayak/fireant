@@ -116,6 +116,12 @@ class Field(Node):
         self.precision = precision
         self.hyperlink_template = hyperlink_template
 
+        # An artificial field is created dynamically as the query is mounted, instead of being defined during
+        # instantiation. That's the case for set dimensions, for instance. The only practical aspect of this
+        # is that artificial dimensions are hashed differently (see dunder hash method). Instead of using the
+        # memory reference, artificial dimensions use a set of its fields.
+        self.is_artificial = False
+
     @property
     def is_aggregate(self):
         return self.definition.is_aggregate
@@ -271,13 +277,22 @@ class Field(Node):
             """
             return hash(None)
 
+        if self.is_artificial:
+            """
+            Python's deep copy built-in are a problem when:
+                Handling artificial fields (e.g. set field) in data blending.
+            Given artificial fields are dynamically generated, they can't be properly compared when hashed
+            by memory id. Therefore we hash them differently.
+            """
+            return hash((self.alias, self.label, self.data_type, self.definition))
+
         return id(self)
 
     def for_(self, replacement):
         return replacement
 
-    def get_sql(self, **kwargs):
-        raise NotImplementedError
+    def get_sql(self, *args, **kwargs):
+        return self.definition.get_sql(*args, **kwargs)
 
     @property
     @immutable

@@ -218,7 +218,7 @@ class QueryBuilderFetchDataTests(TestCase):
         set_filter = f.ResultSet(dimensions[0]=='On')
         mock_dataset.query.widget(mock_widget).dimension(*dimensions).filter(set_filter).fetch()
 
-        set_dimension = _make_set_dimension(set_filter)
+        set_dimension = _make_set_dimension(set_filter, mock_dataset)
         mock_fetch_data.assert_called_once_with(
             ANY, ANY, FieldMatcher(set_dimension), ANY, ANY
         )
@@ -234,7 +234,7 @@ class QueryBuilderFetchDataTests(TestCase):
         set_filter = f.ResultSet(dimensions[0]=='On', will_replace_referenced_dimension=False)
         mock_dataset.query.widget(mock_widget).dimension(*dimensions).filter(set_filter).fetch()
 
-        set_dimension = _make_set_dimension(set_filter)
+        set_dimension = _make_set_dimension(set_filter, mock_dataset)
         mock_fetch_data.assert_called_once_with(
             ANY, ANY, FieldMatcher(set_dimension, dimensions[0]), ANY, ANY
         )

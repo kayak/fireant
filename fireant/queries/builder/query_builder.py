@@ -12,7 +12,6 @@ from ..sets import (
     apply_set_dimensions,
     omit_set_filters,
 )
-from ...dataset.modifiers import DimensionModifier
 
 
 class QueryException(DataSetException):
@@ -168,7 +167,7 @@ class QueryBuilder(object):
 
         :return: A list of Field instances.
         """
-        return apply_set_dimensions(self._dimensions, self._filters)
+        return apply_set_dimensions(self._dimensions, self._filters, self.dataset)
 
     @property
     def filters(self):
