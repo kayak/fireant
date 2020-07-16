@@ -98,6 +98,11 @@ class HighCharts(ChartWidget, TransformableWidget):
         """
         result_df = data_frame.copy()
 
+        hide_dimensions = {
+            dimension for dimension in dimensions if dimension.fetch_only
+        }
+        self.hide_data_frame_indexes(result_df, hide_dimensions)
+
         dimension_map = {
             alias_selector(dimension.alias): dimension for dimension in dimensions
         }
@@ -242,7 +247,7 @@ class HighCharts(ChartWidget, TransformableWidget):
         colors,
         data_frame,
         series_data_frames,
-        dimension_fields,
+        dimensions,
         references,
         is_timeseries=False,
     ):
@@ -256,7 +261,7 @@ class HighCharts(ChartWidget, TransformableWidget):
         :param axis_color:
         :param colors:
         :param series_data_frames:
-        :param dimension_fields:
+        :param dimensions:
         :param references:
         :param is_timeseries:
         :return:
@@ -270,7 +275,7 @@ class HighCharts(ChartWidget, TransformableWidget):
                 for reference in [None] + references:
                     hc_series.append(
                         self._render_pie_series(
-                            series.metric, reference, data_frame, dimension_fields
+                            series.metric, reference, data_frame, dimensions
                         )
                     )
                 continue
@@ -283,7 +288,7 @@ class HighCharts(ChartWidget, TransformableWidget):
             ):
                 dimension_values = utils.wrap_list(dimension_values)
                 dimension_label = self._format_dimension_values(
-                    dimension_fields[1:], dimension_values
+                    dimensions[1:], dimension_values
                 )
 
                 hc_series += self._render_highcharts_series(
@@ -567,8 +572,8 @@ class HighCharts(ChartWidget, TransformableWidget):
         return data_frame.groupby(level=levels, sort=False)
 
     @staticmethod
-    def _format_dimension_values(dimension_fields, dimension_values):
+    def _format_dimension_values(dimensions, dimension_values):
         return ", ".join(
-            str.strip(formats.display_value(value, dimension_field) or str(value))
-            for value, dimension_field in zip(dimension_values, dimension_fields)
+            str.strip(formats.display_value(value, dimension) or str(value))
+            for value, dimension in zip(dimension_values, dimensions)
         )

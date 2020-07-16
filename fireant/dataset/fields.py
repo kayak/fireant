@@ -86,10 +86,22 @@ class Field(Node):
         A precision value for rounding decimals. By default, no rounding will be applied.
 
     :param prefix: (optional)
-        A prefix for rendering labels in visualizations such as '$'
+        A prefix for rendering labels in visualizations such as '$'.
 
-    :param suffix:
-        A suffix for rendering labels in visualizations such as '€'
+    :param suffix: (optional)
+        A suffix for rendering labels in visualizations such as '€'.
+
+    :param thousands: (optional)
+        A character to be used as a thousand separator when rendering values.
+
+    :param hyperlink_template: (optional)
+        A url string that can also reference other fields in a dataset. To reference a field put its alias
+        between {}. This is only used in certain widgets (i.e. react table).
+
+    :param fetch_only: (optional)
+        Whether the field data should be ignored in widgets. This is useful for not displaying hyperlink
+        dependencies, which might be necessary only for the purpose of generating a hyperlink and have no
+        effect on the dimension grouping.
     """
 
     def __init__(
@@ -104,6 +116,7 @@ class Field(Node):
         thousands: str = None,
         precision: int = None,
         hyperlink_template: str = None,
+        fetch_only: bool = False,
     ):
         self.alias = alias
         self.data_type = data_type
@@ -115,6 +128,7 @@ class Field(Node):
         self.thousands = thousands
         self.precision = precision
         self.hyperlink_template = hyperlink_template
+        self.fetch_only = fetch_only
 
         # An artificial field is created dynamically as the query is mounted, instead of being defined during
         # instantiation. That's the case for set dimensions, for instance. The only practical aspect of this

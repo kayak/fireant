@@ -1,5 +1,7 @@
 from typing import Union
 
+import pandas as pd
+
 from fireant.dataset.fields import Field
 from fireant.dataset.operations import Operation
 from fireant.dataset.references import Reference
@@ -11,6 +13,7 @@ from fireant.reference_helpers import (
     reference_suffix,
 )
 from fireant.utils import (
+    alias_selector,
     deepcopy,
     immutable,
 )
@@ -61,6 +64,17 @@ class TransformableWidget(Widget):
     # This attribute can be overridden in order to paginate in groups. Useful in cases like for charts where pagination
     # should be applied to the number of series rather than the number of data points.
     group_pagination = False
+
+    @staticmethod
+    def hide_data_frame_indexes(data_frame, dimensions_to_hide):
+        data_frame_indexes = (
+            [data_frame.index.name] if not isinstance(data_frame.index, pd.MultiIndex) else data_frame.index.names
+        )
+
+        for dimension in dimensions_to_hide:
+            dimesion_alias = alias_selector(dimension.alias)
+            if dimesion_alias in data_frame_indexes:
+                data_frame.reset_index(level=dimesion_alias, drop=True, inplace=True)
 
     def transform(self, data_frame, dimensions, references, annotation_frame=None):
         """

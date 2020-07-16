@@ -299,13 +299,15 @@ class HighChartsLineChartTransformerTests(TestCase):
             result,
         )
 
-    def test_single_metric_with_uni_dim_line_chart(self):
+    def test_single_metric_with_fetch_only_uni_dim_line_chart(self):
         dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
+        dimensions[1].fetch_only = True
         result = (
             HighCharts(title="Time Series with Unique Dimension and Single Metric")
             .axis(self.chart_class(mock_dataset.fields.votes))
             .transform(dimx2_date_str_df, dimensions, [])
         )
+        dimensions[1].fetch_only = False
 
         self.assertEqual(
             {
@@ -327,53 +329,23 @@ class HighChartsLineChartTransformerTests(TestCase):
                     {
                         "color": "#DDDF0D",
                         "dashStyle": "Solid",
-                        "data": [
+                        'data': [
                             (820454400000, 7579518),
-                            (946684800000, 8294949),
-                            (1072915200000, 9578189),
-                            (1199145600000, 11803106),
-                            (1325376000000, 12424128),
-                            (1451606400000, 4871678),
-                        ],
-                        "marker": {"fillColor": "#DDDF0D", "symbol": "circle"},
-                        "name": "Votes (Democrat)",
-                        "stacking": self.stacking,
-                        "tooltip": {
-                            "valueDecimals": None,
-                            "valuePrefix": None,
-                            "valueSuffix": None,
-                        },
-                        "type": self.chart_type,
-                        "yAxis": "0",
-                    },
-                    {
-                        "color": "#55BF3B",
-                        "dashStyle": "Solid",
-                        "data": [(820454400000, 1076384)],
-                        "marker": {"fillColor": "#DDDF0D", "symbol": "square"},
-                        "name": "Votes (Independent)",
-                        "stacking": self.stacking,
-                        "tooltip": {
-                            "valueDecimals": None,
-                            "valuePrefix": None,
-                            "valueSuffix": None,
-                        },
-                        "type": self.chart_type,
-                        "yAxis": "0",
-                    },
-                    {
-                        "color": "#DF5353",
-                        "dashStyle": "Solid",
-                        "data": [
+                            (820454400000, 1076384),
                             (820454400000, 6564547),
+                            (946684800000, 8294949),
                             (946684800000, 8367068),
+                            (1072915200000, 9578189),
                             (1072915200000, 10036743),
+                            (1199145600000, 11803106),
                             (1199145600000, 9491109),
+                            (1325376000000, 12424128),
                             (1325376000000, 8148082),
+                            (1451606400000, 4871678),
                             (1451606400000, 13438835),
                         ],
-                        "marker": {"fillColor": "#DDDF0D", "symbol": "diamond"},
-                        "name": "Votes (Republican)",
+                        "marker": {"fillColor": "#DDDF0D", "symbol": "circle"},
+                        "name": "Votes",
                         "stacking": self.stacking,
                         "tooltip": {
                             "valueDecimals": None,
