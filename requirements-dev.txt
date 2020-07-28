@@ -6,7 +6,8 @@
 -r requirements-extras-postgresql.txt
 -r requirements-extras-ipython.txt
 mock
-bumpversion==0.5.3
+bumpversion
+black
 wheel==0.30.0
 watchdog==0.8.3
 flake8==3.5.0
