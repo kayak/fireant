@@ -31,6 +31,12 @@ class ReferenceFilterTests(TestCase):
                     definition=t0.metric,
                     data_type=DataType.number,
                 ),
+                Field(
+                    "unused_metric",
+                    label="Unused Metric",
+                    definition=t0.unused_metric,
+                    data_type=DataType.number,
+                ),
             ],
         )
 
@@ -146,3 +152,15 @@ class ReferenceFilterTests(TestCase):
             result_df.reset_index(drop=True),
             pd.DataFrame.from_dict({"$metric0": [2, 3], "$metric0_dod": [5, 9]}),
         )
+
+    def test_reference_filter_for_an_unselected_metric(self):
+        reference_filter = ReferenceFilter(
+            self.dataset.fields.unused_metric, ComparisonOperator.gt, 5
+        )
+        reference = DayOverDay(
+            self.dataset.fields.timestamp, filters=[reference_filter]
+        )
+
+        result_df = apply_reference_filters(self.df, reference)
+
+        pd.testing.assert_frame_equal(result_df, self.df)

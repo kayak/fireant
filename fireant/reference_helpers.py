@@ -74,8 +74,9 @@ def reference_suffix(metric, reference):
 def apply_reference_filters(df, reference):
     for reference_filter in reference.filters:
         df_column_key = alias_selector(reference_alias(reference_filter.metric, reference))
-        column = df[df_column_key]
-        dataframe_filter = ComparisonOperator.eval(column, reference_filter.operator, reference_filter.value)
-        df = df.loc[dataframe_filter]
+        if df_column_key in df:
+            column = df[df_column_key]
+            dataframe_filter = ComparisonOperator.eval(column, reference_filter.operator, reference_filter.value)
+            df = df.loc[dataframe_filter]
 
     return df
