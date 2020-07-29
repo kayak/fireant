@@ -64,20 +64,24 @@ class HighCharts(ChartWidget, TransformableWidget):
     group_pagination = True
 
     def __init__(
-        self, title=None, colors=None, x_axis_visible=True, tooltip_visible=True
+        self,
+        title=None,
+        colors=None,
+        x_axis_visible=True,
+        tooltip_visible=True,
+        split_dimension=None,
     ):
         super(HighCharts, self).__init__()
         self.title = title
         self.colors = colors or DEFAULT_COLORS
         self.x_axis_visible = x_axis_visible
         self.tooltip_visible = tooltip_visible
+        self.split_dimension = split_dimension or None
 
     def __repr__(self):
         return ".".join(["HighCharts()"] + [repr(axis) for axis in self.items])
 
-    def transform(
-        self, data_frame, dimensions, references, annotation_frame=None
-    ):
+    def transform(self, data_frame, dimensions, references, annotation_frame=None):
         """
         - Main entry point -
 
@@ -94,7 +98,7 @@ class HighCharts(ChartWidget, TransformableWidget):
         :param annotation_frame:
             A data frame containing annotation data.
         :return:
-            A dict meant to be dumped as JSON.
+            A dict or a list of dicts meant to be dumped as JSON.
         """
         result_df = data_frame.copy()
 
@@ -102,6 +106,60 @@ class HighCharts(ChartWidget, TransformableWidget):
             dimension for dimension in dimensions if dimension.fetch_only
         }
         self.hide_data_frame_indexes(result_df, hide_dimensions)
+
+        dimension_map = {
+            alias_selector(dimension.alias): dimension for dimension in dimensions
+        }
+
+        render_group = []
+        split_dimension = self.split_dimension
+
+        if split_dimension:
+            split_dimension_alias = alias_selector(split_dimension.alias)
+
+            categories = self._categories(
+                result_df, dimension_map, split_dimension_alias,
+            )
+
+            for category in categories:
+                render_group.append(
+                    [
+                        result_df.xs(
+                            category, level=split_dimension_alias, drop_level=False
+                        ),
+                        formats.display_value(category, split_dimension) or category,
+                    ]
+                )
+
+        if not render_group:
+            render_group = [(result_df, None)]
+
+        num_charts = len(render_group)
+
+        charts = [
+            self._render_individual_chart(
+                chart_df,
+                dimensions,
+                references,
+                annotation_frame=annotation_frame,
+                titleSuffix=titleSuffix,
+                num_charts=num_charts,
+            )
+            for chart_df, titleSuffix in render_group
+        ]
+
+        return charts[0] if num_charts == 1 else charts
+
+    def _render_individual_chart(
+        self,
+        data_frame,
+        dimensions,
+        references,
+        annotation_frame=None,
+        titleSuffix="",
+        num_charts=1,
+    ):
+        result_df = data_frame
 
         dimension_map = {
             alias_selector(dimension.alias): dimension for dimension in dimensions
@@ -149,11 +207,23 @@ class HighCharts(ChartWidget, TransformableWidget):
                 is_timeseries,
             )
 
-        x_axis = self._render_x_axis(result_df, dimensions, dimension_map)
+        categories = self._categories(result_df, dimension_map)
+        x_axis = self._render_x_axis(dimensions, categories)
 
         annotations = []
         if has_only_line_series(axis) and annotation_frame is not None:
             annotations = self._render_annotation(annotation_frame, x_axis)
+
+        extra = {}
+
+        if num_charts > 1:
+            extra["title"] = {
+                "text": f"{self.title} ({titleSuffix})" if self.title else titleSuffix
+            }
+            extra["chart"] = {
+                # Height of 240px is the smallest we can have, while still fully displaying the chart menu.
+                "height": 240
+            }
 
         return {
             "title": {"text": self.title},
@@ -168,38 +238,57 @@ class HighCharts(ChartWidget, TransformableWidget):
             },
             "legend": {"useHTML": True},
             "annotations": annotations,
+            **extra,
         }
 
-    def _render_x_axis(self, data_frame, dimensions, dimension_map):
+    def _categories(self, data_frame, dimension_map, dimension_alias=None):
+        is_mi = isinstance(data_frame.index, pd.MultiIndex)
+        levels = data_frame.index.levels if is_mi else [data_frame.index]
+
+        first_level = None
+
+        if dimension_alias:
+            level_index = 0
+
+            for i, level in enumerate(levels):
+                if level.name == dimension_alias:
+                    level_index = i
+                    break
+
+            first_level = levels[level_index]
+        else:
+            first_level = levels[0]
+
+        if first_level is not None and first_level.name is not None:
+            dimension_alias = first_level.name
+            dimension = dimension_map[dimension_alias]
+            return [
+                formats.display_value(category, dimension) or category
+                if not pd.isnull(category)
+                else None
+                for category in first_level
+            ]
+
+        return []
+
+    def _render_x_axis(self, dimensions, categories):
         """
         Renders the xAxis configuration.
 
         https://api.highcharts.com/highcharts/xAxis
 
-        :param data_frame:
         :param dimensions:
-        :param dimension_map:
+        :param categories:
         :return:
         """
-        is_mi = isinstance(data_frame.index, pd.MultiIndex)
-        first_level = data_frame.index.levels[0] if is_mi else data_frame.index
-
         is_timeseries = dimensions and dimensions[0].data_type == DataType.date
+
         if is_timeseries:
             return {"type": "datetime", "visible": self.x_axis_visible}
 
-        categories = ["All"]
-        if first_level.name is not None:
-            dimension_alias = first_level.name
-            dimension = dimension_map[dimension_alias]
-            categories = [
-                formats.display_value(category, dimension) or category
-                for category in first_level
-            ]
-
         return {
             "type": "category",
-            "categories": categories,
+            "categories": categories if categories else ["All"],
             "visible": self.x_axis_visible,
         }
 

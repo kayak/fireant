@@ -2,7 +2,10 @@ from unittest import TestCase
 
 import pandas as pd
 
-from fireant import CumSum, Rollup
+from fireant import (
+    CumSum,
+    Rollup,
+)
 from fireant.tests.dataset.mocks import (
     ElectionOverElection,
     day,
@@ -14,6 +17,7 @@ from fireant.tests.dataset.mocks import (
     dimx1_num_df,
     dimx1_str_df,
     dimx1_str_totals_df,
+    dimx2_category_index_str_df,
     dimx2_date_index_str_df,
     dimx2_date_num_df,
     dimx2_date_str_df,
@@ -22,13 +26,14 @@ from fireant.tests.dataset.mocks import (
     dimx2_date_str_totals_df,
     dimx2_date_str_totalsx2_df,
     dimx2_str_num_df,
-    dimx2_category_index_str_df,
     dimx2_str_str_df,
-    dimx3_date_str_str_df,
     mock_dataset,
     year,
 )
-from fireant.widgets.highcharts import DEFAULT_COLORS, HighCharts
+from fireant.widgets.highcharts import (
+    DEFAULT_COLORS,
+    HighCharts,
+)
 
 
 class HighChartsLineChartTransformerTests(TestCase):
@@ -93,9 +98,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         result = (
             HighCharts(title="Time Series, Single Metric")
             .axis(self.chart_class(mock_dataset.fields.votes))
-            .transform(
-                dimx1_date_df, [year(mock_dataset.fields.timestamp)], []
-            )
+            .transform(dimx1_date_df, [year(mock_dataset.fields.timestamp)], [])
         )
 
         self.assertEqual(
@@ -248,11 +251,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         result = (
             HighCharts(title="Time Series, Single Metric")
             .axis(self.chart_class(CumSum(mock_dataset.fields.votes)))
-            .transform(
-                dimx1_date_operation_df,
-                [mock_dataset.fields.timestamp],
-                [],
-            )
+            .transform(dimx1_date_operation_df, [mock_dataset.fields.timestamp], [],)
         )
 
         self.assertEqual(
@@ -299,224 +298,437 @@ class HighChartsLineChartTransformerTests(TestCase):
             result,
         )
 
-    def test_single_metric_with_fetch_only_uni_dim_line_chart(self):
-        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
-        dimensions[1].fetch_only = True
+    def test_single_metric_with_a_split_dimension_dimx2_date_str_line_chart(self):
+        dimensions = [
+            mock_dataset.fields.timestamp,
+            mock_dataset.fields.political_party,
+        ]
         result = (
-            HighCharts(title="Time Series with Unique Dimension and Single Metric")
+            HighCharts(
+                title="Time Series with Datetime/Text Dimensions and Single Metric",
+                split_dimension=dimensions[1],
+            )
             .axis(self.chart_class(mock_dataset.fields.votes))
             .transform(dimx2_date_str_df, dimensions, [])
         )
-        dimensions[1].fetch_only = False
 
-        self.assertEqual(
-            {
-                "title": {
-                    "text": "Time Series with Unique Dimension and Single Metric"
-                },
-                "xAxis": {"type": "datetime", "visible": True},
-                "yAxis": [
-                    {
-                        "id": "0",
-                        "labels": {"style": {"color": None}},
-                        "title": {"text": None},
-                        "visible": True,
-                    }
-                ],
-                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
-                "legend": {"useHTML": True},
-                "series": [
-                    {
-                        "color": "#DDDF0D",
-                        "dashStyle": "Solid",
-                        'data': [
-                            (820454400000, 7579518),
-                            (820454400000, 1076384),
-                            (820454400000, 6564547),
-                            (946684800000, 8294949),
-                            (946684800000, 8367068),
-                            (1072915200000, 9578189),
-                            (1072915200000, 10036743),
-                            (1199145600000, 11803106),
-                            (1199145600000, 9491109),
-                            (1325376000000, 12424128),
-                            (1325376000000, 8148082),
-                            (1451606400000, 4871678),
-                            (1451606400000, 13438835),
-                        ],
-                        "marker": {"fillColor": "#DDDF0D", "symbol": "circle"},
-                        "name": "Votes",
-                        "stacking": self.stacking,
-                        "tooltip": {
-                            "valueDecimals": None,
-                            "valuePrefix": None,
-                            "valueSuffix": None,
-                        },
-                        "type": self.chart_type,
-                        "yAxis": "0",
+        with self.subTest("returns 3 charts"):
+            self.assertEqual(len(result), 3)
+
+        with self.subTest("for Democrat split (1st chart)"):
+            self.assertEqual(
+                {
+                    "chart": {"height": 240},
+                    "title": {
+                        "text": "Time Series with Datetime/Text Dimensions and Single Metric (Democrat)"
                     },
-                ],
-                "annotations": [],
-                "colors": DEFAULT_COLORS,
-            },
-            result,
-        )
+                    "xAxis": {"type": "datetime", "visible": True},
+                    "yAxis": [
+                        {
+                            "id": "0",
+                            "labels": {"style": {"color": None}},
+                            "title": {"text": None},
+                            "visible": True,
+                        }
+                    ],
+                    "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                    "legend": {"useHTML": True},
+                    "series": [
+                        {
+                            "color": "#DDDF0D",
+                            "dashStyle": "Solid",
+                            "data": [
+                                (820454400000, 7579518),
+                                (946684800000, 8294949),
+                                (1072915200000, 9578189),
+                                (1199145600000, 11803106),
+                                (1325376000000, 12424128),
+                                (1451606400000, 4871678),
+                            ],
+                            "marker": {"fillColor": "#DDDF0D", "symbol": "circle"},
+                            "name": "Votes (Democrat)",
+                            "stacking": self.stacking,
+                            "tooltip": {
+                                "valueDecimals": None,
+                                "valuePrefix": None,
+                                "valueSuffix": None,
+                            },
+                            "type": self.chart_type,
+                            "yAxis": "0",
+                        },
+                    ],
+                    "annotations": [],
+                    "colors": DEFAULT_COLORS,
+                },
+                result[0],
+            )
 
-    def test_multi_metrics_single_axis_line_chart(self):
+        with self.subTest("for Independent split (2nd chart)"):
+            self.assertEqual(
+                {
+                    "chart": {"height": 240},
+                    "title": {
+                        "text": "Time Series with Datetime/Text Dimensions and Single Metric (Independent)"
+                    },
+                    "xAxis": {"type": "datetime", "visible": True},
+                    "yAxis": [
+                        {
+                            "id": "0",
+                            "labels": {"style": {"color": None}},
+                            "title": {"text": None},
+                            "visible": True,
+                        }
+                    ],
+                    "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                    "legend": {"useHTML": True},
+                    "series": [
+                        {
+                            "color": "#DDDF0D",
+                            "dashStyle": "Solid",
+                            "data": [(820454400000, 1076384),],
+                            "marker": {"fillColor": "#DDDF0D", "symbol": "circle"},
+                            "name": "Votes (Independent)",
+                            "stacking": self.stacking,
+                            "tooltip": {
+                                "valueDecimals": None,
+                                "valuePrefix": None,
+                                "valueSuffix": None,
+                            },
+                            "type": self.chart_type,
+                            "yAxis": "0",
+                        },
+                    ],
+                    "annotations": [],
+                    "colors": DEFAULT_COLORS,
+                },
+                result[1],
+            )
+
+        with self.subTest("for Republican split (3rd chart)"):
+            self.assertEqual(
+                {
+                    "chart": {"height": 240},
+                    "title": {
+                        "text": "Time Series with Datetime/Text Dimensions and Single Metric (Republican)"
+                    },
+                    "xAxis": {"type": "datetime", "visible": True},
+                    "yAxis": [
+                        {
+                            "id": "0",
+                            "labels": {"style": {"color": None}},
+                            "title": {"text": None},
+                            "visible": True,
+                        }
+                    ],
+                    "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                    "legend": {"useHTML": True},
+                    "series": [
+                        {
+                            "color": "#DDDF0D",
+                            "dashStyle": "Solid",
+                            "data": [
+                                (820454400000, 6564547),
+                                (946684800000, 8367068),
+                                (1072915200000, 10036743),
+                                (1199145600000, 9491109),
+                                (1325376000000, 8148082),
+                                (1451606400000, 13438835),
+                            ],
+                            "marker": {"fillColor": "#DDDF0D", "symbol": "circle"},
+                            "name": "Votes (Republican)",
+                            "stacking": self.stacking,
+                            "tooltip": {
+                                "valueDecimals": None,
+                                "valuePrefix": None,
+                                "valueSuffix": None,
+                            },
+                            "type": self.chart_type,
+                            "yAxis": "0",
+                        },
+                    ],
+                    "annotations": [],
+                    "colors": DEFAULT_COLORS,
+                },
+                result[2],
+            )
+
+    def test_single_metric_with_a_split_dimension_dimx2_str_str_line_chart(self):
+        dimensions = [
+            mock_dataset.fields.political_party,
+            mock_dataset.fields["candidate-name"],
+        ]
         result = (
-            HighCharts(title="Time Series with Unique Dimension and Multiple Metrics")
-            .axis(
-                self.chart_class(mock_dataset.fields.votes),
-                self.chart_class(mock_dataset.fields.wins),
+            HighCharts(
+                title="Time Series with two Text Dimensions and Single Metric",
+                split_dimension=dimensions[0],
             )
-            .transform(
-                dimx2_date_str_df,
-                [mock_dataset.fields.timestamp, mock_dataset.fields.political_party],
-                [],
-            )
+            .axis(self.chart_class(mock_dataset.fields.votes))
+            .transform(dimx2_str_str_df, dimensions, [])
         )
 
-        self.assertEqual(
-            {
-                "title": {
-                    "text": "Time Series with Unique Dimension and Multiple Metrics"
-                },
-                "xAxis": {"type": "datetime", "visible": True},
-                "yAxis": [
-                    {
-                        "id": "0",
-                        "labels": {"style": {"color": "#DDDF0D"}},
-                        "title": {"text": None},
+        with self.subTest("returns 3 charts"):
+            self.assertEqual(len(result), 3)
+
+        with self.subTest("for Democrat split (1st chart)"):
+            self.assertEqual(
+                {
+                    "chart": {"height": 240},
+                    "title": {
+                        "text": "Time Series with two Text Dimensions and Single Metric (Democrat)"
+                    },
+                    "xAxis": {
+                        "categories": ["Democrat", "Independent", "Republican"],
+                        "type": "category",
                         "visible": True,
-                    }
-                ],
-                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
-                "legend": {"useHTML": True},
-                "series": [
-                    {
-                        "color": "#DDDF0D",
-                        "dashStyle": "Solid",
-                        "data": [
-                            (820454400000, 7579518),
-                            (946684800000, 8294949),
-                            (1072915200000, 9578189),
-                            (1199145600000, 11803106),
-                            (1325376000000, 12424128),
-                            (1451606400000, 4871678),
-                        ],
-                        "marker": {"fillColor": "#DDDF0D", "symbol": "circle"},
-                        "name": "Votes (Democrat)",
-                        "stacking": self.stacking,
-                        "tooltip": {
-                            "valueDecimals": None,
-                            "valuePrefix": None,
-                            "valueSuffix": None,
-                        },
-                        "type": self.chart_type,
-                        "yAxis": "0",
                     },
-                    {
-                        "color": "#55BF3B",
-                        "dashStyle": "Solid",
-                        "data": [(820454400000, 1076384)],
-                        "marker": {"fillColor": "#DDDF0D", "symbol": "square"},
-                        "name": "Votes (Independent)",
-                        "stacking": self.stacking,
-                        "tooltip": {
-                            "valueDecimals": None,
-                            "valuePrefix": None,
-                            "valueSuffix": None,
+                    "yAxis": [
+                        {
+                            "id": "0",
+                            "labels": {"style": {"color": None}},
+                            "title": {"text": None},
+                            "visible": True,
+                        }
+                    ],
+                    "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                    "legend": {"useHTML": True},
+                    "series": [
+                        {
+                            "color": "#DDDF0D",
+                            "dashStyle": "Solid",
+                            "data": [{"x": 0, "y": 8294949},],
+                            "marker": {"fillColor": "#DDDF0D", "symbol": "circle"},
+                            "name": "Votes (Al Gore)",
+                            "stacking": self.stacking,
+                            "tooltip": {
+                                "valueDecimals": None,
+                                "valuePrefix": None,
+                                "valueSuffix": None,
+                            },
+                            "type": self.chart_type,
+                            "yAxis": "0",
                         },
-                        "type": self.chart_type,
-                        "yAxis": "0",
-                    },
-                    {
-                        "color": "#DF5353",
-                        "dashStyle": "Solid",
-                        "data": [
-                            (820454400000, 6564547),
-                            (946684800000, 8367068),
-                            (1072915200000, 10036743),
-                            (1199145600000, 9491109),
-                            (1325376000000, 8148082),
-                            (1451606400000, 13438835),
-                        ],
-                        "marker": {"fillColor": "#DDDF0D", "symbol": "diamond"},
-                        "name": "Votes (Republican)",
-                        "stacking": self.stacking,
-                        "tooltip": {
-                            "valueDecimals": None,
-                            "valuePrefix": None,
-                            "valueSuffix": None,
+                        {
+                            "color": "#55BF3B",
+                            "dashStyle": "Solid",
+                            "data": [{"x": 0, "y": 24227234}],
+                            "marker": {"fillColor": "#DDDF0D", "symbol": "square"},
+                            "name": "Votes (Barrack Obama)",
+                            "stacking": self.stacking,
+                            "tooltip": {
+                                "valueDecimals": None,
+                                "valuePrefix": None,
+                                "valueSuffix": None,
+                            },
+                            "type": self.chart_type,
+                            "yAxis": "0",
                         },
-                        "type": self.chart_type,
-                        "yAxis": "0",
-                    },
-                    {
-                        "color": "#7798BF",
-                        "dashStyle": "Solid",
-                        "data": [
-                            (820454400000, 2),
-                            (946684800000, 0),
-                            (1072915200000, 0),
-                            (1199145600000, 2),
-                            (1325376000000, 2),
-                            (1451606400000, 0),
-                        ],
-                        "marker": {"fillColor": "#DDDF0D", "symbol": "circle"},
-                        "name": "Wins (Democrat)",
-                        "stacking": self.stacking,
-                        "tooltip": {
-                            "valueDecimals": None,
-                            "valuePrefix": None,
-                            "valueSuffix": None,
+                        {
+                            "color": "#DF5353",
+                            "dashStyle": "Solid",
+                            "data": [{"x": 0, "y": 7579518}],
+                            "marker": {"fillColor": "#DDDF0D", "symbol": "diamond"},
+                            "name": "Votes (Bill Clinton)",
+                            "stacking": self.stacking,
+                            "tooltip": {
+                                "valueDecimals": None,
+                                "valuePrefix": None,
+                                "valueSuffix": None,
+                            },
+                            "type": self.chart_type,
+                            "yAxis": "0",
                         },
-                        "type": self.chart_type,
-                        "yAxis": "0",
-                    },
-                    {
-                        "color": "#AAEEEE",
-                        "dashStyle": "Solid",
-                        "data": [(820454400000, 0)],
-                        "marker": {"fillColor": "#DDDF0D", "symbol": "square"},
-                        "name": "Wins (Independent)",
-                        "stacking": self.stacking,
-                        "tooltip": {
-                            "valueDecimals": None,
-                            "valuePrefix": None,
-                            "valueSuffix": None,
+                        {
+                            "color": "#7798BF",
+                            "dashStyle": "Solid",
+                            "data": [{"x": 0, "y": 4871678}],
+                            "marker": {"fillColor": "#DDDF0D", "symbol": "triangle"},
+                            "name": "Votes (Hillary Clinton)",
+                            "stacking": self.stacking,
+                            "tooltip": {
+                                "valueDecimals": None,
+                                "valuePrefix": None,
+                                "valueSuffix": None,
+                            },
+                            "type": self.chart_type,
+                            "yAxis": "0",
                         },
-                        "type": self.chart_type,
-                        "yAxis": "0",
-                    },
-                    {
-                        "color": "#FF0066",
-                        "dashStyle": "Solid",
-                        "data": [
-                            (820454400000, 0),
-                            (946684800000, 2),
-                            (1072915200000, 2),
-                            (1199145600000, 0),
-                            (1325376000000, 0),
-                            (1451606400000, 2),
-                        ],
-                        "marker": {"fillColor": "#DDDF0D", "symbol": "diamond"},
-                        "name": "Wins (Republican)",
-                        "stacking": self.stacking,
-                        "tooltip": {
-                            "valueDecimals": None,
-                            "valuePrefix": None,
-                            "valueSuffix": None,
+                        {
+                            "color": "#AAEEEE",
+                            "dashStyle": "Solid",
+                            "data": [{"x": 0, "y": 9578189}],
+                            "marker": {
+                                "fillColor": "#DDDF0D",
+                                "symbol": "triangle-down",
+                            },
+                            "name": "Votes (John Kerry)",
+                            "stacking": self.stacking,
+                            "tooltip": {
+                                "valueDecimals": None,
+                                "valuePrefix": None,
+                                "valueSuffix": None,
+                            },
+                            "type": self.chart_type,
+                            "yAxis": "0",
                         },
-                        "type": self.chart_type,
-                        "yAxis": "0",
+                    ],
+                    "annotations": [],
+                    "colors": DEFAULT_COLORS,
+                },
+                result[0],
+            )
+
+        with self.subTest("for Independent split (2nd chart)"):
+            self.assertEqual(
+                {
+                    "chart": {"height": 240},
+                    "title": {
+                        "text": "Time Series with two Text Dimensions and Single Metric (Independent)"
                     },
-                ],
-                "annotations": [],
-                "colors": DEFAULT_COLORS,
-            },
-            result,
-        )
+                    "xAxis": {
+                        "categories": ["Democrat", "Independent", "Republican"],
+                        "type": "category",
+                        "visible": True,
+                    },
+                    "yAxis": [
+                        {
+                            "id": "0",
+                            "labels": {"style": {"color": None}},
+                            "title": {"text": None},
+                            "visible": True,
+                        }
+                    ],
+                    "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                    "legend": {"useHTML": True},
+                    "series": [
+                        {
+                            "color": "#DDDF0D",
+                            "dashStyle": "Solid",
+                            "data": [{"x": 1, "y": 1076384},],
+                            "marker": {"fillColor": "#DDDF0D", "symbol": "circle"},
+                            "name": "Votes (Ross Perot)",
+                            "stacking": self.stacking,
+                            "tooltip": {
+                                "valueDecimals": None,
+                                "valuePrefix": None,
+                                "valueSuffix": None,
+                            },
+                            "type": self.chart_type,
+                            "yAxis": "0",
+                        },
+                    ],
+                    "annotations": [],
+                    "colors": DEFAULT_COLORS,
+                },
+                result[1],
+            )
+
+        with self.subTest("for Republican split (3rd chart)"):
+            self.assertEqual(
+                {
+                    "chart": {"height": 240},
+                    "title": {
+                        "text": "Time Series with two Text Dimensions and Single Metric (Republican)"
+                    },
+                    "xAxis": {
+                        "categories": ["Democrat", "Independent", "Republican"],
+                        "type": "category",
+                        "visible": True,
+                    },
+                    "yAxis": [
+                        {
+                            "id": "0",
+                            "labels": {"style": {"color": None}},
+                            "title": {"text": None},
+                            "visible": True,
+                        }
+                    ],
+                    "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                    "legend": {"useHTML": True},
+                    "series": [
+                        {
+                            "color": "#DDDF0D",
+                            "dashStyle": "Solid",
+                            "data": [{"x": 2, "y": 6564547},],
+                            "marker": {"fillColor": "#DDDF0D", "symbol": "circle"},
+                            "name": "Votes (Bob Dole)",
+                            "stacking": self.stacking,
+                            "tooltip": {
+                                "valueDecimals": None,
+                                "valuePrefix": None,
+                                "valueSuffix": None,
+                            },
+                            "type": self.chart_type,
+                            "yAxis": "0",
+                        },
+                        {
+                            "color": "#55BF3B",
+                            "dashStyle": "Solid",
+                            "data": [{"x": 2, "y": 13438835},],
+                            "marker": {"fillColor": "#DDDF0D", "symbol": "square"},
+                            "name": "Votes (Donald Trump)",
+                            "stacking": self.stacking,
+                            "tooltip": {
+                                "valueDecimals": None,
+                                "valuePrefix": None,
+                                "valueSuffix": None,
+                            },
+                            "type": self.chart_type,
+                            "yAxis": "0",
+                        },
+                        {
+                            "color": "#DF5353",
+                            "dashStyle": "Solid",
+                            "data": [{"x": 2, "y": 18403811},],
+                            "marker": {"fillColor": "#DDDF0D", "symbol": "diamond"},
+                            "name": "Votes (George Bush)",
+                            "stacking": self.stacking,
+                            "tooltip": {
+                                "valueDecimals": None,
+                                "valuePrefix": None,
+                                "valueSuffix": None,
+                            },
+                            "type": self.chart_type,
+                            "yAxis": "0",
+                        },
+                        {
+                            "color": "#7798BF",
+                            "dashStyle": "Solid",
+                            "data": [{"x": 2, "y": 9491109},],
+                            "marker": {"fillColor": "#DDDF0D", "symbol": "triangle"},
+                            "name": "Votes (John McCain)",
+                            "stacking": self.stacking,
+                            "tooltip": {
+                                "valueDecimals": None,
+                                "valuePrefix": None,
+                                "valueSuffix": None,
+                            },
+                            "type": self.chart_type,
+                            "yAxis": "0",
+                        },
+                        {
+                            "color": "#AAEEEE",
+                            "dashStyle": "Solid",
+                            "data": [{"x": 2, "y": 8148082},],
+                            "marker": {
+                                "fillColor": "#DDDF0D",
+                                "symbol": "triangle-down",
+                            },
+                            "name": "Votes (Mitt Romney)",
+                            "stacking": self.stacking,
+                            "tooltip": {
+                                "valueDecimals": None,
+                                "valuePrefix": None,
+                                "valueSuffix": None,
+                            },
+                            "type": self.chart_type,
+                            "yAxis": "0",
+                        },
+                    ],
+                    "annotations": [],
+                    "colors": DEFAULT_COLORS,
+                },
+                result[2],
+            )
 
     def test_multi_metrics_multi_axis_line_chart(self):
         result = (
@@ -704,7 +916,10 @@ class HighChartsLineChartTransformerTests(TestCase):
             .axis(self.chart_class(mock_dataset.fields.wins))
             .transform(
                 dataframe,
-                [mock_dataset.fields.timestamp, Rollup(mock_dataset.fields.political_party)],
+                [
+                    mock_dataset.fields.timestamp,
+                    Rollup(mock_dataset.fields.political_party),
+                ],
                 [],
             )
         )
@@ -789,7 +1004,10 @@ class HighChartsLineChartTransformerTests(TestCase):
             .axis(self.chart_class(mock_dataset.fields.wins))
             .transform(
                 dimx2_date_str_totals_df,
-                [mock_dataset.fields.timestamp, Rollup(mock_dataset.fields.political_party)],
+                [
+                    mock_dataset.fields.timestamp,
+                    Rollup(mock_dataset.fields.political_party),
+                ],
                 [],
             )
         )
@@ -1196,7 +1414,10 @@ class HighChartsLineChartTransformerTests(TestCase):
         )
 
     def test_uni_dim_with_ref_line_chart(self):
-        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
+        dimensions = [
+            mock_dataset.fields.timestamp,
+            mock_dataset.fields.political_party,
+        ]
         references = [ElectionOverElection(mock_dataset.fields.timestamp)]
         result = (
             HighCharts(title="Time Series with Unique Dimension and Reference")
@@ -1313,14 +1534,15 @@ class HighChartsLineChartTransformerTests(TestCase):
         )
 
     def test_uni_dim_with_ref_delta_line_chart(self):
-        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
+        dimensions = [
+            mock_dataset.fields.timestamp,
+            mock_dataset.fields.political_party,
+        ]
         references = [ElectionOverElection(mock_dataset.fields.timestamp, delta=True)]
         result = (
             HighCharts(title="Time Series with Unique Dimension and Delta Reference")
             .axis(self.chart_class(mock_dataset.fields.votes))
-            .transform(
-                dimx2_date_str_ref_delta_df, dimensions, references
-            )
+            .transform(dimx2_date_str_ref_delta_df, dimensions, references)
         )
 
         self.assertEqual(
@@ -1492,14 +1714,15 @@ class HighChartsLineChartTransformerTests(TestCase):
         )
 
     def test_ref_axes_set_to_same_visibility_as_parent_axis(self):
-        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
+        dimensions = [
+            mock_dataset.fields.timestamp,
+            mock_dataset.fields.political_party,
+        ]
         references = [ElectionOverElection(mock_dataset.fields.timestamp, delta=True)]
         result = (
             HighCharts(title="Time Series with Unique Dimension and Delta Reference")
             .axis(self.chart_class(mock_dataset.fields.votes), y_axis_visible=False)
-            .transform(
-                dimx2_date_str_ref_delta_df, dimensions, references
-            )
+            .transform(dimx2_date_str_ref_delta_df, dimensions, references)
         )
 
         self.assertEqual(
@@ -1731,9 +1954,7 @@ class HighChartsBarChartTransformerTests(TestCase):
         result = (
             HighCharts("Votes and Wins")
             .axis(self.chart_class(mock_dataset.fields.votes))
-            .transform(
-                dimx1_str_df, [mock_dataset.fields.political_party], []
-            )
+            .transform(dimx1_str_df, [mock_dataset.fields.political_party], [])
         )
 
         self.assertEqual(
@@ -1786,9 +2007,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                 self.chart_class(mock_dataset.fields.votes),
                 self.chart_class(mock_dataset.fields.wins),
             )
-            .transform(
-                dimx1_str_df, [mock_dataset.fields.political_party], []
-            )
+            .transform(dimx1_str_df, [mock_dataset.fields.political_party], [])
         )
 
         self.assertEqual(
@@ -1848,7 +2067,10 @@ class HighChartsBarChartTransformerTests(TestCase):
         )
 
     def test_cont_uni_dims_single_metric_bar_chart(self):
-        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
+        dimensions = [
+            mock_dataset.fields.timestamp,
+            mock_dataset.fields.political_party,
+        ]
         result = (
             HighCharts("Election Votes by State")
             .axis(self.chart_class(mock_dataset.fields.votes))
@@ -1931,7 +2153,10 @@ class HighChartsBarChartTransformerTests(TestCase):
         )
 
     def test_cont_uni_dims_multi_metric_single_axis_bar_chart(self):
-        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
+        dimensions = [
+            mock_dataset.fields.timestamp,
+            mock_dataset.fields.political_party,
+        ]
         result = (
             HighCharts(title="Election Votes by State")
             .axis(
@@ -2070,7 +2295,10 @@ class HighChartsBarChartTransformerTests(TestCase):
         )
 
     def test_cont_uni_dims_multi_metric_multi_axis_bar_chart(self):
-        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
+        dimensions = [
+            mock_dataset.fields.timestamp,
+            mock_dataset.fields.political_party,
+        ]
         result = (
             HighCharts(title="Election Votes by State")
             .axis(self.chart_class(mock_dataset.fields.votes))
@@ -2217,9 +2445,7 @@ class HighChartsBarChartTransformerTests(TestCase):
             HighCharts(title="Categorical Dimension with Totals")
             .axis(self.chart_class(mock_dataset.fields.votes))
             .transform(
-                dimx1_str_totals_df,
-                [Rollup(mock_dataset.fields.political_party)],
-                [],
+                dimx1_str_totals_df, [Rollup(mock_dataset.fields.political_party)], [],
             )
         )
 
@@ -2648,9 +2874,7 @@ class HighChartsPieChartTransformerTests(TestCase):
         result = (
             HighCharts("Votes and Wins By Day")
             .axis(self.chart_class(mock_dataset.fields.votes))
-            .transform(
-                dimx1_date_df, [year(mock_dataset.fields.timestamp)], []
-            )
+            .transform(dimx1_date_df, [year(mock_dataset.fields.timestamp)], [])
         )
 
         self.assertEqual(
@@ -2700,9 +2924,7 @@ class HighChartsPieChartTransformerTests(TestCase):
         result = (
             HighCharts("Votes and Wins By Party")
             .axis(self.chart_class(mock_dataset.fields.votes))
-            .transform(
-                dimx1_str_df, [mock_dataset.fields.political_party], []
-            )
+            .transform(dimx1_str_df, [mock_dataset.fields.political_party], [])
         )
 
         self.assertEqual(
@@ -2751,9 +2973,7 @@ class HighChartsPieChartTransformerTests(TestCase):
         result = (
             HighCharts(title="Votes and Wins By Election")
             .axis(self.chart_class(mock_dataset.fields.votes))
-            .transform(
-                dimx1_num_df, [mock_dataset.fields["candidate-id"]], []
-            )
+            .transform(dimx1_num_df, [mock_dataset.fields["candidate-id"]], [])
         )
 
         self.assertEqual(
@@ -2998,7 +3218,10 @@ class HighChartsPieChartTransformerTests(TestCase):
         )
 
     def test_pie_chart_dimx2_date_str_reference(self):
-        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
+        dimensions = [
+            mock_dataset.fields.timestamp,
+            mock_dataset.fields.political_party,
+        ]
         references = [ElectionOverElection(mock_dataset.fields.timestamp)]
         result = (
             HighCharts(title="Election Votes by State")
