@@ -379,7 +379,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                             "visible": True,
                         }
                     ],
-                    "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                    "tooltip": {"shared": False, "useHTML": True, "enabled": True},
                     "legend": {"useHTML": True},
                     "series": [
                         {
@@ -489,7 +489,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                             "visible": True,
                         }
                     ],
-                    "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                    "tooltip": {"shared": False, "useHTML": True, "enabled": True},
                     "legend": {"useHTML": True},
                     "series": [
                         {
@@ -597,7 +597,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                             "visible": True,
                         }
                     ],
-                    "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                    "tooltip": {"shared": False, "useHTML": True, "enabled": True},
                     "legend": {"useHTML": True},
                     "series": [
                         {
@@ -642,7 +642,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                             "visible": True,
                         }
                     ],
-                    "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                    "tooltip": {"shared": False, "useHTML": True, "enabled": True},
                     "legend": {"useHTML": True},
                     "series": [
                         {
@@ -764,7 +764,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                         "visible": True,
                     },
                 ],
-                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                "tooltip": {"shared": False, "useHTML": True, "enabled": True},
                 "legend": {"useHTML": True},
                 "series": [
                     {
@@ -990,7 +990,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                         "dashStyle": "Solid",
                     },
                 ],
-                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                "tooltip": {"shared": False, "useHTML": True, "enabled": True},
                 "legend": {"useHTML": True},
             },
         )
@@ -1032,7 +1032,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                         "visible": True,
                     },
                 ],
-                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                "tooltip": {"shared": False, "useHTML": True, "enabled": True},
                 "legend": {"useHTML": True},
                 "series": [
                     {
@@ -1241,7 +1241,7 @@ class HighChartsLineChartTransformerTests(TestCase):
                         "visible": True,
                     },
                 ],
-                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                "tooltip": {"shared": False, "useHTML": True, "enabled": True},
                 "legend": {"useHTML": True},
                 "series": [
                     {
@@ -1869,7 +1869,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                         "visible": True,
                     }
                 ],
-                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                "tooltip": {"shared": False, "useHTML": True, "enabled": True},
                 "legend": {"useHTML": True},
                 "series": [
                     {
@@ -1914,7 +1914,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                         "visible": True,
                     }
                 ],
-                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                "tooltip": {"shared": False, "useHTML": True, "enabled": True},
                 "legend": {"useHTML": True},
                 "series": [
                     {
@@ -2089,7 +2089,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                         "visible": True,
                     }
                 ],
-                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                "tooltip": {"shared": False, "useHTML": True, "enabled": True},
                 "legend": {"useHTML": True},
                 "series": [
                     {
@@ -2178,7 +2178,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                         "visible": True,
                     }
                 ],
-                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                "tooltip": {"shared": False, "useHTML": True, "enabled": True},
                 "legend": {"useHTML": True},
                 "series": [
                     {
@@ -2324,7 +2324,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                         "visible": True,
                     },
                 ],
-                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                "tooltip": {"shared": False, "useHTML": True, "enabled": True},
                 "legend": {"useHTML": True},
                 "series": [
                     {
@@ -2633,7 +2633,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                         "yAxis": "0",
                     },
                 ],
-                "tooltip": {"enabled": True, "shared": True, "useHTML": True},
+                "tooltip": {"enabled": True, "shared": False, "useHTML": True},
                 "annotations": [],
                 "colors": DEFAULT_COLORS,
             },
@@ -2659,7 +2659,7 @@ class HighChartsBarChartTransformerTests(TestCase):
                         "visible": False,
                     }
                 ],
-                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                "tooltip": {"shared": False, "useHTML": True, "enabled": True},
                 "legend": {"useHTML": True},
                 "series": [
                     {
@@ -2733,7 +2733,7 @@ class HighChartsPieChartTransformerTests(TestCase):
         self.assertEqual(
             {
                 "title": {"text": "All Votes"},
-                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                "tooltip": {"shared": False, "useHTML": True, "enabled": True},
                 "legend": {"useHTML": True},
                 "series": [
                     {
@@ -2777,7 +2777,7 @@ class HighChartsPieChartTransformerTests(TestCase):
         self.assertEqual(
             {
                 "title": {"text": "Votes and Wins"},
-                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                "tooltip": {"shared": False, "useHTML": True, "enabled": True},
                 "legend": {"useHTML": True},
                 "series": [
                     {
@@ -3484,7 +3484,7 @@ class HighChartsLineChartAnnotationTransformerTests(TestCase):
                         "visible": True,
                     }
                 ],
-                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                "tooltip": {"shared": False, "useHTML": True, "enabled": True},
                 "legend": {"useHTML": True},
                 "series": [
                     {
