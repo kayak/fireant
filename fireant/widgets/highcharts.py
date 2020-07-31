@@ -53,6 +53,7 @@ MARKER_SYMBOLS = ("circle", "square", "diamond", "triangle", "triangle-down")
 
 SERIES_NEEDING_MARKER = (ChartWidget.LineSeries, ChartWidget.AreaSeries)
 TS_UPPER_BOUND = pd.Timestamp.max - timedelta(seconds=1)
+ALWAYS_SHARED_TOOLTIP_CHART_TYPES = {ChartWidget.PieSeries.type}
 
 
 def has_only_line_series(axis):
@@ -236,7 +237,10 @@ class HighCharts(ChartWidget, TransformableWidget):
                 "enabled": self.tooltip_visible,
                 # When only a single datapoint per series is available, shared tooltips should be avoided.
                 # Since it looks clunky and often supersedes most of the chart.
-                "shared": all([len(item['data']) > 1 for item in series])
+                "shared": all([
+                    len(item['data']) > 1 or item['type'] in ALWAYS_SHARED_TOOLTIP_CHART_TYPES
+                    for item in series
+                ]),
             },
             "legend": {"useHTML": True},
             "annotations": annotations,
@@ -524,6 +528,12 @@ class HighCharts(ChartWidget, TransformableWidget):
 
     def _render_pie_series(self, metric, reference, data_frame, dimension_fields):
         metric_alias = utils.alias_selector(metric.alias)
+
+        if self.split_dimension:
+            dimension_fields = [
+                dimension for dimension in dimension_fields if dimension != self.split_dimension
+            ]
+            data_frame = data_frame.reset_index(alias_selector(self.split_dimension.alias), drop=True)
 
         data = []
         for dimension_values, y in data_frame[metric_alias].iteritems():
