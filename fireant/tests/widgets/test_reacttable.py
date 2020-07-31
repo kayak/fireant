@@ -97,6 +97,31 @@ class FormattingRulesTests(TestCase):
             result,
         )
 
+    def test_formatting_heatmap_rule_with_2_colors(self):
+        result = ReactTable(
+            self.dataset.fields.metric0,
+            formatting_rules=[
+                FormattingHeatMapRule(
+                    FormattingField(metric=self.dataset.fields.metric0),
+                    "ff0000",
+                    start_color="00ff00",
+                )
+            ],
+        ).transform(self.df, [], [])
+
+        self.assertEqual(
+            {
+                "columns": [{"Header": "Metric0", "accessor": "$metric0"}],
+                "data": [
+                    {"$metric0": {"display": "1", "raw": 1, "color": "00ff00"}},
+                    {"$metric0": {"display": "2", "raw": 2, "color": "aaffaa"}},
+                    {"$metric0": {"display": "3", "raw": 3, "color": "ffa2a2"}},
+                    {"$metric0": {"display": "4", "raw": 4, "color": "ff0000"}},
+                ],
+            },
+            result,
+        )
+
     def test_single_formatting_condition_rule(self):
         result = ReactTable(
             self.dataset.fields.metric0,
