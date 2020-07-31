@@ -57,6 +57,11 @@ def rgb_to_hex(rgb_val):
     return "{0:02x}{1:02x}{2:02x}".format(*rgb_val)
 
 
+def hex_to_hsv(hex_color):
+    rgb_color = hex_to_rgb(hex_color)
+    return colorsys.rgb_to_hsv(*(val / 255 for val in rgb_color))
+
+
 class FormattingField:
     def __init__(self, metric=None, reference=None, operation=None):
         self.metric = metric
@@ -112,14 +117,21 @@ class FormattingHeatMapRule(FormattingRule):
     with set_min_max. The final value we increase with 0.05 to not have any white values.
     This will result in for instance a final saturation range of [0.05; 1.00] if the rule color is very saturated
     and in [0.05; 0.55] for a low saturated rule color.
+
+    If a start_color is supplied the same calculations are done for both the color and the start_color, but the
+    start_color will cover the first 50% of values and it will result in a color transition over white.
     """
 
     WHITE = 'FFFFFF'
 
-    def __init__(self, field, color, covers_row=False):
+    def __init__(self, field, color, start_color=None, covers_row=False):
         super().__init__(field, color, covers_row)
-        rgb_color = hex_to_rgb(self.color)
-        self.hsv_color = colorsys.rgb_to_hsv(*(val / 255 for val in rgb_color))
+        self.hsv_color = hex_to_hsv(self.color)
+        if start_color:
+            self.hsv_start_color = hex_to_hsv(start_color)
+            self.start_saturation_spread = max(0.50, self.hsv_start_color[1])
+        else:
+            self.hsv_start_color = None
         self.saturation_spread = max(0.50, self.hsv_color[1] - 0.05)
         self.min_val, self.max_val = None, None
 
@@ -130,15 +142,31 @@ class FormattingHeatMapRule(FormattingRule):
     def _is_invalid(val):
         return pd.isna(val) or np.isinf(val)
 
+    @staticmethod
+    def get_hex_color_with_new_saturation(base_hsv_color, saturation):
+        calculated_hsv_color = colorsys.hsv_to_rgb(base_hsv_color[0], saturation, base_hsv_color[2])
+        return rgb_to_hex((round(val * 255) for val in calculated_hsv_color))
+
     def determine_color(self, value):
         if self._is_invalid(value) or self._is_invalid(self.min_val) or self._is_invalid(self.max_val):
             return self.WHITE
 
         val_ratio = (value - self.min_val) / (self.max_val - self.min_val)
-        saturation = val_ratio * self.saturation_spread + 0.05
 
-        calculated_hsv_color = colorsys.hsv_to_rgb(self.hsv_color[0], saturation, self.hsv_color[2])
-        return rgb_to_hex((round(val * 255) for val in calculated_hsv_color))
+        if self.hsv_start_color is not None:
+            if val_ratio <= 0.5:
+                # The supplied value should use the start color.
+                # Move the val_ratio back to a [0, 1.0] range with the values flipped.
+                flipped_val_ratio = abs(val_ratio - 0.5) * 2.0
+                saturation = flipped_val_ratio * self.start_saturation_spread
+                return self.get_hex_color_with_new_saturation(self.hsv_start_color, saturation)
+            else:
+                # The supplied value should use the default color.
+                # Adjust it from the (0.5, 1.0] range to (0.0, 1.0]
+                val_ratio = (val_ratio - 0.5) * 2.0
+
+        saturation = val_ratio * self.saturation_spread + 0.05
+        return self.get_hex_color_with_new_saturation(self.hsv_color, saturation)
 
 
 def find_rule_to_apply(rules, value):
