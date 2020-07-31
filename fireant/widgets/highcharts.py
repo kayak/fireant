@@ -232,9 +232,11 @@ class HighCharts(ChartWidget, TransformableWidget):
             "colors": self.colors,
             "series": series,
             "tooltip": {
-                "shared": True,
                 "useHTML": True,
                 "enabled": self.tooltip_visible,
+                # When only a single datapoint per series is available, shared tooltips should be avoided.
+                # Since it looks clunky and often supersedes most of the chart.
+                "shared": all([len(item['data']) > 1 for item in series])
             },
             "legend": {"useHTML": True},
             "annotations": annotations,
