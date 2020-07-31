@@ -2733,7 +2733,7 @@ class HighChartsPieChartTransformerTests(TestCase):
         self.assertEqual(
             {
                 "title": {"text": "All Votes"},
-                "tooltip": {"shared": False, "useHTML": True, "enabled": True},
+                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
                 "legend": {"useHTML": True},
                 "series": [
                     {
@@ -2764,6 +2764,150 @@ class HighChartsPieChartTransformerTests(TestCase):
             result,
         )
 
+    def test_pie_chart_dimx2_metricx1_with_a_split_dimension(self):
+        result = (
+            HighCharts(title="All Votes", split_dimension=mock_dataset.fields.political_party)
+            .axis(self.chart_class(mock_dataset.fields.votes))
+            .transform(dimx2_str_str_df, [mock_dataset.fields.political_party, mock_dataset.fields['candidate-name']], [])
+        )
+
+        with self.subTest("returns 3 charts"):
+            self.assertEqual(len(result), 3)
+
+        with self.subTest("for Democrat split (1st chart)"):
+            self.assertEqual(
+                {
+                    'chart': {'height': 240},
+                    "title": {"text": "All Votes (Democrat)"},
+                    "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                    "legend": {"useHTML": True},
+                    "series": [
+                        {
+                            "name": "Votes",
+                            "type": "pie",
+                            "data": [
+                                {'name': 'Al Gore', 'y': 8294949},
+                                {'name': 'Barrack Obama', 'y': 24227234},
+                                {'name': 'Bill Clinton', 'y': 7579518},
+                                {'name': 'Hillary Clinton', 'y': 4871678},
+                                {'name': 'John Kerry', 'y': 9578189},
+                            ],
+                            "tooltip": {
+                                "pointFormat": '<span style="color:{point.color}">●</span> '
+                                "{series.name}: <b>{point.y} ({point.percentage:.1f}%)</b><br/>",
+                                "valueDecimals": None,
+                                "valuePrefix": None,
+                                "valueSuffix": None,
+                            },
+                        }
+                    ],
+                    'xAxis': {
+                        'categories': ['Democrat', 'Independent', 'Republican'],
+                        'type': 'category',
+                        'visible': True,
+                    },
+                    "yAxis": [
+                        {
+                            "id": "0",
+                            "labels": {"style": {"color": None}},
+                            "title": {"text": None},
+                            "visible": True,
+                        }
+                    ],
+                    "annotations": [],
+                    "colors": DEFAULT_COLORS,
+                },
+                result[0],
+            )
+
+        with self.subTest("for Independent split (2nd chart)"):
+            self.assertEqual(
+                {
+                    'chart': {'height': 240},
+                    "title": {"text": "All Votes (Independent)"},
+                    "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                    "legend": {"useHTML": True},
+                    "series": [
+                        {
+                            "name": "Votes",
+                            "type": "pie",
+                            "data": [
+                                {'name': 'Ross Perot', 'y': 1076384},
+                            ],
+                            "tooltip": {
+                                "pointFormat": '<span style="color:{point.color}">●</span> '
+                                "{series.name}: <b>{point.y} ({point.percentage:.1f}%)</b><br/>",
+                                "valueDecimals": None,
+                                "valuePrefix": None,
+                                "valueSuffix": None,
+                            },
+                        }
+                    ],
+                    'xAxis': {
+                        'categories': ['Democrat', 'Independent', 'Republican'],
+                        'type': 'category',
+                        'visible': True,
+                    },
+                    "yAxis": [
+                        {
+                            "id": "0",
+                            "labels": {"style": {"color": None}},
+                            "title": {"text": None},
+                            "visible": True,
+                        }
+                    ],
+                    "annotations": [],
+                    "colors": DEFAULT_COLORS,
+                },
+                result[1],
+            )
+
+        with self.subTest("for Republican split (3rd chart)"):
+            self.assertEqual(
+                {
+                    'chart': {'height': 240},
+                    "title": {"text": "All Votes (Republican)"},
+                    "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                    "legend": {"useHTML": True},
+                    "series": [
+                        {
+                            "name": "Votes",
+                            "type": "pie",
+                            "data": [
+                                {'name': 'Bob Dole', 'y': 6564547},
+                                {'name': 'Donald Trump', 'y': 13438835},
+                                {'name': 'George Bush', 'y': 18403811},
+                                {'name': 'John McCain', 'y': 9491109},
+                                {'name': 'Mitt Romney', 'y': 8148082},
+                            ],
+                            "tooltip": {
+                                "pointFormat": '<span style="color:{point.color}">●</span> '
+                                "{series.name}: <b>{point.y} ({point.percentage:.1f}%)</b><br/>",
+                                "valueDecimals": None,
+                                "valuePrefix": None,
+                                "valueSuffix": None,
+                            },
+                        }
+                    ],
+                    'xAxis': {
+                        'categories': ['Democrat', 'Independent', 'Republican'],
+                        'type': 'category',
+                        'visible': True,
+                    },
+                    "yAxis": [
+                        {
+                            "id": "0",
+                            "labels": {"style": {"color": None}},
+                            "title": {"text": None},
+                            "visible": True,
+                        }
+                    ],
+                    "annotations": [],
+                    "colors": DEFAULT_COLORS,
+                },
+                result[2],
+            )
+
     def test_pie_chart_metricx2(self):
         result = (
             HighCharts(title="Votes and Wins")
@@ -2777,7 +2921,7 @@ class HighChartsPieChartTransformerTests(TestCase):
         self.assertEqual(
             {
                 "title": {"text": "Votes and Wins"},
-                "tooltip": {"shared": False, "useHTML": True, "enabled": True},
+                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
                 "legend": {"useHTML": True},
                 "series": [
                     {
