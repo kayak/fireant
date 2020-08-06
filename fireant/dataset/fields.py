@@ -1,14 +1,20 @@
 from collections import Iterable
+from datetime import datetime
 from enum import Enum
 from functools import wraps
+from numbers import Number
+from typing import Type, Union
 
+from pypika import Field as PyPikaField
 from pypika.enums import Arithmetic
 from pypika.terms import (
     ArithmeticExpression,
+    Function,
     Mod,
     Node,
     Pow,
 )
+
 from .filters import (
     AntiPatternFilter,
     BooleanFilter,
@@ -106,8 +112,8 @@ class Field(Node):
 
     def __init__(
         self,
-        alias,
-        definition,
+        alias: str,
+        definition: Union[PyPikaField, Type[Function]],
         data_type: DataType = DataType.number,
         label=None,
         hint_table=None,
@@ -140,30 +146,38 @@ class Field(Node):
     def is_aggregate(self):
         return self.definition.is_aggregate
 
-    def eq(self, other):
+    @property
+    def is_wrapped(self) -> bool:
+        """
+        This allows calling code can easily tell whether the field has been wrapped.
+        This occurs if data blending is being used.
+        """
+        return bool(getattr(self.definition, 'definition', False))
+
+    def eq(self, other: Number) -> ComparatorFilter:
         return ComparatorFilter(self, ComparisonOperator.eq, other)
 
-    def ne(self, other):
+    def ne(self, other: Number) -> ComparatorFilter:
         return ComparatorFilter(self, ComparisonOperator.ne, other)
 
     @restrict_types(CONTINUOUS_TYPES)
-    def gt(self, other):
+    def gt(self, other: Number) -> ComparatorFilter:
         return ComparatorFilter(self, ComparisonOperator.gt, other)
 
     @restrict_types(CONTINUOUS_TYPES)
-    def ge(self, other):
+    def ge(self, other: Number) -> ComparatorFilter:
         return ComparatorFilter(self, ComparisonOperator.gte, other)
 
     @restrict_types(CONTINUOUS_TYPES)
-    def lt(self, other):
+    def lt(self, other: Number):
         return ComparatorFilter(self, ComparisonOperator.lt, other)
 
     @restrict_types(CONTINUOUS_TYPES)
-    def le(self, other):
+    def le(self, other: Number) -> ComparatorFilter:
         return ComparatorFilter(self, ComparisonOperator.lte, other)
 
     @restrict_types(CONTINUOUS_TYPES)
-    def between(self, lower, upper):
+    def between(self, lower: datetime, upper: datetime) -> RangeFilter:
         """
         Creates a filter to filter a dataset query.
 
@@ -177,7 +191,7 @@ class Field(Node):
         """
         return RangeFilter(self, lower, upper)
 
-    def isin(self, values: Iterable):
+    def isin(self, values: Iterable) -> ContainsFilter:
         """
         Creates a filter that filters to rows where
 
@@ -190,7 +204,7 @@ class Field(Node):
         """
         return ContainsFilter(self, values)
 
-    def notin(self, values):
+    def notin(self, values: Iterable) -> ExcludesFilter:
         """
         Creates a filter to filter a dataset query.
 
@@ -205,15 +219,15 @@ class Field(Node):
         return ExcludesFilter(self, values)
 
     @restrict_types([DataType.text])
-    def like(self, pattern, *patterns):
+    def like(self, pattern: str, *patterns: Iterable) -> PatternFilter:
         return PatternFilter(self, pattern, *patterns)
 
     @restrict_types([DataType.text])
-    def not_like(self, pattern, *patterns):
+    def not_like(self, pattern: str, *patterns: Iterable) -> AntiPatternFilter:
         return AntiPatternFilter(self, pattern, *patterns)
 
     @restrict_types([DataType.boolean])
-    def is_(self, value: bool):
+    def is_(self, value: bool) -> BooleanFilter:
         """
         Creates a filter to filter a dataset query.
 
@@ -224,7 +238,7 @@ class Field(Node):
         """
         return BooleanFilter(self, value)
 
-    def void(self):
+    def void(self) -> VoidFilter:
         return VoidFilter(self)
 
     def __eq__(self, other):
@@ -305,7 +319,7 @@ class Field(Node):
     def for_(self, replacement):
         return replacement
 
-    def get_sql(self, *args, **kwargs):
+    def get_sql(self, *args, **kwargs) -> str:
         return self.definition.get_sql(*args, **kwargs)
 
     @property

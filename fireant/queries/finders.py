@@ -1,13 +1,18 @@
 from collections import defaultdict, namedtuple
+from typing import TYPE_CHECKING, Union
 
+from pypika.terms import Field as PyPikaField
 from toposort import CircularDependencyError, toposort_flatten
 
+from fireant.dataset.filters import Filter
 from fireant.dataset.intervals import DATETIME_INTERVALS, DatetimeInterval
 from fireant.dataset.modifiers import OmitFromRollup, Rollup
 from fireant.dataset.operations import Share
 from fireant.exceptions import DataSetException
 from fireant.utils import groupby, ordered_distinct_list, ordered_distinct_list_by_attr
 
+if TYPE_CHECKING:
+    from fireant import Field
 
 class MissingTableJoinException(DataSetException):
     pass
@@ -18,6 +23,13 @@ class CircularJoinsException(DataSetException):
 
 
 ReferenceGroup = namedtuple("ReferenceGroup", ("dimension", "time_unit", "intervals"))
+
+
+def _get_field_definition(field: Union['Field', 'Filter']) -> PyPikaField:
+    if field.is_wrapped:
+        return getattr(field.definition, 'definition', None)
+
+    return getattr(field, 'definition', None)
 
 
 def find_required_tables_to_join(elements, base_table):
@@ -37,7 +49,7 @@ def find_required_tables_to_join(elements, base_table):
             table
             for element in elements
             # Need extra for-loop to incl. the `display_definition` from `UniqueDimension`
-            for attr in [getattr(element, "definition", None)]
+            for attr in [_get_field_definition(element)]
             # ... but then filter Nones since most elements do not have `display_definition`
             if attr is not None
             for table in attr.tables_

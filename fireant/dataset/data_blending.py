@@ -4,7 +4,6 @@ from fireant.queries.builder import (
     DataSetBlenderQueryBuilder,
     DimensionChoicesQueryBuilder,
 )
-from fireant.queries.builder.query_builder import validate_fields
 from fireant.utils import (
     deepcopy,
     immutable,
@@ -71,7 +70,8 @@ class DataSetBlender:
         self.dimension_map = dimension_map
 
         # Wrap all dataset fields with another field on top so that:
-        #   1. DataSetBlender doesn't share a reference to a field with a DataSet
+        #   1. DataSetBlender doesn't share a reference to a field with a DataSet (__hash__ is used to find out which
+        #      dataset the field is in - see the Field class' __hash__ method for more details)
         #   2. When complex fields are added, the `definition` attribute will always have at least one field within
         #      its object graph
         self.fields = DataSet.Fields(
