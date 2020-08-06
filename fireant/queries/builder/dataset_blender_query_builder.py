@@ -1,24 +1,25 @@
 import copy
 from typing import List
 
-from fireant.dataset.fields import Field
+from pypika import JoinType, Query
+
 from fireant.queries.builder.dataset_query_builder import DataSetQueryBuilder
 from fireant.queries.finders import (
     find_dataset_fields,
     find_field_in_modified_field,
     find_metrics_for_widgets,
+    find_operations_for_widgets,
     find_share_dimensions,
-    find_operations_for_widgets
 )
 from fireant.queries.sql_transformer import make_slicer_query_with_totals_and_references
 from fireant.reference_helpers import reference_type_alias
 from fireant.utils import alias_selector, listify, ordered_distinct_list_by_attr
 from fireant.widgets.base import Widget
-from pypika import Query, JoinType
 from ..sets import (
     apply_set_dimensions,
     omit_set_filters,
 )
+
 
 @listify
 def _find_dataset_fields_needed_to_be_mapped(dataset):
@@ -52,7 +53,7 @@ def _find_dataset_fields_needed_to_be_mapped(dataset):
     """
     complex_fields = []
     for field in dataset.fields:
-        if isinstance(field.definition, Field):
+        if field.is_wrapped:
             yield field
         else:
             complex_fields.append(field)
