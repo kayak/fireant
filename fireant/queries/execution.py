@@ -1,22 +1,14 @@
-from functools import reduce
-from typing import (
-    Iterable,
-    Sized,
-    Union,
-)
+from typing import Iterable, List, Type
 
 import pandas as pd
+from pypika.queries import QueryBuilder
 
 from fireant.database import Database
-from fireant.dataset.fields import Field, DataType
+from fireant.dataset.fields import DataType, Field
 from fireant.dataset.references import calculate_delta_percent
 from fireant.dataset.totals import get_totals_marker_for_dtype
-
-from fireant.utils import (
-    alias_selector,
-    chunks,
-)
-from .finders import find_totals_dimensions, find_field_in_modified_field
+from fireant.utils import alias_selector, chunks
+from .finders import find_field_in_modified_field, find_totals_dimensions
 from .pandas_workaround import df_subtract
 from ..dataset.modifiers import RollupValue
 
@@ -27,7 +19,7 @@ PANDAS_TO_DATETIME_FORMAT = {}
 
 def fetch_data(
     database: Database,
-    queries: Union[Sized, Iterable],
+    queries: List[Type[QueryBuilder]],
     dimensions: Iterable[Field],
     share_dimensions: Iterable[Field] = (),
     reference_groups=(),

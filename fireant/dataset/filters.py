@@ -54,6 +54,15 @@ class Filter(FieldModifier):
     def is_aggregate(self):
         return self.definition.is_aggregate
 
+    @property
+    def is_wrapped(self) -> bool:
+        """
+        We do not wrap field modifiers e.g. filters, just fields themselves during data blending.
+        This is for convenience as Filter and Field classes are often passed to util functions as part of the
+        same collection.
+        """
+        return False
+
     def __eq__(self, other):
         return all(
             [
