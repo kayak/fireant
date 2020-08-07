@@ -1,20 +1,17 @@
-import pandas as pd
 from unittest import TestCase
 from unittest.mock import ANY, Mock, patch
 
+import pandas as pd
+from pypika import Order, Table
+
 import fireant as f
-from fireant import Share, DataSet, DataType, Field
+from fireant import DataSet, DataType, Field, Share
 from fireant.dataset.filters import ComparisonOperator
 from fireant.dataset.references import ReferenceFilter
 from fireant.queries.sets import _make_set_dimension
 from fireant.tests.database.mock_database import TestDatabase
 from fireant.tests.dataset.matchers import FieldMatcher, PypikaQueryMatcher
-from fireant.tests.dataset.mocks import (
-    mock_dataset,
-    mock_date_annotation_dataset,
-    mock_category_annotation_dataset,
-)
-from pypika import Order, Table
+from fireant.tests.dataset.mocks import (mock_category_annotation_dataset, mock_dataset, mock_date_annotation_dataset)
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -175,7 +172,7 @@ class QueryBuilderFetchDataTests(TestCase):
             ANY,
             [
                 PypikaQueryMatcher(
-                    'SELECT SUM("votes") "$votes" ' 'FROM "politics"."politician"'
+                    'SELECT SUM("votes") "$votes" FROM "politics"."politician" LIMIT 200000'
                 )
             ],
             ANY,
@@ -426,7 +423,8 @@ class QueryBuilderAnnotationTests(TestCase):
                         'SUM("votes") "$votes" '
                         'FROM "politics"."politician" '
                         'GROUP BY "$timestamp" '
-                        'ORDER BY "$timestamp"'
+                        'ORDER BY "$timestamp" '
+                        'LIMIT 200000'
                     )
                 ],
                 FieldMatcher(*dims),
@@ -475,7 +473,8 @@ class QueryBuilderAnnotationTests(TestCase):
                         'SUM("votes") "$votes" '
                         'FROM "politics"."politician" '
                         'GROUP BY "$political_party" '
-                        'ORDER BY "$political_party"'
+                        'ORDER BY "$political_party" '
+                        'LIMIT 200000'
                     )
                 ],
                 FieldMatcher(*dims),
@@ -526,7 +525,8 @@ class QueryBuilderAnnotationTests(TestCase):
                         'SUM("votes") "$votes" '
                         'FROM "politics"."politician" '
                         'GROUP BY "$timestamp","$political_party" '
-                        'ORDER BY "$timestamp","$political_party"'
+                        'ORDER BY "$timestamp","$political_party" '
+                        'LIMIT 200000'
                     )
                 ],
                 FieldMatcher(*dims),
@@ -552,7 +552,8 @@ class QueryBuilderAnnotationTests(TestCase):
                     'SUM("votes") "$votes" '
                     'FROM "politics"."politician" '
                     'GROUP BY "$political_party" '
-                    'ORDER BY "$political_party"'
+                    'ORDER BY "$political_party" '
+                    'LIMIT 200000'
                 )
             ],
             FieldMatcher(*dims),
@@ -571,7 +572,7 @@ class QueryBuilderAnnotationTests(TestCase):
             mock_date_annotation_dataset.database,
             [
                 PypikaQueryMatcher(
-                    "SELECT " 'SUM("votes") "$votes" ' 'FROM "politics"."politician"'
+                    'SELECT SUM("votes") "$votes" FROM "politics"."politician" LIMIT 200000'
                 )
             ],
             FieldMatcher(*dims),
@@ -618,7 +619,8 @@ class QueryBuilderAnnotationTests(TestCase):
                         'FROM "politics"."politician" '
                         "WHERE \"timestamp\"='2020-01-01' "
                         'GROUP BY "$timestamp" '
-                        'ORDER BY "$timestamp"'
+                        'ORDER BY "$timestamp" '
+                        'LIMIT 200000'
                     )
                 ],
                 FieldMatcher(*dims),
@@ -672,7 +674,8 @@ class QueryBuilderAnnotationTests(TestCase):
                         'FROM "politics"."politician" '
                         "WHERE \"political_party\"='Democrat' "
                         'GROUP BY "$timestamp","$political_party" '
-                        'ORDER BY "$timestamp","$political_party"'
+                        'ORDER BY "$timestamp","$political_party" '
+                        'LIMIT 200000'
                     )
                 ],
                 FieldMatcher(*dims),

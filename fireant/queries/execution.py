@@ -24,12 +24,7 @@ def fetch_data(
     share_dimensions: Iterable[Field] = (),
     reference_groups=(),
 ):
-    queries = [
-        str(
-            query.limit(min(query._limit or float("inf"), database.max_result_set_size))
-        )
-        for query in queries
-    ]
+    queries = [str(query) for query in queries]
 
     # Indicate which dimensions need to be parsed as date types
     # For this we create a dictionary with the dimension alias as key and PANDAS_TO_DATETIME_FORMAT as value

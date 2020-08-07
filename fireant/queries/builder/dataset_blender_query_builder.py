@@ -193,14 +193,14 @@ def _build_dataset_query(
     dataset_operations = operations
 
     return make_slicer_query_with_totals_and_references(
-        dataset.database,
-        dataset.table,
-        dataset.joins,
-        dataset_dimensions,
-        dataset_metrics,
-        dataset_operations,
-        dataset_filters,
-        dataset_references,
+        database=dataset.database,
+        table=dataset.table,
+        joins=dataset.joins,
+        dimensions=dataset_dimensions,
+        metrics=dataset_metrics,
+        operations=dataset_operations,
+        filters=dataset_filters,
+        references=dataset_references,
         orders=[],
         share_dimensions=dataset_share_dimensions,
     )
@@ -412,6 +412,7 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
             blended_query = _blend_query(
                 dimensions, metrics, orders, field_maps, queryset
             )
+            blended_query = self._apply_pagination(blended_query)
 
             if blended_query:
                 blended_queries.append(blended_query)

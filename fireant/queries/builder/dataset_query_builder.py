@@ -1,6 +1,6 @@
 from typing import (
     Dict,
-    Iterable,
+    Iterable, List, TYPE_CHECKING, Type,
 )
 
 from fireant.dataset.fields import DataType
@@ -35,6 +35,9 @@ from ..sql_transformer import (
     make_slicer_query,
     make_slicer_query_with_totals_and_references,
 )
+
+if TYPE_CHECKING:
+    from pypika import PyPikaQueryBuilder
 
 
 class DataSetQueryBuilder(
@@ -77,7 +80,7 @@ class DataSetQueryBuilder(
         )
 
     @property
-    def sql(self):
+    def sql(self) -> List[Type['PyPikaQueryBuilder']]:
         """
         Serialize this query builder to a list of Pypika/SQL queries. This function will return one query for every
         combination of reference and rolled up dimension (including null options).
@@ -97,18 +100,20 @@ class DataSetQueryBuilder(
         operations = find_operations_for_widgets(self._widgets)
         share_dimensions = find_share_dimensions(dimensions, operations)
 
-        return make_slicer_query_with_totals_and_references(
-            self.dataset.database,
-            self.table,
-            self.dataset.joins,
-            dimensions,
-            metrics,
-            operations,
-            self.filters,
-            self._references,
+        queries = make_slicer_query_with_totals_and_references(
+            database=self.dataset.database,
+            table=self.table,
+            joins=self.dataset.joins,
+            dimensions=dimensions,
+            metrics=metrics,
+            operations=operations,
+            filters=self.filters,
+            references=self._references,
             orders=self.orders,
             share_dimensions=share_dimensions,
         )
+
+        return [self._apply_pagination(query) for query in queries]
 
     def fetch(self, hint=None) -> Iterable[Dict]:
         """

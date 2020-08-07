@@ -3,7 +3,6 @@ from unittest import TestCase
 import fireant as f
 from fireant.tests.dataset.mocks import (
     mock_dataset,
-    mock_spend_dataset,
 )
 
 
@@ -28,7 +27,8 @@ class QueryBuilderJoinTests(TestCase):
                          'FULL OUTER JOIN "locations"."district" '
                          'ON "politician"."district_id"="district"."id" '
                          'GROUP BY "$timestamp","$district-name" '
-                         'ORDER BY "$timestamp","$district-name"', str(queries[0]))
+                         'ORDER BY "$timestamp","$district-name" '
+                         'LIMIT 200000', str(queries[0]))
 
     def test_dimension_with_multiple_joins_includes_joins_ordered__in_query(self):
         queries = mock_dataset.query \
@@ -51,7 +51,8 @@ class QueryBuilderJoinTests(TestCase):
                          'FULL OUTER JOIN "locations"."district" '
                          'ON "politician"."district_id"="district"."id" '
                          'GROUP BY "$timestamp","$district-name" '
-                         'ORDER BY "$timestamp","$district-name"', str(queries[0]))
+                         'ORDER BY "$timestamp","$district-name" '
+                         'LIMIT 200000', str(queries[0]))
 
     def test_dimension_with_recursive_join_joins_all_join_tables(self):
         queries = mock_dataset.query \
@@ -72,7 +73,8 @@ class QueryBuilderJoinTests(TestCase):
                          'JOIN "locations"."state" '
                          'ON "district"."state_id"="state"."id" '
                          'GROUP BY "$timestamp","$state" '
-                         'ORDER BY "$timestamp","$state"', str(queries[0]))
+                         'ORDER BY "$timestamp","$state" '
+                         'LIMIT 200000', str(queries[0]))
 
     def test_metric_with_join_includes_join_in_query(self):
         queries = mock_dataset.query \
@@ -89,7 +91,8 @@ class QueryBuilderJoinTests(TestCase):
                          'JOIN "politics"."voter" '
                          'ON "politician"."id"="voter"."politician_id" '
                          'GROUP BY "$political_party" '
-                         'ORDER BY "$political_party"', str(queries[0]))
+                         'ORDER BY "$political_party" '
+                         'LIMIT 200000', str(queries[0]))
 
     def test_dimension_filter_with_join_on_display_definition_does_not_include_join_in_query(self):
         queries = mock_dataset.query \
@@ -102,7 +105,8 @@ class QueryBuilderJoinTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
-                         'WHERE "district_id" IN (1)', str(queries[0]))
+                         'WHERE "district_id" IN (1) '
+                         'LIMIT 200000', str(queries[0]))
 
     def test_dimension_filter_with_recursive_join_includes_join_in_query(self):
         queries = mock_dataset.query \
@@ -117,7 +121,8 @@ class QueryBuilderJoinTests(TestCase):
                          'FROM "politics"."politician" '
                          'FULL OUTER JOIN "locations"."district" '
                          'ON "politician"."district_id"="district"."id" '
-                         'WHERE "district"."district_name" IN (\'example\')', str(queries[0]))
+                         'WHERE "district"."district_name" IN (\'example\') '
+                         'LIMIT 200000', str(queries[0]))
 
     def test_dimension_filter_with_deep_recursive_join_includes_joins_in_query(self):
         queries = mock_dataset.query \
@@ -136,4 +141,5 @@ class QueryBuilderJoinTests(TestCase):
                          'ON "district"."state_id"="state"."id" '
                          'JOIN "test"."deep" '
                          'ON "deep"."id"="state"."ref_id" '
-                         'WHERE "deep"."id" IN (1)', str(queries[0]))
+                         'WHERE "deep"."id" IN (1) '
+                         'LIMIT 200000', str(queries[0]))

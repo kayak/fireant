@@ -2,6 +2,7 @@ import functools
 
 import pandas as pd
 from dateutil.relativedelta import relativedelta
+
 from fireant.dataset.fields import DataType
 from fireant.dataset.filters import RangeFilter
 from fireant.dataset.intervals import DatetimeInterval
@@ -105,28 +106,22 @@ def adjust_dataframe_for_rolling_window(operations, data_frame):
     return data_frame
 
 
-def apply_to_query_args(
-    database, table, joins, dimensions, metrics, operations, filters, references
-):
+def apply_to_query_args(*, dimensions, operations, filters, **kwargs):
     filters = adjust_daterange_filter_for_rolling_window(
         dimensions, operations, filters
     )
-    return (
-        database,
-        table,
-        joins,
-        dimensions,
-        metrics,
-        operations,
-        filters,
-        references,
+    return dict(
+        dimensions=dimensions,
+        operations=operations,
+        filters=filters,
+        **kwargs
     )
 
 
 def apply_special_cases(f):
     @functools.wraps(f)
-    def wrapper(*args, **kwargs):
-        return f(*apply_to_query_args(*args), **kwargs)
+    def wrapper(**kwargs):
+        return f(**apply_to_query_args(**kwargs))
 
     return wrapper
 

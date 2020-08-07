@@ -23,7 +23,8 @@ class QueryBuilderOperationTests(TestCase):
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp"', str(queries[0]))
+                         'ORDER BY "$timestamp" '
+                         'LIMIT 200000', str(queries[0]))
 
     def test_build_query_with_cummean_operation(self):
         queries = mock_dataset.query \
@@ -38,7 +39,8 @@ class QueryBuilderOperationTests(TestCase):
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp"', str(queries[0]))
+                         'ORDER BY "$timestamp" '
+                         'LIMIT 200000', str(queries[0]))
 
     def test_build_query_with_cumprod_operation(self):
         queries = mock_dataset.query \
@@ -53,7 +55,8 @@ class QueryBuilderOperationTests(TestCase):
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp"', str(queries[0]))
+                         'ORDER BY "$timestamp" '
+                         'LIMIT 200000', str(queries[0]))
 
     def test_build_query_with_rollingmean_operation(self):
         queries = mock_dataset.query \
@@ -68,4 +71,5 @@ class QueryBuilderOperationTests(TestCase):
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
                          'GROUP BY "$timestamp" '
-                         'ORDER BY "$timestamp"', str(queries[0]))
+                         'ORDER BY "$timestamp" '
+                         'LIMIT 200000', str(queries[0]))

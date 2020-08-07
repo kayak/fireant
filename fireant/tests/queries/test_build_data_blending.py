@@ -1,12 +1,13 @@
 from unittest import TestCase
 
+from pypika import Order
+
 import fireant as f
 from fireant.tests.dataset.mocks import (
     Rollup,
     mock_dataset_blender,
     mock_staff_dataset,
 )
-from pypika import Order
 
 
 class DataSetBlenderQueryBuilderTests(TestCase):
@@ -41,7 +42,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             'FROM "politics"."politician_spend" '
             'GROUP BY "$timestamp") "sq1" '
             'ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -80,7 +82,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             ') "sq1" '
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -114,7 +117,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             ') "sq1" '
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -153,7 +157,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             ') "sq1" '
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp","$political_party"',
+            'ORDER BY "$timestamp","$political_party" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -189,7 +194,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             ') "sq1" '
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -226,7 +232,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             ') "sq1" '
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -263,7 +270,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             ') "sq1" '
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -309,7 +317,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             ') "sq2" '
             "ON "
             '"sq0"."$candidate-id"="sq2"."$candidate-id" '
-            'ORDER BY "$political_party","$candidate-id"',
+            'ORDER BY "$political_party","$candidate-id" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -353,7 +362,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             ') "sq2" '
             "ON "
             '"sq0"."$candidate-id"="sq2"."$candidate-id" '
-            'ORDER BY "$candidate-id"',
+            'ORDER BY "$candidate-id" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -389,7 +399,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             ') "sq1" '
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -427,7 +438,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             ') "sq1" '
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -466,7 +478,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
             'AND "sq0"."$candidate-id"="sq1"."$candidate-id" '
-            'ORDER BY "$timestamp","$candidate-id"',
+            'ORDER BY "$timestamp","$candidate-id" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -501,7 +514,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             ') "sq1" '
             "ON "
             '"sq0"."$candidate-id"="sq1"."$candidate-id" '
-            'ORDER BY "$candidate-id"',
+            'ORDER BY "$candidate-id" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -540,7 +554,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             ') "sq1" '
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -578,7 +593,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             ') "sq1" '
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -620,7 +636,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             ') "sq1" '
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$votes"',
+            'ORDER BY "$votes" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -664,7 +681,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
             'AND "sq0"."$state"="sq1"."$state" '
-            'ORDER BY "$timestamp","$state"',
+            'ORDER BY "$timestamp","$state" '
+            'LIMIT 200000',
             str(query.sql[0]),
         )
 
@@ -703,7 +721,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 ') "sq1" '
                 "ON "
                 '"sq0"."$timestamp"="sq1"."$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(base_query),
             )
         with self.subTest("ref query"):
@@ -727,7 +746,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 ') "sq1" '
                 "ON "
                 '"sq0"."$timestamp"="sq1"."$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(ref_query),
             )
 
@@ -770,7 +790,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 "ON "
                 '"sq0"."$timestamp"="sq1"."$timestamp" '
                 'AND "sq0"."$candidate-id"="sq1"."$candidate-id" '
-                'ORDER BY "$timestamp","$candidate-id"',
+                'ORDER BY "$timestamp","$candidate-id" '
+                'LIMIT 200000',
                 str(base_query),
             )
         with self.subTest("totals query"):
@@ -798,7 +819,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 "ON "
                 '"sq0"."$timestamp"="sq1"."$timestamp" '
                 'AND "sq0"."$candidate-id"="sq1"."$candidate-id" '
-                'ORDER BY "$timestamp","$candidate-id"',
+                'ORDER BY "$timestamp","$candidate-id" '
+                'LIMIT 200000',
                 str(totals_query),
             )
 
@@ -841,7 +863,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             "ON "
             '"sq0"."$timestamp"="sq1"."$timestamp" '
             'AND "sq0"."$candidate-id"="sq1"."$candidate-id" '
-            'ORDER BY "$candidate-id" DESC',
+            'ORDER BY "$candidate-id" DESC '
+            'LIMIT 200000',
             str(query),
         )
 

@@ -229,6 +229,10 @@ class QueryBuilder(object):
 
         return fetch_data(self.dataset.database, queries, self.dimensions)
 
+    def _apply_pagination(self, query):
+        query = query.limit(min(self._limit or float("inf"), self.dataset.database.max_result_set_size))
+        return query.offset(self._offset)
+
 
 class ReferenceQueryBuilderMixin:
     """

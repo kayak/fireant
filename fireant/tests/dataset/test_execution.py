@@ -11,6 +11,7 @@ from unittest.mock import (
 import numpy as np
 import pandas as pd
 import pandas.testing
+from pypika import Query
 
 from fireant import DayOverDay
 from fireant.dataset.modifiers import Rollup, RollupValue
@@ -19,7 +20,6 @@ from fireant.queries.execution import (
     fetch_data,
     reduce_result_set,
 )
-from pypika import Query
 from .mocks import (
     dimx0_metricx1_df,
     dimx1_date_df,
@@ -35,7 +35,7 @@ from .mocks import (
     politicians_hint_table,
     politicians_table,
 )
-from ..test_formats import date_field, text_field, boolean_field, number_field
+from ..test_formats import boolean_field, date_field, number_field, text_field
 
 pd.set_option("display.expand_frame_repr", False)
 metrics = ["$votes", "$wins", "$wins_with_style", "$turnout"]
@@ -67,7 +67,6 @@ class TestFetchData(TestCase):
     @patch("fireant.queries.execution.reduce_result_set")
     def test_fetch_data(self, reduce_mock):
         database = MagicMock()
-        database.max_result_set_size = 5
         database.fetch_dataframes.return_value = [
             self.test_result_a,
             self.test_result_b,
@@ -80,8 +79,8 @@ class TestFetchData(TestCase):
 
         pandas.testing.assert_frame_equal(mocked_result, result)
         database.fetch_dataframes.assert_called_with(
-            'SELECT * FROM "politics"."politician" LIMIT 5',
-            'SELECT * FROM "politics"."hints" LIMIT 5',
+            'SELECT * FROM "politics"."politician"',
+            'SELECT * FROM "politics"."hints"',
             parse_dates={}
         )
         reduce_mock.assert_called_once_with(
@@ -91,14 +90,13 @@ class TestFetchData(TestCase):
     @patch("fireant.queries.execution.reduce_result_set")
     def test_fetch_data_with_date_dimensions(self, reduce_mock):
         database = MagicMock()
-        database.max_result_set_size = 5
         dimensions = [number_field, date_field, boolean_field, text_field]
 
         fetch_data(database, self.test_queries, dimensions)
 
         database.fetch_dataframes.assert_called_with(
-            'SELECT * FROM "politics"."politician" LIMIT 5',
-            'SELECT * FROM "politics"."hints" LIMIT 5',
+            'SELECT * FROM "politics"."politician"',
+            'SELECT * FROM "politics"."hints"',
             parse_dates={'$date': {}}
         )
 
