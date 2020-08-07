@@ -1,7 +1,4 @@
-from typing import (
-    Dict,
-    Iterable, List, TYPE_CHECKING, Type,
-)
+from typing import Dict, Iterable, List, TYPE_CHECKING, Type, Union
 
 from fireant.dataset.fields import DataType
 from fireant.dataset.intervals import DatetimeInterval
@@ -49,7 +46,7 @@ class DataSetQueryBuilder(
     """
 
     def __init__(self, dataset):
-        super(DataSetQueryBuilder, self).__init__(dataset, dataset.table)
+        super().__init__(dataset)
         self._totals_dimensions = set()
         self._apply_filter_to_totals = []
 
@@ -115,7 +112,7 @@ class DataSetQueryBuilder(
 
         return [self._apply_pagination(query) for query in queries]
 
-    def fetch(self, hint=None) -> Iterable[Dict]:
+    def fetch(self, hint=None) -> Union[Iterable[Dict], Dict]:
         """
         Fetch the data for this query and transform it into the widgets.
 
@@ -141,7 +138,7 @@ class DataSetQueryBuilder(
             if first_dimension.alias == alignment_dimension_alias:
                 annotation_frame = self.fetch_annotation()
 
-        data_frame = fetch_data(
+        max_rows_returned, data_frame = fetch_data(
             self.dataset.database,
             queries,
             dimensions,
@@ -177,7 +174,7 @@ class DataSetQueryBuilder(
         )
 
         # Apply transformations
-        return [
+        widget_data = [
             widget.transform(
                 data_frame,
                 dimensions,
@@ -186,6 +183,8 @@ class DataSetQueryBuilder(
             )
             for widget in self._widgets
         ]
+
+        return self._transform_for_return(widget_data, max_rows_returned=max_rows_returned)
 
     def fetch_annotation(self):
         """
@@ -229,7 +228,7 @@ class DataSetQueryBuilder(
             filters=annotation_alignment_dimension_filters,
         )
 
-        annotation_df = fetch_data(
+        _, annotation_df = fetch_data(
             self.dataset.database, [annotation_query], [annotation.alignment_field]
         )
 

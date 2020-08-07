@@ -75,7 +75,7 @@ class TestFetchData(TestCase):
         mocked_result = pd.DataFrame([{"a": 1.0}])
         reduce_mock.return_value = mocked_result
 
-        result = fetch_data(database, self.test_queries, self.test_dimensions)
+        max_rows_returned, result = fetch_data(database, self.test_queries, self.test_dimensions)
 
         pandas.testing.assert_frame_equal(mocked_result, result)
         database.fetch_dataframes.assert_called_with(
@@ -90,6 +90,7 @@ class TestFetchData(TestCase):
     @patch("fireant.queries.execution.reduce_result_set")
     def test_fetch_data_with_date_dimensions(self, reduce_mock):
         database = MagicMock()
+        database.fetch_dataframes.return_value = []
         dimensions = [number_field, date_field, boolean_field, text_field]
 
         fetch_data(database, self.test_queries, dimensions)

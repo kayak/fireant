@@ -387,9 +387,6 @@ Each |ClassHighChartsSeries| instance is constructed with one or more metrics.
         ...
 
 
-Datatables_
-"""""""""""
-
 React-Table_
 """"""""""""
 

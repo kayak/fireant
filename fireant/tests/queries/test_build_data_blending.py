@@ -871,6 +871,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
     def test_does_not_raise_SlicerException_when_a_dimension_is_not_mapped_for_unnecessary_secondary_datasets(
         self,
     ):
+        # noinspection PyStatementEffect
         (
             mock_dataset_blender.query()
             .widget(f.ReactTable(mock_dataset_blender.fields["votes"]))

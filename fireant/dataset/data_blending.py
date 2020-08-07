@@ -88,11 +88,23 @@ class DataSetBlender:
         self.latest = self.primary_dataset.latest
         self.annotation = None
 
+    @property
+    def return_additional_metadata(self) -> bool:
+        # When using data blending, datasets are nested inside DataSetBlender objects. Additionally,
+        # the primary_dataset can be a combination of datasets depending on how many datasets are being blended.
+        # This helper property walks the tree to return the return_additional_metadata value from the original
+        # primary dataset.
+        dataset = self.primary_dataset
+        while not isinstance(dataset, DataSet):
+            dataset = dataset.primary_dataset
+
+        return dataset.return_additional_metadata
+
     def __eq__(self, other):
         return isinstance(other, DataSetBlender) and self.fields == other.fields
 
     def __repr__(self):
-        return "BlendedDatSet(fields=[{}])".format(
+        return "BlendedDataSet(fields=[{}])".format(
             ",".join([repr(f) for f in self.fields])
         )
 

@@ -1,5 +1,6 @@
+import copy
 from unittest import TestCase
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import ANY, MagicMock, Mock, patch
 
 import pandas as pd
 from pypika import Order, Table
@@ -16,7 +17,7 @@ from fireant.tests.dataset.mocks import (mock_category_annotation_dataset, mock_
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 @patch("fireant.queries.builder.dataset_query_builder.paginate")
-@patch("fireant.queries.builder.dataset_query_builder.fetch_data")
+@patch("fireant.queries.builder.dataset_query_builder.fetch_data", return_value=(100, MagicMock()))
 class FindShareDimensionsTests(TestCase):
     def test_find_no_share_dimensions_with_no_share_operation(
         self, mock_fetch_data: Mock, mock_paginate: Mock
@@ -101,7 +102,7 @@ class FindShareDimensionsTests(TestCase):
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 @patch("fireant.queries.builder.dataset_query_builder.apply_reference_filters")
 @patch("fireant.queries.builder.dataset_query_builder.paginate")
-@patch("fireant.queries.builder.dataset_query_builder.fetch_data")
+@patch("fireant.queries.builder.dataset_query_builder.fetch_data", return_value=(100, MagicMock()))
 class QueryBuilderFetchDataTests(TestCase):
     def test_reference_filters_are_applied(self, mock_fetch: Mock, mock_2: Mock, mock_apply_reference_filters: Mock):
         db = TestDatabase()
@@ -134,7 +135,7 @@ class QueryBuilderFetchDataTests(TestCase):
         reference = f.DayOverDay(dataset.fields.timestamp, filters=[reference_filter])
 
         df = pd.DataFrame.from_dict({"$value": [1]})
-        mock_fetch.return_value = df
+        mock_fetch.return_value = 100, df
         mock_apply_reference_filters.return_value = df
 
         (
@@ -145,8 +146,6 @@ class QueryBuilderFetchDataTests(TestCase):
         ).fetch()
 
         mock_apply_reference_filters.assert_called_once_with(df, reference)
-
-
 
     def test_pass_slicer_database_as_arg(
         self, mock_fetch_data: Mock, *args
@@ -285,13 +284,30 @@ class QueryBuilderFetchDataTests(TestCase):
 
         self.assertListEqual(result, [mock_widget.transform.return_value])
 
+    def test_envelopes_responses_if_return_additional_metadata_True(self, *args):
+        dataset = copy.deepcopy(mock_dataset)
+        mock_widget = f.Widget(dataset.fields.votes)
+        mock_widget.transform = Mock()
+        dataset.return_additional_metadata = True
+
+        result = (
+            dataset.query.dimension(dataset.fields.timestamp)
+            .widget(mock_widget)
+            .fetch()
+        )
+
+        self.assertEqual(
+            dict(data=[mock_widget.transform.return_value], metadata=dict(max_rows_returned=100)),
+            result,
+        )
+
 
 @patch(
     "fireant.queries.builder.dataset_query_builder.scrub_totals_from_share_results",
     side_effect=lambda *args: args[0],
 )
 @patch("fireant.queries.builder.dataset_query_builder.paginate")
-@patch("fireant.queries.builder.dataset_query_builder.fetch_data")
+@patch("fireant.queries.builder.dataset_query_builder.fetch_data", return_value=(100, MagicMock()))
 class QueryBuilderPaginationTests(TestCase):
     def test_paginate_is_called(
         self, mock_fetch_data: Mock, mock_paginate: Mock, *mocks
@@ -304,7 +320,7 @@ class QueryBuilderPaginationTests(TestCase):
         ).fetch()
 
         mock_paginate.assert_called_once_with(
-            mock_fetch_data.return_value,
+            mock_fetch_data.return_value[1],
             [mock_widget],
             limit=None,
             offset=None,
@@ -323,7 +339,7 @@ class QueryBuilderPaginationTests(TestCase):
         ).limit(15).fetch()
 
         mock_paginate.assert_called_once_with(
-            mock_fetch_data.return_value,
+            mock_fetch_data.return_value[1],
             [mock_widget],
             limit=15,
             offset=None,
@@ -342,7 +358,7 @@ class QueryBuilderPaginationTests(TestCase):
         ).limit(15).offset(20).fetch()
 
         mock_paginate.assert_called_once_with(
-            mock_fetch_data.return_value,
+            mock_fetch_data.return_value[1],
             [mock_widget],
             limit=15,
             offset=20,
@@ -362,7 +378,7 @@ class QueryBuilderPaginationTests(TestCase):
 
         orders = [(mock_dataset.fields.votes, Order.asc)]
         mock_paginate.assert_called_once_with(
-            mock_fetch_data.return_value,
+            mock_fetch_data.return_value[1],
             [mock_widget],
             limit=None,
             offset=None,
@@ -370,7 +386,7 @@ class QueryBuilderPaginationTests(TestCase):
         )
 
 
-@patch("fireant.queries.builder.dataset_query_builder.fetch_data")
+@patch("fireant.queries.builder.dataset_query_builder.fetch_data", return_value=(100, MagicMock()))
 class QueryBuilderAnnotationTests(TestCase):
     def get_fetch_call_args(self, mock_fetch_data):
         self.assertEqual(mock_fetch_data.call_count, 2)

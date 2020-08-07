@@ -1,4 +1,4 @@
-from typing import Iterable, List, Type
+from typing import Iterable, List, Tuple, Type
 
 import pandas as pd
 from pypika.queries import QueryBuilder
@@ -23,7 +23,7 @@ def fetch_data(
     dimensions: Iterable[Field],
     share_dimensions: Iterable[Field] = (),
     reference_groups=(),
-):
+) -> Tuple[int, pd.DataFrame]:
     queries = [str(query) for query in queries]
 
     # Indicate which dimensions need to be parsed as date types
@@ -35,8 +35,9 @@ def fetch_data(
             pandas_parse_dates[alias_selector(unmodified_dimension.alias)] = PANDAS_TO_DATETIME_FORMAT
 
     results = database.fetch_dataframes(*queries, parse_dates=pandas_parse_dates)
+    max_rows_returned = max([len(x) for x in results], default=0)
 
-    return reduce_result_set(results, reference_groups, dimensions, share_dimensions)
+    return max_rows_returned, reduce_result_set(results, reference_groups, dimensions, share_dimensions)
 
 
 def reduce_result_set(
