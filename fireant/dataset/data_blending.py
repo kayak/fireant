@@ -4,7 +4,6 @@ from fireant.queries.builder import (
     DataSetBlenderQueryBuilder,
     DimensionChoicesQueryBuilder,
 )
-from fireant.queries.builder.query_builder import validate_fields
 from fireant.utils import (
     deepcopy,
     immutable,

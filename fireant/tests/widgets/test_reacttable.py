@@ -88,10 +88,10 @@ class FormattingRulesTests(TestCase):
             {
                 "columns": [{"Header": "Metric0", "accessor": "$metric0"}],
                 "data": [
-                    {"$metric0": {"display": "1", "raw": 1, "color": "fff2f2"}},
-                    {"$metric0": {"display": "2", "raw": 2, "color": "ffa2a2"}},
-                    {"$metric0": {"display": "3", "raw": 3, "color": "ff5151"}},
-                    {"$metric0": {"display": "4", "raw": 4, "color": "ff0000"}},
+                    {"$metric0": {"display": "1", "raw": 1, "color": "fff2f2", 'text_color': '212121'}},
+                    {"$metric0": {"display": "2", "raw": 2, "color": "ffa2a2", 'text_color': '212121'}},
+                    {"$metric0": {"display": "3", "raw": 3, "color": "ff5151", 'text_color': '212121'}},
+                    {"$metric0": {"display": "4", "raw": 4, "color": "ff0000", 'text_color': 'FDFDFD'}},
                 ],
             },
             result,
@@ -113,10 +113,10 @@ class FormattingRulesTests(TestCase):
             {
                 "columns": [{"Header": "Metric0", "accessor": "$metric0"}],
                 "data": [
-                    {"$metric0": {"display": "1", "raw": 1, "color": "00ff00"}},
-                    {"$metric0": {"display": "2", "raw": 2, "color": "aaffaa"}},
-                    {"$metric0": {"display": "3", "raw": 3, "color": "ffa2a2"}},
-                    {"$metric0": {"display": "4", "raw": 4, "color": "ff0000"}},
+                    {"$metric0": {"display": "1", "raw": 1, "color": "00ff00", 'text_color': '212121'}},
+                    {"$metric0": {"display": "2", "raw": 2, "color": "aaffaa", 'text_color': '212121'}},
+                    {"$metric0": {"display": "3", "raw": 3, "color": "ffa2a2", 'text_color': '212121'}},
+                    {"$metric0": {"display": "4", "raw": 4, "color": "ff0000", 'text_color': 'FDFDFD'}},
                 ],
             },
             result,
@@ -141,8 +141,8 @@ class FormattingRulesTests(TestCase):
                 "data": [
                     {"$metric0": {"display": "1", "raw": 1}},
                     {"$metric0": {"display": "2", "raw": 2}},
-                    {"$metric0": {"display": "3", "raw": 3, "color": "EEEEEE"}},
-                    {"$metric0": {"display": "4", "raw": 4, "color": "EEEEEE"}},
+                    {"$metric0": {"display": "3", "raw": 3, "color": "EEEEEE", 'text_color': '212121'}},
+                    {"$metric0": {"display": "4", "raw": 4, "color": "EEEEEE", 'text_color': '212121'}},
                 ],
             },
             result,
@@ -178,12 +178,12 @@ class FormattingRulesTests(TestCase):
                         "$timestamp": {"display": "200", "raw": 200},
                     },
                     {
-                        "$metric0": {"display": "3", "raw": 3, "color": "EEEEEE"},
-                        "$timestamp": {"display": "300", "raw": 300, "color": "EEEEEE"},
+                        "$metric0": {"display": "3", "raw": 3, "color": "EEEEEE", 'text_color': '212121'},
+                        "$timestamp": {"display": "300", "raw": 300, "color": "EEEEEE", 'text_color': '212121'},
                     },
                     {
-                        "$metric0": {"display": "4", "raw": 4, "color": "EEEEEE"},
-                        "$timestamp": {"display": "400", "raw": 400, "color": "EEEEEE"},
+                        "$metric0": {"display": "4", "raw": 4, "color": "EEEEEE", 'text_color': '212121'},
+                        "$timestamp": {"display": "400", "raw": 400, "color": "EEEEEE", 'text_color': '212121'},
                     },
                 ],
             },
@@ -218,8 +218,8 @@ class FormattingRulesTests(TestCase):
                     {'$metrics': {'raw': 'Metric0'},
                      '100': {'display': '1', 'raw': 1},
                      '200': {'display': '2', 'raw': 2},
-                     '300': {'color': 'EEEEEE', 'display': '3', 'raw': 3},
-                     '400': {'color': 'EEEEEE', 'display': '4', 'raw': 4}}
+                     '300': {'color': 'EEEEEE', 'display': '3', 'raw': 3, 'text_color': '212121'},
+                     '400': {'color': 'EEEEEE', 'display': '4', 'raw': 4, 'text_color': '212121'}}
                 ],
             },
             result,
@@ -259,7 +259,7 @@ class FormattingRulesTests(TestCase):
                     },
                     {
                         "$metric0": {"display": "3", "raw": 3},
-                        "$metric0_dod": {"display": "9", "raw": 9, "color": "EEEEEE"},
+                        "$metric0_dod": {"display": "9", "raw": 9, "color": "EEEEEE", 'text_color': '212121'},
                     },
                     {
                         "$metric0": {"display": "4", "raw": 4},
@@ -267,6 +267,7 @@ class FormattingRulesTests(TestCase):
                             "display": "12",
                             "raw": 12,
                             "color": "EEEEEE",
+                            'text_color': '212121'
                         },
                     },
                 ],
@@ -301,6 +302,7 @@ class FormattingRulesTests(TestCase):
                             "display": "6",
                             "raw": 6,
                             "color": "EEEEEE",
+                            'text_color': '212121'
                         }
                     },
                     {
@@ -308,6 +310,7 @@ class FormattingRulesTests(TestCase):
                             "display": "10",
                             "raw": 10,
                             "color": "EEEEEE",
+                            'text_color': '212121'
                         }
                     },
                 ],
@@ -351,6 +354,7 @@ class FormattingRulesTests(TestCase):
                             "display": "15",
                             "raw": 15,
                             "color": "EEEEEE",
+                            'text_color': '212121'
                         }
                     },
                     {
@@ -359,6 +363,7 @@ class FormattingRulesTests(TestCase):
                             "display": "27",
                             "raw": 27,
                             "color": "EEEEEE",
+                            'text_color': '212121'
                         }
                     },
                 ],
@@ -389,10 +394,10 @@ class FormattingRulesTests(TestCase):
             {
                 "columns": [{"Header": "Metric0", "accessor": "$metric0"}],
                 "data": [
-                    {"$metric0": {"display": "1", "raw": 1, "color": "AAAAAA"}},
+                    {"$metric0": {"display": "1", "raw": 1, "color": "AAAAAA", 'text_color': '212121'}},
                     {"$metric0": {"display": "2", "raw": 2}},
                     {"$metric0": {"display": "3", "raw": 3}},
-                    {"$metric0": {"display": "4", "raw": 4, "color": "EEEEEE"}},
+                    {"$metric0": {"display": "4", "raw": 4, "color": "EEEEEE", 'text_color': '212121'}},
                 ],
             },
             result,

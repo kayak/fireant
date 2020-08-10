@@ -90,8 +90,20 @@ class FormattingRule:
     def applies(self, value):
         return True
 
-    def determine_color(self, value, *args, **kwargs):
+    def determine_colors(self, value):
+        background_color = self._determine_background_color(value)
+        return background_color, self._determine_text_color(background_color)
+
+    def _determine_background_color(self, value):
         return self.color
+
+    def _determine_text_color(self, background_color):
+        """
+        Determines, using the luminance of the background color, whether the text color should be light or dark.
+        """
+        rgb_bg_color = hex_to_rgb(background_color)
+        luminance = (0.299 * rgb_bg_color[0] + 0.587 * rgb_bg_color[1] + 0.114 * rgb_bg_color[2]) / 255;
+        return 'FDFDFD' if luminance < 0.5 else '212121';
 
     def get_field_selector(self):
         return alias_selector(self.field.get_alias())
@@ -147,7 +159,7 @@ class FormattingHeatMapRule(FormattingRule):
         calculated_hsv_color = colorsys.hsv_to_rgb(base_hsv_color[0], saturation, base_hsv_color[2])
         return rgb_to_hex((round(val * 255) for val in calculated_hsv_color))
 
-    def determine_color(self, value):
+    def _determine_background_color(self, value):
         if self._is_invalid(value) or self._is_invalid(self.min_val) or self._is_invalid(self.max_val):
             return self.WHITE
 
@@ -481,7 +493,7 @@ class ReactTable(Pandas):
         return _make_columns(data_frame.columns.to_frame(), dropped_metric_level_name)
 
     @staticmethod
-    def transform_row_index(index_values, field_map, dimension_hyperlink_templates, hide_dimension_aliases, row_color):
+    def transform_row_index(index_values, field_map, dimension_hyperlink_templates, hide_dimension_aliases, row_colors):
         # Add the index to the row
         row = {}
         for key, value in index_values.items():
@@ -495,9 +507,8 @@ class ReactTable(Pandas):
             display = _display_value(value, field)
             if display is not None:
                 data["display"] = display
-            if row_color is not None:
-                data["color"] = row_color
-
+            if row_colors is not None:
+                data["color"], data["text_color"] = row_colors
 
             is_totals = display == TOTALS_LABEL
 
@@ -537,7 +548,7 @@ class ReactTable(Pandas):
 
     def transform_row_values(self, series, fields, is_transposed, is_pivoted):
         row = {}
-        row_color = None
+        row_colors = None
 
         for key, value in series.items():
             key = wrap_list(key)
@@ -548,14 +559,15 @@ class ReactTable(Pandas):
             data = {
                 RAW_VALUE: raw_value(value, field),
             }
-            if not row_color:
+            if not row_colors:
                 # No color for this field yet
                 rule = find_rule_to_apply(self.formatting_rules_map[metric_alias], value)
                 if rule is not None:
-                    data["color"] = rule.determine_color(value)
+                    colors = rule.determine_colors(value)
+                    data["color"], data["text_color"] = colors
                     if not is_transposed and not is_pivoted and rule.covers_row:
                         # No transposing or pivoting going on so set as row color if it's specified for the rule
-                        row_color = data["color"]
+                        row_colors = colors
 
             display = _display_value(value, field, date_as=return_none)
             if display is not None:
@@ -564,15 +576,15 @@ class ReactTable(Pandas):
             accessor = self._get_row_value_accessor(series, fields, key)
             setdeepattr(row, accessor, data)
 
-        # Assign the row color to fields that don't have a color yet
-        if row_color:
+        # Assign the row colors to fields that aren't colored yet
+        if row_colors:
             for key in series.keys():
                 accessor = self._get_row_value_accessor(series, fields, wrap_list(key))
                 data = getdeepattr(row, accessor)
                 if "color" not in data:
-                    data["color"] = row_color
+                    data["color"], data["text_color"] = row_colors
 
-        return row, row_color
+        return row, row_colors
 
     def calculate_min_max(self, df, is_transposed):
         if not self.min_max_map:
@@ -637,7 +649,7 @@ class ReactTable(Pandas):
 
         rows = []
         for index, series in data_frame.iterrows():
-            row_values, row_color = self.transform_row_values(series, field_map, is_transposed, is_pivoted)
+            row_values, row_colors = self.transform_row_values(series, field_map, is_transposed, is_pivoted)
 
             index = wrap_list(index)
             # Get a list of values from the index. These can be metrics or dimensions so it checks in the item map if
@@ -647,7 +659,7 @@ class ReactTable(Pandas):
             )
             index_display_values = OrderedDict(zip(index_names, index_values))
             row_index = self.transform_row_index(
-                index_display_values, field_map, dimension_hyperlink_templates, hide_aliases, row_color
+                index_display_values, field_map, dimension_hyperlink_templates, hide_aliases, row_colors
             )
             rows.append(
                 {
