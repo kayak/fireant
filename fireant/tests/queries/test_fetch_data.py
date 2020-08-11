@@ -16,11 +16,11 @@ from fireant.tests.dataset.mocks import (mock_category_annotation_dataset, mock_
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
-@patch("fireant.queries.builder.dataset_query_builder.paginate")
+@patch("fireant.queries.builder.dataset_query_builder.sort")
 @patch("fireant.queries.builder.dataset_query_builder.fetch_data", return_value=(100, MagicMock()))
 class FindShareDimensionsTests(TestCase):
     def test_find_no_share_dimensions_with_no_share_operation(
-        self, mock_fetch_data: Mock, mock_paginate: Mock
+        self, mock_fetch_data: Mock, mock_sort: Mock
     ):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
@@ -36,7 +36,7 @@ class FindShareDimensionsTests(TestCase):
         mock_fetch_data.assert_called_once_with(ANY, ANY, ANY, [], ANY)
 
     def test_find_share_dimensions_with_a_single_share_operation(
-        self, mock_fetch_data: Mock, mock_paginate: Mock
+        self, mock_fetch_data: Mock, mock_sort: Mock
     ):
         mock_widget = f.Widget(
             Share(mock_dataset.fields.votes, over=mock_dataset.fields.state)
@@ -56,7 +56,7 @@ class FindShareDimensionsTests(TestCase):
         )
 
     def test_find_share_dimensions_with_a_multiple_share_operations(
-        self, mock_fetch_data: Mock, mock_paginate: Mock
+        self, mock_fetch_data: Mock, mock_sort: Mock
     ):
         mock_widget = f.Widget(
             Share(mock_dataset.fields.votes, over=mock_dataset.fields.state),
@@ -77,7 +77,7 @@ class FindShareDimensionsTests(TestCase):
         )
 
     def test_find_share_dimensions_with_a_multiple_share_operations_over_different_dimensions(
-        self, mock_fetch_data: Mock, mock_paginate: Mock
+        self, mock_fetch_data: Mock, mock_sort: Mock
     ):
         mock_widget = f.Widget(
             Share(mock_dataset.fields.votes, over=mock_dataset.fields.state),
@@ -101,7 +101,7 @@ class FindShareDimensionsTests(TestCase):
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 @patch("fireant.queries.builder.dataset_query_builder.apply_reference_filters")
-@patch("fireant.queries.builder.dataset_query_builder.paginate")
+@patch("fireant.queries.builder.dataset_query_builder.sort")
 @patch("fireant.queries.builder.dataset_query_builder.fetch_data", return_value=(100, MagicMock()))
 class QueryBuilderFetchDataTests(TestCase):
     def test_reference_filters_are_applied(self, mock_fetch: Mock, mock_2: Mock, mock_apply_reference_filters: Mock):
@@ -253,7 +253,7 @@ class QueryBuilderFetchDataTests(TestCase):
             ANY, ANY, FieldMatcher(*dimensions), ANY, ANY
         )
 
-    def test_call_transform_on_widget(self, mock_fetch_data: Mock, mock_paginate: Mock, *args):
+    def test_call_transform_on_widget(self, mock_fetch_data: Mock, mock_sort: Mock, *args):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
 
@@ -263,7 +263,7 @@ class QueryBuilderFetchDataTests(TestCase):
         ).fetch()
 
         mock_widget.transform.assert_called_once_with(
-            mock_paginate.return_value,
+            mock_sort.return_value,
             FieldMatcher(mock_dataset.fields.timestamp),
             [],
             None,
@@ -306,11 +306,11 @@ class QueryBuilderFetchDataTests(TestCase):
     "fireant.queries.builder.dataset_query_builder.scrub_totals_from_share_results",
     side_effect=lambda *args: args[0],
 )
-@patch("fireant.queries.builder.dataset_query_builder.paginate")
+@patch("fireant.queries.builder.dataset_query_builder.sort")
 @patch("fireant.queries.builder.dataset_query_builder.fetch_data", return_value=(100, MagicMock()))
-class QueryBuilderPaginationTests(TestCase):
-    def test_paginate_is_called(
-        self, mock_fetch_data: Mock, mock_paginate: Mock, *mocks
+class QueryBuilderSortTests(TestCase):
+    def test_sort_is_called(
+        self, mock_fetch_data: Mock, mock_sort: Mock, *mocks
     ):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
@@ -319,54 +319,14 @@ class QueryBuilderPaginationTests(TestCase):
             mock_widget
         ).fetch()
 
-        mock_paginate.assert_called_once_with(
+        mock_sort.assert_called_once_with(
             mock_fetch_data.return_value[1],
             [mock_widget],
-            limit=None,
-            offset=None,
             orders=[(mock_dataset.fields.timestamp, None)],
         )
 
-    def test_pagination_applied_with_limit(
-        self, mock_fetch_data: Mock, mock_paginate: Mock, *mocks
-    ):
-        mock_widget = f.Widget(mock_dataset.fields.votes)
-        mock_widget.transform = Mock()
-
-        # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
-        mock_dataset.query.dimension(mock_dataset.fields.timestamp).widget(
-            mock_widget
-        ).limit(15).fetch()
-
-        mock_paginate.assert_called_once_with(
-            mock_fetch_data.return_value[1],
-            [mock_widget],
-            limit=15,
-            offset=None,
-            orders=[(mock_dataset.fields.timestamp, None)],
-        )
-
-    def test_pagination_applied_with_offset(
-        self, mock_fetch_data: Mock, mock_paginate: Mock, *mocks
-    ):
-        mock_widget = f.Widget(mock_dataset.fields.votes)
-        mock_widget.transform = Mock()
-
-        # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
-        mock_dataset.query.dimension(mock_dataset.fields.timestamp).widget(
-            mock_widget
-        ).limit(15).offset(20).fetch()
-
-        mock_paginate.assert_called_once_with(
-            mock_fetch_data.return_value[1],
-            [mock_widget],
-            limit=15,
-            offset=20,
-            orders=[(mock_dataset.fields.timestamp, None)],
-        )
-
-    def test_pagination_applied_with_orders(
-        self, mock_fetch_data: Mock, mock_paginate: Mock, *mocks
+    def test_sort_applied_with_orders(
+        self, mock_fetch_data: Mock, mock_sort: Mock, *mocks
     ):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
@@ -377,11 +337,9 @@ class QueryBuilderPaginationTests(TestCase):
         ).orderby(mock_dataset.fields.votes, Order.asc).fetch()
 
         orders = [(mock_dataset.fields.votes, Order.asc)]
-        mock_paginate.assert_called_once_with(
+        mock_sort.assert_called_once_with(
             mock_fetch_data.return_value[1],
             [mock_widget],
-            limit=None,
-            offset=None,
             orders=orders,
         )
 
