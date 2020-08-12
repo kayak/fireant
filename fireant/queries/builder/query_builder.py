@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING, Union
+
 from pypika import Order
 
 from fireant.dataset.fields import Field
@@ -12,6 +14,9 @@ from ..sets import (
     apply_set_dimensions,
     omit_set_filters,
 )
+
+if TYPE_CHECKING:
+    from fireant.dataset import DataSet
 
 
 class QueryException(DataSetException):
@@ -63,9 +68,13 @@ class QueryBuilder(object):
     via a set of functions which can be chained together.
     """
 
-    def __init__(self, dataset, table):
+    def __init__(self, dataset: 'DataSet', return_additional_metadata: bool = False):
+        """
+        :param dataset: DataSet to build the query for
+        :param additional_metadata: When True, the dictionary responses will be enveloped with extra metadata.
+        """
         self.dataset = dataset
-        self.table = table
+        self.table = dataset.table
         self._dimensions = []
         self._filters = []
         self._orders = None
@@ -227,7 +236,17 @@ class QueryBuilder(object):
         """
         queries = add_hints(self.sql, hint)
 
-        return fetch_data(self.dataset.database, queries, self.dimensions)
+        max_rows_returned, data = fetch_data(self.dataset.database, queries, self.dimensions)
+        return self._transform_for_return(data, max_rows_returned=max_rows_returned)
+
+    def _apply_pagination(self, query):
+        query = query.limit(min(self._limit or float('inf'), self.dataset.database.max_result_set_size))
+        return query.offset(self._offset)
+
+    def _transform_for_return(self, widget_data, **metadata) -> Union[dict, list]:
+        return dict(data=widget_data, metadata=dict(**metadata)) \
+            if self.dataset.return_additional_metadata \
+            else widget_data
 
 
 class ReferenceQueryBuilderMixin:

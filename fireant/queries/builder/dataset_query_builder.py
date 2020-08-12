@@ -1,7 +1,4 @@
-from typing import (
-    Dict,
-    Iterable,
-)
+from typing import Dict, Iterable, List, TYPE_CHECKING, Type, Union
 
 from fireant.dataset.fields import DataType
 from fireant.dataset.intervals import DatetimeInterval
@@ -30,11 +27,14 @@ from ..finders import (
     find_operations_for_widgets,
     find_share_dimensions,
 )
-from ..pagination import paginate
+from ..sorting import sort
 from ..sql_transformer import (
     make_slicer_query,
     make_slicer_query_with_totals_and_references,
 )
+
+if TYPE_CHECKING:
+    from pypika import PyPikaQueryBuilder
 
 
 class DataSetQueryBuilder(
@@ -46,7 +46,7 @@ class DataSetQueryBuilder(
     """
 
     def __init__(self, dataset):
-        super(DataSetQueryBuilder, self).__init__(dataset, dataset.table)
+        super().__init__(dataset)
         self._totals_dimensions = set()
         self._apply_filter_to_totals = []
 
@@ -77,7 +77,7 @@ class DataSetQueryBuilder(
         )
 
     @property
-    def sql(self):
+    def sql(self) -> List[Type['PyPikaQueryBuilder']]:
         """
         Serialize this query builder to a list of Pypika/SQL queries. This function will return one query for every
         combination of reference and rolled up dimension (including null options).
@@ -97,20 +97,22 @@ class DataSetQueryBuilder(
         operations = find_operations_for_widgets(self._widgets)
         share_dimensions = find_share_dimensions(dimensions, operations)
 
-        return make_slicer_query_with_totals_and_references(
-            self.dataset.database,
-            self.table,
-            self.dataset.joins,
-            dimensions,
-            metrics,
-            operations,
-            self.filters,
-            self._references,
+        queries = make_slicer_query_with_totals_and_references(
+            database=self.dataset.database,
+            table=self.table,
+            joins=self.dataset.joins,
+            dimensions=dimensions,
+            metrics=metrics,
+            operations=operations,
+            filters=self.filters,
+            references=self._references,
             orders=self.orders,
             share_dimensions=share_dimensions,
         )
 
-    def fetch(self, hint=None) -> Iterable[Dict]:
+        return [self._apply_pagination(query) for query in queries]
+
+    def fetch(self, hint=None) -> Union[Iterable[Dict], Dict]:
         """
         Fetch the data for this query and transform it into the widgets.
 
@@ -136,7 +138,7 @@ class DataSetQueryBuilder(
             if first_dimension.alias == alignment_dimension_alias:
                 annotation_frame = self.fetch_annotation()
 
-        data_frame = fetch_data(
+        max_rows_returned, data_frame = fetch_data(
             self.dataset.database,
             queries,
             dimensions,
@@ -163,16 +165,14 @@ class DataSetQueryBuilder(
         if orders is None:
             orders = self.default_orders
 
-        data_frame = paginate(
+        data_frame = sort(
             data_frame,
             self._widgets,
             orders=orders,
-            limit=self._limit,
-            offset=self._offset,
         )
 
         # Apply transformations
-        return [
+        widget_data = [
             widget.transform(
                 data_frame,
                 dimensions,
@@ -181,6 +181,8 @@ class DataSetQueryBuilder(
             )
             for widget in self._widgets
         ]
+
+        return self._transform_for_return(widget_data, max_rows_returned=max_rows_returned)
 
     def fetch_annotation(self):
         """
@@ -224,7 +226,7 @@ class DataSetQueryBuilder(
             filters=annotation_alignment_dimension_filters,
         )
 
-        annotation_df = fetch_data(
+        _, annotation_df = fetch_data(
             self.dataset.database, [annotation_query], [annotation.alignment_field]
         )
 

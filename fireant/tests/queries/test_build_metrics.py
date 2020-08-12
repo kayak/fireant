@@ -17,7 +17,8 @@ class QueryBuilderMetricTests(TestCase):
 
         self.assertEqual('SELECT '
                          'SUM("votes") "$votes" '
-                         'FROM "politics"."politician"', str(queries[0]))
+                         'FROM "politics"."politician" '
+                         'LIMIT 200000', str(queries[0]))
 
     def test_build_query_with_multiple_metrics(self):
         queries = mock_dataset.query \
@@ -29,7 +30,8 @@ class QueryBuilderMetricTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "$votes",'
                          'SUM("is_winner") "$wins" '
-                         'FROM "politics"."politician"', str(queries[0]))
+                         'FROM "politics"."politician" '
+                         'LIMIT 200000', str(queries[0]))
 
     def test_build_query_with_multiple_visualizations(self):
         queries = mock_dataset.query \
@@ -42,7 +44,8 @@ class QueryBuilderMetricTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "$votes",'
                          'SUM("is_winner") "$wins" '
-                         'FROM "politics"."politician"', str(queries[0]))
+                         'FROM "politics"."politician" '
+                         'LIMIT 200000', str(queries[0]))
 
     def test_build_query_for_chart_visualization_with_single_axis(self):
         queries = mock_dataset.query \
@@ -54,7 +57,8 @@ class QueryBuilderMetricTests(TestCase):
 
         self.assertEqual('SELECT '
                          'SUM("votes") "$votes" '
-                         'FROM "politics"."politician"', str(queries[0]))
+                         'FROM "politics"."politician" '
+                         'LIMIT 200000', str(queries[0]))
 
     def test_build_query_for_chart_visualization_with_multiple_axes(self):
         queries = mock_dataset.query \
@@ -68,4 +72,5 @@ class QueryBuilderMetricTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "$votes",'
                          'SUM("is_winner") "$wins" '
-                         'FROM "politics"."politician"', str(queries[0]))
+                         'FROM "politics"."politician" '
+                         'LIMIT 200000', str(queries[0]))

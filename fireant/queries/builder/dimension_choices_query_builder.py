@@ -1,4 +1,5 @@
-import pandas as pd
+from typing import List
+
 from pypika import Order
 
 from fireant.utils import alias_selector
@@ -20,7 +21,7 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
     """
 
     def __init__(self, dataset, dimension):
-        super(DimensionChoicesQueryBuilder, self).__init__(dataset, dataset.table)
+        super().__init__(dataset)
 
         self.hint_table = getattr(dimension, "hint_table", None)
         self._dimensions.append(dimension)
@@ -123,7 +124,7 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
 
         return [query]
 
-    def fetch(self, hint=None, force_include=()) -> pd.Series:
+    def fetch(self, hint=None, force_include=()) -> List[str]:
         """
         Fetch the data for this query and transform it into the widgets.
 
@@ -162,8 +163,7 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
 
         # Order by the dimension definition that the choices are for
         query = query.orderby(alias_definition)
-
-        data = fetch_data(self.dataset.database, [query], self.dimensions)
+        max_rows_returned, data = fetch_data(self.dataset.database, [query], self.dimensions)
 
         if len(data.index.names) > 1:
             display_alias = data.index.names[1]
@@ -175,7 +175,8 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
             choices = data["display"]
 
         dimension_display = self.dimensions[-1]
-        return choices.map(lambda raw: display_value(raw, dimension_display) or raw)
+        choices = choices.map(lambda raw: display_value(raw, dimension_display) or raw)
+        return self._transform_for_return(choices, max_rows_returned=max_rows_returned)
 
     def __repr__(self):
         return ".".join(

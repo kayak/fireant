@@ -57,7 +57,7 @@ setup(
     "in a variety of different formats.\n\n"
     "Fireant is a great compliment to Jupter notebooks using matplotlib and pandas. It can be used "
     "in "
-    "web projects with Highcharts and Datatables.js.  It can even just provide a layer of "
+    "web projects with Highcharts and React-Table.  It can even just provide a layer of "
     "abstraction "
     "for accessing analytical data akin to ORM libraries in software projects.",
     classifiers=[

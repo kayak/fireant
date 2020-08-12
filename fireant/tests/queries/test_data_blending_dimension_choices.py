@@ -1,12 +1,10 @@
-from datetime import date
 from unittest.case import TestCase
 from unittest.mock import (
     ANY,
-    Mock,
+    MagicMock, Mock,
     patch,
 )
 
-from fireant import day
 from fireant.tests.dataset.matchers import (
     FieldMatcher,
     PypikaQueryMatcher,
@@ -15,7 +13,7 @@ from fireant.tests.dataset.mocks import mock_dataset_blender
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
-@patch("fireant.queries.builder.dimension_choices_query_builder.fetch_data")
+@patch("fireant.queries.builder.dimension_choices_query_builder.fetch_data", return_value=(1, MagicMock()))
 class BlenderDimensionsChoicesFetchTests(TestCase):
     def test_query_choices_for_primary_field_in_dataset_blender(
         self, mock_fetch_data: Mock

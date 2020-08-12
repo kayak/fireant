@@ -114,7 +114,8 @@ class DataSet:
         joins=(),
         annotation=None,
         fields=(),
-        always_query_all_metrics=False,
+        always_query_all_metrics: bool = False,
+        return_additional_metadata: bool = False,
     ):
         """
         Constructor for a dataset.  Contains all the fields to initialize the dataset.
@@ -133,6 +134,9 @@ class DataSet:
             Annotation for fetching additional data for a dataset.
         :param always_query_all_metrics: (Default: False)
             When true, all metrics will be included in database queries in order to increase cache hits.
+        :param return_additional_metadata: (Default: False)
+            When true, widget data will be enveloped so extra metadata can be added to the response
+            as follows: {'data': <widget data>, 'metadata': {...}}
         """
         self.table = table
         self.database = database
@@ -145,6 +149,7 @@ class DataSet:
         self.query = DataSetQueryBuilder(self)
         self.latest = DimensionLatestQueryBuilder(self)
         self.always_query_all_metrics = always_query_all_metrics
+        self.return_additional_metadata = return_additional_metadata
 
         for field in fields:
             if not field.definition.is_aggregate:

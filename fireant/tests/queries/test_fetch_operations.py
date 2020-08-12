@@ -1,5 +1,4 @@
 from unittest import TestCase
-
 from unittest.mock import (
     Mock,
     call,
@@ -15,7 +14,7 @@ from fireant.utils import alias_selector
 
 
 @patch('fireant.queries.builder.dataset_query_builder.scrub_totals_from_share_results', side_effect=lambda *args, **kwargs: args[0])
-@patch('fireant.queries.builder.dataset_query_builder.paginate', side_effect=lambda *args, **kwargs: args[0])
+@patch('fireant.queries.builder.dataset_query_builder.sort', side_effect=lambda *args, **kwargs: args[0])
 @patch('fireant.queries.builder.dataset_query_builder.fetch_data')
 class QueryBuilderOperationsTests(TestCase):
     def test_operations_evaluated(self, mock_fetch_data: Mock, *mocks):
@@ -27,7 +26,7 @@ class QueryBuilderOperationsTests(TestCase):
         mock_widget.transform = Mock()
 
         mock_df = {}
-        mock_fetch_data.return_value = mock_df
+        mock_fetch_data.return_value = 100, mock_df
 
         # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
         mock_dataset.query \
@@ -48,7 +47,7 @@ class QueryBuilderOperationsTests(TestCase):
         mock_widget.transform = Mock()
 
         mock_df = {}
-        mock_fetch_data.return_value = mock_df
+        mock_fetch_data.return_value = 100, mock_df
 
         # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
         mock_dataset.query \
@@ -71,7 +70,7 @@ class QueryBuilderOperationsTests(TestCase):
         mock_widget.transform = Mock()
 
         mock_df = {}
-        mock_fetch_data.return_value = mock_df
+        mock_fetch_data.return_value = 100, mock_df
 
         # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
         mock_dataset.query \

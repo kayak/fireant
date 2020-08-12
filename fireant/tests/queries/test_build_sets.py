@@ -39,7 +39,8 @@ class ResultSetTests(TestCase):
             "SELECT "
             "CASE WHEN SUM(\"number\")>10 THEN 'set(SUM(number)>10)' ELSE 'complement(SUM(number)>10)' END \"$set(SUM(number)>10)\","
             'SUM("number") "$aggr_number" '
-            'FROM "test"',
+            'FROM "test" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -58,7 +59,8 @@ class ResultSetTests(TestCase):
             'SUM("number") "$aggr_number" '
             'FROM "test" '
             "GROUP BY \"$text\" "
-            "ORDER BY \"$text\"",
+            "ORDER BY \"$text\" "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -83,7 +85,8 @@ class ResultSetTests(TestCase):
             'SUM("number") "$aggr_number" '
             'FROM "test" '
             'GROUP BY "$date","$text","$boolean" '
-            'ORDER BY "$date","$text","$boolean"',
+            'ORDER BY "$date","$text","$boolean" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -108,7 +111,8 @@ class ResultSetTests(TestCase):
                 'SUM("number") "$aggr_number" '
                 'FROM "test" '
                 'GROUP BY "$date","$boolean" '
-                'ORDER BY "$date","$boolean"',
+                'ORDER BY "$date","$boolean" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -120,7 +124,8 @@ class ResultSetTests(TestCase):
                 'SUM("number") "$aggr_number" '
                 'FROM "test" '
                 'GROUP BY "$date","$boolean" '
-                'ORDER BY "$date","$boolean"',
+                'ORDER BY "$date","$boolean" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -146,7 +151,8 @@ class ResultSetTests(TestCase):
             'SUM("number") "$aggr_number" '
             'FROM "test" '
             'GROUP BY "$set(text=\'abc\')","$text" '
-            'ORDER BY "$set(text=\'abc\')","$text"',
+            'ORDER BY "$set(text=\'abc\')","$text" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -167,7 +173,8 @@ class ResultSetTests(TestCase):
             'SUM("number") "$aggr_number" '
             'FROM "test" '
             "GROUP BY \"$text\" "
-            "ORDER BY \"$text\"",
+            "ORDER BY \"$text\" "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -185,7 +192,8 @@ class ResultSetTests(TestCase):
             'SUM("number") "$aggr_number" '
             'FROM "test" '
             "GROUP BY \"$text\" "
-            "ORDER BY \"$text\"",
+            "ORDER BY \"$text\" "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -207,7 +215,8 @@ class ResultSetTests(TestCase):
             'SUM("number") "$aggr_number" '
             'FROM "test" '
             'GROUP BY "$date","$boolean","$text" '
-            'ORDER BY "$date","$boolean","$text"',
+            'ORDER BY "$date","$boolean","$text" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -227,7 +236,8 @@ class ResultSetTests(TestCase):
             'SUM("number") "$aggr_number" '
             'FROM "test" '
             "GROUP BY \"$text\" "
-            "ORDER BY \"$text\"",
+            "ORDER BY \"$text\" "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -254,7 +264,8 @@ class ResultSetTests(TestCase):
             'SUM("number") "$aggr_number" '
             'FROM "test" '
             "GROUP BY \"$text\" "
-            "ORDER BY \"$text\"",
+            "ORDER BY \"$text\" "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -282,7 +293,8 @@ class ResultSetTests(TestCase):
             'SUM("number") "$aggr_number" '
             'FROM "test" '
             "GROUP BY \"$text\" "
-            "ORDER BY \"$text\"",
+            "ORDER BY \"$text\" "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -304,7 +316,8 @@ class ResultSetTests(TestCase):
             'SUM("number") "$aggr_number" '
             'FROM "test" '
             "GROUP BY \"$text\" "
-            "ORDER BY \"$text\"",
+            "ORDER BY \"$text\" "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -330,6 +343,7 @@ class ResultSetTests(TestCase):
             'SUM("number") "$aggr_number" '
             'FROM "test" '
             "GROUP BY \"$text\" "
-            "ORDER BY \"$text\"",
+            "ORDER BY \"$text\" "
+            "LIMIT 200000",
             str(queries[0]),
         )

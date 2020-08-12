@@ -1,9 +1,9 @@
 from unittest import TestCase
 
-import fireant as f
-from fireant import DataSet, DataType, Database, Field, ReactTable
 from pypika import Tables
 
+import fireant as f
+from fireant import DataSet, DataType, Database, Field, ReactTable
 from fireant.tests.database.mock_database import TestDatabase
 
 
@@ -89,7 +89,8 @@ class DataSetBlenderIntegrationTests(TestCase):
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(query),
         )
 
@@ -154,7 +155,8 @@ class DataSetBlenderIntegrationTests(TestCase):
             '"metric" "$metric2" '
             'FROM "test1"'
             ') "sq1" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(query),
         )
 
@@ -243,7 +245,8 @@ class DataSetBlenderIntegrationTests(TestCase):
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp","$account"',
+            'ORDER BY "$timestamp","$account" '
+            'LIMIT 200000',
             str(query),
         )
 
@@ -306,7 +309,8 @@ class DataSetBlenderIntegrationTests(TestCase):
             'FROM "test1" '
             'GROUP BY "$b"'
             ') "sq1" ON "sq0"."$a"="sq1"."$b" '
-            'ORDER BY "$a"',
+            'ORDER BY "$a" '
+            'LIMIT 200000',
             str(query),
         )
 
@@ -392,7 +396,8 @@ class DataSetBlenderIntegrationTests(TestCase):
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp","$account"',
+            'ORDER BY "$timestamp","$account" '
+            'LIMIT 200000',
             str(query_1),
         )
 
@@ -413,7 +418,8 @@ class DataSetBlenderIntegrationTests(TestCase):
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp","$account"',
+            'ORDER BY "$timestamp","$account" '
+            'LIMIT 200000',
             str(query_2),
         )
 
@@ -500,7 +506,8 @@ class DataSetBlenderIntegrationTests(TestCase):
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$metric1"',
+            'ORDER BY "$metric1" '
+            'LIMIT 200000',
             str(query_1),
         )
 
@@ -521,7 +528,8 @@ class DataSetBlenderIntegrationTests(TestCase):
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$metric1_dod"',
+            'ORDER BY "$metric1_dod" '
+            'LIMIT 200000',
             str(query_2),
         )
 
@@ -610,7 +618,8 @@ class DataSetBlenderIntegrationTests(TestCase):
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$metric0"',
+            'ORDER BY "$metric0" '
+            'LIMIT 200000',
             str(query_1),
         )
 
@@ -633,7 +642,8 @@ class DataSetBlenderIntegrationTests(TestCase):
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$metric0_dod"',
+            'ORDER BY "$metric0_dod" '
+            'LIMIT 200000',
             str(query_2),
         )
 
@@ -716,7 +726,8 @@ class DataSetBlenderIntegrationTests(TestCase):
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(query_1),
         )
 
@@ -737,7 +748,8 @@ class DataSetBlenderIntegrationTests(TestCase):
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(query_2),
         )
 
@@ -824,7 +836,8 @@ class DataSetBlenderIntegrationTests(TestCase):
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(query_1),
         )
 
@@ -845,7 +858,8 @@ class DataSetBlenderIntegrationTests(TestCase):
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(query_2),
         )
 
@@ -932,7 +946,8 @@ class DataSetBlenderIntegrationTests(TestCase):
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(query_1),
         )
 
@@ -953,7 +968,8 @@ class DataSetBlenderIntegrationTests(TestCase):
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(query_2),
         )
 
@@ -1039,7 +1055,8 @@ class DataSetBlenderIntegrationTests(TestCase):
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(query_1),
         )
 
@@ -1061,7 +1078,8 @@ class DataSetBlenderIntegrationTests(TestCase):
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(query_2),
         )
 
@@ -1160,7 +1178,7 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
         (query,) = blender.query().widget(ReactTable(blender.fields.only_metric2)).sql
 
         self.assertEqual(
-            'SELECT "sq0"."$metric2" "$only_metric2" FROM (SELECT "metric" "$metric2" FROM "test2") "sq0"',
+            'SELECT "sq0"."$metric2" "$only_metric2" FROM (SELECT "metric" "$metric2" FROM "test2") "sq0" LIMIT 200000',
             str(query),
         )
 
@@ -1296,7 +1314,8 @@ class DataSetBlenderMultipleDatasetsTests(TestCase):
                 'FROM "test1" '
                 'GROUP BY "$timestamp"'
                 ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-                'ORDER BY "$timestamp"'
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000'
             ),
             str(query),
         )

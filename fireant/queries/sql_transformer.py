@@ -1,9 +1,7 @@
-from typing import Iterable
+from typing import Iterable, List, Type
 
-from pypika import (
-    Table,
-    functions as fn,
-)
+from pypika import Table, functions as fn
+from pypika.queries import QueryBuilder
 
 from fireant.database import Database
 from fireant.dataset.fields import Field
@@ -27,6 +25,7 @@ from .totals_helper import adapt_for_totals_query
 
 @apply_special_cases
 def make_slicer_query_with_totals_and_references(
+    *,
     database,
     table,
     joins,
@@ -37,7 +36,7 @@ def make_slicer_query_with_totals_and_references(
     references,
     orders,
     share_dimensions=(),
-):
+) -> List[Type[QueryBuilder]]:
     """
     :param dataset:
     :param database:
@@ -49,6 +48,8 @@ def make_slicer_query_with_totals_and_references(
     :param filters:
     :param references:
     :param orders:
+    :param limit:
+    :param offset:
     :param share_dimensions:
     :return:
     """
@@ -111,7 +112,6 @@ def make_slicer_query_with_totals_and_references(
             # totals can be applied when combining the separate result set from each query.
             query._totals = totals_dimension
             query._references = references
-
             queries.append(query)
 
     return queries
@@ -125,7 +125,7 @@ def make_slicer_query(
     metrics: Iterable[Field] = (),
     filters: Iterable[Filter] = (),
     orders: Iterable = (),
-):
+) -> Type[QueryBuilder]:
     """
     Creates a pypika/SQL query from a list of slicer elements.
 
@@ -164,7 +164,7 @@ def make_slicer_query(
     for join in find_joins_for_tables(joins, base_table, join_tables_needed_for_query):
         query = query.join(join.table, how=join.join_type).on(join.criterion)
 
-    default_orders =  []
+    default_orders = []
 
     # Add dimensions
     for dimension in dimensions:

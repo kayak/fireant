@@ -1,6 +1,5 @@
-from unittest import TestCase
-
 from datetime import date
+from unittest import TestCase
 
 import fireant as f
 from fireant.tests.dataset.mocks import mock_dataset
@@ -26,7 +25,8 @@ class QueryBuilderDimensionTests(TestCase):
             'SUM("votes") "$votes" '
             'FROM "politics"."politician" '
             'GROUP BY "$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -46,7 +46,8 @@ class QueryBuilderDimensionTests(TestCase):
             'SUM("votes") "$votes" '
             'FROM "politics"."politician" '
             'GROUP BY "$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -66,7 +67,8 @@ class QueryBuilderDimensionTests(TestCase):
             'SUM("votes") "$votes" '
             'FROM "politics"."politician" '
             'GROUP BY "$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -86,7 +88,8 @@ class QueryBuilderDimensionTests(TestCase):
             'SUM("votes") "$votes" '
             'FROM "politics"."politician" '
             'GROUP BY "$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -106,7 +109,8 @@ class QueryBuilderDimensionTests(TestCase):
             'SUM("votes") "$votes" '
             'FROM "politics"."politician" '
             'GROUP BY "$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -126,7 +130,8 @@ class QueryBuilderDimensionTests(TestCase):
             'SUM("votes") "$votes" '
             'FROM "politics"."politician" '
             'GROUP BY "$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -146,7 +151,8 @@ class QueryBuilderDimensionTests(TestCase):
             'SUM("votes") "$votes" '
             'FROM "politics"."politician" '
             'GROUP BY "$timestamp" '
-            'ORDER BY "$timestamp"',
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -166,7 +172,8 @@ class QueryBuilderDimensionTests(TestCase):
             'SUM("votes") "$votes" '
             'FROM "politics"."politician" '
             'GROUP BY "$winner" '
-            'ORDER BY "$winner"',
+            'ORDER BY "$winner" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -186,7 +193,8 @@ class QueryBuilderDimensionTests(TestCase):
             'SUM("votes") "$votes" '
             'FROM "politics"."politician" '
             'GROUP BY "$political_party" '
-            'ORDER BY "$political_party"',
+            'ORDER BY "$political_party" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -210,7 +218,8 @@ class QueryBuilderDimensionTests(TestCase):
             'SUM("votes") "$votes" '
             'FROM "politics"."politician" '
             'GROUP BY "$timestamp","$candidate-id","$candidate-name" '
-            'ORDER BY "$timestamp","$candidate-id","$candidate-name"',
+            'ORDER BY "$timestamp","$candidate-id","$candidate-name" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -238,7 +247,8 @@ class QueryBuilderDimensionTests(TestCase):
             'SUM("is_winner") "$wins" '
             'FROM "politics"."politician" '
             'GROUP BY "$timestamp","$political_party" '
-            'ORDER BY "$timestamp","$political_party"',
+            'ORDER BY "$timestamp","$political_party" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -264,7 +274,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$political_party" '
-                'ORDER BY "$political_party"',
+                'ORDER BY "$political_party" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -275,7 +286,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$political_party" '
-                'ORDER BY "$political_party"',
+                'ORDER BY "$political_party" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -302,7 +314,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp","$candidate-id","$political_party" '
-                'ORDER BY "$timestamp","$candidate-id","$political_party"',
+                'ORDER BY "$timestamp","$candidate-id","$political_party" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -317,7 +330,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp","$candidate-id","$political_party" '
-                'ORDER BY "$timestamp","$candidate-id","$political_party"',
+                'ORDER BY "$timestamp","$candidate-id","$political_party" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -344,7 +358,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp","$candidate-id","$political_party" '
-                'ORDER BY "$timestamp","$candidate-id","$political_party"',
+                'ORDER BY "$timestamp","$candidate-id","$political_party" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -359,7 +374,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp","$candidate-id","$political_party" '
-                'ORDER BY "$timestamp","$candidate-id","$political_party"',
+                'ORDER BY "$timestamp","$candidate-id","$political_party" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -375,7 +391,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp","$candidate-id","$political_party" '
-                'ORDER BY "$timestamp","$candidate-id","$political_party"',
+                'ORDER BY "$timestamp","$candidate-id","$political_party" '
+                'LIMIT 200000',
                 str(queries[2]),
             )
 
@@ -401,7 +418,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp","$political_party" '
-                'ORDER BY "$timestamp","$political_party"',
+                'ORDER BY "$timestamp","$political_party" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -413,7 +431,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp","$political_party" '
-                'ORDER BY "$timestamp","$political_party"',
+                'ORDER BY "$timestamp","$political_party" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -427,7 +446,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp","$political_party" '
-                'ORDER BY "$timestamp","$political_party"',
+                'ORDER BY "$timestamp","$political_party" '
+                'LIMIT 200000',
                 str(queries[2]),
             )
 
@@ -441,7 +461,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp","$political_party" '
-                'ORDER BY "$timestamp","$political_party"',
+                'ORDER BY "$timestamp","$political_party" '
+                'LIMIT 200000',
                 str(queries[3]),
             )
 
@@ -473,7 +494,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 'FROM "politics"."politician" '
                 "WHERE \"timestamp\" BETWEEN '2018-01-01' AND '2019-01-01' "
                 'GROUP BY "$timestamp","$political_party" '
-                'ORDER BY "$timestamp","$political_party"',
+                'ORDER BY "$timestamp","$political_party" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -487,7 +509,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('day',-1,'2018-01-01') "
                 "AND TIMESTAMPADD('day',-1,'2019-01-01') "
                 'GROUP BY "$timestamp","$political_party" '
-                'ORDER BY "$timestamp","$political_party"',
+                'ORDER BY "$timestamp","$political_party" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -502,7 +525,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 'FROM "politics"."politician" '
                 "WHERE \"timestamp\" BETWEEN '2018-01-01' AND '2019-01-01' "
                 'GROUP BY "$timestamp","$political_party" '
-                'ORDER BY "$timestamp","$political_party"',
+                'ORDER BY "$timestamp","$political_party" '
+                'LIMIT 200000',
                 str(queries[2]),
             )
 
@@ -518,7 +542,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('day',-1,'2018-01-01') "
                 "AND TIMESTAMPADD('day',-1,'2019-01-01') "
                 'GROUP BY "$timestamp","$political_party" '
-                'ORDER BY "$timestamp","$political_party"',
+                'ORDER BY "$timestamp","$political_party" '
+                'LIMIT 200000',
                 str(queries[3]),
             )
 
@@ -551,7 +576,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 'FROM "politics"."politician" '
                 "WHERE \"timestamp\" BETWEEN '2018-01-01' AND '2019-01-01' "
                 'GROUP BY "$political_party","$timestamp" '
-                'ORDER BY "$political_party","$timestamp"',
+                'ORDER BY "$political_party","$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -565,7 +591,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$political_party","$timestamp" '
-                'ORDER BY "$political_party","$timestamp"',
+                'ORDER BY "$political_party","$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -604,7 +631,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 "WHERE \"timestamp\" BETWEEN '2018-01-01' AND '2019-01-01' "
                 "AND \"timestamp\" BETWEEN '2018-03-01' AND '2019-09-01' "
                 'GROUP BY "$political_party","$timestamp" '
-                'ORDER BY "$political_party","$timestamp"',
+                'ORDER BY "$political_party","$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -619,7 +647,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 'FROM "politics"."politician" '
                 "WHERE \"timestamp\" BETWEEN '2018-03-01' AND '2019-09-01' "
                 'GROUP BY "$political_party","$timestamp" '
-                'ORDER BY "$political_party","$timestamp"',
+                'ORDER BY "$political_party","$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -654,7 +683,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 'FROM "politics"."politician" '
                 "WHERE \"timestamp\" BETWEEN '2018-01-01' AND '2019-01-01' "
                 'GROUP BY "$political_party","$timestamp" '
-                'ORDER BY "$political_party","$timestamp"',
+                'ORDER BY "$political_party","$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -668,7 +698,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$political_party","$timestamp" '
-                'ORDER BY "$political_party","$timestamp"',
+                'ORDER BY "$political_party","$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -682,6 +713,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$political_party","$timestamp" '
-                'ORDER BY "$political_party","$timestamp"',
+                'ORDER BY "$political_party","$timestamp" '
+                'LIMIT 200000',
                 str(queries[2]),
             )

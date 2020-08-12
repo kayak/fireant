@@ -1,28 +1,26 @@
-import pandas as pd
+import copy
 from unittest import TestCase
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import ANY, MagicMock, Mock, patch
+
+import pandas as pd
+from pypika import Order, Table
 
 import fireant as f
-from fireant import Share, DataSet, DataType, Field
+from fireant import DataSet, DataType, Field, Share
 from fireant.dataset.filters import ComparisonOperator
 from fireant.dataset.references import ReferenceFilter
 from fireant.queries.sets import _make_set_dimension
 from fireant.tests.database.mock_database import TestDatabase
 from fireant.tests.dataset.matchers import FieldMatcher, PypikaQueryMatcher
-from fireant.tests.dataset.mocks import (
-    mock_dataset,
-    mock_date_annotation_dataset,
-    mock_category_annotation_dataset,
-)
-from pypika import Order, Table
+from fireant.tests.dataset.mocks import (mock_category_annotation_dataset, mock_dataset, mock_date_annotation_dataset)
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
-@patch("fireant.queries.builder.dataset_query_builder.paginate")
-@patch("fireant.queries.builder.dataset_query_builder.fetch_data")
+@patch("fireant.queries.builder.dataset_query_builder.sort")
+@patch("fireant.queries.builder.dataset_query_builder.fetch_data", return_value=(100, MagicMock()))
 class FindShareDimensionsTests(TestCase):
     def test_find_no_share_dimensions_with_no_share_operation(
-        self, mock_fetch_data: Mock, mock_paginate: Mock
+        self, mock_fetch_data: Mock, mock_sort: Mock
     ):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
@@ -38,7 +36,7 @@ class FindShareDimensionsTests(TestCase):
         mock_fetch_data.assert_called_once_with(ANY, ANY, ANY, [], ANY)
 
     def test_find_share_dimensions_with_a_single_share_operation(
-        self, mock_fetch_data: Mock, mock_paginate: Mock
+        self, mock_fetch_data: Mock, mock_sort: Mock
     ):
         mock_widget = f.Widget(
             Share(mock_dataset.fields.votes, over=mock_dataset.fields.state)
@@ -58,7 +56,7 @@ class FindShareDimensionsTests(TestCase):
         )
 
     def test_find_share_dimensions_with_a_multiple_share_operations(
-        self, mock_fetch_data: Mock, mock_paginate: Mock
+        self, mock_fetch_data: Mock, mock_sort: Mock
     ):
         mock_widget = f.Widget(
             Share(mock_dataset.fields.votes, over=mock_dataset.fields.state),
@@ -79,7 +77,7 @@ class FindShareDimensionsTests(TestCase):
         )
 
     def test_find_share_dimensions_with_a_multiple_share_operations_over_different_dimensions(
-        self, mock_fetch_data: Mock, mock_paginate: Mock
+        self, mock_fetch_data: Mock, mock_sort: Mock
     ):
         mock_widget = f.Widget(
             Share(mock_dataset.fields.votes, over=mock_dataset.fields.state),
@@ -103,8 +101,8 @@ class FindShareDimensionsTests(TestCase):
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 @patch("fireant.queries.builder.dataset_query_builder.apply_reference_filters")
-@patch("fireant.queries.builder.dataset_query_builder.paginate")
-@patch("fireant.queries.builder.dataset_query_builder.fetch_data")
+@patch("fireant.queries.builder.dataset_query_builder.sort")
+@patch("fireant.queries.builder.dataset_query_builder.fetch_data", return_value=(100, MagicMock()))
 class QueryBuilderFetchDataTests(TestCase):
     def test_reference_filters_are_applied(self, mock_fetch: Mock, mock_2: Mock, mock_apply_reference_filters: Mock):
         db = TestDatabase()
@@ -137,7 +135,7 @@ class QueryBuilderFetchDataTests(TestCase):
         reference = f.DayOverDay(dataset.fields.timestamp, filters=[reference_filter])
 
         df = pd.DataFrame.from_dict({"$value": [1]})
-        mock_fetch.return_value = df
+        mock_fetch.return_value = 100, df
         mock_apply_reference_filters.return_value = df
 
         (
@@ -148,8 +146,6 @@ class QueryBuilderFetchDataTests(TestCase):
         ).fetch()
 
         mock_apply_reference_filters.assert_called_once_with(df, reference)
-
-
 
     def test_pass_slicer_database_as_arg(
         self, mock_fetch_data: Mock, *args
@@ -175,7 +171,7 @@ class QueryBuilderFetchDataTests(TestCase):
             ANY,
             [
                 PypikaQueryMatcher(
-                    'SELECT SUM("votes") "$votes" ' 'FROM "politics"."politician"'
+                    'SELECT SUM("votes") "$votes" FROM "politics"."politician" LIMIT 200000'
                 )
             ],
             ANY,
@@ -257,7 +253,7 @@ class QueryBuilderFetchDataTests(TestCase):
             ANY, ANY, FieldMatcher(*dimensions), ANY, ANY
         )
 
-    def test_call_transform_on_widget(self, mock_fetch_data: Mock, mock_paginate: Mock, *args):
+    def test_call_transform_on_widget(self, mock_fetch_data: Mock, mock_sort: Mock, *args):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
 
@@ -267,7 +263,7 @@ class QueryBuilderFetchDataTests(TestCase):
         ).fetch()
 
         mock_widget.transform.assert_called_once_with(
-            mock_paginate.return_value,
+            mock_sort.return_value,
             FieldMatcher(mock_dataset.fields.timestamp),
             [],
             None,
@@ -288,16 +284,33 @@ class QueryBuilderFetchDataTests(TestCase):
 
         self.assertListEqual(result, [mock_widget.transform.return_value])
 
+    def test_envelopes_responses_if_return_additional_metadata_True(self, *args):
+        dataset = copy.deepcopy(mock_dataset)
+        mock_widget = f.Widget(dataset.fields.votes)
+        mock_widget.transform = Mock()
+        dataset.return_additional_metadata = True
+
+        result = (
+            dataset.query.dimension(dataset.fields.timestamp)
+            .widget(mock_widget)
+            .fetch()
+        )
+
+        self.assertEqual(
+            dict(data=[mock_widget.transform.return_value], metadata=dict(max_rows_returned=100)),
+            result,
+        )
+
 
 @patch(
     "fireant.queries.builder.dataset_query_builder.scrub_totals_from_share_results",
     side_effect=lambda *args: args[0],
 )
-@patch("fireant.queries.builder.dataset_query_builder.paginate")
-@patch("fireant.queries.builder.dataset_query_builder.fetch_data")
-class QueryBuilderPaginationTests(TestCase):
-    def test_paginate_is_called(
-        self, mock_fetch_data: Mock, mock_paginate: Mock, *mocks
+@patch("fireant.queries.builder.dataset_query_builder.sort")
+@patch("fireant.queries.builder.dataset_query_builder.fetch_data", return_value=(100, MagicMock()))
+class QueryBuilderSortTests(TestCase):
+    def test_sort_is_called(
+        self, mock_fetch_data: Mock, mock_sort: Mock, *mocks
     ):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
@@ -306,54 +319,14 @@ class QueryBuilderPaginationTests(TestCase):
             mock_widget
         ).fetch()
 
-        mock_paginate.assert_called_once_with(
-            mock_fetch_data.return_value,
+        mock_sort.assert_called_once_with(
+            mock_fetch_data.return_value[1],
             [mock_widget],
-            limit=None,
-            offset=None,
             orders=[(mock_dataset.fields.timestamp, None)],
         )
 
-    def test_pagination_applied_with_limit(
-        self, mock_fetch_data: Mock, mock_paginate: Mock, *mocks
-    ):
-        mock_widget = f.Widget(mock_dataset.fields.votes)
-        mock_widget.transform = Mock()
-
-        # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
-        mock_dataset.query.dimension(mock_dataset.fields.timestamp).widget(
-            mock_widget
-        ).limit(15).fetch()
-
-        mock_paginate.assert_called_once_with(
-            mock_fetch_data.return_value,
-            [mock_widget],
-            limit=15,
-            offset=None,
-            orders=[(mock_dataset.fields.timestamp, None)],
-        )
-
-    def test_pagination_applied_with_offset(
-        self, mock_fetch_data: Mock, mock_paginate: Mock, *mocks
-    ):
-        mock_widget = f.Widget(mock_dataset.fields.votes)
-        mock_widget.transform = Mock()
-
-        # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
-        mock_dataset.query.dimension(mock_dataset.fields.timestamp).widget(
-            mock_widget
-        ).limit(15).offset(20).fetch()
-
-        mock_paginate.assert_called_once_with(
-            mock_fetch_data.return_value,
-            [mock_widget],
-            limit=15,
-            offset=20,
-            orders=[(mock_dataset.fields.timestamp, None)],
-        )
-
-    def test_pagination_applied_with_orders(
-        self, mock_fetch_data: Mock, mock_paginate: Mock, *mocks
+    def test_sort_applied_with_orders(
+        self, mock_fetch_data: Mock, mock_sort: Mock, *mocks
     ):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
@@ -364,16 +337,14 @@ class QueryBuilderPaginationTests(TestCase):
         ).orderby(mock_dataset.fields.votes, Order.asc).fetch()
 
         orders = [(mock_dataset.fields.votes, Order.asc)]
-        mock_paginate.assert_called_once_with(
-            mock_fetch_data.return_value,
+        mock_sort.assert_called_once_with(
+            mock_fetch_data.return_value[1],
             [mock_widget],
-            limit=None,
-            offset=None,
             orders=orders,
         )
 
 
-@patch("fireant.queries.builder.dataset_query_builder.fetch_data")
+@patch("fireant.queries.builder.dataset_query_builder.fetch_data", return_value=(100, MagicMock()))
 class QueryBuilderAnnotationTests(TestCase):
     def get_fetch_call_args(self, mock_fetch_data):
         self.assertEqual(mock_fetch_data.call_count, 2)
@@ -426,7 +397,8 @@ class QueryBuilderAnnotationTests(TestCase):
                         'SUM("votes") "$votes" '
                         'FROM "politics"."politician" '
                         'GROUP BY "$timestamp" '
-                        'ORDER BY "$timestamp"'
+                        'ORDER BY "$timestamp" '
+                        'LIMIT 200000'
                     )
                 ],
                 FieldMatcher(*dims),
@@ -475,7 +447,8 @@ class QueryBuilderAnnotationTests(TestCase):
                         'SUM("votes") "$votes" '
                         'FROM "politics"."politician" '
                         'GROUP BY "$political_party" '
-                        'ORDER BY "$political_party"'
+                        'ORDER BY "$political_party" '
+                        'LIMIT 200000'
                     )
                 ],
                 FieldMatcher(*dims),
@@ -526,7 +499,8 @@ class QueryBuilderAnnotationTests(TestCase):
                         'SUM("votes") "$votes" '
                         'FROM "politics"."politician" '
                         'GROUP BY "$timestamp","$political_party" '
-                        'ORDER BY "$timestamp","$political_party"'
+                        'ORDER BY "$timestamp","$political_party" '
+                        'LIMIT 200000'
                     )
                 ],
                 FieldMatcher(*dims),
@@ -552,7 +526,8 @@ class QueryBuilderAnnotationTests(TestCase):
                     'SUM("votes") "$votes" '
                     'FROM "politics"."politician" '
                     'GROUP BY "$political_party" '
-                    'ORDER BY "$political_party"'
+                    'ORDER BY "$political_party" '
+                    'LIMIT 200000'
                 )
             ],
             FieldMatcher(*dims),
@@ -571,7 +546,7 @@ class QueryBuilderAnnotationTests(TestCase):
             mock_date_annotation_dataset.database,
             [
                 PypikaQueryMatcher(
-                    "SELECT " 'SUM("votes") "$votes" ' 'FROM "politics"."politician"'
+                    'SELECT SUM("votes") "$votes" FROM "politics"."politician" LIMIT 200000'
                 )
             ],
             FieldMatcher(*dims),
@@ -618,7 +593,8 @@ class QueryBuilderAnnotationTests(TestCase):
                         'FROM "politics"."politician" '
                         "WHERE \"timestamp\"='2020-01-01' "
                         'GROUP BY "$timestamp" '
-                        'ORDER BY "$timestamp"'
+                        'ORDER BY "$timestamp" '
+                        'LIMIT 200000'
                     )
                 ],
                 FieldMatcher(*dims),
@@ -672,7 +648,8 @@ class QueryBuilderAnnotationTests(TestCase):
                         'FROM "politics"."politician" '
                         "WHERE \"political_party\"='Democrat' "
                         'GROUP BY "$timestamp","$political_party" '
-                        'ORDER BY "$timestamp","$political_party"'
+                        'ORDER BY "$timestamp","$political_party" '
+                        'LIMIT 200000'
                     )
                 ],
                 FieldMatcher(*dims),
