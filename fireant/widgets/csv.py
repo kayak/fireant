@@ -2,16 +2,15 @@ from _csv import QUOTE_MINIMAL
 from typing import Iterable
 
 from fireant.dataset.fields import Field
-
 from .pandas import Pandas
 
 
 class CSV(Pandas):
     def __init__(
-        self, metric: Field, *metrics: Iterable[Field], group_pagination=False, **kwargs
+        self, metric: Field, *metrics: Iterable[Field], group_sort=False, **kwargs
     ):
         super().__init__(metric, *metrics, **kwargs)
-        self.group_pagination = group_pagination
+        self.group_sort = group_sort
 
     def transform(
         self,

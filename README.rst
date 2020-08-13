@@ -253,7 +253,6 @@ Crafted with ♥ in Berlin.
 .. _Jupyter: http://jupyter.org/
 .. _Matplotlib: http://matplotlib.org/
 .. _HighCharts: http://www.highcharts.com/
-.. _Datatables: https://datatables.net/
 .. _React-Table: https://react-table.js.org/
 
 .. _appendix_end:

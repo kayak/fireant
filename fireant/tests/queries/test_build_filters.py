@@ -5,14 +5,14 @@ from datetime import (
 from unittest import TestCase
 
 import pytz
-
-import fireant as f
-from fireant import DataSetFilterException
-from fireant.tests.dataset.mocks import test_database
 from pypika import (
     Table,
     functions as fn,
 )
+
+import fireant as f
+from fireant import DataSetFilterException
+from fireant.tests.dataset.mocks import test_database
 
 test_table = Table("test")
 ds = f.DataSet(
@@ -48,7 +48,8 @@ class FilterDateFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            "WHERE \"date\"='2019-03-06'",
+            "WHERE \"date\"='2019-03-06' "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -64,7 +65,8 @@ class FilterDateFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            "WHERE \"date\"='2019-03-06'",
+            "WHERE \"date\"='2019-03-06' "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -80,7 +82,8 @@ class FilterDateFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            "WHERE \"date\"='2019-03-06T09:36:11'",
+            "WHERE \"date\"='2019-03-06T09:36:11' "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -96,7 +99,8 @@ class FilterDateFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            "WHERE \"date\"='2019-03-06T09:36:11+00:00'",
+            "WHERE \"date\"='2019-03-06T09:36:11+00:00' "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -112,7 +116,8 @@ class FilterDateFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            "WHERE \"date\"<>'2019-03-06'",
+            "WHERE \"date\"<>'2019-03-06' "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -128,7 +133,8 @@ class FilterDateFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            "WHERE \"date\">'2019-03-06'",
+            "WHERE \"date\">'2019-03-06' "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -144,7 +150,8 @@ class FilterDateFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            "WHERE \"date\">='2019-03-06'",
+            "WHERE \"date\">='2019-03-06' "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -160,7 +167,8 @@ class FilterDateFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            "WHERE \"date\"<'2019-03-06'",
+            "WHERE \"date\"<'2019-03-06' "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -176,7 +184,8 @@ class FilterDateFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            "WHERE \"date\"<='2019-03-06'",
+            "WHERE \"date\"<='2019-03-06' "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -192,7 +201,8 @@ class FilterDateFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            "WHERE \"date\" IN ('2019-03-06','2019-03-07')",
+            "WHERE \"date\" IN ('2019-03-06','2019-03-07') "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -208,7 +218,8 @@ class FilterDateFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            "WHERE \"date\" NOT IN ('2019-03-06','2019-03-07')",
+            "WHERE \"date\" NOT IN ('2019-03-06','2019-03-07') "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -224,7 +235,8 @@ class FilterDateFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            "WHERE \"date\" BETWEEN '2019-03-06' AND '2019-03-07'",
+            "WHERE \"date\" BETWEEN '2019-03-06' AND '2019-03-07' "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -249,7 +261,7 @@ class FilterDateFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT " 'SUM("number") "$aggr_number" ' 'FROM "test"', str(queries[0])
+            "SELECT " 'SUM("number") "$aggr_number" ' 'FROM "test" LIMIT 200000', str(queries[0])
         )
 
     def test_void_filter_with_a_dimension_filter(self):
@@ -265,7 +277,8 @@ class FilterDateFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            "WHERE \"date\"='2019-03-06'",
+            "WHERE \"date\"='2019-03-06' "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -282,7 +295,8 @@ class FilterDateFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'HAVING SUM("number")>10',
+            'HAVING SUM("number")>10 '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -298,7 +312,7 @@ class FilterNumberFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT " 'SUM("number") "$aggr_number" ' 'FROM "test" ' 'WHERE "number"=1',
+            'SELECT SUM("number") "$aggr_number" FROM "test" WHERE "number"=1 LIMIT 200000',
             str(queries[0]),
         )
 
@@ -314,7 +328,8 @@ class FilterNumberFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'WHERE "number"=1.0',
+            'WHERE "number"=1.0 '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -330,7 +345,8 @@ class FilterNumberFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'WHERE "number"<>5',
+            'WHERE "number"<>5 '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -343,7 +359,7 @@ class FilterNumberFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT " 'SUM("number") "$aggr_number" ' 'FROM "test" ' 'WHERE "number">5',
+            'SELECT SUM("number") "$aggr_number" FROM "test" ' 'WHERE "number">5 LIMIT 200000',
             str(queries[0]),
         )
 
@@ -359,7 +375,8 @@ class FilterNumberFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'WHERE "number">=5',
+            'WHERE "number">=5 '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -372,7 +389,7 @@ class FilterNumberFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT " 'SUM("number") "$aggr_number" ' 'FROM "test" ' 'WHERE "number"<5',
+            "SELECT " 'SUM("number") "$aggr_number" ' 'FROM "test" ' 'WHERE "number"<5 LIMIT 200000',
             str(queries[0]),
         )
 
@@ -388,7 +405,8 @@ class FilterNumberFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'WHERE "number"<=5',
+            'WHERE "number"<=5 '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -404,7 +422,8 @@ class FilterNumberFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'WHERE "number" IN (5,7)',
+            'WHERE "number" IN (5,7) '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -420,7 +439,8 @@ class FilterNumberFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'WHERE "number" NOT IN (5,7)',
+            'WHERE "number" NOT IN (5,7) '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -436,7 +456,8 @@ class FilterNumberFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'WHERE "number" BETWEEN 5 AND 7',
+            'WHERE "number" BETWEEN 5 AND 7 '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -467,7 +488,8 @@ class FilterTextFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            "WHERE \"text\"='abc'",
+            "WHERE \"text\"='abc' "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -483,7 +505,8 @@ class FilterTextFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            "WHERE \"text\"<>'abc'",
+            "WHERE \"text\"<>'abc' "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -519,7 +542,8 @@ class FilterTextFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            "WHERE \"text\" IN ('abc','def')",
+            "WHERE \"text\" IN ('abc','def') "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -535,7 +559,8 @@ class FilterTextFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            "WHERE \"text\" NOT IN ('abc','def')",
+            "WHERE \"text\" NOT IN ('abc','def') "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -555,7 +580,8 @@ class FilterTextFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            "WHERE LOWER(\"text\") LIKE LOWER('abc%')",
+            "WHERE LOWER(\"text\") LIKE LOWER('abc%') "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -571,7 +597,8 @@ class FilterTextFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            "WHERE NOT LOWER(\"text\") LIKE LOWER('abc%')",
+            "WHERE NOT LOWER(\"text\") LIKE LOWER('abc%') "
+            "LIMIT 200000",
             str(queries[0]),
         )
 
@@ -590,7 +617,8 @@ class FilterBooleanFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'WHERE "boolean"=true',
+            'WHERE "boolean"=true '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -606,7 +634,8 @@ class FilterBooleanFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'WHERE "boolean"=false',
+            'WHERE "boolean"=false '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -622,7 +651,8 @@ class FilterBooleanFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'WHERE "boolean"=1',
+            'WHERE "boolean"=1 '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -638,7 +668,8 @@ class FilterBooleanFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'WHERE "boolean"=0',
+            'WHERE "boolean"=0 '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -679,7 +710,7 @@ class FilterBooleanFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT " 'SUM("number") "$aggr_number" ' 'FROM "test" ' 'WHERE "boolean"',
+            "SELECT " 'SUM("number") "$aggr_number" ' 'FROM "test" ' 'WHERE "boolean" LIMIT 200000',
             str(queries[0]),
         )
 
@@ -695,7 +726,8 @@ class FilterBooleanFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'WHERE NOT "boolean"',
+            'WHERE NOT "boolean" '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -714,7 +746,8 @@ class FilterAggregateNumberFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'HAVING SUM("number")=1',
+            'HAVING SUM("number")=1 '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -730,7 +763,8 @@ class FilterAggregateNumberFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'HAVING SUM("number")=1.0',
+            'HAVING SUM("number")=1.0 '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -746,7 +780,8 @@ class FilterAggregateNumberFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'HAVING SUM("number")<>5',
+            'HAVING SUM("number")<>5 '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -762,7 +797,8 @@ class FilterAggregateNumberFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'HAVING SUM("number")>5',
+            'HAVING SUM("number")>5 '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -778,7 +814,8 @@ class FilterAggregateNumberFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'HAVING SUM("number")>=5',
+            'HAVING SUM("number")>=5 '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -794,7 +831,8 @@ class FilterAggregateNumberFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'HAVING SUM("number")<5',
+            'HAVING SUM("number")<5 '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -810,7 +848,8 @@ class FilterAggregateNumberFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'HAVING SUM("number")<=5',
+            'HAVING SUM("number")<=5 '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -826,7 +865,8 @@ class FilterAggregateNumberFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'HAVING SUM("number") IN (5,7)',
+            'HAVING SUM("number") IN (5,7) '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -842,7 +882,8 @@ class FilterAggregateNumberFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'HAVING SUM("number") NOT IN (5,7)',
+            'HAVING SUM("number") NOT IN (5,7) '
+            'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -858,7 +899,8 @@ class FilterAggregateNumberFieldTests(TestCase):
             "SELECT "
             'SUM("number") "$aggr_number" '
             'FROM "test" '
-            'HAVING SUM("number") BETWEEN 5 AND 7',
+            'HAVING SUM("number") BETWEEN 5 AND 7 '
+            'LIMIT 200000',
             str(queries[0]),
         )
 

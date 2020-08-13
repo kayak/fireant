@@ -1,6 +1,10 @@
 from unittest import TestCase
+from unittest.mock import patch
 
-from fireant.tests.dataset.mocks import mock_dataset
+import pandas as pd
+
+from fireant import DataSet, DataType, Field
+from fireant.tests.dataset.mocks import mock_dataset, politicians_table, test_database
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -32,3 +36,28 @@ class DimensionsLatestQueryBuilderTests(TestCase):
                          'MAX("timestamp") "$timestamp",'
                          'MAX("timestamp2") "$timestamp2" '
                          'FROM "politics"."politician"', str(query))
+
+    @patch('fireant.queries.builder.dimension_latest_query_builder.fetch_data')
+    def test_envelopes_responses_if_return_additional_metadata_True(self, mock_fetch_data):
+        dataset = DataSet(
+            table=politicians_table,
+            database=test_database,
+            return_additional_metadata=True,
+            fields=[
+                Field(
+                    "timestamp1",
+                    label="timestamp1",
+                    definition=politicians_table.timestamp1,
+                    data_type=DataType.text,
+                    hyperlink_template="http://example.com/{political_party}",
+                )
+            ]
+        )
+
+        df = pd.DataFrame({'political_party': ['a', 'b', 'c']}).set_index('political_party')
+        mock_fetch_data.return_value = 100, df
+
+        result = dataset.latest(dataset.fields.timestamp1).fetch()
+
+        self.assertEqual(dict(max_rows_returned=100), result['metadata'])
+        self.assertTrue(result['data'].equals(pd.Series(['a'], index=['political_party'])))

@@ -1,18 +1,18 @@
+import pandas as pd
+
 from fireant.dataset.fields import Field
 from fireant.utils import (
     alias_for_alias_selector,
     immutable,
 )
-from .query_builder import (
-    QueryBuilder,
-    QueryException,
-)
+from .query_builder import QueryBuilder, QueryException, add_hints
+from ..execution import fetch_data
 from ..sql_transformer import make_latest_query
 
 
 class DimensionLatestQueryBuilder(QueryBuilder):
     def __init__(self, dataset):
-        super(DimensionLatestQueryBuilder, self).__init__(dataset, dataset.table)
+        super().__init__(dataset)
 
     @immutable
     def __call__(self, dimension: Field, *dimensions: Field):
@@ -43,8 +43,14 @@ class DimensionLatestQueryBuilder(QueryBuilder):
         return [query]
 
     def fetch(self, hint=None):
-        data = super().fetch(hint=hint).reset_index().iloc[0]
+        queries = add_hints(self.sql, hint)
+        max_rows_returned, data = fetch_data(self.dataset.database, queries, self.dimensions)
+        data = self._get_latest_data_from_df(data)
+        return self._transform_for_return(data, max_rows_returned=max_rows_returned)
+
+    def _get_latest_data_from_df(self, df: pd.DataFrame) -> pd.Series:
+        latest = df.reset_index().iloc[0]
         # Remove the row index as the name and trim the special dimension key characters from the dimension key
-        data.name = None
-        data.index = [alias_for_alias_selector(alias) for alias in data.index]
-        return data
+        latest.name = None
+        latest.index = [alias_for_alias_selector(alias) for alias in latest.index]
+        return latest

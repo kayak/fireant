@@ -1,6 +1,5 @@
-from unittest import TestCase
-
 from datetime import date
+from unittest import TestCase
 
 import fireant as f
 from fireant import Rollup
@@ -28,13 +27,13 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
         with self.subTest("base query is same as without reference"):
             self.assertEqual(
-                "SELECT " 'SUM("votes") "$votes" ' 'FROM "politics"."politician"',
+                'SELECT SUM("votes") "$votes" FROM "politics"."politician" LIMIT 200000',
                 str(queries[0]),
             )
 
         with self.subTest("reference query is same as base query"):
             self.assertEqual(
-                "SELECT " 'SUM("votes") "$votes_dod" ' 'FROM "politics"."politician"',
+                "SELECT " 'SUM("votes") "$votes_dod" ' 'FROM "politics"."politician" LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -63,7 +62,8 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 'FROM "politics"."politician" '
                 "WHERE \"timestamp\" BETWEEN '2000-01-01' AND '2000-03-01' "
                 'GROUP BY "$political_party" '
-                'ORDER BY "$political_party"',
+                'ORDER BY "$political_party" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -78,7 +78,8 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('day',-1,'2000-01-01') "
                 "AND TIMESTAMPADD('day',-1,'2000-03-01') "
                 'GROUP BY "$political_party" '
-                'ORDER BY "$political_party"',
+                'ORDER BY "$political_party" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -101,7 +102,8 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -114,7 +116,8 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -137,7 +140,8 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -150,7 +154,8 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 'SUM("votes") "$votes_wow" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -173,7 +178,8 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -186,7 +192,8 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 'SUM("votes") "$votes_mom" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -209,7 +216,8 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -222,7 +230,8 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 'SUM("votes") "$votes_qoq" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -245,7 +254,8 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -258,7 +268,8 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 'SUM("votes") "$votes_yoy" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -281,7 +292,8 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -294,7 +306,8 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 'SUM("votes") "$votes_mom" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -317,7 +330,8 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -330,7 +344,8 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 'SUM("votes") "$votes_qoq" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -353,7 +368,8 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -366,7 +382,8 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 'SUM("votes") "$votes_yoy" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -394,7 +411,8 @@ class QueryBuilderDatetimeReferenceWithDeltaTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -407,7 +425,8 @@ class QueryBuilderDatetimeReferenceWithDeltaTests(TestCase):
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -430,7 +449,8 @@ class QueryBuilderDatetimeReferenceWithDeltaTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -443,7 +463,8 @@ class QueryBuilderDatetimeReferenceWithDeltaTests(TestCase):
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -472,7 +493,8 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -485,7 +507,8 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -508,7 +531,8 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -521,7 +545,8 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -544,7 +569,8 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -557,7 +583,8 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -580,7 +607,8 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -593,7 +621,8 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -616,7 +645,8 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -629,7 +659,8 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -660,7 +691,8 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -673,7 +705,8 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -686,7 +719,8 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
                 'SUM("votes") "$votes_yoy" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[2]),
             )
 
@@ -712,7 +746,8 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -725,7 +760,8 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -754,7 +790,8 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -767,7 +804,8 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -798,7 +836,8 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -809,7 +848,8 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -820,7 +860,8 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
                 'SUM("votes") "$votes_yoy" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[2]),
             )
 
@@ -850,7 +891,8 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp","$political_party" '
-                'ORDER BY "$timestamp","$political_party"',
+                'ORDER BY "$timestamp","$political_party" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -864,7 +906,8 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
                 'SUM("votes") "$votes_yoy" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp","$political_party" '
-                'ORDER BY "$timestamp","$political_party"',
+                'ORDER BY "$timestamp","$political_party" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -891,7 +934,8 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp","$candidate-name" '
-                'ORDER BY "$timestamp","$candidate-name"',
+                'ORDER BY "$timestamp","$candidate-name" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -905,7 +949,8 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
                 'SUM("votes") "$votes_yoy" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp","$candidate-name" '
-                'ORDER BY "$timestamp","$candidate-name"',
+                'ORDER BY "$timestamp","$candidate-name" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -934,7 +979,8 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
                 'FROM "politics"."politician" '
                 "WHERE \"timestamp\" BETWEEN '2018-01-01' AND '2018-01-31' "
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -949,7 +995,8 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
                 "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('day',-1,'2018-01-01') "
                 "AND TIMESTAMPADD('day',-1,'2018-01-31') "
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -980,7 +1027,8 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
                 "WHERE \"timestamp\" BETWEEN '2018-01-01' AND '2018-01-31' "
                 "AND \"political_party\" IN ('d') "
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[0]),
             )
 
@@ -995,7 +1043,8 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
                 "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('day',-1,'2018-01-01') AND TIMESTAMPADD('day',-1,'2018-01-31') "
                 "AND \"political_party\" IN ('d') "
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -1031,7 +1080,8 @@ class QueryBuilderReferencesWithRollupTests(TestCase):
                 'FROM "politics"."politician" '
                 "WHERE \"timestamp\" BETWEEN '2018-01-01' AND '2018-01-31' "
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(base),
             )
 
@@ -1046,7 +1096,8 @@ class QueryBuilderReferencesWithRollupTests(TestCase):
                 "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('week',-1,'2018-01-01') "
                 "AND TIMESTAMPADD('week',-1,'2018-01-31') "
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(reference),
             )
 
@@ -1060,7 +1111,8 @@ class QueryBuilderReferencesWithRollupTests(TestCase):
                 'FROM "politics"."politician" '
                 "WHERE \"timestamp\" BETWEEN '2018-01-01' AND '2018-01-31' "
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(base_rollup),
             )
 
@@ -1075,6 +1127,7 @@ class QueryBuilderReferencesWithRollupTests(TestCase):
                 "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('week',-1,'2018-01-01') "
                 "AND TIMESTAMPADD('week',-1,'2018-01-31') "
                 'GROUP BY "$timestamp" '
-                'ORDER BY "$timestamp"',
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
                 str(reference_rollup),
             )

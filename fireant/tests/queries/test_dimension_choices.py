@@ -1,10 +1,13 @@
 from unittest import TestCase
 from unittest.mock import (
     ANY,
-    Mock,
+    MagicMock, Mock,
     patch,
 )
 
+import pandas as pd
+
+from fireant import DataSet, DataType, Field
 from fireant.tests.dataset.matchers import (
     FieldMatcher,
     PypikaQueryMatcher,
@@ -12,6 +15,8 @@ from fireant.tests.dataset.matchers import (
 from fireant.tests.dataset.mocks import (
     mock_dataset,
     mock_hint_dataset,
+    politicians_table,
+    test_database,
 )
 
 
@@ -62,7 +67,7 @@ class DimensionsChoicesQueryBuilderTests(TestCase):
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
-    @patch("fireant.queries.builder.dimension_choices_query_builder.fetch_data")
+    @patch("fireant.queries.builder.dimension_choices_query_builder.fetch_data", return_value=(100, MagicMock()))
     def test_query_choices_for_dataset_with_hint_table(self, mock_fetch_data: Mock):
         mock_hint_dataset.fields.political_party.choices.fetch()
 
@@ -81,7 +86,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
             FieldMatcher(mock_hint_dataset.fields.political_party),
         )
 
-    @patch("fireant.queries.builder.dimension_choices_query_builder.fetch_data")
+    @patch("fireant.queries.builder.dimension_choices_query_builder.fetch_data", return_value=(100, MagicMock()))
     @patch.object(
         mock_hint_dataset.database,
         "get_column_definitions",
@@ -113,7 +118,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
             FieldMatcher(mock_hint_dataset.fields.candidate_name),
         )
 
-    @patch("fireant.queries.builder.dimension_choices_query_builder.fetch_data")
+    @patch("fireant.queries.builder.dimension_choices_query_builder.fetch_data", return_value=(100, MagicMock()))
     @patch.object(
         mock_hint_dataset.database,
         "get_column_definitions",
@@ -147,7 +152,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
             FieldMatcher(mock_hint_dataset.fields.political_party),
         )
 
-    @patch("fireant.queries.builder.dimension_choices_query_builder.fetch_data")
+    @patch("fireant.queries.builder.dimension_choices_query_builder.fetch_data", return_value=(100, MagicMock()))
     @patch.object(
         mock_hint_dataset.database,
         "get_column_definitions",
@@ -179,7 +184,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
             FieldMatcher(mock_hint_dataset.fields.political_party),
         )
 
-    @patch("fireant.queries.builder.dimension_choices_query_builder.fetch_data")
+    @patch("fireant.queries.builder.dimension_choices_query_builder.fetch_data", return_value=(100, MagicMock()))
     @patch.object(
         mock_hint_dataset.database,
         "get_column_definitions",
@@ -209,7 +214,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
             FieldMatcher(mock_hint_dataset.fields.political_party),
         )
 
-    @patch("fireant.queries.builder.dimension_choices_query_builder.fetch_data")
+    @patch("fireant.queries.builder.dimension_choices_query_builder.fetch_data", return_value=(100, MagicMock()))
     @patch.object(
         mock_hint_dataset.database,
         "get_column_definitions",
@@ -235,7 +240,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
             FieldMatcher(mock_hint_dataset.fields["district-name"]),
         )
 
-    @patch("fireant.queries.builder.dimension_choices_query_builder.fetch_data")
+    @patch("fireant.queries.builder.dimension_choices_query_builder.fetch_data", return_value=(100, MagicMock()))
     @patch.object(
         mock_hint_dataset.database,
         "get_column_definitions",
@@ -267,7 +272,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
             FieldMatcher(mock_hint_dataset.fields["district-name"]),
         )
 
-    @patch("fireant.queries.builder.dimension_choices_query_builder.fetch_data")
+    @patch("fireant.queries.builder.dimension_choices_query_builder.fetch_data", return_value=(100, MagicMock()))
     @patch.object(
         mock_hint_dataset.database,
         "get_column_definitions",
@@ -304,7 +309,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
-@patch("fireant.queries.builder.dimension_choices_query_builder.fetch_data")
+@patch("fireant.queries.builder.dimension_choices_query_builder.fetch_data", return_value=(100, MagicMock()))
 class DimensionsChoicesFetchTests(TestCase):
     def test_query_choices_for_field(self, mock_fetch_data: Mock):
         mock_dataset.fields.political_party.choices.fetch()
@@ -322,4 +327,29 @@ class DimensionsChoicesFetchTests(TestCase):
                 )
             ],
             FieldMatcher(mock_dataset.fields.political_party),
+        )
+
+    def test_envelopes_responses_if_return_additional_metadata_True(self, mock_fetch_data):
+        mock_dataset = DataSet(
+            table=politicians_table,
+            database=test_database,
+            return_additional_metadata=True,
+            fields=[
+                Field(
+                    "political_party",
+                    label="Party",
+                    definition=politicians_table.political_party,
+                    data_type=DataType.text,
+                    hyperlink_template="http://example.com/{political_party}",
+                )
+            ]
+        )
+        df = pd.DataFrame({'political_party': ['a', 'b', 'c']}).set_index('political_party')
+        mock_fetch_data.return_value = 100, df
+
+        result = mock_dataset.fields.political_party.choices.fetch()
+
+        self.assertEqual(dict(max_rows_returned=100), result['metadata'])
+        self.assertTrue(
+            pd.Series(['a', 'b', 'c'], index=['a', 'b', 'c'], name='political_party').equals(result['data'])
         )
