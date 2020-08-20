@@ -113,8 +113,8 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
                 dimensions=dimensions,
                 filters=filters,
             )
-            .limit(self._limit)
-            .offset(self._offset)
+            .limit(self._query_limit)
+            .offset(self._query_offset)
         )
 
         if self.hint_table:

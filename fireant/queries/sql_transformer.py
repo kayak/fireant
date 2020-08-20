@@ -48,8 +48,6 @@ def make_slicer_query_with_totals_and_references(
     :param filters:
     :param references:
     :param orders:
-    :param limit:
-    :param offset:
     :param share_dimensions:
     :return:
     """

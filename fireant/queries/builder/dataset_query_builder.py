@@ -27,7 +27,7 @@ from ..finders import (
     find_operations_for_widgets,
     find_share_dimensions,
 )
-from ..sorting import sort
+from ..pagination import paginate
 from ..sql_transformer import (
     make_slicer_query,
     make_slicer_query_with_totals_and_references,
@@ -165,10 +165,12 @@ class DataSetQueryBuilder(
         if orders is None:
             orders = self.default_orders
 
-        data_frame = sort(
+        data_frame = paginate(
             data_frame,
             self._widgets,
             orders=orders,
+            limit=self._client_limit,
+            offset=self._client_offset,
         )
 
         # Apply transformations

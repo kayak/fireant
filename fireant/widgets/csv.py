@@ -7,10 +7,10 @@ from .pandas import Pandas
 
 class CSV(Pandas):
     def __init__(
-        self, metric: Field, *metrics: Iterable[Field], group_sort=False, **kwargs
+        self, metric: Field, *metrics: Iterable[Field], group_pagination=False, **kwargs
     ):
         super().__init__(metric, *metrics, **kwargs)
-        self.group_sort = group_sort
+        self.group_pagination = group_pagination
 
     def transform(
         self,
