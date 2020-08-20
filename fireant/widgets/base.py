@@ -63,7 +63,7 @@ class Widget:
 class TransformableWidget(Widget):
     # This attribute can be overridden in order to sort groups. Useful in cases like for charts where sorting
     # should be applied to the number of series rather than the number of data points.
-    group_sort = False
+    group_pagination = False
 
     @staticmethod
     def hide_data_frame_indexes(data_frame, dimensions_to_hide):

@@ -61,8 +61,8 @@ def has_only_line_series(axis):
 
 
 class HighCharts(ChartWidget, TransformableWidget):
-    # Sorting should be applied to groups of the 0th index level (the x-axis) in order to sort the series correctly
-    group_sort = True
+    # Pagination should be applied to groups of the 0th index level (the x-axis) in order to paginate series
+    group_pagination = True
 
     def __init__(
         self,

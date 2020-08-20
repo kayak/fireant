@@ -68,18 +68,19 @@ class QueryBuilder(object):
     via a set of functions which can be chained together.
     """
 
-    def __init__(self, dataset: 'DataSet', return_additional_metadata: bool = False):
+    def __init__(self, dataset: 'DataSet'):
         """
         :param dataset: DataSet to build the query for
-        :param additional_metadata: When True, the dictionary responses will be enveloped with extra metadata.
         """
         self.dataset = dataset
         self.table = dataset.table
         self._dimensions = []
         self._filters = []
         self._orders = None
-        self._limit = None
-        self._offset = None
+        self._client_limit = None
+        self._client_offset = None
+        self._query_limit = None
+        self._query_offset = None
 
     def __deepcopy__(self, memodict={}):
         fields = [d for d in self._dimensions]
@@ -140,28 +141,54 @@ class QueryBuilder(object):
             self._orders += [(field, orientation)]
 
     @immutable
-    def limit(self, limit):
+    def limit_query(self, limit):
         """
         Sets the limit of the query.
 
         :param limit:
             A limit on the number of database rows returned.
         :return:
-            A copy of the query with the limit set.
+            A copy of the query with the query limit set.
         """
-        self._limit = limit
+        self._query_limit = limit
 
     @immutable
-    def offset(self, offset):
+    def offset_query(self, offset):
         """
         Sets the offset of the query.
 
         :param offset:
             A offset on the number of database rows returned.
         :return:
-            A copy of the query with the ofset set.
+            A copy of the query with the query offset set.
         """
-        self._offset = offset
+        self._query_offset = offset
+
+    @immutable
+    def limit_client(self, limit):
+        """
+        Sets the limit to be used when paginating the Pandas Dataframe after the results
+        have been returned
+
+        :param limit:
+            A limit on the number of dataframe rows returned.
+        :return:
+            A copy of the query with the dataframe limit set.
+        """
+        self._client_limit = limit
+
+    @immutable
+    def offset_client(self, offset):
+        """
+        Sets the offset to be used when paginating the Pandas Dataframe after the results
+        have been returned
+
+        :param offset:
+            A offset on the number of dataframe rows returned
+        :return:
+            A copy of the query with the dataframe offset set.
+        """
+        self._client_offset = offset
 
     @property
     def dimensions(self):
@@ -240,8 +267,8 @@ class QueryBuilder(object):
         return self._transform_for_return(data, max_rows_returned=max_rows_returned)
 
     def _apply_pagination(self, query):
-        query = query.limit(min(self._limit or float('inf'), self.dataset.database.max_result_set_size))
-        return query.offset(self._offset)
+        query = query.limit(min(self._query_limit or float('inf'), self.dataset.database.max_result_set_size))
+        return query.offset(self._query_offset)
 
     def _transform_for_return(self, widget_data, **metadata) -> Union[dict, list]:
         return dict(data=widget_data, metadata=dict(**metadata)) \
