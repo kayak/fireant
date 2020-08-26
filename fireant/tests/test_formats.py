@@ -49,32 +49,6 @@ class SafeRawValueTests(TestCase):
                     str(value).lower(), formats.display_value(value, boolean_field)
                 )
 
-    def test_decimal_value_is_returned_with_decimal_point_replaced(self):
-        tests = [
-            (0.0, "0$0"),
-            (-1.1, "-1$1"),
-            (1.1, "1$1"),
-            (0.123456789, "0$123456789"),
-            (-0.123456789, "-0$123456789"),
-        ]
-        for value, expected in tests:
-            with self.subTest("using value" + str(value)):
-                self.assertEqual(expected, formats.safe_value(value))
-
-    def test_string_value_is_returned_with_only_safe_characters_replaced(self):
-        tests = [
-            ("abcdefghijklmnopqrstuvwxyz", "abcdefghijklmnopqrstuvwxyz"),
-            ("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
-            (" ", " "),
-            ("-0123456789", "-0123456789"),
-            (".[]", "$$$"),
-            ("a.1", "a$1"),
-            ("b[0]", "b$0$"),
-        ]
-        for value, expected in tests:
-            with self.subTest("using value" + value):
-                self.assertEqual(expected, formats.safe_value(value))
-
 
 class FormatRawValueTests(TestCase):
     def test_none_returned_as_none(self):

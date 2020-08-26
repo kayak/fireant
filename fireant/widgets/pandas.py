@@ -1,6 +1,7 @@
-import pandas as pd
 from functools import partial
 from typing import Iterable
+
+import pandas as pd
 
 from fireant import formats
 from fireant.dataset.fields import Field
@@ -195,7 +196,7 @@ class Pandas(TransformableWidget):
     def add_formatting(self, dimensions, items, pivot_df, use_raw_values):
         format_df = pivot_df.copy()
 
-        def _get_f_display(item):
+        def _get_field_display(item):
             return partial(
                 formats.display_value,
                 field=item,
@@ -210,25 +211,25 @@ class Pandas(TransformableWidget):
             and len(dimensions) == len(self.pivot) > 0
         ):
             for item in items:
-                f_display = _get_f_display(item)
+                field_display = _get_field_display(item)
                 format_df.loc[items[0].label] = format_df.loc[items[0].label].apply(
-                    f_display
+                    field_display
                 )
 
             return format_df
 
         if self.pivot and len(items) == 1:
-            f_display = _get_f_display(items[0])
-            format_df = format_df.applymap(f_display)
+            field_display = _get_field_display(items[0])
+            format_df = format_df.applymap(field_display)
             return format_df
 
         for item in items:
             key = item.label
-            f_display = _get_f_display(item)
+            field_display = _get_field_display(item)
             format_df[key] = (
-                format_df[key].apply(f_display)
+                format_df[key].apply(field_display)
                 if isinstance(format_df[key], pd.Series)
-                else format_df[key].applymap(f_display)
+                else format_df[key].applymap(field_display)
             )
 
         return format_df
