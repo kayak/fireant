@@ -1,5 +1,4 @@
 import math
-import re
 from datetime import (
     date,
     datetime,
@@ -91,9 +90,6 @@ def _identity(value):
     return value
 
 
-UNSAFE_CHARS = re.compile(r"[^\w\d\s\-:()]")
-
-
 def json_value(value):
     """
     This function will return only values safe for JSON
@@ -115,12 +111,11 @@ def safe_value(value):
     if value in TOTALS_MARKERS:
         return TOTALS_VALUE
 
-    str_value = (
+    return (
         date_as_string(value, interval_key="iso")
         if isinstance(value, date)
         else str(value)
     )
-    return UNSAFE_CHARS.sub("$", str_value)
 
 
 @filter_kwargs
