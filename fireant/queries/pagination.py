@@ -135,19 +135,25 @@ def _group_paginate(data_frame, start=None, end=None, orders=()):
     )
 
     def _apply_pagination(df):
-        # This function applies sorting by using the sorted dimension values as an index to select values in the right
-        # order out of the data frame. The index must be filtered to only values that are in this data frame, since
-        # there might be missing combinations of index values.
+        """
+        This function applies sorting by using the sorted dimension values as an index to select values in the right
+        order out of the data frame. The index must be filtered to only values that are in this data frame, since
+        there might be missing combinations of index values.
+        """
         dfx = df.reset_index(level=0, drop=True)
         value_in_index = sorted_dimension_values.isin(dfx.index)
         index_slice = sorted_dimension_values[value_in_index].values
 
         """
-        In the case of bool dimensions, convert index_slice to an array of literal `True`, because pandas `.loc` handles
-        lists of bool as a mask.
+        In the case of bool dimensions, convert index_slice to an array of literal `True` and/or `False`,
+        because pandas `.loc` handles lists of bool as a mask. In which `True` returns the row and `False` won't.
         """
         if bool in {type(x) for x in sorted_dimension_values}:
-            index_slice |= True
+            num_missing_entries_in_boolean_mask = len(index_slice)
+            index_slice = [False]*len(dfx.index)
+
+            for i in range(num_missing_entries_in_boolean_mask):
+                index_slice[i] = True
 
         # Need to include nulls so append them to the end of the sorted data frame
         isnull = _index_isnull(dfx)
