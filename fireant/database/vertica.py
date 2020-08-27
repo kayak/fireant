@@ -4,6 +4,7 @@ from pypika import (
     functions as fn,
     terms,
 )
+
 from .base import Database
 from .sql_types import (
     BigInt,
@@ -32,11 +33,7 @@ class Trunc(terms.Function):
     """
 
     def __init__(self, field, date_format, alias=None):
-        super(Trunc, self).__init__("TRUNC", field, date_format, alias=alias)
-        # Setting the fields here means we can access the TRUNC args by name.
-        self.field = field
-        self.date_format = date_format
-        self.alias = alias
+        super(Trunc, self).__init__('TRUNC', field, date_format, alias=alias)
 
 
 class VerticaDatabase(Database):

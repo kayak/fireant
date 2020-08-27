@@ -37,9 +37,6 @@ MySQL
         charset='utf8mb4',
     )
 
-MySQL additionally requires a custom function that |Brand| uses to rollup date values to specific intervals, equivalent to the ``TRUNC_DATE`` function available in other database platforms. To install the ``TRUNC_DATE`` function in your MySQL database, run the script found in ``fireant/scripts/mysql_functions.sql``. Further information is provided in this script on how to grant permissions on this function to your MySQL users.
-
-
 PostgreSQL
 
 .. code-block:: python

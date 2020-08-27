@@ -1,6 +1,5 @@
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
-
 from pypika import (
     functions as fn,
     terms,
@@ -24,10 +23,6 @@ class Trunc(terms.Function):
 
     def __init__(self, field, date_format, alias=None):
         super(Trunc, self).__init__('TRUNC', field, date_format, alias=alias)
-        # Setting the fields here means we can access the TRUNC args by name.
-        self.field = field
-        self.date_format = date_format
-        self.alias = alias
 
 
 class SnowflakeDatabase(Database):

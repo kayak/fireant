@@ -5,11 +5,7 @@ from unittest.mock import (
     patch,
 )
 
-from pypika import (
-    Field,
-    Column as PypikaColumn,
-    MySQLQuery,
-)
+from pypika import (Column as PypikaColumn, Field, MySQLQuery)
 
 from fireant.database import MySQLDatabase
 from fireant.database.mysql import MySQLTypeEngine
@@ -46,32 +42,39 @@ class TestMySQLDatabase(TestCase):
     def test_trunc_hour(self):
         result = self.mysql.trunc_date(Field('date'), 'hour')
 
-        self.assertEqual('dashmore.TRUNC("date",\'hour\')', str(result))
+        self.assertEqual('DATE_FORMAT("date",\'%Y-%m-%d %H:00:00\')', str(result))
 
     def test_trunc_day(self):
         result = self.mysql.trunc_date(Field('date'), 'day')
 
-        self.assertEqual('dashmore.TRUNC("date",\'day\')', str(result))
+        self.assertEqual('DATE_FORMAT("date",\'%Y-%m-%d 00:00:00\')', str(result))
 
     def test_trunc_week(self):
         result = self.mysql.trunc_date(Field('date'), 'week')
 
-        self.assertEqual('dashmore.TRUNC("date",\'week\')', str(result))
+        self.assertEqual('DATE_FORMAT(DATE_SUB("date",INTERVAL WEEKDAY("date") DAY),\'%Y-%m-%d 00:00:00\')', str(result))
 
     def test_trunc_month(self):
         result = self.mysql.trunc_date(Field('date'), 'month')
 
-        self.assertEqual('dashmore.TRUNC("date",\'month\')', str(result))
+        self.assertEqual('DATE_FORMAT("date",\'%Y-%m-01\')', str(result))
 
     def test_trunc_quarter(self):
         result = self.mysql.trunc_date(Field('date'), 'quarter')
 
-        self.assertEqual('dashmore.TRUNC("date",\'quarter\')', str(result))
+        self.assertEqual(
+            'MAKEDATE(YEAR(TIMESTAMP("date")),1)+INTERVAL QUARTER(TIMESTAMP("date")) QUARTER-INTERVAL 1 QUARTER',
+            str(result)
+        )
 
     def test_trunc_year(self):
         result = self.mysql.trunc_date(Field('date'), 'year')
 
-        self.assertEqual('dashmore.TRUNC("date",\'year\')', str(result))
+        self.assertEqual('DATE_FORMAT("date",\'%Y-01-01\')', str(result))
+
+    def test_valueerror_raised_if_invalid_trunc_interval_unit_provided(self):
+        with self.assertRaisesRegex(ValueError, 'Invalid interval provided to trunc_date method: invalid'):
+            self.mysql.trunc_date(Field('date'), 'invalid')
 
     def test_date_add_hour(self):
         result = self.mysql.date_add(Field('date'), 'hour', 1)
