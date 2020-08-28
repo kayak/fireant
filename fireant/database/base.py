@@ -1,5 +1,6 @@
-import pandas as pd
+from typing import Collection, Dict, Union
 
+import pandas as pd
 from pypika import (
     Query,
     enums,
@@ -7,10 +8,7 @@ from pypika import (
     terms,
 )
 
-from fireant.middleware.decorators import (
-    connection_middleware,
-    apply_middlewares,
-)
+from fireant.middleware.decorators import (apply_middlewares, connection_middleware)
 
 
 class Database(object):
@@ -70,12 +68,13 @@ class Database(object):
         return fn.Cast(definition, enums.SqlTypes.VARCHAR)
 
     @apply_middlewares
-    def fetch_queries(self, *queries, **kwargs):
+    def fetch_queries(self, *queries, connection=None, parameters: Union[Dict, Collection] = ()):
         results = []
-        connection = kwargs.get("connection")
+        # Parameters can either be passed as a list when using formatting placeholders like %s (varies per platform)
+        # or a dict when using named placeholders.
         for query in queries:
             cursor = connection.cursor()
-            cursor.execute(str(query))
+            cursor.execute(str(query), parameters)
             results.append(cursor.fetchall())
 
         return results

@@ -1,5 +1,5 @@
 from pypika import (
-    Tables,
+    Parameter, Tables,
     VerticaQuery,
     functions as fn,
     terms,
@@ -94,20 +94,25 @@ class VerticaDatabase(Database):
 
         view_query = VerticaQuery.from_(view_columns) \
             .select(view_columns.column_name, view_columns.data_type) \
-            .where((view_columns.table_schema == schema) & (view_columns.field('table_name') == table)) \
+            .where((view_columns.table_schema == Parameter(':schema'))
+                   & (view_columns.field('table_name') == Parameter(':table'))) \
             .distinct()
 
         table_query = (
             VerticaQuery.from_(table_columns, immutable=False)
             .select(table_columns.column_name, table_columns.data_type)
             .where(
-                (table_columns.table_schema == schema)
-                & (table_columns.field("table_name") == table)
+                (table_columns.table_schema == Parameter(':schema'))
+                & (table_columns.field("table_name") == Parameter(':table'))
             )
             .distinct()
         )
 
-        return self.fetch(str(view_query + table_query), connection=connection)
+        return self.fetch(
+            str(view_query + table_query),
+            parameters=dict(schema=schema, table=table),
+            connection=connection
+        )
 
     def import_csv(self, table, file_path, connection=None):
         """

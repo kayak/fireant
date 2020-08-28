@@ -6,7 +6,7 @@ from pypika import (
     functions as fn,
     terms,
 )
-from pypika.terms import CustomFunction, Interval
+from pypika.terms import CustomFunction, Interval, Parameter
 
 from . import sql_types
 from .base import Database
@@ -130,12 +130,12 @@ class MySQLDatabase(Database):
         columns_query = MySQLQuery \
             .from_(columns) \
             .select(columns.column_name, columns.column_type) \
-            .where(columns.table_schema == schema) \
-            .where(columns.field('table_name') == table) \
+            .where(columns.table_schema == Parameter('%(schema)s')) \
+            .where(columns.field('table_name') == Parameter('%(table)s')) \
             .distinct() \
             .orderby(columns.column_name)
 
-        return self.fetch(str(columns_query), connection=connection)
+        return self.fetch(str(columns_query), parameters=dict(schema=schema, table=table), connection=connection)
 
     def import_csv(self, table, file_path, connection=None):
         """

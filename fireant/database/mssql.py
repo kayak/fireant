@@ -1,7 +1,5 @@
 from pypika import (
-    Parameter, PostgreSQLQuery,
-    Table,
-    functions as fn,
+    MSSQLQuery, functions as fn,
     terms,
 )
 
@@ -17,18 +15,18 @@ class DateTrunc(terms.Function):
         super(DateTrunc, self).__init__('DATE_TRUNC', date_format, field, alias=alias)
 
 
-class PostgreSQLDatabase(Database):
+class MSSQLDatabase(Database):
     """
-    PostgreSQL client that uses the psycopg module.
+    Microsoft SQL Server client that uses the psycopg module.
     """
 
     # The pypika query class to use for constructing queries
-    query_cls = PostgreSQLQuery
+    query_cls = MSSQLQuery
 
     def __init__(
         self,
-        host="localhost",
-        port=5432,
+        host='localhost',
+        port=1433,
         database=None,
         user=None,
         password=None,
@@ -39,8 +37,6 @@ class PostgreSQLDatabase(Database):
         self.password = password
 
     def connect(self):
-        import psycopg2
-
         return psycopg2.connect(
             host=self.host,
             port=self.port,
@@ -56,15 +52,20 @@ class PostgreSQLDatabase(Database):
         return fn.DateAdd(str(date_part), interval, field)
 
     def get_column_definitions(self, schema, table, connection=None):
-        columns = Table("columns", schema="INFORMATION_SCHEMA")
-
-        columns_query = (
-            PostgreSQLQuery.from_(columns, immutable=False)
-            .select(columns.column_name, columns.data_type)
-            .where(columns.table_schema == Parameter('%(schema)s'))
-            .where(columns.field("table_name") == Parameter('%(table)s'))
-            .distinct()
-            .orderby(columns.column_name)
-        )
-
-        return self.fetch(str(columns_query), parameters=dict(schema=schema, table=table), connection=connection)
+        pass
+#         columns = Table("columns", schema="INFORMATION_SCHEMA")
+#
+#         columns_query = (
+#             MSSQLQuery.from_(columns, immutable=False)
+#             .select(columns.column_name, columns.data_type)
+#             .where(columns.table_schema == schema)
+#             .where(columns.field("table_name") == table)
+#             .distinct()
+#             .orderby(columns.column_name)
+#         )
+#
+#         columns_query = ('SELECT *'
+# 'FROM INFORMATION_SCHEMA.COLUMNS''
+# 'WHERE TABLE_NAME = N'Customers')
+#
+#         return self.fetch(str(columns_query), connection=connection)
