@@ -58,15 +58,25 @@ def _make_set_dimension(set_filter: Field, target_dataset: 'DataSet') -> Field:
 
     is_metric = _is_metric(set_dimension)
 
-    if target_dataset and not is_metric and isinstance(old_definition, BasicCriterion):
-        # When using data blending, the dataset table of the set filter needs to be re-mapped to the table in the
-        # target dataset (i.e. primary or secondary). The easiest way to do that is to select the field in the
-        # target dataset directly.
+    # When using data blending, the dataset table of the set filter needs to be re-mapped to the table in the
+    # target dataset (i.e. primary or secondary). The easiest way to do that is to select the field in the
+    # target dataset directly.
+    if target_dataset and not is_metric and isinstance(old_definition, (
+        terms.ContainsCriterion, terms.NullCriterion,
+        terms.BetweenCriterion, terms.BitwiseAndCriterion,
+    )):
         target_dataset_definition = deepcopy(target_dataset.fields[set_dimension.alias].definition)
 
-        if not isinstance(old_definition.left, terms.ValueWrapper):
+        if not isinstance(old_definition.term, (terms.ValueWrapper, terms.Function)):
+            old_definition.term = target_dataset_definition
+
+    if target_dataset and not is_metric and isinstance(old_definition, terms.BasicCriterion):
+        target_dataset_definition = deepcopy(target_dataset.fields[set_dimension.alias].definition)
+
+        if not isinstance(old_definition.left, (terms.ValueWrapper, terms.Function)):
             old_definition.left = target_dataset_definition
-        if not isinstance(old_definition.right, terms.ValueWrapper):
+
+        if not isinstance(old_definition.right, (terms.ValueWrapper, terms.Function)):
             old_definition.right = target_dataset_definition
 
     set_term = set_filter.set_label

@@ -188,7 +188,7 @@ mock_spend_dataset = DataSet(
         Field(
             "state",
             label="State",
-            definition=politicians_spend_table.state,
+            definition=politicians_spend_table.state_name,
             data_type=DataType.text,
         ),
         Field(
