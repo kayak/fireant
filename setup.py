@@ -64,7 +64,6 @@ setup(
         "License :: OSI Approved :: Apache Software License",
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
-        "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
         "Programming Language :: PL/SQL",
         "Topic :: Software Development :: Libraries :: Python Modules",
