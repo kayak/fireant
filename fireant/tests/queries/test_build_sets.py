@@ -27,6 +27,8 @@ ds = f.DataSet(
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 class ResultSetTests(TestCase):
+    maxDiff = None
+
     def test_no_metric_is_removed_when_result_set_metric_filter_is_present(self):
         queries = (
             ds.query.widget(f.Pandas(ds.fields.aggr_number))
@@ -347,3 +349,36 @@ class ResultSetTests(TestCase):
             "LIMIT 200000",
             str(queries[0]),
         )
+
+    def test_dimension_filter_variations_with_sets(self):
+        for field_alias, fltr in [
+            ('text', ds.fields.text.like("%abc%")),
+            ('text', ds.fields.text.not_like("%abc%")),
+            ('text', ds.fields.text.isin(["abc"])),
+            ('text', ds.fields.text.notin(["abc"])),
+            ('date', ds.fields.date.between('date1', 'date2')),
+            ('number', ds.fields.number.between(5, 15)),
+            ('number', ds.fields.number.isin([1,2,3])),
+            ('number', ds.fields.number.notin([1,2,3])),
+        ]:
+            fltr_sql = fltr.definition.get_sql(quote_char="")
+
+            with self.subTest(fltr_sql):
+                queries = (
+                    ds.query.widget(f.Pandas(ds.fields.aggr_number))
+                    .dimension(ds.fields[field_alias])
+                    .filter(f.ResultSet(fltr, set_label='set_A', complement_label='set_B'))
+                    .sql
+                )
+
+                self.assertEqual(len(queries), 1)
+                self.assertEqual(
+                    "SELECT "
+                    f"CASE WHEN {fltr} THEN 'set_A' ELSE 'set_B' END \"${field_alias}\","
+                    'SUM("number") "$aggr_number" '
+                    'FROM "test" '
+                    f"GROUP BY \"${field_alias}\" "
+                    f"ORDER BY \"${field_alias}\" "
+                    "LIMIT 200000",
+                    str(queries[0]),
+                )

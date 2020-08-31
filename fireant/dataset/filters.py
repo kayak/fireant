@@ -113,15 +113,10 @@ class ContainsFilter(Filter):
         return self.field.definition.isin(self.values)
 
 
-class NegatedFilterMixin:
+class ExcludesFilter(ContainsFilter):
     @property
     def definition(self):
-        definition = super().definition
-        return definition.negate()
-
-
-class ExcludesFilter(NegatedFilterMixin, ContainsFilter):
-    pass
+        return self.field.definition.notin(self.values)
 
 
 class RangeFilter(Filter):
@@ -132,7 +127,7 @@ class RangeFilter(Filter):
 
     @property
     def definition(self):
-        return self.field.definition[self.start:self.stop]
+        return self.field.definition.between(self.start, self.stop)
 
 
 class PatternFilter(Filter):
@@ -149,6 +144,13 @@ class PatternFilter(Filter):
             definition |= Lower(self.field.definition).like(Lower(pattern))
 
         return definition
+
+
+class NegatedFilterMixin:
+    @property
+    def definition(self):
+        definition = super().definition
+        return definition.negate()
 
 
 class AntiPatternFilter(NegatedFilterMixin, PatternFilter):

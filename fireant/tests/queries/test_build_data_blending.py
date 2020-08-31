@@ -519,6 +519,53 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             str(queries[0]),
         )
 
+    def test_dimension_filter_variations_with_sets_for_data_blending(self):
+        for field_alias, fltr in [
+            ('state', mock_dataset_blender.fields.state.like("%abc%")),
+            ('state', mock_dataset_blender.fields.state.not_like("%abc%")),
+            ('state', mock_dataset_blender.fields.state.isin(["abc"])),
+            ('state', mock_dataset_blender.fields.state.notin(["abc"])),
+            ('timestamp', mock_dataset_blender.fields.timestamp.between('date1', 'date2')),
+            ('candidate-id', mock_dataset_blender.fields['candidate-id'].between(5, 15)),
+            ('candidate-id', mock_dataset_blender.fields['candidate-id'].isin([1,2,3])),
+            ('candidate-id', mock_dataset_blender.fields['candidate-id'].notin([1,2,3])),
+        ]:
+            fltr_definition = fltr.definition
+            while hasattr(fltr_definition, 'definition'):
+                fltr_definition = fltr_definition.definition
+
+            fltr_sql = fltr_definition.get_sql(quote_char="")
+
+            with self.subTest(fltr_sql):
+                queries = (
+                    mock_dataset_blender.query.widget(f.Pandas(mock_dataset_blender.fields['candidate-spend']))
+                    .dimension(mock_dataset_blender.fields[field_alias])
+                    .filter(f.ResultSet(fltr, set_label='set_A', complement_label='set_B'))
+                    .sql
+                )
+
+                self.assertEqual(len(queries), 1)
+                self.assertEqual(
+                    "SELECT "
+                    f'"sq0"."${field_alias}" "${field_alias}",'
+                    '"sq1"."$candidate-spend" "$candidate-spend" '
+                    'FROM ('
+                    'SELECT '
+                    f'CASE WHEN {fltr} THEN \'set_A\' ELSE \'set_B\' END "${field_alias}" '
+                    'FROM "politics"."politician" '
+                    f'GROUP BY "${field_alias}"'
+                    ') "sq0" LEFT JOIN ('
+                    'SELECT '
+                    f'CASE WHEN {fltr} THEN \'set_A\' ELSE \'set_B\' END "${field_alias}",'
+                    'SUM("candidate_spend") "$candidate-spend" '
+                    'FROM "politics"."politician_spend" '
+                    f'GROUP BY "${field_alias}"'
+                    f') "sq1" ON "sq0"."${field_alias}"="sq1"."${field_alias}" '
+                    f"ORDER BY \"${field_alias}\" "
+                    "LIMIT 200000",
+                    str(queries[0]),
+                )
+
     def test_apply_dimension_filter_on_mapped_dimension_field_filters_in_both_nested_query(
         self,
     ):
@@ -673,7 +720,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             "LEFT JOIN ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
-            '"state" "$state",'
+            '"state_name" "$state",'
             'SUM("candidate_spend") "$candidate-spend" '
             'FROM "politics"."politician_spend" '
             'GROUP BY "$timestamp","$state"'
