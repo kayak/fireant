@@ -14,11 +14,7 @@ class DateTrunc(terms.Function):
     """
 
     def __init__(self, field, date_format, alias=None):
-        super(DateTrunc, self).__init__("DATE_TRUNC", date_format, field, alias=alias)
-        # Setting the fields here means we can access the TRUNC args by name.
-        self.field = field
-        self.date_format = date_format
-        self.alias = alias
+        super(DateTrunc, self).__init__('DATE_TRUNC', date_format, field, alias=alias)
 
 
 class PostgreSQLDatabase(Database):

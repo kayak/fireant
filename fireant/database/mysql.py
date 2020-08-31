@@ -6,39 +6,19 @@ from pypika import (
     functions as fn,
     terms,
 )
+from pypika.terms import CustomFunction, Interval
 
+from . import sql_types
 from .base import Database
 from .type_engine import TypeEngine
-from .sql_types import (
-    Char,
-    VarChar,
-    Text,
-    Boolean,
-    Integer,
-    SmallInt,
-    BigInt,
-    Decimal,
-    Numeric,
-    Float,
-    DoublePrecision,
-    Date,
-    Time,
-    DateTime,
-    Timestamp,
-)
 
-
-class Trunc(terms.Function):
-    """
-    Wrapper for a custom MySQL TRUNC function (installed via a custom FireAnt MySQL script)
-    """
-
-    def __init__(self, field, date_format, alias=None):
-        super(Trunc, self).__init__('dashmore.TRUNC', field, date_format, alias=alias)
-        # Setting the fields here means we can access the TRUNC args by name.
-        self.field = field
-        self.date_format = date_format
-        self.alias = alias
+_DateFormat = CustomFunction('DATE_FORMAT', ['field', 'date_format'])
+_DateSub = CustomFunction('DATE_SUB', ['field', 'interval'])
+_MakeDate = CustomFunction('MAKEDATE', ['year', 'day_of_year'])
+_Weekday = CustomFunction('WEEKDAY', ['arg'])
+_Year = CustomFunction('YEAR', ['arg'])
+_Quarter = CustomFunction('QUARTER', ['arg'])
+_Timestamp = CustomFunction('TIMESTAMP', ['arg'])
 
 
 class DateAdd(terms.Function):
@@ -49,6 +29,22 @@ class DateAdd(terms.Function):
 
     def __init__(self, field, interval_term, alias=None):
         super(DateAdd, self).__init__('DATE_ADD', field, interval_term, alias=alias)
+
+
+class _CustomMySQLInterval(terms.Function):
+    """
+    The PyPika Interval function generates Interval SQL based on the provided time unit arguments.
+    Fireant needs a more flexible Interval query string generator than this
+    to mimicking the Vertica TRUNC function, so this is defined locally here.
+    """
+    def __init__(self, field, unit):
+        super().__init__('INTERVAL', field, unit)
+        self.field = field
+        self.unit = unit
+
+    def get_sql(self, **kwargs):
+        field_sql = self.field.get_sql(**kwargs)
+        return f'INTERVAL {field_sql} {self.unit}'
 
 
 class MySQLDatabase(Database):
@@ -103,7 +99,22 @@ class MySQLDatabase(Database):
                                 charset=self.charset, cursorclass=pymysql.cursors.Cursor)
 
     def trunc_date(self, field, interval):
-        return Trunc(field, str(interval))
+        if interval == 'hour':
+            return _DateFormat(field, '%Y-%m-%d %H:00:00')
+        elif interval == 'day':
+            return _DateFormat(field, '%Y-%m-%d 00:00:00')
+        elif interval == 'week':
+            return _DateFormat(_DateSub(field, _CustomMySQLInterval(_Weekday(field), 'DAY')), '%Y-%m-%d 00:00:00')
+        elif interval == 'month':
+            return _DateFormat(field, '%Y-%m-01')
+        elif interval == 'quarter':
+            return _MakeDate(_Year(_Timestamp(field)), 1) \
+                   + _CustomMySQLInterval(_Quarter(_Timestamp(field)), 'QUARTER') \
+                   - Interval(quarters=1, dialect=Dialects.MYSQL)
+        elif interval == 'year':
+            return _DateFormat(field, '%Y-01-01')
+        else:
+            raise ValueError(f'Invalid interval provided to trunc_date method: {interval}')
 
     def to_char(self, definition):
         return fn.Cast(definition, enums.SqlTypes.CHAR)
@@ -173,29 +184,29 @@ class MySQLDatabase(Database):
 
 class MySQLTypeEngine(TypeEngine):
     mysql_to_ansi_mapper = {
-        'bit': Char,
-        'char': Char,
-        'nchar': Char,
-        'varchar': VarChar,
-        'nvarchar': VarChar,
-        'text': Text,
-        'boolean': Boolean,
-        'int': Integer,
-        'integer': Integer,
-        'year': Integer,
-        'smallint': SmallInt,
-        'tinyint': SmallInt,
-        'bigint': BigInt,
-        'decimal': Decimal,
-        'fixed': Decimal,
-        'numeric': Numeric,
-        'float': Float,
-        'real': DoublePrecision,
-        'double': DoublePrecision,
-        'date': Date,
-        'time': Time,
-        'datetime': DateTime,
-        'timestamp': Timestamp,
+        'bit': sql_types.Char,
+        'char': sql_types.Char,
+        'nchar': sql_types.Char,
+        'varchar': sql_types.VarChar,
+        'nvarchar': sql_types.VarChar,
+        'text': sql_types.Text,
+        'boolean': sql_types.Boolean,
+        'int': sql_types.Integer,
+        'integer': sql_types.Integer,
+        'year': sql_types.Integer,
+        'smallint': sql_types.SmallInt,
+        'tinyint': sql_types.SmallInt,
+        'bigint': sql_types.BigInt,
+        'decimal': sql_types.Decimal,
+        'fixed': sql_types.Decimal,
+        'numeric': sql_types.Numeric,
+        'float': sql_types.Float,
+        'real': sql_types.DoublePrecision,
+        'double': sql_types.DoublePrecision,
+        'date': sql_types.Date,
+        'time': sql_types.Time,
+        'datetime': sql_types.DateTime,
+        'timestamp': sql_types.Timestamp,
     }
 
     ansi_to_mysql_mapper = {
