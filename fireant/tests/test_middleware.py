@@ -7,6 +7,7 @@ from unittest.mock import (
 )
 
 from fireant.middleware.concurrency import ThreadPoolConcurrencyMiddleware
+from fireant.middleware.decorators import connection_middleware, QueryCancelled
 
 
 class TestThreadPoolConcurrencyMiddleware(TestCase):
@@ -33,3 +34,32 @@ class TestThreadPoolConcurrencyMiddleware(TestCase):
             [call(mock_database, "query_a"), call(mock_database, "query_b")]
         )
         mock_threadpool_manager.assert_called_with(processes=2)
+
+
+class TestConnectionMiddleware(TestCase):
+
+    def test_decorator_provides_connection_if_non_provided(self):
+        mock_connection = MagicMock()
+        mock_database_object = MagicMock()
+        mock_database_object.connect.return_value.__enter__.return_value = mock_connection
+        mock_function = MagicMock()
+
+        decorated_function = connection_middleware(mock_function)
+        decorated_function(mock_database_object, "query")
+
+        mock_function.assert_called_once_with(mock_database_object, "query", connection=mock_connection)
+
+    def test_keyboard_interrupt_tries_cancelling_query(self):
+        mock_connection = MagicMock()
+        mock_database_object = MagicMock()
+        mock_database_object.connect.return_value.__enter__.return_value = mock_connection
+        mock_function = MagicMock()
+        mock_function.side_effect = KeyboardInterrupt()
+
+        decorated_function = connection_middleware(mock_function)
+
+        with self.assertRaises(QueryCancelled):
+            decorated_function(mock_database_object, "query")
+
+        mock_connection.cancel.assert_called_once()
+        mock_connection.close.assert_called_once()
