@@ -5,8 +5,9 @@ from unittest.mock import (
     patch,
 )
 
-from fireant.database import SnowflakeDatabase
 from pypika import Field
+
+from fireant.database import SnowflakeDatabase
 
 
 class TestSnowflake(TestCase):
@@ -139,6 +140,7 @@ class TestSnowflake(TestCase):
         SnowflakeDatabase().get_column_definitions('test_schema', 'test_table')
 
         mock_fetch.assert_called_once_with(
-              'DESCRIBE TABLE test_schema.test_table TYPE=COLUMNS',
-              connection=None
+              'DESCRIBE TABLE %(schema)s.%(table)s TYPE=COLUMNS',
+              connection=None,
+              parameters={'schema': 'test_schema', 'table': 'test_table'}
         )

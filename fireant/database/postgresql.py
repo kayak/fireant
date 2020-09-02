@@ -1,5 +1,5 @@
 from pypika import (
-    PostgreSQLQuery,
+    Parameter, PostgreSQLQuery,
     Table,
     functions as fn,
     terms,
@@ -32,9 +32,9 @@ class PostgreSQLDatabase(Database):
         database=None,
         user=None,
         password=None,
-        **kwags
+        **kwargs
     ):
-        super(PostgreSQLDatabase, self).__init__(host, port, database, **kwags)
+        super().__init__(host, port, database, **kwargs)
         self.user = user
         self.password = password
 
@@ -61,10 +61,10 @@ class PostgreSQLDatabase(Database):
         columns_query = (
             PostgreSQLQuery.from_(columns, immutable=False)
             .select(columns.column_name, columns.data_type)
-            .where(columns.table_schema == schema)
-            .where(columns.field("table_name") == table)
+            .where(columns.table_schema == Parameter('%(schema)s'))
+            .where(columns.field("table_name") == Parameter('%(table)s'))
             .distinct()
             .orderby(columns.column_name)
         )
 
-        return self.fetch(str(columns_query), connection=connection)
+        return self.fetch(str(columns_query), parameters=dict(schema=schema, table=table), connection=connection)

@@ -4,8 +4,9 @@ from unittest.mock import (
     patch,
 )
 
-from fireant.database import PostgreSQLDatabase
 from pypika import Field
+
+from fireant.database import PostgreSQLDatabase
 
 
 class TestPostgreSQL(TestCase):
@@ -97,7 +98,8 @@ class TestPostgreSQL(TestCase):
         mock_fetch.assert_called_once_with(
               'SELECT DISTINCT "column_name","data_type" ' \
               'FROM "INFORMATION_SCHEMA"."columns" ' \
-              'WHERE "table_schema"=\'test_schema\' AND "table_name"=\'test_table\' ' \
+              'WHERE "table_schema"=%(schema)s AND "table_name"=%(table)s ' \
               'ORDER BY "column_name"',
-              connection=None
+              connection=None,
+              parameters={'schema': 'test_schema', 'table': 'test_table'}
         )

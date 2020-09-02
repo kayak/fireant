@@ -4,17 +4,12 @@ from unittest.mock import (
     patch,
 )
 
-from pypika import (
-    Field,
-    Column as PypikaColumn,
-    VerticaQuery,
-)
+from pypika import (Column as PypikaColumn, Field, VerticaQuery)
 
 from fireant.database import (
     VerticaDatabase,
     VerticaTypeEngine,
 )
-
 from fireant.database.sql_types import VarChar
 
 
@@ -107,14 +102,15 @@ class TestVertica(TestCase):
         VerticaDatabase().get_column_definitions('test_schema', 'test_table')
 
         expected_query = ('(SELECT DISTINCT "column_name","data_type" FROM "view_columns" '
-                          'WHERE "table_schema"=\'test_schema\' AND "table_name"=\'test_table\') '
+                          'WHERE "table_schema"=:schema AND "table_name"=:table) '
                           'UNION '
                           '(SELECT DISTINCT "column_name","data_type" FROM "columns" '
-                          'WHERE "table_schema"=\'test_schema\' AND "table_name"=\'test_table\')')
+                          'WHERE "table_schema"=:schema AND "table_name"=:table)')
 
         mock_fetch.assert_called_once_with(
               expected_query,
-              connection=None
+              connection=None,
+              parameters={'schema': 'test_schema', 'table': 'test_table'}
         )
 
     @patch.object(VerticaDatabase, 'execute')
