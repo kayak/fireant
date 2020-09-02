@@ -8,7 +8,7 @@ class APITests(TestCase):
         with self.subTest("base class"):
             self.assertIn("Database", vars(fireant))
 
-        for db in ("MySQL", "Vertica", "Redshift", "PostgreSQL", "Snowflake"):
+        for db in ("MySQL", "Vertica", "Redshift", "PostgreSQL", "MSSQL", "Snowflake"):
             with self.subTest(db):
                 self.assertIn(db + "Database", vars(fireant))
 

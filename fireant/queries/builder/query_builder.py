@@ -82,6 +82,7 @@ class QueryBuilder(object):
         self._query_limit = None
         self._query_offset = None
 
+    # noinspection PyDefaultArgument
     def __deepcopy__(self, memodict={}):
         fields = [d for d in self._dimensions]
         if self._orders is not None:
@@ -221,7 +222,7 @@ class QueryBuilder(object):
 
         :return: None or a list of tuples shaped as Field instance and ordering.
         """
-        return self._orders
+        return self._orders or self.default_orders
 
     @property
     def default_orders(self):
@@ -267,6 +268,11 @@ class QueryBuilder(object):
         return self._transform_for_return(data, max_rows_returned=max_rows_returned)
 
     def _apply_pagination(self, query):
+        # Some platforms require an order by when pagination is used. Therefore, if there is no ordering set,
+        # we just default to the first column.
+        if not self.orders:
+            query = query.orderby(1)
+
         query = query.limit(min(self._query_limit or float('inf'), self.dataset.database.max_result_set_size))
         return query.offset(self._query_offset)
 

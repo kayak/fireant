@@ -18,6 +18,7 @@ class QueryBuilderMetricTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
+                         'ORDER BY 1 '
                          'LIMIT 200000', str(queries[0]))
 
     def test_build_query_with_multiple_metrics(self):
@@ -31,6 +32,7 @@ class QueryBuilderMetricTests(TestCase):
                          'SUM("votes") "$votes",'
                          'SUM("is_winner") "$wins" '
                          'FROM "politics"."politician" '
+                         'ORDER BY 1 '
                          'LIMIT 200000', str(queries[0]))
 
     def test_build_query_with_multiple_visualizations(self):
@@ -45,6 +47,7 @@ class QueryBuilderMetricTests(TestCase):
                          'SUM("votes") "$votes",'
                          'SUM("is_winner") "$wins" '
                          'FROM "politics"."politician" '
+                         'ORDER BY 1 '
                          'LIMIT 200000', str(queries[0]))
 
     def test_build_query_for_chart_visualization_with_single_axis(self):
@@ -58,6 +61,7 @@ class QueryBuilderMetricTests(TestCase):
         self.assertEqual('SELECT '
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
+                         'ORDER BY 1 '
                          'LIMIT 200000', str(queries[0]))
 
     def test_build_query_for_chart_visualization_with_multiple_axes(self):
@@ -73,4 +77,5 @@ class QueryBuilderMetricTests(TestCase):
                          'SUM("votes") "$votes",'
                          'SUM("is_winner") "$wins" '
                          'FROM "politics"."politician" '
+                         'ORDER BY 1 '
                          'LIMIT 200000', str(queries[0]))

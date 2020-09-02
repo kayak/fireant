@@ -103,6 +103,14 @@ class Rollup(DimensionModifier):
     A field modifier that will make totals be calculated for the wrapped dimension.
     """
     @property
+    def groupable(self):
+        """
+        Do not use rollups in group bys - this is superfluous and some database
+        engines do not support grouping on static columns e.g. MSSQL
+        """
+        return False
+
+    @property
     def definition(self):
         return RollupValue()
 

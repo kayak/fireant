@@ -348,12 +348,8 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         metrics_aliases = {metric.alias for metric in metrics}
         dimensions_aliases = {dimension.alias for dimension in dimensions}
 
-        orders = self.orders
-        if orders is None:
-            orders = self.default_orders
-
         # Add fields to be ordered on, to metrics if they aren't yet selected in metrics or dimensions
-        for field, orientation in orders:
+        for field, orientation in self.orders:
             if (
                 field.alias not in metrics_aliases
                 and field.alias not in dimensions_aliases
@@ -410,7 +406,7 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         blended_queries = []
         for queryset in query_sets:
             blended_query = _blend_query(
-                dimensions, metrics, orders, field_maps, queryset
+                dimensions, metrics, self.orders, field_maps, queryset
             )
             blended_query = self._apply_pagination(blended_query)
 

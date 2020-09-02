@@ -1,4 +1,4 @@
-from typing import Iterable, List, Type
+from typing import Iterable, List, Sequence, Type
 
 from pypika import Table, functions as fn
 from pypika.queries import QueryBuilder
@@ -118,11 +118,11 @@ def make_slicer_query_with_totals_and_references(
 def make_slicer_query(
     database: Database,
     base_table: Table,
-    joins: Iterable[Join] = (),
-    dimensions: Iterable[Field] = (),
-    metrics: Iterable[Field] = (),
-    filters: Iterable[Filter] = (),
-    orders: Iterable = (),
+    joins: Sequence[Join] = (),
+    dimensions: Sequence[Field] = (),
+    metrics: Sequence[Field] = (),
+    filters: Sequence[Filter] = (),
+    orders: Sequence = (),
 ) -> Type[QueryBuilder]:
     """
     Creates a pypika/SQL query from a list of slicer elements.
@@ -162,19 +162,13 @@ def make_slicer_query(
     for join in find_joins_for_tables(joins, base_table, join_tables_needed_for_query):
         query = query.join(join.table, how=join.join_type).on(join.criterion)
 
-    default_orders = []
-
     # Add dimensions
     for dimension in dimensions:
         dimension_term = make_term_for_field(dimension, database.trunc_date)
         query = query.select(dimension_term)
 
-        if not dimension.is_aggregate:
+        if dimension.groupable:
             query = query.groupby(dimension_term)
-            default_orders.append((dimension, None))
-
-    if orders is None:
-        orders = default_orders
 
     # Add filters
     for fltr in filters:

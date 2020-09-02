@@ -37,6 +37,22 @@ MySQL
         charset='utf8mb4',
     )
 
+Microsoft SQL Server
+.. code-block:: python
+
+    import fireant.settings
+    from fireant.database import MSSQLDatabase
+
+    database = MSSQLDatabase(
+        database='testdb',
+        host='mysql.example.com',
+        port=3308,
+        user='user',
+        password='password123',
+    )
+
+Please note, for this connection, you need to install FreeTDS.
+
 PostgreSQL
 
 .. code-block:: python
@@ -107,6 +123,9 @@ Instead of using one of the built in database connectors, you can provide your o
 
         def date_add(self, date_part, interval, field):
             return DateAdd(...)  # custom DateAdd function
+
+        def convert_date(self, dt):
+            return Cast(...)  # custom date conversion function. Defaults to an identity function if not provided
 
 Once a Database connector has been set up, it can be used when instantiating |ClassDataSet|.
 

@@ -106,6 +106,7 @@ class QueryBuilderJoinTests(TestCase):
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
                          'WHERE "district_id" IN (1) '
+                         'ORDER BY 1 '
                          'LIMIT 200000', str(queries[0]))
 
     def test_dimension_filter_with_recursive_join_includes_join_in_query(self):
@@ -122,6 +123,7 @@ class QueryBuilderJoinTests(TestCase):
                          'FULL OUTER JOIN "locations"."district" '
                          'ON "politician"."district_id"="district"."id" '
                          'WHERE "district"."district_name" IN (\'example\') '
+                         'ORDER BY 1 '
                          'LIMIT 200000', str(queries[0]))
 
     def test_dimension_filter_with_deep_recursive_join_includes_joins_in_query(self):
@@ -142,4 +144,5 @@ class QueryBuilderJoinTests(TestCase):
                          'JOIN "test"."deep" '
                          'ON "deep"."id"="state"."ref_id" '
                          'WHERE "deep"."id" IN (1) '
+                         'ORDER BY 1 '
                          'LIMIT 200000', str(queries[0]))

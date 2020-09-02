@@ -161,14 +161,10 @@ class DataSetQueryBuilder(
             operations, data_frame
         )
 
-        orders = self.orders
-        if orders is None:
-            orders = self.default_orders
-
         data_frame = paginate(
             data_frame,
             self._widgets,
-            orders=orders,
+            orders=self.orders,
             limit=self._client_limit,
             offset=self._client_offset,
         )
@@ -319,7 +315,7 @@ class DataSetQueryBuilder(
                 ],
                 *[
                     "orderby({}, {})".format(definition.alias, orientation)
-                    for (definition, orientation) in (self.orders or self.default_orders)
+                    for (definition, orientation) in self.orders
                 ],
             ]
         )
