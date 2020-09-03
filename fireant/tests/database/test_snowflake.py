@@ -140,7 +140,10 @@ class TestSnowflake(TestCase):
         SnowflakeDatabase().get_column_definitions('test_schema', 'test_table')
 
         mock_fetch.assert_called_once_with(
-              'DESCRIBE TABLE %(schema)s.%(table)s TYPE=COLUMNS',
+              'SELECT DISTINCT COLUMN_NAME,DATA_TYPE '
+              'FROM INFORMATION_SCHEMA.COLUMNS '
+              'WHERE TABLE_SCHEMA=%(schema)s AND TABLE_NAME=%(table)s '
+              'ORDER BY column_name',
               connection=None,
               parameters={'schema': 'test_schema', 'table': 'test_table'}
         )

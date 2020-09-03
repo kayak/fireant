@@ -1,7 +1,7 @@
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from pypika import (
-    functions as fn,
+    Parameter, Table, functions as fn,
     terms,
 )
 from pypika.dialects import SnowflakeQuery
@@ -97,8 +97,15 @@ class SnowflakeDatabase(Database):
                                   encryption_algorithm=serialization.NoEncryption())
 
     def get_column_definitions(self, schema, table, connection=None):
-        columns = self.fetch('DESCRIBE TABLE %(schema)s.%(table)s TYPE=COLUMNS',
-                             parameters=dict(schema=schema, table=table),
-                             connection=connection)
-        return [column[0:2] for column in columns]
+        columns = Table('COLUMNS', schema='INFORMATION_SCHEMA')
 
+        columns_query = (
+            SnowflakeQuery.from_(columns, immutable=False)
+            .select(columns.COLUMN_NAME, columns.DATA_TYPE)
+            .where(columns.TABLE_SCHEMA == Parameter('%(schema)s'))
+            .where(columns.field('TABLE_NAME') == Parameter('%(table)s'))
+            .distinct()
+            .orderby(columns.column_name)
+        )
+
+        return self.fetch(str(columns_query), connection=connection, parameters=dict(schema=schema, table=table))
