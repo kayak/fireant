@@ -27,13 +27,13 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
         with self.subTest("base query is same as without reference"):
             self.assertEqual(
-                'SELECT SUM("votes") "$votes" FROM "politics"."politician" LIMIT 200000',
+                'SELECT SUM("votes") "$votes" FROM "politics"."politician" ORDER BY 1 LIMIT 200000',
                 str(queries[0]),
             )
 
         with self.subTest("reference query is same as base query"):
             self.assertEqual(
-                "SELECT " 'SUM("votes") "$votes_dod" ' 'FROM "politics"."politician" LIMIT 200000',
+                'SELECT SUM("votes") "$votes_dod" FROM "politics"."politician" ORDER BY 1 LIMIT 200000',
                 str(queries[1]),
             )
 
@@ -1110,7 +1110,6 @@ class QueryBuilderReferencesWithRollupTests(TestCase):
                 'SUM("votes") "$votes" '
                 'FROM "politics"."politician" '
                 "WHERE \"timestamp\" BETWEEN '2018-01-01' AND '2018-01-31' "
-                'GROUP BY "$timestamp" '
                 'ORDER BY "$timestamp" '
                 'LIMIT 200000',
                 str(base_rollup),
@@ -1126,7 +1125,6 @@ class QueryBuilderReferencesWithRollupTests(TestCase):
                 'FROM "politics"."politician" '
                 "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('week',-1,'2018-01-01') "
                 "AND TIMESTAMPADD('week',-1,'2018-01-31') "
-                'GROUP BY "$timestamp" '
                 'ORDER BY "$timestamp" '
                 'LIMIT 200000',
                 str(reference_rollup),

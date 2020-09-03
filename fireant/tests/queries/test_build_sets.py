@@ -39,9 +39,11 @@ class ResultSetTests(TestCase):
         self.assertEqual(len(queries), 1)
         self.assertEqual(
             "SELECT "
-            "CASE WHEN SUM(\"number\")>10 THEN 'set(SUM(number)>10)' ELSE 'complement(SUM(number)>10)' END \"$set(SUM(number)>10)\","
+            "CASE WHEN SUM(\"number\")>10 THEN 'set(SUM(number)>10)' "
+            "ELSE 'complement(SUM(number)>10)' END \"$set(SUM(number)>10)\","
             'SUM("number") "$aggr_number" '
             'FROM "test" '
+            'ORDER BY 1 '
             'LIMIT 200000',
             str(queries[0]),
         )
@@ -125,7 +127,7 @@ class ResultSetTests(TestCase):
                 '\'_FIREANT_ROLLUP_VALUE_\' "$boolean",'
                 'SUM("number") "$aggr_number" '
                 'FROM "test" '
-                'GROUP BY "$date","$boolean" '
+                'GROUP BY "$date" '
                 'ORDER BY "$date","$boolean" '
                 'LIMIT 200000',
                 str(queries[1]),

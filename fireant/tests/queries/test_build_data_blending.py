@@ -263,7 +263,9 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             "LEFT JOIN ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
-            'CASE WHEN SUM("candidate_spend")>500 THEN \'set(SUM(candidate_spend)>500)\' ELSE \'complement(SUM(candidate_spend)>500)\' END "$set(SUM(candidate_spend)>500)",'
+            'CASE WHEN SUM("candidate_spend")>500 THEN \'set(SUM(candidate_spend)>500)\' '
+            'ELSE \'complement(SUM(candidate_spend)>500)\' '
+            'END "$set(SUM(candidate_spend)>500)",'
             'SUM("candidate_spend") "$candidate-spend" '
             'FROM "politics"."politician_spend" '
             'GROUP BY "$timestamp"'
@@ -381,7 +383,9 @@ class DataSetBlenderQueryBuilderTests(TestCase):
         self.assertEqual(
             "SELECT "
             '"sq0"."$timestamp" "$timestamp",'
-            'CASE WHEN "sq1"."$candidate-spend"/"sq0"."$wins">1000 THEN \'set(sq1.$candidate-spend/sq0.$wins>1000)\' ELSE \'complement(sq1.$candidate-spend/sq0.$wins>1000)\' END \"$set(sq1.$candidate-spend/sq0.$wins>1000)\",'
+            'CASE WHEN "sq1"."$candidate-spend"/"sq0"."$wins">1000 THEN \'set(sq1.$candidate-spend/sq0.$wins>1000)\' '
+            'ELSE \'complement(sq1.$candidate-spend/sq0.$wins>1000)\' '
+            'END \"$set(sq1.$candidate-spend/sq0.$wins>1000)\",'
             '"sq1"."$candidate-spend"/"sq0"."$wins" "$candidate-spend-per-wins" '
             "FROM ("
             "SELECT "
@@ -424,7 +428,9 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             "FROM ("
             "SELECT "
             'TRUNC("timestamp",\'DD\') "$timestamp",'
-            'CASE WHEN SUM("votes")>10000 THEN \'set(SUM(votes)>10000)\' ELSE \'complement(SUM(votes)>10000)\' END "$set(SUM(votes)>10000)",'
+            'CASE WHEN SUM("votes")>10000 THEN \'set(SUM(votes)>10000)\' '
+            'ELSE \'complement(SUM(votes)>10000)\' '
+            'END "$set(SUM(votes)>10000)",'
             'SUM("votes") "$votes" '
             'FROM "politics"."politician" '
             'GROUP BY "$timestamp"'
@@ -853,7 +859,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 "'_FIREANT_ROLLUP_VALUE_' \"$candidate-id\","
                 'SUM("is_winner") "$wins" '
                 'FROM "politics"."politician" '
-                'GROUP BY "$timestamp","$candidate-id"'
+                'GROUP BY "$timestamp"'
                 ') "sq0" '
                 "LEFT JOIN ("
                 "SELECT "
@@ -861,7 +867,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 "'_FIREANT_ROLLUP_VALUE_' \"$candidate-id\","
                 'SUM("candidate_spend") "$candidate-spend" '
                 'FROM "politics"."politician_spend" '
-                'GROUP BY "$timestamp","$candidate-id"'
+                'GROUP BY "$timestamp"'
                 ') "sq1" '
                 "ON "
                 '"sq0"."$timestamp"="sq1"."$timestamp" '

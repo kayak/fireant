@@ -739,14 +739,12 @@ class DataSetBlenderIntegrationTests(TestCase):
             "SELECT "
             "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
             '"metric" "$metric0" '
-            'FROM "test0" '
-            'GROUP BY "$timestamp"'
+            'FROM "test0"'
             ') "sq0" '
             "LEFT JOIN ("
             "SELECT "
             "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\" "
-            'FROM "test1" '
-            'GROUP BY "$timestamp"'
+            'FROM "test1"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
             'ORDER BY "$timestamp" '
             'LIMIT 200000',
@@ -849,14 +847,12 @@ class DataSetBlenderIntegrationTests(TestCase):
             "SELECT "
             "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
             '"metric" "$metric0" '
-            'FROM "test0" '
-            'GROUP BY "$timestamp"'
+            'FROM "test0"'
             ') "sq0" '
             "LEFT JOIN ("
             "SELECT "
             "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\" "
-            'FROM "test1" '
-            'GROUP BY "$timestamp"'
+            'FROM "test1"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
             'ORDER BY "$timestamp" '
             'LIMIT 200000',
@@ -958,15 +954,13 @@ class DataSetBlenderIntegrationTests(TestCase):
             "FROM ("
             "SELECT "
             "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\" "
-            'FROM "test0" '
-            'GROUP BY "$timestamp"'
+            'FROM "test0"'
             ') "sq0" '
             "LEFT JOIN ("
             "SELECT "
             "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
             '"metric" "$metric1" '
-            'FROM "test1" '
-            'GROUP BY "$timestamp"'
+            'FROM "test1"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
             'ORDER BY "$timestamp" '
             'LIMIT 200000',
@@ -1068,15 +1062,13 @@ class DataSetBlenderIntegrationTests(TestCase):
             "SELECT "
             "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
             '"metric" "$metric0" '
-            'FROM "test0" '
-            'GROUP BY "$timestamp"'
+            'FROM "test0"'
             ') "sq0" '
             "LEFT JOIN ("
             "SELECT "
             "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
             '"metric" "$metric1" '
-            'FROM "test1" '
-            'GROUP BY "$timestamp"'
+            'FROM "test1"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
             'ORDER BY "$timestamp" '
             'LIMIT 200000',
@@ -1178,7 +1170,8 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
         (query,) = blender.query().widget(ReactTable(blender.fields.only_metric2)).sql
 
         self.assertEqual(
-            'SELECT "sq0"."$metric2" "$only_metric2" FROM (SELECT "metric" "$metric2" FROM "test2") "sq0" LIMIT 200000',
+            'SELECT "sq0"."$metric2" "$only_metric2" FROM (SELECT "metric" "$metric2" FROM "test2") "sq0" '
+            'ORDER BY 1 LIMIT 200000',
             str(query),
         )
 

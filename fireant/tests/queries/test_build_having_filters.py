@@ -20,6 +20,7 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")=5 '
+                         'ORDER BY 1 '
                          'LIMIT 200000', str(queries[0]))
 
     def test_build_query_with_metric_filter_eq_left(self):
@@ -34,6 +35,7 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")=5 '
+                         'ORDER BY 1 '
                          'LIMIT 200000', str(queries[0]))
 
     def test_build_query_with_metric_filter_ne(self):
@@ -48,6 +50,7 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")<>5 '
+                         'ORDER BY 1 '
                          'LIMIT 200000', str(queries[0]))
 
     def test_build_query_with_metric_filter_ne_left(self):
@@ -62,6 +65,7 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")<>5 '
+                         'ORDER BY 1 '
                          'LIMIT 200000', str(queries[0]))
 
     def test_build_query_with_metric_filter_gt(self):
@@ -76,6 +80,7 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")>5 '
+                         'ORDER BY 1 '
                          'LIMIT 200000', str(queries[0]))
 
     def test_build_query_with_metric_filter_gt_left(self):
@@ -90,6 +95,7 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")>5 '
+                         'ORDER BY 1 '
                          'LIMIT 200000', str(queries[0]))
 
     def test_build_query_with_metric_filter_gte(self):
@@ -104,6 +110,7 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")>=5 '
+                         'ORDER BY 1 '
                          'LIMIT 200000', str(queries[0]))
 
     def test_build_query_with_metric_filter_gte_left(self):
@@ -118,6 +125,7 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")>=5 '
+                         'ORDER BY 1 '
                          'LIMIT 200000', str(queries[0]))
 
     def test_build_query_with_metric_filter_lt(self):
@@ -132,6 +140,7 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")<5 '
+                         'ORDER BY 1 '
                          'LIMIT 200000', str(queries[0]))
 
     def test_build_query_with_metric_filter_lt_left(self):
@@ -146,6 +155,7 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")<5 '
+                         'ORDER BY 1 '
                          'LIMIT 200000', str(queries[0]))
 
     def test_build_query_with_metric_filter_lte(self):
@@ -160,6 +170,7 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")<=5 '
+                         'ORDER BY 1 '
                          'LIMIT 200000', str(queries[0]))
 
     def test_build_query_with_metric_filter_lte_left(self):
@@ -174,4 +185,5 @@ class QueryBuilderMetricFilterTests(TestCase):
                          'SUM("votes") "$votes" '
                          'FROM "politics"."politician" '
                          'HAVING SUM("votes")<=5 '
+                         'ORDER BY 1 '
                          'LIMIT 200000', str(queries[0]))

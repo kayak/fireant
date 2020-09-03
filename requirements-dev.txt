@@ -4,6 +4,7 @@
 -r requirements-extras-mysql.txt
 -r requirements-extras-redshift.txt
 -r requirements-extras-postgresql.txt
+-r requirements-extras-mssql.txt
 -r requirements-extras-ipython.txt
 mock
 bumpversion

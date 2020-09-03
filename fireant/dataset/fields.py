@@ -1,5 +1,4 @@
 from collections import Iterable
-from datetime import datetime
 from enum import Enum
 from functools import wraps
 from numbers import Number
@@ -147,6 +146,14 @@ class Field(Node):
         return self.definition.is_aggregate
 
     @property
+    def groupable(self):
+        """
+        Whether this field should be allowed to be specified
+        in a query group by statement
+        """
+        return not self.is_aggregate
+
+    @property
     def is_wrapped(self) -> bool:
         """
         This allows calling code can easily tell whether the field has been wrapped.
@@ -177,7 +184,7 @@ class Field(Node):
         return ComparatorFilter(self, ComparisonOperator.lte, other)
 
     @restrict_types(CONTINUOUS_TYPES)
-    def between(self, lower: datetime, upper: datetime) -> RangeFilter:
+    def between(self, lower, upper) -> RangeFilter:
         """
         Creates a filter to filter a dataset query.
 

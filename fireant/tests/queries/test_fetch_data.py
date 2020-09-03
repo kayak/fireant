@@ -171,7 +171,7 @@ class QueryBuilderFetchDataTests(TestCase):
             ANY,
             [
                 PypikaQueryMatcher(
-                    'SELECT SUM("votes") "$votes" FROM "politics"."politician" LIMIT 200000'
+                    'SELECT SUM("votes") "$votes" FROM "politics"."politician" ORDER BY 1 LIMIT 200000'
                 )
             ],
             ANY,
@@ -587,7 +587,7 @@ class QueryBuilderAnnotationTests(TestCase):
             mock_date_annotation_dataset.database,
             [
                 PypikaQueryMatcher(
-                    'SELECT SUM("votes") "$votes" FROM "politics"."politician" LIMIT 200000'
+                    'SELECT SUM("votes") "$votes" FROM "politics"."politician" ORDER BY 1 LIMIT 200000'
                 )
             ],
             FieldMatcher(*dims),

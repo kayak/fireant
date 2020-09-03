@@ -74,7 +74,7 @@ setup(
         "Operating System :: Microsoft :: Windows",
     ],
     keywords=(
-        "fireant python query builder querybuilder sql mysql postgres psql oracle vertica aggregated "
+        "fireant python query builder querybuilder sql mysql postgres mssql psql oracle vertica aggregated "
         "relational database rdbms business analytics bi data science analysis pandas"
     ),
     install_requires=install_requires,
