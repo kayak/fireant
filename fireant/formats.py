@@ -73,7 +73,7 @@ def _format_decimal(value, thousands="", precision=None, suffix=None, use_raw_va
     if use_raw_value and suffix == '%':
         # When raw values are required, we divide percentage values by 100 to ensure they
         # work well with Spreadsheet applications like Excel.
-        value = float(value) / 100
+        value /= 100
 
     value = precision_pattern.format(value)
     if precision is None and value != '0':
