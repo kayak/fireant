@@ -113,3 +113,6 @@ class Database(object):
 
     def fetch_dataframe(self, query, **kwargs):
         return self.fetch_dataframes(query, **kwargs)[0]
+
+    def __str__(self):
+        return f'Database|{self.__class__.__name__}|{self.host}'
