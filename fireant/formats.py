@@ -59,20 +59,27 @@ def return_none(value):
 
 
 @filter_kwargs
-def _format_decimal(value, thousands="", precision=None):
+def _format_decimal(value, thousands="", precision=None, suffix=None, use_raw_value=False):
     if not isinstance(value, (int, float)):
         return value
 
-    precision_pattern = (
-        "{{:{}.{}f}}".format(thousands, precision)
-        if precision is not None
-        else "{{:{}f}}".format(thousands)
-    )
+    if use_raw_value:
+        precision_pattern = '{}'
+    elif precision is not None:
+        precision_pattern = f'{{:{thousands}.{precision}f}}'
+    else:
+        precision_pattern = f'{{:{thousands}f}}'
 
-    f_value = precision_pattern.format(value)
-    if precision is None:
-        f_value = f_value.rstrip("0").rstrip(".")
-    return f_value
+    if use_raw_value and suffix == '%':
+        # When raw values are required, we divide percentage values by 100 to ensure they
+        # work well with Spreadsheet applications like Excel.
+        value = float(value) / 100
+
+    value = precision_pattern.format(value)
+    if precision is None and value != '0':
+        value = value.rstrip('0').rstrip('.')
+
+    return value
 
 
 @filter_kwargs
@@ -180,6 +187,14 @@ def display_value(
         The dataset field that the value represents.
     :param date_as:
         A format function for datetimes.
+    :param nan_value:
+        The value to return if the value is a Pandas null (np.nan) value.
+    :param null_value:
+        The value to return if the value is None
+    :param use_raw_value:
+        Do not output a value with prefix/suffixes. If a suffix is a percentage sign and this value is true, the raw
+        value will be value/100 to make it easier for users when exporting to tools like Excel.
+
     :return:
         A formatted string containing the display value for the metric.
     """
