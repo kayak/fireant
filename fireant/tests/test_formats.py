@@ -248,3 +248,7 @@ class FormatDisplayValueStyleTests(TestCase):
     def test_use_raw_value(self):
         field = Field("number", None, data_type=DataType.number, suffix="€", prefix="$")
         self.assertEqual("1234", formats.display_value(1234, field, use_raw_value=True))
+
+    def test_converts_percentage_to_decimal_when_use_raw_value_True_and_suffix_is_percentage(self):
+        field = Field("number", None, data_type=DataType.number, suffix="%")
+        self.assertEqual("0.87123123131", formats.display_value(87.123123131, field, use_raw_value=True))

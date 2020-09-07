@@ -1,3 +1,4 @@
+import logging
 from typing import Iterable, List, Tuple, Type
 
 import pandas as pd
@@ -11,6 +12,8 @@ from fireant.utils import alias_selector, chunks
 from .finders import find_field_in_modified_field, find_totals_dimensions
 from .pandas_workaround import df_subtract
 from ..dataset.modifiers import RollupValue
+
+logger = logging.getLogger(__name__)
 
 # Passing in an empty dictionary as format option to pandas' parse_dates causes errors to be ignored instead of
 # being coerced into NaT.
@@ -36,6 +39,7 @@ def fetch_data(
 
     results = database.fetch_dataframes(*queries, parse_dates=pandas_parse_dates)
     max_rows_returned = max([len(x) for x in results], default=0)
+    logger.info('max_rows_returned', extra={'row_count': max_rows_returned, 'database': str(Database)})
 
     return max_rows_returned, reduce_result_set(results, reference_groups, dimensions, share_dimensions)
 

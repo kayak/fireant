@@ -16,10 +16,9 @@ from fireant.tests.dataset.mocks import (
     dimx2_date_num_df,
     dimx2_date_str_df,
     dimx2_date_str_ref_df,
-    dimx2_str_str_df,
     mock_dataset,
 )
-from fireant.tests.widgets.test_pandas import _format_float
+from fireant.tests.widgets.test_pandas import format_float_raw
 from fireant.utils import alias_selector as f
 
 csv_options = {'quoting': QUOTE_MINIMAL}
@@ -34,7 +33,7 @@ class CSVWidgetTests(TestCase):
 
         expected = dimx0_metricx1_df.copy()[[f('votes')]]
         expected.columns = ['Votes']
-        expected = expected.applymap(_format_float)
+        expected = expected.applymap(format_float_raw)
 
         self.assertEqual(expected.to_csv(**csv_options), result)
 
@@ -44,7 +43,7 @@ class CSVWidgetTests(TestCase):
 
         expected = dimx0_metricx2_df.copy()[[f('votes'), f('wins')]]
         expected.columns = ['Votes', 'Wins']
-        expected = expected.applymap(_format_float)
+        expected = expected.applymap(format_float_raw)
 
         self.assertEqual(expected.to_csv(**csv_options), result)
 
@@ -54,7 +53,7 @@ class CSVWidgetTests(TestCase):
 
         expected = dimx0_metricx2_df.copy()[[f('wins'), f('votes')]]
         expected.columns = ['Wins', 'Votes']
-        expected = expected.applymap(_format_float)
+        expected = expected.applymap(format_float_raw)
 
         self.assertEqual(expected.to_csv(**csv_options), result)
 
@@ -65,7 +64,7 @@ class CSVWidgetTests(TestCase):
         expected = dimx1_date_df.copy()[[f('wins')]]
         expected.index.names = ['Timestamp']
         expected.columns = ['Wins']
-        expected = expected.applymap(_format_float)
+        expected = expected.applymap(format_float_raw)
 
         self.assertEqual(expected.to_csv(**csv_options), result)
 
@@ -77,7 +76,7 @@ class CSVWidgetTests(TestCase):
         expected = dimx1_date_operation_df.copy()[[f('cumsum(votes)')]]
         expected.index.names = ['Timestamp']
         expected.columns = ['CumSum(Votes)']
-        expected = expected.applymap(_format_float)
+        expected = expected.applymap(format_float_raw)
 
         self.assertEqual(expected.to_csv(**csv_options), result)
 
@@ -160,7 +159,7 @@ class CSVWidgetTests(TestCase):
         expected = expected.unstack(level=[1])
         expected.index.names = ['Timestamp']
         expected.columns = ['Democrat', 'Independent', 'Republican']
-        expected = expected.applymap(_format_float)
+        expected = expected.applymap(format_float_raw)
 
         self.assertEqual(expected.to_csv(**csv_options), result)
 
@@ -173,7 +172,7 @@ class CSVWidgetTests(TestCase):
         expected = expected.unstack(level=1)
         expected.index.names = ['Timestamp']
         expected.columns = list(range(1, 12))
-        expected = expected.applymap(_format_float)
+        expected = expected.applymap(format_float_raw)
 
         self.assertEqual(expected.to_csv(**csv_options), result)
 
@@ -186,7 +185,7 @@ class CSVWidgetTests(TestCase):
         expected = dimx2_date_str_ref_df.copy()[[f('votes'), f('votes_eoe')]]
         expected.index.names = ['Timestamp', 'Party']
         expected.columns = ['Votes', 'Votes EoE']
-        expected = expected.applymap(_format_float)
+        expected = expected.applymap(format_float_raw)
 
         self.assertEqual(expected.to_csv(**csv_options), result)
 
@@ -199,6 +198,6 @@ class CSVWidgetTests(TestCase):
         expected = dimx2_date_str_ref_df.copy()[[f('votes'), f('votes_eoe'), f('wins'), f('wins_eoe')]]
         expected.index.names = ['Timestamp', 'Party']
         expected.columns = ['Votes', 'Votes EoE', 'Wins', 'Wins EoE']
-        expected = expected.applymap(_format_float)
+        expected = expected.applymap(format_float_raw)
 
         self.assertEqual(expected.to_csv(**csv_options), result)
