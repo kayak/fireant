@@ -39,7 +39,7 @@ def fetch_data(
 
     results = database.fetch_dataframes(*queries, parse_dates=pandas_parse_dates)
     max_rows_returned = max([len(x) for x in results], default=0)
-    logger.info('max_rows_returned', extra={'row_count': max_rows_returned, 'database': str(Database)})
+    logger.info('max_rows_returned', extra={'row_count': max_rows_returned, 'database': str(database)})
 
     return max_rows_returned, reduce_result_set(results, reference_groups, dimensions, share_dimensions)
 
