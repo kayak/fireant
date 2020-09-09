@@ -739,12 +739,14 @@ class DataSetBlenderIntegrationTests(TestCase):
             "SELECT "
             "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
             '"metric" "$metric0" '
-            'FROM "test0"'
+            'FROM "test0" '
+            'GROUP BY "$timestamp"'
             ') "sq0" '
             "LEFT JOIN ("
             "SELECT "
             "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\" "
-            'FROM "test1"'
+            'FROM "test1" '
+            'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
             'ORDER BY "$timestamp" '
             'LIMIT 200000',
@@ -847,12 +849,14 @@ class DataSetBlenderIntegrationTests(TestCase):
             "SELECT "
             "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
             '"metric" "$metric0" '
-            'FROM "test0"'
+            'FROM "test0" '
+            'GROUP BY "$timestamp"'
             ') "sq0" '
             "LEFT JOIN ("
             "SELECT "
             "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\" "
-            'FROM "test1"'
+            'FROM "test1" '
+            'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
             'ORDER BY "$timestamp" '
             'LIMIT 200000',
@@ -954,13 +958,15 @@ class DataSetBlenderIntegrationTests(TestCase):
             "FROM ("
             "SELECT "
             "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\" "
-            'FROM "test0"'
+            'FROM "test0" '
+            'GROUP BY "$timestamp"'
             ') "sq0" '
             "LEFT JOIN ("
             "SELECT "
             "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
             '"metric" "$metric1" '
-            'FROM "test1"'
+            'FROM "test1" '
+            'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
             'ORDER BY "$timestamp" '
             'LIMIT 200000',
@@ -1062,13 +1068,15 @@ class DataSetBlenderIntegrationTests(TestCase):
             "SELECT "
             "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
             '"metric" "$metric0" '
-            'FROM "test0"'
+            'FROM "test0" '
+            'GROUP BY "$timestamp"'
             ') "sq0" '
             "LEFT JOIN ("
             "SELECT "
             "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
             '"metric" "$metric1" '
-            'FROM "test1"'
+            'FROM "test1" '
+            'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
             'ORDER BY "$timestamp" '
             'LIMIT 200000',

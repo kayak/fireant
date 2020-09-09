@@ -1,3 +1,4 @@
+import copy
 from datetime import datetime
 from unittest import TestCase
 from unittest.mock import (
@@ -8,7 +9,9 @@ from unittest.mock import (
 import pytz
 from pypika import Field
 
+import fireant as f
 from fireant import MSSQLDatabase
+from fireant.tests.dataset.mocks import mock_dataset
 
 
 class TestMSSQLDatabase(TestCase):
@@ -120,4 +123,28 @@ class TestMSSQLDatabase(TestCase):
               'ORDER BY "column_name"',
               connection=None,
               parameters={'schema': 'test_schema', 'table': 'test_table'}
+        )
+
+
+class MSSQLSQLBuilderTests(TestCase):
+    def test_does_not_group_rollup_column(self):
+        mssql_mock_dataset = copy.deepcopy(mock_dataset)
+        mssql_mock_dataset.database = MSSQLDatabase()
+
+        queries = (
+            mssql_mock_dataset.query()
+            .widget(f.ReactTable(mock_dataset.fields.votes))
+            .dimension(f.Rollup(mock_dataset.fields.political_party))
+            .sql
+        )
+
+        self.assertEqual(
+            "SELECT "
+            "'_FIREANT_ROLLUP_VALUE_' \"$political_party\","
+            'SUM("votes") "$votes" '
+            'FROM "politics"."politician" '
+            'ORDER BY "$political_party" '
+            'OFFSET 0 ROWS '
+            'FETCH NEXT 200000 ROWS ONLY',
+            str(queries[1]),
         )

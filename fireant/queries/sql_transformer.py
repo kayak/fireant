@@ -7,6 +7,7 @@ from fireant.database import Database
 from fireant.dataset.fields import Field
 from fireant.dataset.filters import Filter
 from fireant.dataset.joins import Join
+from fireant.dataset.modifiers import Rollup
 from fireant.utils import (
     alias_selector,
     flatten,
@@ -167,7 +168,13 @@ def make_slicer_query(
         dimension_term = make_term_for_field(dimension, database.trunc_date)
         query = query.select(dimension_term)
 
-        if dimension.groupable:
+        # Some database platforms like MSSQL do not support grouping by static value columns.
+        # Fireant uses static value columns for totals placeholders.
+        # TODO this can be reverted once an issue with data blending attaching unnecessary subqueries
+        # is removed as in some cases the left join can cause duplicate rows to appear when not grouping a rollup column
+        ungroupable_rollup = isinstance(dimension, Rollup) and not database.can_group_static_value
+
+        if not dimension.is_aggregate and not ungroupable_rollup:
             query = query.groupby(dimension_term)
 
     # Add filters
