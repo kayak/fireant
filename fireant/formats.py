@@ -64,7 +64,7 @@ def _format_decimal(value, thousands="", precision=None, suffix=None, use_raw_va
         return value
 
     if use_raw_value:
-        precision_pattern = '{}'
+        precision_pattern = f'{{:.{precision if precision is not None else 16}f}}'
     elif precision is not None:
         precision_pattern = f'{{:{thousands}.{precision}f}}'
     else:
@@ -76,7 +76,7 @@ def _format_decimal(value, thousands="", precision=None, suffix=None, use_raw_va
         value /= 100
 
     value = precision_pattern.format(value)
-    if precision is None and value != '0':
+    if precision is None:
         value = value.rstrip('0').rstrip('.')
 
     return value
