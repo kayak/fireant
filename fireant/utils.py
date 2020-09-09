@@ -285,3 +285,7 @@ def listify(func):
         return retval
 
     return new_func
+
+
+def filter_nones(iterable):
+    return filter(None.__ne__, iterable)

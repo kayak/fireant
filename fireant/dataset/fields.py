@@ -326,3 +326,15 @@ class Field(Node):
     def share(self):
         self._share = True
         return self
+
+
+def is_metric_field(field: Field) -> bool:
+    """
+    Returns whether a field is a metric.
+
+    :param field: A Field instance.
+    :return: A boolean.
+    """
+    # Only terms wrapped with aggregate functions, such as SUM, will evaluate is_aggregate to True in Pypika.
+    # This is a good way to validate that the set dimension, in question, is actually encompassing a metric.
+    return field.is_aggregate
