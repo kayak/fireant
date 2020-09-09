@@ -249,6 +249,18 @@ class FormatDisplayValueStyleTests(TestCase):
         field = Field("number", None, data_type=DataType.number, suffix="€", prefix="$")
         self.assertEqual("1234", formats.display_value(1234, field, use_raw_value=True))
 
+    def test_raw_value_formats_integers_with_trailing_zeros(self):
+        field = Field("number", None, data_type=DataType.number)
+        self.assertEqual("126500", formats.display_value(126500, field, use_raw_value=True))
+
+    def test_raw_value_does_not_trim_zero_value(self):
+        field = Field("number", None, data_type=DataType.number)
+        self.assertEqual("0", formats.display_value(0, field, use_raw_value=True))
+
+    def test_raw_value_when_precision_specified(self):
+        field = Field("number", None, data_type=DataType.number, precision=4)
+        self.assertEqual("1244996.1138", formats.display_value(1244996.1138000000000000, field, use_raw_value=True))
+
     def test_converts_percentage_to_decimal_when_use_raw_value_True_and_suffix_is_percentage(self):
         field = Field("number", None, data_type=DataType.number, suffix="%")
         self.assertEqual("0.87123123131", formats.display_value(87.123123131, field, use_raw_value=True))
