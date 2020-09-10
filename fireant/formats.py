@@ -63,17 +63,21 @@ def _format_decimal(value, thousands="", precision=None, suffix=None, use_raw_va
     if not isinstance(value, (int, float)):
         return value
 
+    if use_raw_value and suffix == '%':
+        # When raw values are required, we divide percentage values by 100 to ensure they
+        # work well with Spreadsheet applications like Excel.
+        value /= 100
+
+        # Add extra precision to offset the division
+        if precision is not None:
+            precision += 2
+
     if use_raw_value:
         precision_pattern = f'{{:.{precision if precision is not None else 16}f}}'
     elif precision is not None:
         precision_pattern = f'{{:{thousands}.{precision}f}}'
     else:
         precision_pattern = f'{{:{thousands}f}}'
-
-    if use_raw_value and suffix == '%':
-        # When raw values are required, we divide percentage values by 100 to ensure they
-        # work well with Spreadsheet applications like Excel.
-        value /= 100
 
     value = precision_pattern.format(value)
     if precision is None:
