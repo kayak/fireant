@@ -73,7 +73,7 @@ def _format_decimal(value, thousands="", precision=None, suffix=None, use_raw_va
             precision += 2
 
     if use_raw_value:
-        precision_pattern = f'{{:.{precision if precision is not None else 16}f}}'
+        precision_pattern = f'{{:.{precision if precision is not None else 6}f}}'
     elif precision is not None:
         precision_pattern = f'{{:{thousands}.{precision}f}}'
     else:
