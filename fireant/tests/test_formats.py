@@ -251,7 +251,7 @@ class FormatDisplayValueStyleTests(TestCase):
 
     def test_use_raw_value_float(self):
         field = Field("number", None, data_type=DataType.number, suffix="€", prefix="$")
-        self.assertEqual("1.546346", formats.display_value(1.546346346, field, use_raw_value=True))
+        self.assertEqual("1.546346346", formats.display_value(1.546346346, field, use_raw_value=True))
 
     def test_raw_value_formats_integers_with_trailing_zeros(self):
         field = Field("number", None, data_type=DataType.number)
@@ -268,7 +268,7 @@ class FormatDisplayValueStyleTests(TestCase):
     def test_converts_percentage_to_decimal_when_use_raw_value_True_and_suffix_is_percentage(self):
         with self.subTest('when no precision'):
             field = Field("number", None, data_type=DataType.number, suffix="%")
-            self.assertEqual("0.871231", formats.display_value(87.123123131, field, use_raw_value=True))
+            self.assertEqual("0.87123123131", formats.display_value(87.123123131, field, use_raw_value=True))
 
         with self.subTest('when precision'):
             field = Field("number", None, data_type=DataType.number, suffix="%", precision=2)
