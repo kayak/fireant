@@ -208,10 +208,6 @@ def _build_dataset_query(
     operations,
     share_dimensions,
 ):
-
-    if not dataset_metrics and not dataset_dimensions:
-        return []
-
     dataset_references = map_blender_fields_to_dataset_fields(
         references, field_map, dataset
     )
@@ -223,7 +219,7 @@ def _build_dataset_query(
     # TODO: It's possible that we have to adapt/map the operations for @apply_special_cases
     dataset_operations = operations
 
-    result = make_slicer_query_with_totals_and_references(
+    return make_slicer_query_with_totals_and_references(
         database=dataset.database,
         table=dataset.table,
         joins=dataset.joins,
@@ -235,9 +231,6 @@ def _build_dataset_query(
         orders=[],
         share_dimensions=dataset_share_dimensions,
     )
-    if result[0].get_sql() == "":
-        return []
-    return result
 
 
 def _blender_join_criteria(
@@ -381,8 +374,8 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         self._validate()
 
         datasets, field_maps = _datasets_and_field_maps(self.dataset, self._filters)
-        selected_blender_dimensions = self.dimensions
 
+        selected_blender_dimensions = self.dimensions
         selected_blender_dimensions_aliases = {
             dimension.alias for dimension in selected_blender_dimensions
         }
@@ -391,22 +384,29 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
             metric.alias for metric in selected_blender_metrics
         }
 
+        operations = find_operations_for_widgets(self._widgets)
+        share_dimensions = find_share_dimensions(
+            selected_blender_dimensions, operations
+        )
+        non_set_filters = omit_set_filters(self._filters)
+
         # Add fields to be ordered on, to metrics if they aren't yet selected in metrics or dimensions
-        for field, orientation in self.orders:
+        # To think about: if the selected order_by field is a dimension, should we add it to dimensions?
+        for field, _ in self.orders:
             if (
                 field.alias not in selected_blender_metrics_aliases
                 and field.alias not in selected_blender_dimensions_aliases
             ):
                 selected_blender_metrics.append(field)
 
-        selected_metrics_as_dataset_fields = find_dataset_fields(
-            selected_blender_metrics
-        )
-        operations = find_operations_for_widgets(self._widgets)
-        share_dimensions = find_share_dimensions(
-            selected_blender_dimensions, operations
-        )
-        non_set_filters = omit_set_filters(self._filters)
+        # Needed dimensions in final query as tuples of (dimension, is_selected_dimension)
+        needed_blender_dimensions = [(dimension_field, True) for dimension_field in selected_blender_dimensions]
+        # Add dimension filters which are not selected to the pool of needed dimensions
+        for filter_ in non_set_filters:
+            if not is_metric_field(filter_.field) and (filter_.field.alias not in selected_blender_dimensions_aliases):
+                needed_blender_dimensions.append((filter_.field, False))
+
+        selected_metrics_as_dataset_fields = find_dataset_fields(selected_blender_metrics)
 
         # Determine for each dataset which metrics and dimensions need to be selected
         dataset_dimensions = [[] for _ in range(len(datasets))]
@@ -446,18 +446,16 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         # Second map the dimensions and find the dimensions which are unique to a dataset. Include those.
         # Also save for each dimension of which datasets it is part of.
         dimensions_dataset_info = []
-        print("HERE")
-        for dimension in selected_blender_dimensions:
-            print(dimension)
+        for blender_dimension_field, is_selected_dimension in needed_blender_dimensions:
             dimension_dataset_info = []
 
             for dataset_index, dataset in enumerate(datasets):
                 mapped_dimension = map_blender_field_to_dataset_field(
-                    dimension, field_maps[dataset_index], dataset
+                    blender_dimension_field, field_maps[dataset_index], dataset
                 )
 
                 if mapped_dimension is not None:
-                    dimension_dataset_info.append((dataset_index, mapped_dimension))
+                    dimension_dataset_info.append((dataset_index, mapped_dimension, is_selected_dimension))
 
             if len(dimension_dataset_info) == 0:
                 # This case should only happen when using sets, otherwise I would have raised the following exception:
@@ -465,9 +463,8 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
                 pass
             elif len(dimension_dataset_info) == 1:
                 # This is the only dataset that has this dimension, assign it
-                dataset_index, _ = dimension_dataset_info[0]
+                dataset_index, _, _ = dimension_dataset_info[0]
                 dataset_included_in_final_query[dataset_index] = True
-                # dataset_dimensions[dataset_index].add(mapped_dimension)
 
             if dimension_dataset_info:
                 dimensions_dataset_info.append(dimension_dataset_info)
@@ -477,11 +474,12 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         for dimension_dataset_info in dimensions_dataset_info:
             dimension_accounted_for = False
             first_dataset_that_has_the_dimension = None
-            for (dataset_index, mapped_dimension) in dimension_dataset_info:
+            for (dataset_index, mapped_dimension, is_selected_dimension) in dimension_dataset_info:
                 # If the dataset is already part of the final query, add this dimension
                 if dataset_included_in_final_query[dataset_index]:
                     dimension_accounted_for = True
-                    dataset_dimensions[dataset_index].append(mapped_dimension)
+                    if is_selected_dimension:
+                        dataset_dimensions[dataset_index].append(mapped_dimension)
 
                 # Update first_dataset_that_has_the_dimension if needed
                 if (
@@ -491,27 +489,36 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
                     first_dataset_that_has_the_dimension = (
                         dataset_index,
                         mapped_dimension,
+                        is_selected_dimension,
                     )
 
             if not dimension_accounted_for:
                 # Dimension not yet accounted for! Take first dataset that has the dimension.
-                dataset_index, mapped_dimension = first_dataset_that_has_the_dimension
-                dataset_dimensions[dataset_index].append(mapped_dimension)
+                dataset_index, mapped_dimension, is_selected_dimension = first_dataset_that_has_the_dimension
+                dataset_included_in_final_query[dataset_index] = True
+                if is_selected_dimension:
+                    dataset_dimensions[dataset_index].append(mapped_dimension)
 
         datasets_queries = []
+        filtered_field_maps = []
         for dataset_index, dataset in enumerate(datasets):
-            datasets_queries.append(
-                _build_dataset_query(
-                    dataset,
-                    field_maps[dataset_index],
-                    dataset_metrics[dataset_index],
-                    dataset_dimensions[dataset_index],
-                    dataset_filters[dataset_index],
-                    self._references,
-                    operations,
-                    share_dimensions,
+            if dataset_included_in_final_query[dataset_index]:
+                datasets_queries.append(
+                    _build_dataset_query(
+                        dataset,
+                        field_maps[dataset_index],
+                        dataset_metrics[dataset_index],
+                        dataset_dimensions[dataset_index],
+                        dataset_filters[dataset_index],
+                        self._references,
+                        operations,
+                        share_dimensions,
+                    )
                 )
-            )
+                # Filter the field maps of which the dataset is not going to be in the final query.
+                filtered_field_maps.append(field_maps[dataset_index])
+
+
 
         """
         A dataset query can yield one or more sql queries, depending on how many types of references or dimensions 
@@ -535,15 +542,10 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         # There will be the same amount of query sets as the longest length of queries for a single dataset
         query_sets = [[] for _ in range(per_dataset_queries_count)]
 
-        filtered_field_maps = []
         # Add the queries returned for each dataset to the correct queryset
         for dataset_index, dataset_queries in enumerate(datasets_queries):
-            if len(dataset_queries) != 0:
-                # Only include datasets which resulted in queries, filter field maps the same way.
-                filtered_field_maps.append(field_maps[dataset_index])
-
-                for i, query_set in enumerate(query_sets):
-                    query_set.append(dataset_queries[i])
+            for i, query in enumerate(dataset_queries):
+                query_sets[i].append(query)
 
         blended_queries = []
         for queryset in query_sets:

@@ -382,6 +382,74 @@ class DataSetBlenderIntegrationTests(TestCase):
             str(query),
         )
 
+    def test_filter_unmapped_dimension_from_primary_with_only_metric_selected_from_secondary(
+            self,
+    ):
+        db = Database()
+        t0, t1 = Tables("test0", "test1")
+        primary_ds = DataSet(
+            table=t0,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t0.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "account",
+                    label="Account",
+                    definition=t0.account,
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        secondary_ds = DataSet(
+            table=t1,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t1.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "metric1",
+                    label="Metric1",
+                    definition=fn.Sum(t1.metric),
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        blend_ds = primary_ds.blend(secondary_ds).on(
+            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
+        )
+
+        sql = (
+            blend_ds.query()
+                .dimension(blend_ds.fields.timestamp)
+                .widget(ReactTable(blend_ds.fields.metric1))
+                .filter(blend_ds.fields.account.isin(["123"]))
+        ).sql
+
+        (query,) = sql
+        self.assertEqual(
+            'SELECT "sq0"."$timestamp" "$timestamp","sq1"."$metric1" "$metric1" '
+            'FROM ('
+            'SELECT "timestamp" "$timestamp" FROM "test0" '
+            'WHERE "account" IN (\'123\') '
+            'GROUP BY "$timestamp") "sq0" '
+            'LEFT JOIN ('
+            'SELECT "timestamp" "$timestamp",SUM("metric") "$metric1" FROM "test1" '
+            'GROUP BY "$timestamp"'
+            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
+            str(query),
+        )
+
     def test_select_unmapped_dimension_from_primary_and_metrics_from_both_datasets(
             self,
     ):
@@ -1390,13 +1458,19 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
                 Field(
                     "metric0",
                     label="Metric0",
-                    definition=t0.metric,
+                    definition=fn.Sum(t0.metric),
                     data_type=DataType.number,
                 ),
                 Field(
                     "duplicate_metric",
                     label="DuplicateMetricSet0",
-                    definition=t0.duplicate,
+                    definition=fn.Sum(t0.duplicate),
+                    data_type=DataType.number,
+                ),
+                Field(
+                    "another_dimension",
+                    label="Another Dimension",
+                    definition=t0.dim,
                     data_type=DataType.number,
                 ),
             ],
@@ -1415,7 +1489,13 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
                 Field(
                     "metric1",
                     label="Metric1",
-                    definition=t1.metric,
+                    definition=fn.Sum(t1.metric),
+                    data_type=DataType.number,
+                ),
+                Field(
+                    "another_dimension",
+                    label="Another Dimension",
+                    definition=t1.dim,
                     data_type=DataType.number,
                 ),
             ],
@@ -1434,13 +1514,13 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
                 Field(
                     "metric2",
                     label="Metric2",
-                    definition=t2.metric,
+                    definition=fn.Sum(t2.metric),
                     data_type=DataType.number,
                 ),
                 Field(
                     "duplicate_metric",
                     label="DuplicateMetricSet2",
-                    definition=t2.duplicate,
+                    definition=fn.Sum(t2.duplicate),
                     data_type=DataType.number,
                 ),
             ],
@@ -1448,9 +1528,12 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
         cls.tertiary_ds.id = 2
         cls.blend_ds = (
             cls.primary_ds.blend(cls.secondary_ds)
-            .on_dimensions()
+            .on({
+                cls.primary_ds.fields.timestamp: cls.secondary_ds.fields.timestamp,
+                cls.primary_ds.fields.another_dimension: cls.secondary_ds.fields.another_dimension,
+            })
             .blend(cls.tertiary_ds)
-            .on_dimensions()
+            .on({cls.primary_ds.fields.timestamp: cls.tertiary_ds.fields.timestamp})
         )
 
     def test_selecting_just_one_metric_in_non_primary_dataset(self):
@@ -1467,7 +1550,7 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
 
         self.assertEqual(
             'SELECT "sq0"."$metric2" "$only_metric2" '
-            'FROM (SELECT "metric" "$metric2" FROM "test2") "sq0" '
+            'FROM (SELECT SUM("metric") "$metric2" FROM "test2") "sq0" '
             'ORDER BY 1 LIMIT 200000',
             str(query),
         )
@@ -1482,6 +1565,37 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
                     data_type=DataType.number,
                 ),
             )
+
+    def test_select_dimension_that_is_only_in_two_out_of_three_datasets(self):
+        (query,) = (
+            self.blend_ds.query()
+                .dimension(self.blend_ds.fields.another_dimension)
+                .widget(ReactTable(self.blend_ds.fields.metric2))
+        ).sql
+
+        self.assertEqual(
+            'SELECT "sq0"."$another_dimension" "$another_dimension","sq1"."$metric2" "$metric2" '
+            'FROM (SELECT "dim" "$another_dimension" FROM "test0" GROUP BY "$another_dimension") "sq0",'
+            '(SELECT SUM("metric") "$metric2" FROM "test2") "sq1" '
+            'ORDER BY "$another_dimension" '
+            'LIMIT 200000',
+            str(query),
+        )
+
+    def test_select_dimension_in_third_dataset(self):
+        (query,) = (
+            self.blend_ds.query()
+                .dimension(self.blend_ds.fields.timestamp)
+                .widget(ReactTable(self.blend_ds.fields.metric2))
+        ).sql
+
+        self.assertEqual(
+            'SELECT "sq0"."$timestamp" "$timestamp","sq0"."$metric2" "$metric2" FROM '
+            '(SELECT "timestamp" "$timestamp",SUM("metric") "$metric2" FROM "test2" GROUP BY "$timestamp") "sq0" '
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
+            str(query),
+        )
 
 
 class DataSetBlenderMultipleDatasetsTests(TestCase):

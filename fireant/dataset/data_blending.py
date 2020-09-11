@@ -147,6 +147,11 @@ class DataSetBlenderBuilder:
         )
 
     def on_dimensions(self):
+        """
+        This function doesn't work when blending more than 2 datasets. It won't select dimensions in the 3rd dataset
+        and further. self.primary_dataset might be a DataSetBlender object itself. We would want to dig deeper until
+        we find the actual primary dataset.
+        """
         dimension_map = {}
 
         for secondary_ds_field in self.secondary_dataset.fields:

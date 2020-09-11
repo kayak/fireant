@@ -741,12 +741,6 @@ class ReactTable(Pandas):
             if alias_selector(dimension.alias) not in hide_aliases
         ]
 
-        print("HEREREER")
-        print(result_df)
-        print("AH")
-        print(metric_aliases)
-        print(result_df[metric_aliases])
-
         result_df = self.format_data_frame(result_df[metric_aliases])
         result_df, is_pivoted, is_transposed = self.pivot_data_frame(result_df, pivot_dimensions, self.transpose)
         dimension_columns = self.transform_index_column_headers(result_df, field_map, hide_aliases)
