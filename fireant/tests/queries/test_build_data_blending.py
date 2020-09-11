@@ -805,7 +805,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 "'_FIREANT_ROLLUP_VALUE_' \"$candidate-id\","
                 'SUM("is_winner") "$wins" '
                 'FROM "politics"."politician" '
-                'GROUP BY "$timestamp","$candidate-id"'
+                'GROUP BY "$timestamp"'
                 ') "sq0" '
                 "LEFT JOIN ("
                 "SELECT "
@@ -813,7 +813,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 "'_FIREANT_ROLLUP_VALUE_' \"$candidate-id\","
                 'SUM("candidate_spend") "$candidate-spend" '
                 'FROM "politics"."politician_spend" '
-                'GROUP BY "$timestamp","$candidate-id"'
+                'GROUP BY "$timestamp"'
                 ') "sq1" '
                 "ON "
                 '"sq0"."$timestamp"="sq1"."$timestamp" '

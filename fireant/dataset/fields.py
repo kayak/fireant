@@ -146,6 +146,14 @@ class Field(Node):
         return self.definition.is_aggregate
 
     @property
+    def groupable(self):
+        """
+        Whether this field should be allowed to be specified
+        in a query group by statement
+        """
+        return not self.is_aggregate
+
+    @property
     def is_wrapped(self) -> bool:
         """
         This allows calling code can easily tell whether the field has been wrapped.

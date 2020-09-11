@@ -22,7 +22,6 @@ class Database(object):
     query_cls = Query
 
     slow_query_log_min_seconds = 15
-    can_group_static_value = True
 
     def __init__(
         self,
