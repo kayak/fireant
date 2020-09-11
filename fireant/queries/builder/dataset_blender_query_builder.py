@@ -323,31 +323,27 @@ def _blend_query(dimensions, metrics, orders, field_maps, queries):
 
     reference = base_query._references[0] if base_query._references else None
 
-    if len(queries) == 1:
-        # Optimization step, we don't need to do any joining as there is only one query
-        blender_query = base_query
-    else:
-        blender_query = _perform_join_operations(
-            dimensions, base_query, base_field_map, join_queries, join_field_maps
+    blender_query = _perform_join_operations(
+        dimensions, base_query, base_field_map, join_queries, join_field_maps
+    )
+
+    # WARNING: In order to make complex fields work, the get_sql for each field is monkey patched in. This must
+    # happen here because a complex metric by definition references values selected from the dataset subqueries.
+
+    for metric in find_dataset_fields(metrics):
+        subquery_field = _get_sq_field_for_blender_field(
+            metric, queries, field_maps, reference
         )
+        metric.get_sql = subquery_field.get_sql
 
-        # WARNING: In order to make complex fields work, the get_sql for each field is monkey patched in. This must
-        # happen here because a complex metric by definition references values selected from the dataset subqueries.
-
-        for metric in find_dataset_fields(metrics):
-            subquery_field = _get_sq_field_for_blender_field(
-                metric, queries, field_maps, reference
-            )
-            metric.get_sql = subquery_field.get_sql
-
-        sq_dimensions = [
-            _get_sq_field_for_blender_field(d, queries, field_maps) for d in dimensions
-        ]
-        sq_metrics = [
-            _get_sq_field_for_blender_field(m, queries, field_maps, reference)
-            for m in metrics
-        ]
-        blender_query = blender_query.select(*sq_dimensions).select(*sq_metrics)
+    sq_dimensions = [
+        _get_sq_field_for_blender_field(d, queries, field_maps) for d in dimensions
+    ]
+    sq_metrics = [
+        _get_sq_field_for_blender_field(m, queries, field_maps, reference)
+        for m in metrics
+    ]
+    blender_query = blender_query.select(*sq_dimensions).select(*sq_metrics)
 
     for field, orientation in orders:
         if any(dimension is field for dimension in dimensions):
@@ -450,7 +446,9 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         # Second map the dimensions and find the dimensions which are unique to a dataset. Include those.
         # Also save for each dimension of which datasets it is part of.
         dimensions_dataset_info = []
+        print("HERE")
         for dimension in selected_blender_dimensions:
+            print(dimension)
             dimension_dataset_info = []
 
             for dataset_index, dataset in enumerate(datasets):

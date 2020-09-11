@@ -62,13 +62,9 @@ class DataSetBlenderIntegrationTests(TestCase):
 
         (query,) = sql
         self.assertEqual(
-            "SELECT "
-            '"timestamp" "$timestamp",'
-            'SUM("metric") "$metric0" '
-            'FROM "test0" '
-            'GROUP BY "$timestamp" '
-            'ORDER BY "$timestamp" '
-            'LIMIT 200000',
+            'SELECT "sq0"."$timestamp" "$timestamp","sq0"."$metric0" "$metric0" '
+            'FROM (SELECT "timestamp" "$timestamp",SUM("metric") "$metric0" FROM "test0" GROUP BY "$timestamp") "sq0" '
+            'ORDER BY "$timestamp" LIMIT 200000',
             str(query),
         )
 
@@ -523,13 +519,9 @@ class DataSetBlenderIntegrationTests(TestCase):
 
         (query,) = sql
         self.assertEqual(
-            "SELECT "
-            '"timestamp" "$timestamp",'
-            'SUM("metric") "$metric0" '
-            'FROM "test0" '
-            'GROUP BY "$timestamp" '
-            'ORDER BY "$timestamp" '
-            'LIMIT 200000',
+            'SELECT "sq0"."$timestamp" "$timestamp","sq0"."$metric0" "$metric0" FROM '
+            '(SELECT "timestamp" "$timestamp",SUM("metric") "$metric0" FROM "test0" GROUP BY "$timestamp") "sq0" '
+            'ORDER BY "$timestamp" LIMIT 200000',
             str(query),
         )
 
@@ -890,6 +882,74 @@ class DataSetBlenderIntegrationTests(TestCase):
             str(query_2),
         )
 
+    def test_optimization_with_complex_blended_metric(self):
+        db = TestDatabase()
+        t0, t1 = Tables("test0", "test1")
+        primary_ds = DataSet(
+            table=t0,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t0.timestamp,
+                    data_type=DataType.date,
+                ),
+            ],
+        )
+        secondary_ds = DataSet(
+            table=t1,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t1.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "other_metric_name",
+                    label="Metric",
+                    definition=fn.Sum(t1.metric),
+                    data_type=DataType.number,
+                ),
+                Field(
+                    "metric_2",
+                    label="Metric 2",
+                    definition=fn.Sum(t1.metric_2),
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        blend_ds = primary_ds.blend(secondary_ds).on(
+            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
+        ).extra_fields(
+            Field(
+                "blended_metric",
+                label="Blended Metric",
+                definition=secondary_ds.fields.other_metric_name / secondary_ds.fields.metric_2,
+                data_type=DataType.number,
+            )
+        )
+
+        query = (
+            blend_ds.query()
+                .dimension(blend_ds.fields.timestamp)
+                .widget(f.Widget(blend_ds.fields.blended_metric))
+        ).sql[0]
+
+        self.assertEqual(
+            'SELECT "sq0"."$timestamp" "$timestamp","sq0"."$other_metric_name"/"sq0"."$metric_2" "$blended_metric" '
+            'FROM ('
+            'SELECT "timestamp" "$timestamp",SUM("metric") "$other_metric_name",SUM("metric_2") "$metric_2" '
+            'FROM "test1" '
+            'GROUP BY "$timestamp"'
+            ') "sq0" '
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
+            str(query),
+        )
+
     def test_blending_with_only_metric_filter_selected_in_secondary_dataset(self):
         db = TestDatabase()
         t0, t1 = Tables("test0", "test1")
@@ -1116,23 +1176,16 @@ class DataSetBlenderIntegrationTests(TestCase):
 
         (query_1, query_2) = sql
         self.assertEqual(
-            "SELECT "
-            '"timestamp" "$timestamp",'
-            'SUM("metric") "$metric0" '
-            'FROM "test0" '
-            'GROUP BY "$timestamp" '
-            'ORDER BY "$timestamp" '
-            'LIMIT 200000',
+            'SELECT "sq0"."$timestamp" "$timestamp","sq0"."$metric0" "$metric0" FROM '
+            '(SELECT "timestamp" "$timestamp",SUM("metric") "$metric0" FROM "test0" GROUP BY "$timestamp") "sq0" '
+            'ORDER BY "$timestamp" LIMIT 200000',
             str(query_1),
         )
 
         self.assertEqual(
-            "SELECT "
-            "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
-            'SUM("metric") "$metric0" '
-            'FROM "test0" '
-            'ORDER BY "$timestamp" '
-            'LIMIT 200000',
+            'SELECT "sq0"."$timestamp" "$timestamp","sq0"."$metric0" "$metric0" FROM '
+            '(SELECT \'_FIREANT_ROLLUP_VALUE_\' "$timestamp",SUM("metric") "$metric0" FROM "test0") "sq0" '
+            'ORDER BY "$timestamp" LIMIT 200000',
             str(query_2),
         )
 
@@ -1197,23 +1250,16 @@ class DataSetBlenderIntegrationTests(TestCase):
 
         (query_1, query_2) = sql
         self.assertEqual(
-            "SELECT "
-            '"timestamp" "$timestamp",'
-            'SUM("metric") "$metric1" '
-            'FROM "test1" '
-            'GROUP BY "$timestamp" '
-            'ORDER BY "$timestamp" '
-            'LIMIT 200000',
+            'SELECT "sq0"."$timestamp" "$timestamp","sq0"."$metric1" "$metric1" FROM '
+            '(SELECT "timestamp" "$timestamp",SUM("metric") "$metric1" FROM "test1" GROUP BY "$timestamp") "sq0" '
+            'ORDER BY "$timestamp" LIMIT 200000',
             str(query_1),
         )
 
         self.assertEqual(
-            "SELECT "
-            "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
-            'SUM("metric") "$metric1" '
-            'FROM "test1" '
-            'ORDER BY "$timestamp" '
-            'LIMIT 200000',
+            'SELECT "sq0"."$timestamp" "$timestamp","sq0"."$metric1" "$metric1" FROM '
+            '(SELECT \'_FIREANT_ROLLUP_VALUE_\' "$timestamp",SUM("metric") "$metric1" FROM "test1") "sq0" '
+            'ORDER BY "$timestamp" LIMIT 200000',
             str(query_2),
         )
 
@@ -1420,7 +1466,9 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
         (query,) = blender.query().widget(ReactTable(blender.fields.only_metric2)).sql
 
         self.assertEqual(
-            'SELECT "metric" "$metric2" FROM "test2" ORDER BY 1 LIMIT 200000',
+            'SELECT "sq0"."$metric2" "$only_metric2" '
+            'FROM (SELECT "metric" "$metric2" FROM "test2") "sq0" '
+            'ORDER BY 1 LIMIT 200000',
             str(query),
         )
 

@@ -22,11 +22,12 @@ class DataSetBlenderQueryBuilderTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'TRUNC("timestamp",\'DD\') "$timestamp",'
-            'SUM("votes") "$votes" '
+            'SELECT "sq0"."$timestamp" "$timestamp","sq0"."$votes" "$votes" '
+            'FROM ('
+            'SELECT TRUNC("timestamp",\'DD\') "$timestamp",SUM("votes") "$votes" '
             'FROM "politics"."politician" '
-            'GROUP BY "$timestamp" '
+            'GROUP BY "$timestamp"'
+            ') "sq0" '
             'ORDER BY "$timestamp" '
             'LIMIT 200000',
             str(queries[0]),
@@ -315,13 +316,15 @@ class DataSetBlenderQueryBuilderTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' ELSE \'complement(candidate_id=12)\' END "$candidate-id",'
+            'SELECT "sq0"."$candidate-id" "$candidate-id","sq0"."$num_staff" "$num_staff" '
+            'FROM ('
+            'SELECT CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' '
+            'ELSE \'complement(candidate_id=12)\' END "$candidate-id",'
             'COUNT("staff_id") "$num_staff" '
             'FROM "politics"."politician_staff" '
-            'GROUP BY "$candidate-id" '
-            'ORDER BY "$candidate-id" '
-            'LIMIT 200000',
+            'GROUP BY "$candidate-id"'
+            ') "sq0" '
+            'ORDER BY "$candidate-id" LIMIT 200000',
             str(queries[0]),
         )
 
@@ -508,11 +511,16 @@ class DataSetBlenderQueryBuilderTests(TestCase):
 
                 self.assertEqual(len(queries), 1)
                 self.assertEqual(
+                    "SELECT "
+                    f'"sq0"."${field_alias}" "${field_alias}",'
+                    '"sq0"."$candidate-spend" "$candidate-spend" '
+                    'FROM ('
                     'SELECT '
                     f'CASE WHEN {fltr} THEN \'set_A\' ELSE \'set_B\' END "${field_alias}",'
                     'SUM("candidate_spend") "$candidate-spend" '
                     'FROM "politics"."politician_spend" '
-                    f'GROUP BY "${field_alias}" '
+                    f'GROUP BY "${field_alias}"'
+                    f') "sq0" '
                     f"ORDER BY \"${field_alias}\" "
                     "LIMIT 200000",
                     str(queries[0]),
