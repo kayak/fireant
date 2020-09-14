@@ -97,6 +97,33 @@ class FormattingRulesTests(TestCase):
             result,
         )
 
+    def test_formatting_heatmap_rule_with_just_one_value(self):
+        # This test is to eliminate division by zero
+        df = pd.DataFrame.from_dict({
+            "$metric0": [1],
+            "$timestamp": [0],
+        }).set_index('$timestamp')
+
+        result = ReactTable(
+            self.dataset.fields.metric0,
+            formatting_rules=[
+                FormattingHeatMapRule(
+                    FormattingField(metric=self.dataset.fields.metric0),
+                    "ff0000",
+                )
+            ],
+        ).transform(df, [], [])
+
+        self.assertEqual(
+            {
+                "columns": [{"Header": "Metric0", "accessor": "$metric0"}],
+                "data": [
+                    {"$metric0": {"display": "1", "raw": 1, "color": "FFFFFF", 'text_color': '212121'}},
+                ],
+            },
+            result,
+        )
+
     def test_formatting_heatmap_rule_with_2_colors(self):
         result = ReactTable(
             self.dataset.fields.metric0,
