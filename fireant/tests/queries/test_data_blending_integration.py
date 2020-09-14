@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from pypika import Tables
+from pypika import Tables, functions as fn
 
 import fireant as f
 from fireant import DataSet, DataType, Database, Field, ReactTable
@@ -9,6 +9,64 @@ from fireant.tests.database.mock_database import TestDatabase
 
 class DataSetBlenderIntegrationTests(TestCase):
     maxDiff = None
+
+    def test_select_only_a_metric_from_primary_dataset(
+        self,
+    ):
+        db = Database()
+        t0, t1 = Tables("test0", "test1")
+        primary_ds = DataSet(
+            table=t0,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t0.timestamp,
+                    data_type=DataType.date,
+                ),
+
+                Field(
+                    "metric0",
+                    label="Metric0",
+                    definition=fn.Sum(t0.metric),
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        secondary_ds = DataSet(
+            table=t1,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t1.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "metric1",
+                    label="Metric1",
+                    definition=fn.Sum(t1.metric),
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        blend_ds = primary_ds.blend(secondary_ds).on(
+            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
+        )
+
+        sql = (
+            blend_ds.query().dimension(blend_ds.fields.timestamp).widget(ReactTable(blend_ds.fields.metric0))
+        ).sql
+
+        (query,) = sql
+        self.assertEqual(
+            'SELECT "sq0"."$timestamp" "$timestamp","sq0"."$metric0" "$metric0" '
+            'FROM (SELECT "timestamp" "$timestamp",SUM("metric") "$metric0" FROM "test0" GROUP BY "$timestamp") "sq0" '
+            'ORDER BY "$timestamp" LIMIT 200000',
+            str(query),
+        )
 
     def test_use_metric_from_primary_dataset_when_alias_conflicts_with_metric_from_secondary(
         self,
@@ -160,8 +218,240 @@ class DataSetBlenderIntegrationTests(TestCase):
             str(query),
         )
 
-    def test_do_not_include_fields_with_conflicting_aliases_in_subqueries_unless_mapped(
-        self,
+    def test_select_unmapped_dimension_from_secondary_but_only_metric_from_primary(
+            self,
+    ):
+        db = Database()
+        t0, t1 = Tables("test0", "test1")
+        primary_ds = DataSet(
+            table=t0,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t0.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "metric0",
+                    label="Metric0",
+                    definition=fn.Sum(t0.metric),
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        secondary_ds = DataSet(
+            table=t1,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t1.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "account",
+                    label="Account",
+                    definition=t1.account,
+                    data_type=DataType.number,
+                ),
+                Field(
+                    "metric1",
+                    label="Metric1",
+                    definition=fn.Sum(t1.metric),
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        blend_ds = primary_ds.blend(secondary_ds).on(
+            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
+        )
+
+        sql = (
+            blend_ds.query()
+                .dimension(blend_ds.fields.timestamp, blend_ds.fields.account)
+                .widget(ReactTable(blend_ds.fields.metric0))
+        ).sql
+
+        (query,) = sql
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq1"."$account" "$account",'
+            '"sq0"."$metric0" "$metric0" '
+            "FROM ("
+            "SELECT "
+            '"timestamp" "$timestamp",'
+            'SUM("metric") "$metric0" '
+            'FROM "test0" '
+            'GROUP BY "$timestamp"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            '"timestamp" "$timestamp",'
+            '"account" "$account" '
+            'FROM "test1" '
+            'GROUP BY "$timestamp","$account"'
+            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$timestamp","$account" '
+            'LIMIT 200000',
+            str(query),
+        )
+
+    def test_select_unmapped_dimension_from_primary_but_only_metric_from_secondary(
+            self,
+    ):
+        db = Database()
+        t0, t1 = Tables("test0", "test1")
+        primary_ds = DataSet(
+            table=t0,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t0.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "account",
+                    label="Account",
+                    definition=t0.account,
+                    data_type=DataType.number,
+                ),
+                Field(
+                    "metric0",
+                    label="Metric0",
+                    definition=fn.Sum(t0.metric),
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        secondary_ds = DataSet(
+            table=t1,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t1.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "metric1",
+                    label="Metric1",
+                    definition=fn.Sum(t1.metric),
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        blend_ds = primary_ds.blend(secondary_ds).on(
+            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
+        )
+
+        sql = (
+            blend_ds.query()
+                .dimension(blend_ds.fields.timestamp, blend_ds.fields.account)
+                .widget(ReactTable(blend_ds.fields.metric1))
+        ).sql
+
+        (query,) = sql
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq0"."$account" "$account",'
+            '"sq1"."$metric1" "$metric1" '
+            "FROM ("
+            "SELECT "
+            '"timestamp" "$timestamp",'
+            '"account" "$account" '
+            'FROM "test0" '
+            'GROUP BY "$timestamp","$account"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            '"timestamp" "$timestamp",'
+            'SUM("metric") "$metric1" '
+            'FROM "test1" '
+            'GROUP BY "$timestamp"'
+            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$timestamp","$account" '
+            'LIMIT 200000',
+            str(query),
+        )
+
+    def test_filter_unmapped_dimension_from_primary_with_only_metric_selected_from_secondary(
+            self,
+    ):
+        db = Database()
+        t0, t1 = Tables("test0", "test1")
+        primary_ds = DataSet(
+            table=t0,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t0.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "account",
+                    label="Account",
+                    definition=t0.account,
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        secondary_ds = DataSet(
+            table=t1,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t1.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "metric1",
+                    label="Metric1",
+                    definition=fn.Sum(t1.metric),
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        blend_ds = primary_ds.blend(secondary_ds).on(
+            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
+        )
+
+        sql = (
+            blend_ds.query()
+                .dimension(blend_ds.fields.timestamp)
+                .widget(ReactTable(blend_ds.fields.metric1))
+                .filter(blend_ds.fields.account.isin(["123"]))
+        ).sql
+
+        (query,) = sql
+        self.assertEqual(
+            'SELECT "sq0"."$timestamp" "$timestamp","sq1"."$metric1" "$metric1" '
+            'FROM ('
+            'SELECT "timestamp" "$timestamp" FROM "test0" '
+            'WHERE "account" IN (\'123\') '
+            'GROUP BY "$timestamp") "sq0" '
+            'LEFT JOIN ('
+            'SELECT "timestamp" "$timestamp",SUM("metric") "$metric1" FROM "test1" '
+            'GROUP BY "$timestamp"'
+            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
+            str(query),
+        )
+
+    def test_select_unmapped_dimension_from_primary_and_metrics_from_both_datasets(
+            self,
     ):
         db = Database()
         t0, t1 = Tables("test0", "test1")
@@ -200,12 +490,6 @@ class DataSetBlenderIntegrationTests(TestCase):
                     data_type=DataType.date,
                 ),
                 Field(
-                    "account",
-                    label="Account",
-                    definition=t1.account,
-                    data_type=DataType.number,
-                ),
-                Field(
                     "metric1",
                     label="Metric1",
                     definition=t1.metric,
@@ -219,8 +503,8 @@ class DataSetBlenderIntegrationTests(TestCase):
 
         sql = (
             blend_ds.query()
-            .dimension(blend_ds.fields.timestamp, blend_ds.fields.account)
-            .widget(ReactTable(blend_ds.fields.metric0, blend_ds.fields.metric1))
+                .dimension(blend_ds.fields.timestamp, blend_ds.fields.account)
+                .widget(ReactTable(blend_ds.fields.metric0, blend_ds.fields.metric1))
         ).sql
 
         (query,) = sql
@@ -247,6 +531,65 @@ class DataSetBlenderIntegrationTests(TestCase):
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
             'ORDER BY "$timestamp","$account" '
             'LIMIT 200000',
+            str(query),
+        )
+
+    def test_do_not_include_fields_with_conflicting_aliases_in_subqueries_unless_mapped(
+        self,
+    ):
+        db = Database()
+        t0, t1 = Tables("test0", "test1")
+        primary_ds = DataSet(
+            table=t0,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t0.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "metric0",
+                    label="Metric0",
+                    definition=fn.Sum(t0.metric),
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        secondary_ds = DataSet(
+            table=t1,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t1.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "metric0",
+                    label="Metric0",
+                    definition=fn.Sum(t1.metric),
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        blend_ds = primary_ds.blend(secondary_ds).on(
+            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
+        )
+
+        sql = (
+            blend_ds.query()
+            .dimension(blend_ds.fields.timestamp)
+            .widget(ReactTable(blend_ds.fields.metric0))
+        ).sql
+
+        (query,) = sql
+        self.assertEqual(
+            'SELECT "sq0"."$timestamp" "$timestamp","sq0"."$metric0" "$metric0" FROM '
+            '(SELECT "timestamp" "$timestamp",SUM("metric") "$metric0" FROM "test0" GROUP BY "$timestamp") "sq0" '
+            'ORDER BY "$timestamp" LIMIT 200000',
             str(query),
         )
 
@@ -328,12 +671,6 @@ class DataSetBlenderIntegrationTests(TestCase):
                     data_type=DataType.date,
                 ),
                 Field(
-                    "account",
-                    label="Account",
-                    definition=t0.account,
-                    data_type=DataType.number,
-                ),
-                Field(
                     "metric0",
                     label="Metric0",
                     definition=t0.metric,
@@ -352,12 +689,6 @@ class DataSetBlenderIntegrationTests(TestCase):
                     data_type=DataType.date,
                 ),
                 Field(
-                    "account",
-                    label="Account",
-                    definition=t1.account,
-                    data_type=DataType.number,
-                ),
-                Field(
                     "metric1",
                     label="Metric1",
                     definition=t1.metric,
@@ -371,8 +702,8 @@ class DataSetBlenderIntegrationTests(TestCase):
 
         sql = (
             blend_ds.query()
-            .dimension(blend_ds.fields.timestamp, blend_ds.fields.account)
-            .widget(ReactTable(blend_ds.fields.metric1))
+            .dimension(blend_ds.fields.timestamp)
+            .widget(ReactTable(blend_ds.fields.metric0), ReactTable(blend_ds.fields.metric1))
             .reference(f.DayOverDay(blend_ds.fields.timestamp))
         ).sql
 
@@ -380,14 +711,14 @@ class DataSetBlenderIntegrationTests(TestCase):
         self.assertEqual(
             "SELECT "
             '"sq0"."$timestamp" "$timestamp",'
-            '"sq0"."$account" "$account",'
+            '"sq0"."$metric0" "$metric0",'
             '"sq1"."$metric1" "$metric1" '
             "FROM ("
             "SELECT "
             '"timestamp" "$timestamp",'
-            '"account" "$account" '
+            '"metric" "$metric0" '
             'FROM "test0" '
-            'GROUP BY "$timestamp","$account"'
+            'GROUP BY "$timestamp"'
             ') "sq0" '
             "LEFT JOIN ("
             "SELECT "
@@ -396,7 +727,7 @@ class DataSetBlenderIntegrationTests(TestCase):
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp","$account" '
+            'ORDER BY "$timestamp" '
             'LIMIT 200000',
             str(query_1),
         )
@@ -404,13 +735,13 @@ class DataSetBlenderIntegrationTests(TestCase):
         self.assertEqual(
             "SELECT "
             '"sq0"."$timestamp" "$timestamp",'
-            '"sq0"."$account" "$account",'
+            '"sq0"."$metric0_dod" "$metric0_dod",'
             '"sq1"."$metric1_dod" "$metric1_dod" '
             "FROM ("
             'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
-            '"account" "$account" '
+            '"metric" "$metric0_dod" '
             'FROM "test0" '
-            'GROUP BY "$timestamp","$account"'
+            'GROUP BY "$timestamp"'
             ') "sq0" '
             "LEFT JOIN ("
             'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
@@ -418,7 +749,7 @@ class DataSetBlenderIntegrationTests(TestCase):
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp","$account" '
+            'ORDER BY "$timestamp" '
             'LIMIT 200000',
             str(query_2),
         )
@@ -437,15 +768,9 @@ class DataSetBlenderIntegrationTests(TestCase):
                     data_type=DataType.date,
                 ),
                 Field(
-                    "account",
-                    label="Account",
-                    definition=t0.account,
-                    data_type=DataType.number,
-                ),
-                Field(
                     "metric0",
                     label="Metric0",
-                    definition=t0.metric,
+                    definition=fn.Sum(t0.metric),
                     data_type=DataType.number,
                 ),
             ],
@@ -461,15 +786,9 @@ class DataSetBlenderIntegrationTests(TestCase):
                     data_type=DataType.date,
                 ),
                 Field(
-                    "account",
-                    label="Account",
-                    definition=t1.account,
-                    data_type=DataType.number,
-                ),
-                Field(
                     "metric1",
                     label="Metric1",
-                    definition=t1.metric,
+                    definition=fn.Sum(t1.metric),
                     data_type=DataType.number,
                 ),
             ],
@@ -480,8 +799,8 @@ class DataSetBlenderIntegrationTests(TestCase):
 
         sql = (
             blend_ds.query()
-            .dimension(blend_ds.fields.timestamp, blend_ds.fields.account)
-            .widget(ReactTable(blend_ds.fields.metric1))
+            .dimension(blend_ds.fields.timestamp)
+            .widget(ReactTable(blend_ds.fields.metric0, blend_ds.fields.metric1))
             .reference(f.DayOverDay(blend_ds.fields.timestamp))
             .orderby(blend_ds.fields.metric1)
         ).sql
@@ -490,19 +809,19 @@ class DataSetBlenderIntegrationTests(TestCase):
         self.assertEqual(
             "SELECT "
             '"sq0"."$timestamp" "$timestamp",'
-            '"sq0"."$account" "$account",'
+            '"sq0"."$metric0" "$metric0",'
             '"sq1"."$metric1" "$metric1" '
             "FROM ("
             "SELECT "
             '"timestamp" "$timestamp",'
-            '"account" "$account" '
+            'SUM("metric") "$metric0" '
             'FROM "test0" '
-            'GROUP BY "$timestamp","$account"'
+            'GROUP BY "$timestamp"'
             ') "sq0" '
             "LEFT JOIN ("
             "SELECT "
             '"timestamp" "$timestamp",'
-            '"metric" "$metric1" '
+            'SUM("metric") "$metric1" '
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
@@ -514,17 +833,17 @@ class DataSetBlenderIntegrationTests(TestCase):
         self.assertEqual(
             "SELECT "
             '"sq0"."$timestamp" "$timestamp",'
-            '"sq0"."$account" "$account",'
+            '"sq0"."$metric0_dod" "$metric0_dod",'
             '"sq1"."$metric1_dod" "$metric1_dod" '
             "FROM ("
             'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
-            '"account" "$account" '
+            'SUM("metric") "$metric0_dod" '
             'FROM "test0" '
-            'GROUP BY "$timestamp","$account"'
+            'GROUP BY "$timestamp"'
             ') "sq0" '
             "LEFT JOIN ("
             'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
-            '"metric" "$metric1_dod" '
+            'SUM("metric") "$metric1_dod" '
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
@@ -547,15 +866,9 @@ class DataSetBlenderIntegrationTests(TestCase):
                     data_type=DataType.date,
                 ),
                 Field(
-                    "account",
-                    label="Account",
-                    definition=t0.account,
-                    data_type=DataType.number,
-                ),
-                Field(
                     "metric0",
                     label="Metric0",
-                    definition=t0.metric,
+                    definition=fn.Sum(t0.metric),
                     data_type=DataType.number,
                 ),
             ],
@@ -571,15 +884,9 @@ class DataSetBlenderIntegrationTests(TestCase):
                     data_type=DataType.date,
                 ),
                 Field(
-                    "account",
-                    label="Account",
-                    definition=t1.account,
-                    data_type=DataType.number,
-                ),
-                Field(
                     "metric1",
                     label="Metric1",
-                    definition=t1.metric,
+                    definition=fn.Sum(t1.metric),
                     data_type=DataType.number,
                 ),
             ],
@@ -590,7 +897,7 @@ class DataSetBlenderIntegrationTests(TestCase):
 
         sql = (
             blend_ds.query()
-            .dimension(blend_ds.fields.timestamp, blend_ds.fields.account)
+            .dimension(blend_ds.fields.timestamp)
             .widget(ReactTable(blend_ds.fields.metric1))
             .reference(f.DayOverDay(blend_ds.fields.timestamp))
             .orderby(blend_ds.fields.metric0)
@@ -600,21 +907,19 @@ class DataSetBlenderIntegrationTests(TestCase):
         self.assertEqual(
             "SELECT "
             '"sq0"."$timestamp" "$timestamp",'
-            '"sq0"."$account" "$account",'
             '"sq1"."$metric1" "$metric1",'
             '"sq0"."$metric0" "$metric0" '
             "FROM ("
             "SELECT "
             '"timestamp" "$timestamp",'
-            '"account" "$account",'
-            '"metric" "$metric0" '
+            'SUM("metric") "$metric0" '
             'FROM "test0" '
-            'GROUP BY "$timestamp","$account"'
+            'GROUP BY "$timestamp"'
             ') "sq0" '
             "LEFT JOIN ("
             "SELECT "
             '"timestamp" "$timestamp",'
-            '"metric" "$metric1" '
+            'SUM("metric") "$metric1" '
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
@@ -626,25 +931,164 @@ class DataSetBlenderIntegrationTests(TestCase):
         self.assertEqual(
             "SELECT "
             '"sq0"."$timestamp" "$timestamp",'
-            '"sq0"."$account" "$account",'
             '"sq1"."$metric1_dod" "$metric1_dod",'
             '"sq0"."$metric0_dod" "$metric0_dod" '
             "FROM ("
             'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
-            '"account" "$account",'
-            '"metric" "$metric0_dod" '
+            'SUM("metric") "$metric0_dod" '
             'FROM "test0" '
-            'GROUP BY "$timestamp","$account"'
+            'GROUP BY "$timestamp"'
             ') "sq0" '
             "LEFT JOIN ("
             'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
-            '"metric" "$metric1_dod" '
+            'SUM("metric") "$metric1_dod" '
             'FROM "test1" '
             'GROUP BY "$timestamp"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
             'ORDER BY "$metric0_dod" '
             'LIMIT 200000',
             str(query_2),
+        )
+
+    def test_optimization_with_complex_blended_metric(self):
+        db = TestDatabase()
+        t0, t1 = Tables("test0", "test1")
+        primary_ds = DataSet(
+            table=t0,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t0.timestamp,
+                    data_type=DataType.date,
+                ),
+            ],
+        )
+        secondary_ds = DataSet(
+            table=t1,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t1.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "other_metric_name",
+                    label="Metric",
+                    definition=fn.Sum(t1.metric),
+                    data_type=DataType.number,
+                ),
+                Field(
+                    "metric_2",
+                    label="Metric 2",
+                    definition=fn.Sum(t1.metric_2),
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        blend_ds = primary_ds.blend(secondary_ds).on(
+            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
+        ).extra_fields(
+            Field(
+                "blended_metric",
+                label="Blended Metric",
+                definition=secondary_ds.fields.other_metric_name / secondary_ds.fields.metric_2,
+                data_type=DataType.number,
+            )
+        )
+
+        query = (
+            blend_ds.query()
+                .dimension(blend_ds.fields.timestamp)
+                .widget(f.Widget(blend_ds.fields.blended_metric))
+        ).sql[0]
+
+        self.assertEqual(
+            'SELECT "sq0"."$timestamp" "$timestamp","sq0"."$other_metric_name"/"sq0"."$metric_2" "$blended_metric" '
+            'FROM ('
+            'SELECT "timestamp" "$timestamp",SUM("metric") "$other_metric_name",SUM("metric_2") "$metric_2" '
+            'FROM "test1" '
+            'GROUP BY "$timestamp"'
+            ') "sq0" '
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
+            str(query),
+        )
+
+    def test_blending_with_only_metric_filter_selected_in_secondary_dataset(self):
+        db = TestDatabase()
+        t0, t1 = Tables("test0", "test1")
+        primary_ds = DataSet(
+            table=t0,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t0.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "metric0",
+                    label="Metric0",
+                    definition=fn.Sum(t0.metric),
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        secondary_ds = DataSet(
+            table=t1,
+            database=db,
+            fields=[
+                Field(
+                    "timestamp",
+                    label="Timestamp",
+                    definition=t1.timestamp,
+                    data_type=DataType.date,
+                ),
+                Field(
+                    "metric1",
+                    label="Metric1",
+                    definition=fn.Sum(t1.metric),
+                    data_type=DataType.number,
+                ),
+            ],
+        )
+        blend_ds = primary_ds.blend(secondary_ds).on(
+            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
+        )
+
+        query = (
+            blend_ds.query()
+                .dimension(blend_ds.fields.timestamp)
+                .widget(f.Widget(blend_ds.fields.metric0))
+                .filter(blend_ds.fields.metric1.between(10, 20))
+        ).sql[0]
+
+        self.assertEqual(
+            "SELECT "
+            '"sq0"."$timestamp" "$timestamp",'
+            '"sq0"."$metric0" "$metric0" '
+            "FROM ("
+            "SELECT "
+            '"timestamp" "$timestamp",'
+            'SUM("metric") "$metric0" '
+            'FROM "test0" '
+            'GROUP BY "$timestamp"'
+            ') "sq0" '
+            "LEFT JOIN ("
+            "SELECT "
+            '"timestamp" "$timestamp" '
+            'FROM "test1" '
+            'GROUP BY "$timestamp" '
+            'HAVING SUM("metric") BETWEEN 10 AND 20'
+            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
+            str(query),
         )
 
     def test_blending_with_omit_from_rollup_filter_of_blended_field(self):
@@ -661,15 +1105,9 @@ class DataSetBlenderIntegrationTests(TestCase):
                     data_type=DataType.date,
                 ),
                 Field(
-                    "account",
-                    label="Account",
-                    definition=t0.account,
-                    data_type=DataType.number,
-                ),
-                Field(
                     "metric0",
                     label="Metric0",
-                    definition=t0.metric,
+                    definition=fn.Sum(t0.metric),
                     data_type=DataType.number,
                 ),
             ],
@@ -687,7 +1125,7 @@ class DataSetBlenderIntegrationTests(TestCase):
                 Field(
                     "metric1",
                     label="Metric1",
-                    definition=t1.metric,
+                    definition=fn.Sum(t1.metric),
                     data_type=DataType.number,
                 ),
             ],
@@ -704,7 +1142,7 @@ class DataSetBlenderIntegrationTests(TestCase):
                     f.Share(blend_ds.fields.metric0, over=blend_ds.fields.timestamp)
                 )
             )
-            .filter(f.OmitFromRollup(blend_ds.fields.account.between(10, 20)))
+            .filter(f.OmitFromRollup(blend_ds.fields.metric1.between(10, 20)))
         ).sql
 
         (query_1, query_2) = sql
@@ -715,16 +1153,16 @@ class DataSetBlenderIntegrationTests(TestCase):
             "FROM ("
             "SELECT "
             '"timestamp" "$timestamp",'
-            '"metric" "$metric0" '
+            'SUM("metric") "$metric0" '
             'FROM "test0" '
-            'WHERE "account" BETWEEN 10 AND 20 '
             'GROUP BY "$timestamp"'
             ') "sq0" '
             "LEFT JOIN ("
             "SELECT "
             '"timestamp" "$timestamp" '
             'FROM "test1" '
-            'GROUP BY "$timestamp"'
+            'GROUP BY "$timestamp" '
+            'HAVING SUM("metric") BETWEEN 10 AND 20'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
             'ORDER BY "$timestamp" '
             'LIMIT 200000',
@@ -738,15 +1176,13 @@ class DataSetBlenderIntegrationTests(TestCase):
             "FROM ("
             "SELECT "
             "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
-            '"metric" "$metric0" '
-            'FROM "test0" '
-            'GROUP BY "$timestamp"'
+            'SUM("metric") "$metric0" '
+            'FROM "test0"'
             ') "sq0" '
             "LEFT JOIN ("
             "SELECT "
             "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\" "
-            'FROM "test1" '
-            'GROUP BY "$timestamp"'
+            'FROM "test1"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
             'ORDER BY "$timestamp" '
             'LIMIT 200000',
@@ -767,15 +1203,9 @@ class DataSetBlenderIntegrationTests(TestCase):
                     data_type=DataType.date,
                 ),
                 Field(
-                    "account",
-                    label="Account",
-                    definition=t0.account,
-                    data_type=DataType.number,
-                ),
-                Field(
                     "metric0",
                     label="Metric0",
-                    definition=t0.metric,
+                    definition=fn.Sum(t0.metric),
                     data_type=DataType.number,
                 ),
             ],
@@ -791,15 +1221,9 @@ class DataSetBlenderIntegrationTests(TestCase):
                     data_type=DataType.date,
                 ),
                 Field(
-                    "account",
-                    label="Account",
-                    definition=t1.account,
-                    data_type=DataType.number,
-                ),
-                Field(
                     "metric1",
                     label="Metric1",
-                    definition=t1.metric,
+                    definition=fn.Sum(t1.metric),
                     data_type=DataType.number,
                 ),
             ],
@@ -820,46 +1244,16 @@ class DataSetBlenderIntegrationTests(TestCase):
 
         (query_1, query_2) = sql
         self.assertEqual(
-            "SELECT "
-            '"sq0"."$timestamp" "$timestamp",'
-            '"sq0"."$metric0" "$metric0" '
-            "FROM ("
-            "SELECT "
-            '"timestamp" "$timestamp",'
-            '"metric" "$metric0" '
-            'FROM "test0" '
-            'GROUP BY "$timestamp"'
-            ') "sq0" '
-            "LEFT JOIN ("
-            "SELECT "
-            '"timestamp" "$timestamp" '
-            'FROM "test1" '
-            'GROUP BY "$timestamp"'
-            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp" '
-            'LIMIT 200000',
+            'SELECT "sq0"."$timestamp" "$timestamp","sq0"."$metric0" "$metric0" FROM '
+            '(SELECT "timestamp" "$timestamp",SUM("metric") "$metric0" FROM "test0" GROUP BY "$timestamp") "sq0" '
+            'ORDER BY "$timestamp" LIMIT 200000',
             str(query_1),
         )
 
         self.assertEqual(
-            "SELECT "
-            '"sq0"."$timestamp" "$timestamp",'
-            '"sq0"."$metric0" "$metric0" '
-            "FROM ("
-            "SELECT "
-            "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
-            '"metric" "$metric0" '
-            'FROM "test0" '
-            'GROUP BY "$timestamp"'
-            ') "sq0" '
-            "LEFT JOIN ("
-            "SELECT "
-            "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\" "
-            'FROM "test1" '
-            'GROUP BY "$timestamp"'
-            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp" '
-            'LIMIT 200000',
+            'SELECT "sq0"."$timestamp" "$timestamp","sq0"."$metric0" "$metric0" FROM '
+            '(SELECT \'_FIREANT_ROLLUP_VALUE_\' "$timestamp",SUM("metric") "$metric0" FROM "test0") "sq0" '
+            'ORDER BY "$timestamp" LIMIT 200000',
             str(query_2),
         )
 
@@ -885,7 +1279,7 @@ class DataSetBlenderIntegrationTests(TestCase):
                 Field(
                     "metric0",
                     label="Metric0",
-                    definition=t0.metric,
+                    definition=fn.Sum(t0.metric),
                     data_type=DataType.number,
                 ),
             ],
@@ -901,15 +1295,9 @@ class DataSetBlenderIntegrationTests(TestCase):
                     data_type=DataType.date,
                 ),
                 Field(
-                    "account",
-                    label="Account",
-                    definition=t1.account,
-                    data_type=DataType.number,
-                ),
-                Field(
                     "metric1",
                     label="Metric1",
-                    definition=t1.metric,
+                    definition=fn.Sum(t1.metric),
                     data_type=DataType.number,
                 ),
             ],
@@ -930,46 +1318,16 @@ class DataSetBlenderIntegrationTests(TestCase):
 
         (query_1, query_2) = sql
         self.assertEqual(
-            "SELECT "
-            '"sq0"."$timestamp" "$timestamp",'
-            '"sq1"."$metric1" "$metric1" '
-            "FROM ("
-            "SELECT "
-            '"timestamp" "$timestamp" '
-            'FROM "test0" '
-            'GROUP BY "$timestamp"'
-            ') "sq0" '
-            "LEFT JOIN ("
-            "SELECT "
-            '"timestamp" "$timestamp",'
-            '"metric" "$metric1" '
-            'FROM "test1" '
-            'GROUP BY "$timestamp"'
-            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp" '
-            'LIMIT 200000',
+            'SELECT "sq0"."$timestamp" "$timestamp","sq0"."$metric1" "$metric1" FROM '
+            '(SELECT "timestamp" "$timestamp",SUM("metric") "$metric1" FROM "test1" GROUP BY "$timestamp") "sq0" '
+            'ORDER BY "$timestamp" LIMIT 200000',
             str(query_1),
         )
 
         self.assertEqual(
-            "SELECT "
-            '"sq0"."$timestamp" "$timestamp",'
-            '"sq1"."$metric1" "$metric1" '
-            "FROM ("
-            "SELECT "
-            "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\" "
-            'FROM "test0" '
-            'GROUP BY "$timestamp"'
-            ') "sq0" '
-            "LEFT JOIN ("
-            "SELECT "
-            "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
-            '"metric" "$metric1" '
-            'FROM "test1" '
-            'GROUP BY "$timestamp"'
-            ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
-            'ORDER BY "$timestamp" '
-            'LIMIT 200000',
+            'SELECT "sq0"."$timestamp" "$timestamp","sq0"."$metric1" "$metric1" FROM '
+            '(SELECT \'_FIREANT_ROLLUP_VALUE_\' "$timestamp",SUM("metric") "$metric1" FROM "test1") "sq0" '
+            'ORDER BY "$timestamp" LIMIT 200000',
             str(query_2),
         )
 
@@ -1068,15 +1426,13 @@ class DataSetBlenderIntegrationTests(TestCase):
             "SELECT "
             "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
             '"metric" "$metric0" '
-            'FROM "test0" '
-            'GROUP BY "$timestamp"'
+            'FROM "test0"'
             ') "sq0" '
             "LEFT JOIN ("
             "SELECT "
             "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
             '"metric" "$metric1" '
-            'FROM "test1" '
-            'GROUP BY "$timestamp"'
+            'FROM "test1"'
             ') "sq1" ON "sq0"."$timestamp"="sq1"."$timestamp" '
             'ORDER BY "$timestamp" '
             'LIMIT 200000',
@@ -1102,13 +1458,19 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
                 Field(
                     "metric0",
                     label="Metric0",
-                    definition=t0.metric,
+                    definition=fn.Sum(t0.metric),
                     data_type=DataType.number,
                 ),
                 Field(
                     "duplicate_metric",
                     label="DuplicateMetricSet0",
-                    definition=t0.duplicate,
+                    definition=fn.Sum(t0.duplicate),
+                    data_type=DataType.number,
+                ),
+                Field(
+                    "another_dimension",
+                    label="Another Dimension",
+                    definition=t0.dim,
                     data_type=DataType.number,
                 ),
             ],
@@ -1127,7 +1489,13 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
                 Field(
                     "metric1",
                     label="Metric1",
-                    definition=t1.metric,
+                    definition=fn.Sum(t1.metric),
+                    data_type=DataType.number,
+                ),
+                Field(
+                    "another_dimension",
+                    label="Another Dimension",
+                    definition=t1.dim,
                     data_type=DataType.number,
                 ),
             ],
@@ -1146,13 +1514,13 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
                 Field(
                     "metric2",
                     label="Metric2",
-                    definition=t2.metric,
+                    definition=fn.Sum(t2.metric),
                     data_type=DataType.number,
                 ),
                 Field(
                     "duplicate_metric",
                     label="DuplicateMetricSet2",
-                    definition=t2.duplicate,
+                    definition=fn.Sum(t2.duplicate),
                     data_type=DataType.number,
                 ),
             ],
@@ -1160,9 +1528,12 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
         cls.tertiary_ds.id = 2
         cls.blend_ds = (
             cls.primary_ds.blend(cls.secondary_ds)
-            .on_dimensions()
+            .on({
+                cls.primary_ds.fields.timestamp: cls.secondary_ds.fields.timestamp,
+                cls.primary_ds.fields.another_dimension: cls.secondary_ds.fields.another_dimension,
+            })
             .blend(cls.tertiary_ds)
-            .on_dimensions()
+            .on({cls.primary_ds.fields.timestamp: cls.tertiary_ds.fields.timestamp})
         )
 
     def test_selecting_just_one_metric_in_non_primary_dataset(self):
@@ -1178,7 +1549,8 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
         (query,) = blender.query().widget(ReactTable(blender.fields.only_metric2)).sql
 
         self.assertEqual(
-            'SELECT "sq0"."$metric2" "$only_metric2" FROM (SELECT "metric" "$metric2" FROM "test2") "sq0" '
+            'SELECT "sq0"."$metric2" "$only_metric2" '
+            'FROM (SELECT SUM("metric") "$metric2" FROM "test2") "sq0" '
             'ORDER BY 1 LIMIT 200000',
             str(query),
         )
@@ -1193,6 +1565,37 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
                     data_type=DataType.number,
                 ),
             )
+
+    def test_select_dimension_that_is_only_in_two_out_of_three_datasets(self):
+        (query,) = (
+            self.blend_ds.query()
+                .dimension(self.blend_ds.fields.another_dimension)
+                .widget(ReactTable(self.blend_ds.fields.metric2))
+        ).sql
+
+        self.assertEqual(
+            'SELECT "sq0"."$another_dimension" "$another_dimension","sq1"."$metric2" "$metric2" '
+            'FROM (SELECT "dim" "$another_dimension" FROM "test0" GROUP BY "$another_dimension") "sq0",'
+            '(SELECT SUM("metric") "$metric2" FROM "test2") "sq1" '
+            'ORDER BY "$another_dimension" '
+            'LIMIT 200000',
+            str(query),
+        )
+
+    def test_select_dimension_in_third_dataset(self):
+        (query,) = (
+            self.blend_ds.query()
+                .dimension(self.blend_ds.fields.timestamp)
+                .widget(ReactTable(self.blend_ds.fields.metric2))
+        ).sql
+
+        self.assertEqual(
+            'SELECT "sq0"."$timestamp" "$timestamp","sq0"."$metric2" "$metric2" FROM '
+            '(SELECT "timestamp" "$timestamp",SUM("metric") "$metric2" FROM "test2" GROUP BY "$timestamp") "sq0" '
+            'ORDER BY "$timestamp" '
+            'LIMIT 200000',
+            str(query),
+        )
 
 
 class DataSetBlenderMultipleDatasetsTests(TestCase):

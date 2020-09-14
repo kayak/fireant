@@ -21,27 +21,13 @@ class DataSetBlenderQueryBuilderTests(TestCase):
         ).sql
 
         self.assertEqual(len(queries), 1)
-        # TODO Optimisation opportunity with desired result:
-        # self.assertEqual(
-        #     "SELECT "
-        #     'TRUNC("timestamp",\'DD\') "$timestamp",'
-        #     'SUM("votes") "$votes" '
-        #     'FROM "politics"."politician" '
-        #     'GROUP BY "$timestamp" '
-        #     'ORDER BY "$timestamp"',
-        #     str(queries[0]),
-        # )
         self.assertEqual(
             'SELECT "sq0"."$timestamp" "$timestamp","sq0"."$votes" "$votes" '
-            "FROM ("
+            'FROM ('
             'SELECT TRUNC("timestamp",\'DD\') "$timestamp",SUM("votes") "$votes" '
             'FROM "politics"."politician" '
-            'GROUP BY "$timestamp") "sq0" '
-            "LEFT JOIN ("
-            'SELECT TRUNC("timestamp",\'DD\') "$timestamp" '
-            'FROM "politics"."politician_spend" '
-            'GROUP BY "$timestamp") "sq1" '
-            'ON "sq0"."$timestamp"="sq1"."$timestamp" '
+            'GROUP BY "$timestamp"'
+            ') "sq0" '
             'ORDER BY "$timestamp" '
             'LIMIT 200000',
             str(queries[0]),
@@ -294,7 +280,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             "SELECT "
             '"sq0"."$political_party" "$political_party",'
             '"sq0"."$candidate-id" "$candidate-id",'
-            '"sq2"."$num_staff" "$num_staff" '
+            '"sq1"."$num_staff" "$num_staff" '
             "FROM ("
             "SELECT "
             '"political_party" "$political_party",'
@@ -304,21 +290,13 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             ') "sq0" '
             "LEFT JOIN ("
             "SELECT "
-            'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' ELSE \'complement(candidate_id=12)\' END "$candidate-id" '
-            'FROM "politics"."politician_spend" '
-            'GROUP BY "$candidate-id"'
-            ') "sq1" '
-            "ON "
-            '"sq0"."$candidate-id"="sq1"."$candidate-id" '
-            "LEFT JOIN ("
-            "SELECT "
             'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' ELSE \'complement(candidate_id=12)\' END "$candidate-id",'
             'COUNT("staff_id") "$num_staff" '
             'FROM "politics"."politician_staff" '
             'GROUP BY "$candidate-id"'
-            ') "sq2" '
+            ') "sq1" '
             "ON "
-            '"sq0"."$candidate-id"="sq2"."$candidate-id" '
+            '"sq0"."$candidate-id"="sq1"."$candidate-id" '
             'ORDER BY "$political_party","$candidate-id" '
             'LIMIT 200000',
             str(queries[0]),
@@ -338,34 +316,15 @@ class DataSetBlenderQueryBuilderTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            '"sq0"."$candidate-id" "$candidate-id",'
-            '"sq2"."$num_staff" "$num_staff" '
-            "FROM ("
-            "SELECT "
-            'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' ELSE \'complement(candidate_id=12)\' END "$candidate-id" '
-            'FROM "politics"."politician" '
-            'GROUP BY "$candidate-id"'
-            ') "sq0" '
-            "LEFT JOIN ("
-            "SELECT "
-            'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' ELSE \'complement(candidate_id=12)\' END "$candidate-id" '
-            'FROM "politics"."politician_spend" '
-            'GROUP BY "$candidate-id"'
-            ') "sq1" '
-            "ON "
-            '"sq0"."$candidate-id"="sq1"."$candidate-id" '
-            "LEFT JOIN ("
-            "SELECT "
-            'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' ELSE \'complement(candidate_id=12)\' END "$candidate-id",'
+            'SELECT "sq0"."$candidate-id" "$candidate-id","sq0"."$num_staff" "$num_staff" '
+            'FROM ('
+            'SELECT CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' '
+            'ELSE \'complement(candidate_id=12)\' END "$candidate-id",'
             'COUNT("staff_id") "$num_staff" '
             'FROM "politics"."politician_staff" '
             'GROUP BY "$candidate-id"'
-            ') "sq2" '
-            "ON "
-            '"sq0"."$candidate-id"="sq2"."$candidate-id" '
-            'ORDER BY "$candidate-id" '
-            'LIMIT 200000',
+            ') "sq0" '
+            'ORDER BY "$candidate-id" LIMIT 200000',
             str(queries[0]),
         )
 
@@ -554,19 +513,14 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 self.assertEqual(
                     "SELECT "
                     f'"sq0"."${field_alias}" "${field_alias}",'
-                    '"sq1"."$candidate-spend" "$candidate-spend" '
+                    '"sq0"."$candidate-spend" "$candidate-spend" '
                     'FROM ('
-                    'SELECT '
-                    f'CASE WHEN {fltr} THEN \'set_A\' ELSE \'set_B\' END "${field_alias}" '
-                    'FROM "politics"."politician" '
-                    f'GROUP BY "${field_alias}"'
-                    ') "sq0" LEFT JOIN ('
                     'SELECT '
                     f'CASE WHEN {fltr} THEN \'set_A\' ELSE \'set_B\' END "${field_alias}",'
                     'SUM("candidate_spend") "$candidate-spend" '
                     'FROM "politics"."politician_spend" '
                     f'GROUP BY "${field_alias}"'
-                    f') "sq1" ON "sq0"."${field_alias}"="sq1"."${field_alias}" '
+                    f') "sq0" '
                     f"ORDER BY \"${field_alias}\" "
                     "LIMIT 200000",
                     str(queries[0]),
@@ -859,7 +813,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 "'_FIREANT_ROLLUP_VALUE_' \"$candidate-id\","
                 'SUM("is_winner") "$wins" '
                 'FROM "politics"."politician" '
-                'GROUP BY "$timestamp","$candidate-id"'
+                'GROUP BY "$timestamp"'
                 ') "sq0" '
                 "LEFT JOIN ("
                 "SELECT "
@@ -867,7 +821,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 "'_FIREANT_ROLLUP_VALUE_' \"$candidate-id\","
                 'SUM("candidate_spend") "$candidate-spend" '
                 'FROM "politics"."politician_spend" '
-                'GROUP BY "$timestamp","$candidate-id"'
+                'GROUP BY "$timestamp"'
                 ') "sq1" '
                 "ON "
                 '"sq0"."$timestamp"="sq1"."$timestamp" '

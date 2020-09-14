@@ -13,12 +13,15 @@ from fireant.queries.finders import (
 )
 from fireant.queries.sql_transformer import make_slicer_query_with_totals_and_references
 from fireant.reference_helpers import reference_type_alias
-from fireant.utils import alias_selector, listify, ordered_distinct_list_by_attr
-from fireant.widgets.base import Widget
-from ..sets import (
-    apply_set_dimensions,
-    omit_set_filters,
+from fireant.utils import (
+    alias_selector,
+    listify,
+    ordered_distinct_list_by_attr,
+    filter_nones,
 )
+from fireant.widgets.base import Widget
+from ..sets import apply_set_dimensions, omit_set_filters
+from fireant.dataset.fields import is_metric_field
 
 
 @listify
@@ -103,28 +106,38 @@ def _datasets_and_field_maps(blender_dataset, filters):
         primary_dataset = dataset.primary_dataset
         secondary_dataset = dataset.secondary_dataset
         blender_dataset_fields = apply_set_dimensions(
-            _find_dataset_fields_needed_to_be_mapped(dataset), filters, dataset,
+            _find_dataset_fields_needed_to_be_mapped(dataset), filters, dataset
         )
 
-        primary_dataset_fields = set(apply_set_dimensions(primary_dataset.fields, filters, primary_dataset))
-        secondary_dataset_fields = set(apply_set_dimensions(secondary_dataset.fields, filters, secondary_dataset))
+        primary_dataset_fields = set(
+            apply_set_dimensions(primary_dataset.fields, filters, primary_dataset)
+        )
+        secondary_dataset_fields = set(
+            apply_set_dimensions(secondary_dataset.fields, filters, secondary_dataset)
+        )
 
-        blender_field_to_primary_field_map = dict(_map_field(
-            primary_dataset_fields, blender_dataset_fields,
-        ))
+        blender_field_to_primary_field_map = dict(
+            _map_field(primary_dataset_fields, blender_dataset_fields)
+        )
 
         primary_mapped_dimensions = list(
             apply_set_dimensions(dataset.dimension_map.keys(), filters, primary_dataset)
         )
         secondary_mapped_dimensions = list(
-            apply_set_dimensions(dataset.dimension_map.values(), filters, secondary_dataset)
+            apply_set_dimensions(
+                dataset.dimension_map.values(), filters, secondary_dataset
+            )
         )
-        secondary_dimension_per_primary_dimension = dict(zip(
-            primary_mapped_dimensions, secondary_mapped_dimensions,
-        ))
+        secondary_dimension_per_primary_dimension = dict(
+            zip(primary_mapped_dimensions, secondary_mapped_dimensions)
+        )
 
         blender_field_to_secondary_field_map = dict(
-            _map_field(secondary_dataset_fields, blender_dataset_fields, secondary_dimension_per_primary_dimension)
+            _map_field(
+                secondary_dataset_fields,
+                blender_dataset_fields,
+                secondary_dimension_per_primary_dimension,
+            )
         )
 
         if not isinstance(primary_dataset, DataSetBlender):
@@ -144,11 +157,16 @@ def _datasets_and_field_maps(blender_dataset, filters):
                     or blender_field_to_primary_field_map[field] not in fm
                 ):
                     continue
-                remapped_field_map[field] = fm[blender_field_to_primary_field_map[field]]
+                remapped_field_map[field] = fm[
+                    blender_field_to_primary_field_map[field]
+                ]
 
             datasets_and_field_maps.append((ds, remapped_field_map))
 
-        return [*datasets_and_field_maps, (secondary_dataset, blender_field_to_secondary_field_map)]
+        return [
+            *datasets_and_field_maps,
+            (secondary_dataset, blender_field_to_secondary_field_map),
+        ]
 
     return zip(*_flatten_blend_datasets(blender_dataset))
 
@@ -162,32 +180,41 @@ class EmptyWidget(Widget):
         return super().metrics
 
 
+def map_blender_field_to_dataset_field(field, field_map, dataset):
+    field_from_blender = find_field_in_modified_field(field)
+    if field_from_blender in dataset.fields:
+        return field
+
+    if field_from_blender in field_map:
+        return field.for_(field_map[field_from_blender])
+
+
+def map_blender_fields_to_dataset_fields(fields, field_map, dataset):
+    return list(
+        filter_nones(
+            map_blender_field_to_dataset_field(field, field_map, dataset)
+            for field in fields
+        )
+    )
+
+
 def _build_dataset_query(
-    dataset, field_map, metrics, dimensions, filters, references, operations, share_dimensions
+    dataset,
+    field_map,
+    dataset_metrics,
+    dataset_dimensions,
+    dataset_filters,
+    references,
+    operations,
+    share_dimensions,
 ):
-    @listify
-    def _map_fields(fields):
-        """
-        TODO describe this
-        """
-        for field in fields:
-            field_from_blender = find_field_in_modified_field(field)
-            if field_from_blender in dataset.fields:
-                yield field
-                continue
-            if field_from_blender not in field_map:
-                continue
-
-            yield field.for_(field_map[field_from_blender])
-
-    dataset_metrics = ordered_distinct_list_by_attr(_map_fields(metrics))
-    dataset_dimensions = _map_fields(dimensions)
-    dataset_filters = _map_fields(omit_set_filters(filters))
-    dataset_references = _map_fields(references)
-    dataset_share_dimensions = _map_fields(share_dimensions)
-
-    if not any([dataset_metrics, dataset_dimensions]):
-        return [None]
+    dataset_references = map_blender_fields_to_dataset_fields(
+        references, field_map, dataset
+    )
+    dataset_share_dimensions = map_blender_fields_to_dataset_fields(
+        share_dimensions, field_map, dataset
+    )
+    dataset_metrics = ordered_distinct_list_by_attr(dataset_metrics)
 
     # TODO: It's possible that we have to adapt/map the operations for @apply_special_cases
     dataset_operations = operations
@@ -258,7 +285,9 @@ def _get_sq_field_for_blender_field(field, queries, field_maps, reference=None):
     return definition.as_(field_alias)
 
 
-def _perform_join_operations(dimensions, base_query, base_field_map, join_queries, join_field_maps):
+def _perform_join_operations(
+    dimensions, base_query, base_field_map, join_queries, join_field_maps
+):
     blender_query = Query.from_(base_query, immutable=False)
     for join_sql, join_field_map in zip(join_queries, join_field_maps):
         if join_sql is None:
@@ -282,39 +311,41 @@ def _perform_join_operations(dimensions, base_query, base_field_map, join_querie
 
 
 def _blend_query(dimensions, metrics, orders, field_maps, queries):
-
-    # Remove None's in the beginning and take the first non-empty query as base query
-    for i, query in enumerate(queries):
-        if query:
-            base_query, *join_queries = queries[i:]
-            base_field_map, *join_field_maps = field_maps[i:]
-            break
+    base_query, *join_queries = queries
+    base_field_map, *join_field_maps = field_maps
 
     reference = base_query._references[0] if base_query._references else None
 
-    if len(queries) == 1:
-        # Optimization step, we don't need to do any joining as there is only one query
-        blender_query = base_query
-    else:
-        blender_query = _perform_join_operations(dimensions, base_query, base_field_map, join_queries, join_field_maps)
+    blender_query = _perform_join_operations(
+        dimensions, base_query, base_field_map, join_queries, join_field_maps
+    )
 
-        # WARNING: In order to make complex fields work, the get_sql for each field is monkey patched in. This must
-        # happen here because a complex metric by definition references values selected from the dataset subqueries.
+    # WARNING: In order to make complex fields work, the get_sql for each field is monkey patched in. This must
+    # happen here because a complex metric by definition references values selected from the dataset subqueries.
 
-        for metric in find_dataset_fields(metrics):
-            subquery_field = _get_sq_field_for_blender_field(metric, queries, field_maps, reference)
-            metric.get_sql = subquery_field.get_sql
+    for metric in find_dataset_fields(metrics):
+        subquery_field = _get_sq_field_for_blender_field(
+            metric, queries, field_maps, reference
+        )
+        metric.get_sql = subquery_field.get_sql
 
-        sq_dimensions = [_get_sq_field_for_blender_field(d, queries, field_maps) for d in dimensions]
-        sq_metrics = [_get_sq_field_for_blender_field(m, queries, field_maps, reference) for m in metrics]
-        blender_query = blender_query.select(*sq_dimensions).select(*sq_metrics)
+    sq_dimensions = [
+        _get_sq_field_for_blender_field(d, queries, field_maps) for d in dimensions
+    ]
+    sq_metrics = [
+        _get_sq_field_for_blender_field(m, queries, field_maps, reference)
+        for m in metrics
+    ]
+    blender_query = blender_query.select(*sq_dimensions).select(*sq_metrics)
 
     for field, orientation in orders:
         if any(dimension is field for dimension in dimensions):
             # Don't add the reference type to dimensions
             orderby_field = _get_sq_field_for_blender_field(field, queries, field_maps)
         else:
-            orderby_field = _get_sq_field_for_blender_field(field, queries, field_maps, reference)
+            orderby_field = _get_sq_field_for_blender_field(
+                field, queries, field_maps, reference
+            )
 
         blender_query = blender_query.orderby(orderby_field, order=orientation)
 
@@ -343,37 +374,151 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         self._validate()
 
         datasets, field_maps = _datasets_and_field_maps(self.dataset, self._filters)
-        dimensions = self.dimensions
-        metrics = find_metrics_for_widgets(self._widgets)
-        metrics_aliases = {metric.alias for metric in metrics}
-        dimensions_aliases = {dimension.alias for dimension in dimensions}
+
+        selected_blender_dimensions = self.dimensions
+        selected_blender_dimensions_aliases = {
+            dimension.alias for dimension in selected_blender_dimensions
+        }
+        selected_blender_metrics = find_metrics_for_widgets(self._widgets)
+        selected_blender_metrics_aliases = {
+            metric.alias for metric in selected_blender_metrics
+        }
+
+        operations = find_operations_for_widgets(self._widgets)
+        share_dimensions = find_share_dimensions(
+            selected_blender_dimensions, operations
+        )
+        non_set_filters = omit_set_filters(self._filters)
 
         # Add fields to be ordered on, to metrics if they aren't yet selected in metrics or dimensions
-        for field, orientation in self.orders:
+        # To think about: if the selected order_by field is a dimension, should we add it to dimensions?
+        for field, _ in self.orders:
             if (
-                field.alias not in metrics_aliases
-                and field.alias not in dimensions_aliases
+                field.alias not in selected_blender_metrics_aliases
+                and field.alias not in selected_blender_dimensions_aliases
             ):
-                metrics.append(field)
+                selected_blender_metrics.append(field)
 
-        dataset_metrics = find_dataset_fields(metrics)
-        operations = find_operations_for_widgets(self._widgets)
-        share_dimensions = find_share_dimensions(dimensions, operations)
+        # Needed dimensions in final query as tuples of (dimension, is_selected_dimension)
+        needed_blender_dimensions = [(dimension_field, True) for dimension_field in selected_blender_dimensions]
+        # Add dimension filters which are not selected to the pool of needed dimensions
+        for filter_ in non_set_filters:
+            if not is_metric_field(filter_.field) and (filter_.field.alias not in selected_blender_dimensions_aliases):
+                needed_blender_dimensions.append((filter_.field, False))
 
-        datasets_queries = []
-        for dataset, field_map in zip(datasets, field_maps):
-            datasets_queries.append(
-                _build_dataset_query(
+        selected_metrics_as_dataset_fields = find_dataset_fields(selected_blender_metrics)
+
+        # Determine for each dataset which metrics and dimensions need to be selected
+        dataset_dimensions = [[] for _ in range(len(datasets))]
+        dataset_metrics = []
+        dataset_filters = []
+        dataset_included_in_final_query = [False] * len(datasets)
+
+        # First determine the metrics. If a a metric is requested, and the dataset has it, add it for that dataset.
+        # We include metrics used in filters. We also save for each dataset the mapped metrics and filters
+        for dataset_index, dataset in enumerate(datasets):
+
+            dataset_metrics.append(
+                map_blender_fields_to_dataset_fields(
+                    selected_metrics_as_dataset_fields,
+                    field_maps[dataset_index],
                     dataset,
-                    field_map,
-                    dataset_metrics,
-                    dimensions,
-                    self._filters,
-                    self._references,
-                    operations,
-                    share_dimensions
                 )
             )
+
+            dataset_filters.append(
+                map_blender_fields_to_dataset_fields(
+                    non_set_filters, field_maps[dataset_index], dataset
+                )
+            )
+
+            # Metric selected from this dataset, so include it.
+            if dataset_metrics[dataset_index]:
+                dataset_included_in_final_query[dataset_index] = True
+                continue
+
+            # Filter with metric from this dataset selected, so include it.
+            for filter_ in dataset_filters[dataset_index]:
+                if is_metric_field(filter_.field):
+                    dataset_included_in_final_query[dataset_index] = True
+                    break
+
+        # Second map the dimensions and find the dimensions which are unique to a dataset. Include those.
+        # Also save for each dimension of which datasets it is part of.
+        dimensions_dataset_info = []
+        for blender_dimension_field, is_selected_dimension in needed_blender_dimensions:
+            dimension_dataset_info = []
+
+            for dataset_index, dataset in enumerate(datasets):
+                mapped_dimension = map_blender_field_to_dataset_field(
+                    blender_dimension_field, field_maps[dataset_index], dataset
+                )
+
+                if mapped_dimension is not None:
+                    dimension_dataset_info.append((dataset_index, mapped_dimension, is_selected_dimension))
+
+            if len(dimension_dataset_info) == 0:
+                # This case should only happen when using sets, otherwise I would have raised the following exception:
+                # raise Exception("Dimension requested that was not part of any dataset.")
+                pass
+            elif len(dimension_dataset_info) == 1:
+                # This is the only dataset that has this dimension, assign it
+                dataset_index, _, _ = dimension_dataset_info[0]
+                dataset_included_in_final_query[dataset_index] = True
+
+            if dimension_dataset_info:
+                dimensions_dataset_info.append(dimension_dataset_info)
+
+        # Add all the dimensions to the subqueries that are already selected for the final query
+        # Add dimensions that are not yet accounted for to the first dataset that has it
+        for dimension_dataset_info in dimensions_dataset_info:
+            dimension_accounted_for = False
+            first_dataset_that_has_the_dimension = None
+            for (dataset_index, mapped_dimension, is_selected_dimension) in dimension_dataset_info:
+                # If the dataset is already part of the final query, add this dimension
+                if dataset_included_in_final_query[dataset_index]:
+                    dimension_accounted_for = True
+                    if is_selected_dimension:
+                        dataset_dimensions[dataset_index].append(mapped_dimension)
+
+                # Update first_dataset_that_has_the_dimension if needed
+                if (
+                    not dimension_accounted_for
+                    and first_dataset_that_has_the_dimension is None
+                ):
+                    first_dataset_that_has_the_dimension = (
+                        dataset_index,
+                        mapped_dimension,
+                        is_selected_dimension,
+                    )
+
+            if not dimension_accounted_for:
+                # Dimension not yet accounted for! Take first dataset that has the dimension.
+                dataset_index, mapped_dimension, is_selected_dimension = first_dataset_that_has_the_dimension
+                dataset_included_in_final_query[dataset_index] = True
+                if is_selected_dimension:
+                    dataset_dimensions[dataset_index].append(mapped_dimension)
+
+        datasets_queries = []
+        filtered_field_maps = []
+        for dataset_index, dataset in enumerate(datasets):
+            if dataset_included_in_final_query[dataset_index]:
+                datasets_queries.append(
+                    _build_dataset_query(
+                        dataset,
+                        field_maps[dataset_index],
+                        dataset_metrics[dataset_index],
+                        dataset_dimensions[dataset_index],
+                        dataset_filters[dataset_index],
+                        self._references,
+                        operations,
+                        share_dimensions,
+                    )
+                )
+                # Filter the field maps of which the dataset is not going to be in the final query.
+                filtered_field_maps.append(field_maps[dataset_index])
+
+
 
         """
         A dataset query can yield one or more sql queries, depending on how many types of references or dimensions 
@@ -391,22 +536,25 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         Each set of queries in a column are then reduced to a single data blending sql query.
         """
 
-        # TODO: There is most likely still a bug when lots of references and total calculations get mixed.
-        # Although I haven't been able to actually find a case
         per_dataset_queries_count = max(
             [len(dataset_queries) for dataset_queries in datasets_queries]
         )
+        # There will be the same amount of query sets as the longest length of queries for a single dataset
         query_sets = [[] for _ in range(per_dataset_queries_count)]
 
-        for dataset_queries in datasets_queries:
-            for i, query_set in enumerate(query_sets):
-                if len(dataset_queries) > i:
-                    query_set.append(dataset_queries[i])
+        # Add the queries returned for each dataset to the correct queryset
+        for dataset_index, dataset_queries in enumerate(datasets_queries):
+            for i, query in enumerate(dataset_queries):
+                query_sets[i].append(query)
 
         blended_queries = []
         for queryset in query_sets:
             blended_query = _blend_query(
-                dimensions, metrics, self.orders, field_maps, queryset
+                selected_blender_dimensions,
+                selected_blender_metrics,
+                self.orders,
+                filtered_field_maps,
+                queryset,
             )
             blended_query = self._apply_pagination(blended_query)
 

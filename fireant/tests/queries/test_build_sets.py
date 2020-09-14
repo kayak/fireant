@@ -127,7 +127,7 @@ class ResultSetTests(TestCase):
                 '\'_FIREANT_ROLLUP_VALUE_\' "$boolean",'
                 'SUM("number") "$aggr_number" '
                 'FROM "test" '
-                'GROUP BY "$date","$boolean" '
+                'GROUP BY "$date" '
                 'ORDER BY "$date","$boolean" '
                 'LIMIT 200000',
                 str(queries[1]),

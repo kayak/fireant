@@ -17,7 +17,6 @@ class MSSQLDatabase(Database):
 
     # The pypika query class to use for constructing queries
     query_cls = MSSQLQuery
-    can_group_static_value = False
 
     def __init__(
         self,

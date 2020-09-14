@@ -4,7 +4,6 @@ from pypika import (
     Case,
     terms,
 )
-from pypika.terms import BasicCriterion
 from typing import (
     Tuple,
     List,
@@ -12,7 +11,7 @@ from typing import (
 
 from fireant.dataset.fields import (
     DataType,
-    Field,
+    Field, is_metric_field,
 )
 from fireant.dataset.modifiers import (
     DimensionModifier,
@@ -22,18 +21,6 @@ from ..utils import (
     alias_selector,
     flatten,
 )
-
-
-def _is_metric(field: Field) -> bool:
-    """
-    Returns whether a field is a metric.
-
-    :param field: A Field instance.
-    :return: A boolean.
-    """
-    # Only terms wrapped with aggregate functions, such as SUM, will evaluate is_aggregate to True in Pypika.
-    # This is a good way to validate that the set dimension, in question, is actually encompassing a metric.
-    return field.is_aggregate
 
 
 def _make_set_dimension(set_filter: Field, target_dataset: 'DataSet') -> Field:
@@ -56,7 +43,7 @@ def _make_set_dimension(set_filter: Field, target_dataset: 'DataSet') -> Field:
 
     set_dimension = deepcopy(set_filter.filter.field)
 
-    is_metric = _is_metric(set_dimension)
+    is_metric = is_metric_field(set_dimension)
 
     # When using data blending, the dataset table of the set filter needs to be re-mapped to the table in the
     # target dataset (i.e. primary or secondary). The easiest way to do that is to select the field in the
@@ -132,7 +119,7 @@ def _replace_field_if_needed(field: Field, fields_per_set_filter, target_dataset
         modified_set_dimension.dimension = set_dimension
         set_dimension = modified_set_dimension
 
-    if set_filter.will_replace_referenced_dimension and not _is_metric(set_dimension):
+    if set_filter.will_replace_referenced_dimension and not is_metric_field(set_dimension):
         # Metrics should not be replaced.
         return (set_dimension,)
     else:
@@ -181,7 +168,7 @@ def apply_set_dimensions(fields, filters, target_dataset: 'DataSet') -> List[Fie
 
 def omit_set_filters(filters):
     """
-    Returns all filters but the ones that are `ResultSet` instances.
+    Returns all filters except the ones that are `ResultSet` instances.
 
     :param filters: A list of Filter instances.
     :return: A list of Filter instances.
