@@ -7,6 +7,7 @@ from unittest.mock import (
 
 import numpy as np
 import pandas as pd
+from pandas._testing import assert_index_equal
 from pandas.testing import assert_frame_equal
 from pypika import Order
 
@@ -321,3 +322,22 @@ class GroupPaginationTests(TestCase):
         )
         # This created expected dataframe should match the result
         assert_frame_equal(expected, result)
+
+    def test_group_pagination_with_NaN_values_in_index_does_not_crash(self):
+        index_values = [['2016-10-03', '2016-10-04'], ["General", np.NaN]]
+        data_values = [
+            (10, '2018-08-10'),  # General
+            (2, '2018-08-11'),  # NaN Category
+            (44, '2018-08-09'),  # General
+            (6, '2018-08-06'),  # NaN Category
+        ]
+        idx = pd.MultiIndex.from_product(index_values, names=['$created_time', '$category'])
+        df = pd.DataFrame(data_values, idx, ['$seeds', '$updated_time'])
+
+        result = paginate(df, [mock_chart_widget])
+
+        expected_index_values = [['2016-10-03', '2016-10-04'], ["General", "NaN"]]
+        expected_index = pd.MultiIndex.from_product(expected_index_values, names=['$created_time', '$category'])
+
+        # Original df and result should be the same
+        assert_index_equal(result.index, expected_index)

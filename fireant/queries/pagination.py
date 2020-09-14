@@ -4,6 +4,7 @@ import pandas as pd
 from pandas.core.dtypes.common import is_datetime64_ns_dtype
 from pypika import Order
 
+from fireant import formats
 from fireant.utils import alias_selector
 
 
@@ -108,6 +109,12 @@ def _group_paginate(data_frame, start=None, end=None, orders=()):
         A list of tuples that contain a slicer field definition (with an alias matching the columns of the data frame)
         and a pypika.Order.
     """
+    # Replace NaN / empty values with a static value so that reindexing doesn't cause problems further down the line
+    transformed_index = pd.MultiIndex.from_frame(
+        data_frame.index.to_frame().fillna(formats.NAN_VALUE)
+    )
+    data_frame = data_frame.reindex(transformed_index)
+
     dimension_levels = data_frame.index.names[1:]
     dimension_groups = data_frame.groupby(level=dimension_levels)
 
