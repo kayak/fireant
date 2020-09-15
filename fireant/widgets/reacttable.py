@@ -145,10 +145,13 @@ class FormattingHeatMapRule(FormattingRule):
         else:
             self.hsv_start_color = None
         self.saturation_spread = max(0.50, self.hsv_color[1] - 0.05)
-        self.min_val, self.max_val = None, None
+        self.min_val, self.value_range = None, None
 
     def set_min_max(self, min_val, max_val):
-        self.min_val, self.max_val = min_val, max_val
+        if not self._is_invalid(min_val) and not self._is_invalid(max_val):
+            self.min_val = min_val
+            self.value_range = max_val - min_val
+
 
     @staticmethod
     def _is_invalid(val):
@@ -160,10 +163,10 @@ class FormattingHeatMapRule(FormattingRule):
         return rgb_to_hex((round(val * 255) for val in calculated_hsv_color))
 
     def _determine_background_color(self, value):
-        if self._is_invalid(value) or self._is_invalid(self.min_val) or self._is_invalid(self.max_val):
+        if self._is_invalid(value) or self.min_val is None or self.value_range == 0.0:
             return self.WHITE
 
-        val_ratio = (value - self.min_val) / (self.max_val - self.min_val)
+        val_ratio = (value - self.min_val) / self.value_range
 
         if self.hsv_start_color is not None:
             if val_ratio <= 0.5:
