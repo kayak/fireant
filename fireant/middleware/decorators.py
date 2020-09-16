@@ -32,6 +32,10 @@ def log_middleware(func):
     return wrapper
 
 
+class QueryCancelled(Exception):
+    pass
+
+
 def connection_middleware(func):
 
     @wraps(func)
@@ -40,7 +44,14 @@ def connection_middleware(func):
         if connection:
             return func(database, *queries, connection=connection, **kwargs)
         with database.connect() as connection:
-            return func(database, *queries, connection=connection, **kwargs)
+            try:
+                return func(database, *queries, connection=connection, **kwargs)
+            except KeyboardInterrupt:
+                # A KeyboardInterrupt is used as a means of cancelling queries
+                if hasattr(connection, "cancel"):
+                    connection.cancel()
+                connection.close()
+                raise QueryCancelled("Query was cancelled")
 
     return wrapper
 
