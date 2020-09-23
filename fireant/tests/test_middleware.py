@@ -62,4 +62,4 @@ class TestConnectionMiddleware(TestCase):
             decorated_function(mock_database_object, "query")
 
         mock_connection.cancel.assert_called_once()
-        mock_connection.close.assert_called_once()
+        mock_connection.close.assert_not_called()

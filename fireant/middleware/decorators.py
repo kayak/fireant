@@ -50,8 +50,10 @@ def connection_middleware(func):
                 # A KeyboardInterrupt is used as a means of cancelling queries
                 if hasattr(connection, "cancel"):
                     connection.cancel()
-                connection.close()
-                raise QueryCancelled("Query was cancelled")
+                else:
+                    connection.close()
+
+        raise QueryCancelled("Query was cancelled")
 
     return wrapper
 
