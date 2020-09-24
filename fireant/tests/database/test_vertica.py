@@ -1,3 +1,4 @@
+import logging
 from unittest import TestCase
 from unittest.mock import (
     Mock,
@@ -36,9 +37,14 @@ class TestVertica(TestCase):
 
         self.assertEqual('OK', result)
         mock_vertica.connect.assert_called_once_with(
-              host='test_host', port=1234, database='test_database',
-              user='test_user', password='password',
-              read_timeout=None, unicode_error='replace'
+            host='test_host',
+            port=1234,
+            database='test_database',
+            user='test_user',
+            password='password',
+            read_timeout=None,
+            unicode_error='replace',
+            log_level=logging.WARNING,
         )
 
     def test_trunc_hour(self):

@@ -1,3 +1,5 @@
+import logging
+
 from pypika import (
     Parameter, Tables,
     VerticaQuery,
@@ -69,6 +71,9 @@ class VerticaDatabase(Database):
         self.read_timeout = read_timeout
         self.type_engine = VerticaTypeEngine()
 
+    def cancel(self, connection):
+        connection.cancel()
+
     def connect(self):
         import vertica_python
 
@@ -80,6 +85,7 @@ class VerticaDatabase(Database):
             password=self.password,
             read_timeout=self.read_timeout,
             unicode_error="replace",
+            log_level=logging.WARNING,
         )
 
     def trunc_date(self, field, interval):
