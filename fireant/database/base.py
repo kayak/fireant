@@ -43,6 +43,13 @@ class Database(object):
         """
         raise NotImplementedError
 
+    def cancel(self, connection):
+        """
+        Cancel any running query.
+        """
+        if hasattr(connection, "cancel"):
+            connection.cancel()
+
     def get_column_definitions(self, schema, table, connection=None):
         """
         Return a list of column name, column data type pairs.

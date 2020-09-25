@@ -1,3 +1,4 @@
+import signal
 import time
 from functools import wraps
 
@@ -32,8 +33,42 @@ def log_middleware(func):
     return wrapper
 
 
-class QueryCancelled(Exception):
-    pass
+class CancelableConnection:
+    """
+    This is essentially a context manager that wraps around connection contextmanagers.
+    A handler will be attached to the SIGINT signal for cancellation purposes and removed again when exiting
+    the context.
+    """
+
+    def __init__(self, database, wait_time_after_close=0):
+        self.database = database
+        self.connection_context_manager = None
+        self.connection = None
+        self.wait_time_after_close = wait_time_after_close
+
+    def __enter__(self):
+        """
+        self._handle_interrupt_signal gets set as signal handler for SIGINT right after opening the db connection.
+        """
+        self.connection_context_manager = self.database.connect()
+        self.connection = self.connection_context_manager.__enter__()
+        signal.signal(signal.SIGINT, self._handle_interrupt_signal)
+        return self.connection
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        """
+        self._handle_interrupt_signal gets removed as signal handler for SIGINT right before closing the db connection.
+        """
+        signal.signal(signal.SIGINT, signal.default_int_handler)
+        self.connection_context_manager.__exit__(exception_type, exception_value, traceback)
+        if self.wait_time_after_close:
+            time.sleep(self.wait_time_after_close)
+
+    def _handle_interrupt_signal(self, sig_num, frame):
+        """
+        On SIGINT we want to cancel any outstanding query.
+        """
+        self.database.cancel(self.connection)
 
 
 def connection_middleware(func):
@@ -43,17 +78,9 @@ def connection_middleware(func):
         connection = kwargs.pop('connection', None)
         if connection:
             return func(database, *queries, connection=connection, **kwargs)
-        with database.connect() as connection:
-            try:
-                return func(database, *queries, connection=connection, **kwargs)
-            except KeyboardInterrupt:
-                # A KeyboardInterrupt is used as a means of cancelling queries
-                if hasattr(connection, "cancel"):
-                    connection.cancel()
-                else:
-                    connection.close()
 
-        raise QueryCancelled("Query was cancelled")
+        with CancelableConnection(database, kwargs.pop("wait_time_after_close", 0)) as connection:
+            return func(database, *queries, connection=connection, **kwargs)
 
     return wrapper
 
