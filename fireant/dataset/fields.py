@@ -172,7 +172,7 @@ class Field(Node):
         return ComparatorFilter(self, ComparisonOperator.gt, other)
 
     @restrict_types(CONTINUOUS_TYPES)
-    def ge(self, other: Number) -> ComparatorFilter:
+    def gte(self, other: Number) -> ComparatorFilter:
         return ComparatorFilter(self, ComparisonOperator.gte, other)
 
     @restrict_types(CONTINUOUS_TYPES)
@@ -180,7 +180,7 @@ class Field(Node):
         return ComparatorFilter(self, ComparisonOperator.lt, other)
 
     @restrict_types(CONTINUOUS_TYPES)
-    def le(self, other: Number) -> ComparatorFilter:
+    def lte(self, other: Number) -> ComparatorFilter:
         return ComparatorFilter(self, ComparisonOperator.lte, other)
 
     @restrict_types(CONTINUOUS_TYPES)
@@ -258,13 +258,13 @@ class Field(Node):
         return self.gt(other)
 
     def __ge__(self, other):
-        return self.ge(other)
+        return self.gte(other)
 
     def __lt__(self, other):
         return self.lt(other)
 
     def __le__(self, other):
-        return self.le(other)
+        return self.lte(other)
 
     def __add__(self, other):
         return ArithmeticExpression(Arithmetic.add, self, other)
