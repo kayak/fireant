@@ -87,7 +87,7 @@ def reduce_result_set(
         merged_df = base_df
         for reference_df in reference_dfs:
             merged_df = pd.merge(
-                merged_df, reference_df, how="outer", left_index=True, right_index=True, suffixes=('', '_delete')
+                merged_df, reference_df, how="left", left_index=True, right_index=True, suffixes=('', '_delete')
             )
             # Drop duplicate columns from the merge (indicate by suffix _delete)
             merged_df.drop(merged_df.filter(regex='_delete$').columns.tolist(), axis=1, inplace=True)

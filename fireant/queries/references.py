@@ -1,7 +1,7 @@
 import copy
 from functools import partial
 
-from fireant.dataset.fields import Field
+from fireant.dataset.fields import Field, is_metric_field
 from .field_helper import make_term_for_field
 from .finders import find_field_in_modified_field
 
@@ -77,6 +77,10 @@ def _make_reference_filters(filters, ref_dimension, offset_func):
     """
     reference_filters = []
     for ref_filter in filters:
+        # Metric filters should not be part of the reference
+        if is_metric_field(ref_filter.field):
+            continue
+
         if ref_filter.field is ref_dimension:
             # NOTE: Important to apply the offset function to the start and stop properties because the date math can
             # become expensive over many rows
