@@ -273,6 +273,44 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 str(queries[1]),
             )
 
+    def test_metric_filters_get_filtered_out(self):
+        queries = (
+            mock_dataset.query.widget(
+                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
+            )
+                .dimension(timestamp_daily)
+                .filter(mock_dataset.fields.votes > 1)
+                .reference(f.DayOverDay(mock_dataset.fields.timestamp))
+                .sql
+        )
+
+        self.assertEqual(2, len(queries))
+
+        with self.subTest("base query has the metric filter"):
+            self.assertEqual(
+                "SELECT "
+                'TRUNC("timestamp",\'DD\') "$timestamp",'
+                'SUM("votes") "$votes" '
+                'FROM "politics"."politician" '
+                'GROUP BY "$timestamp" '
+                'HAVING SUM("votes")>1 '
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
+                str(queries[0]),
+            )
+
+        with self.subTest("reference query does not include the metric filter"):
+            self.assertEqual(
+                "SELECT "
+                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                'SUM("votes") "$votes_dod" '
+                'FROM "politics"."politician" '
+                'GROUP BY "$timestamp" '
+                'ORDER BY "$timestamp" '
+                'LIMIT 200000',
+                str(queries[1]),
+            )
+
     def test_mom_with_monthly_interval(self):
         queries = (
             mock_dataset.query.widget(

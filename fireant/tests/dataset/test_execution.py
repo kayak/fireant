@@ -233,6 +233,30 @@ class ReduceResultSetsWithReferencesTests(TestCase):
 
         pandas.testing.assert_frame_equal(expected, result)
 
+    def test_reduce_with_references_and_extra_values_in_reference(self):
+        raw_df = pd.DataFrame(
+            [[date(2019, 1, 2), 1], [date(2019, 1, 3), 9]],
+            columns=["$timestamp", "$metric"],
+        )
+        ref_df = pd.DataFrame(
+            [[date(2019, 1, 2), 7], [date(2019, 1, 4), 8]],
+            columns=["$timestamp", "$metric_dod"],
+        )
+        expected_df = pd.DataFrame(
+            [[date(2019, 1, 2), 1, 7], [date(2019, 1, 3), 9, np.nan]],
+            columns=["$timestamp", "$metric", "$metric_dod"],
+        )
+        expected_df.set_index("$timestamp", inplace=True)
+
+        timestamp = mock_dataset.fields.timestamp
+        reference_groups = ([
+                                DayOverDay(timestamp),
+                            ],)
+        dimensions = (timestamp,)
+        result = reduce_result_set([raw_df, ref_df], reference_groups, dimensions, ())
+
+        pandas.testing.assert_frame_equal(expected_df, result)
+
 
 class ReduceResultSetsWithTotalsTests(TestCase):
     def test_reduce_single_result_set_with_str_dimension(self):
