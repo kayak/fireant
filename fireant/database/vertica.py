@@ -62,13 +62,13 @@ class VerticaDatabase(Database):
         database="vertica",
         user="vertica",
         password=None,
-        read_timeout=None,
+        connection_timeout=None,
         **kwags
     ):
         super(VerticaDatabase, self).__init__(host, port, database, **kwags)
         self.user = user
         self.password = password
-        self.read_timeout = read_timeout
+        self.connection_timeout = connection_timeout
         self.type_engine = VerticaTypeEngine()
 
     def cancel(self, connection):
@@ -83,7 +83,7 @@ class VerticaDatabase(Database):
             database=self.database,
             user=self.user,
             password=self.password,
-            read_timeout=self.read_timeout,
+            connection_timeout=self.connection_timeout,
             unicode_error="replace",
             log_level=logging.WARNING,
         )

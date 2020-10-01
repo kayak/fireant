@@ -38,9 +38,17 @@ def fetch_data(
             pandas_parse_dates[alias_selector(unmodified_dimension.alias)] = PANDAS_TO_DATETIME_FORMAT
 
     results = database.fetch_dataframes(*queries, parse_dates=pandas_parse_dates)
-    max_rows_returned = max([len(x) for x in results], default=0)
-    logger.info('max_rows_returned', extra={'row_count': max_rows_returned, 'database': str(database)})
+    max_rows_returned = 0
+    for result_df in results:
+        row_count = len(result_df)
+        if row_count > max_rows_returned:
+            max_rows_returned = row_count
+        if row_count > database.max_result_set_size:
+            logger.warning('row_count_over_max', extra={'row_count': len(result_df), 'database': str(database)})
+            # drop all result rows above database.max_result_set_size in place
+            result_df.drop(result_df.index[database.max_result_set_size:], inplace=True)
 
+    logger.info('max_rows_returned', extra={'row_count': max_rows_returned, 'database': str(database)})
     return max_rows_returned, reduce_result_set(results, reference_groups, dimensions, share_dimensions)
 
 
