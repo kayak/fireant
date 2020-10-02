@@ -24,7 +24,7 @@ class TestVertica(TestCase):
         self.assertEqual('vertica', vertica.database)
         self.assertEqual('vertica', vertica.user)
         self.assertIsNone(vertica.password)
-        self.assertIsNone(vertica.read_timeout)
+        self.assertIsNone(vertica.connection_timeout)
 
     def test_connect(self):
         mock_vertica = Mock()
@@ -42,7 +42,7 @@ class TestVertica(TestCase):
             database='test_database',
             user='test_user',
             password='password',
-            read_timeout=None,
+            connection_timeout=None,
             unicode_error='replace',
             log_level=logging.WARNING,
         )

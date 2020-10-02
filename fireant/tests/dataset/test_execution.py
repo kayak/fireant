@@ -11,6 +11,7 @@ from unittest.mock import (
 import numpy as np
 import pandas as pd
 import pandas.testing
+from pandas._testing import assert_frame_equal
 from pypika import Query
 
 from fireant import DayOverDay
@@ -66,7 +67,7 @@ class TestFetchData(TestCase):
 
     @patch("fireant.queries.execution.reduce_result_set")
     def test_fetch_data(self, reduce_mock):
-        database = MagicMock()
+        database = MagicMock(max_result_set_size=1000)
         database.fetch_dataframes.return_value = [
             self.test_result_a,
             self.test_result_b,
@@ -86,6 +87,26 @@ class TestFetchData(TestCase):
         reduce_mock.assert_called_once_with(
             [self.test_result_a, self.test_result_b], (), self.test_dimensions, ()
         )
+
+    @patch("fireant.queries.execution.reduce_result_set")
+    def test_fetch_data_strips_rows_over_max_result_set_size(self, reduce_mock):
+        database = MagicMock(max_result_set_size=2)
+        database.fetch_dataframes.return_value = [
+            pd.DataFrame([{"a": 1.0}, {"a": 2.0}, {"a": 3.0}]),
+            pd.DataFrame([{"a": 1.0}])
+        ]
+        reduce_mock.side_effect = lambda *args: args[0]  # let the reduce mock pass on the dataframes unchanged
+
+        max_rows_returned, result = fetch_data(database, self.test_queries, self.test_dimensions)
+
+        database.fetch_dataframes.assert_called_with(
+            'SELECT * FROM "politics"."politician"',
+            'SELECT * FROM "politics"."hints"',
+            parse_dates={}
+        )
+        assert_frame_equal(result[0], pd.DataFrame([{"a": 1.0}, {"a": 2.0}]))
+        assert_frame_equal(result[1], pd.DataFrame([{"a": 1.0}]))
+        self.assertEqual(max_rows_returned, 3)
 
     @patch("fireant.queries.execution.reduce_result_set")
     def test_fetch_data_with_date_dimensions(self, reduce_mock):
