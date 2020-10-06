@@ -32,7 +32,7 @@ class TestVertica(TestCase):
             mock_vertica.connect.return_value = 'OK'
 
             vertica = VerticaDatabase('test_host', 1234, 'test_database',
-                                      'test_user', 'password')
+                                      'test_user', 'password', 300, logging.WARNING)
             result = vertica.connect()
 
         self.assertEqual('OK', result)
@@ -42,7 +42,7 @@ class TestVertica(TestCase):
             database='test_database',
             user='test_user',
             password='password',
-            connection_timeout=None,
+            connection_timeout=300,
             unicode_error='replace',
             log_level=logging.WARNING,
         )
