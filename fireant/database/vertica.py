@@ -63,13 +63,15 @@ class VerticaDatabase(Database):
         user="vertica",
         password=None,
         connection_timeout=None,
-        **kwags
+        log_level=None,
+        **kwargs
     ):
-        super(VerticaDatabase, self).__init__(host, port, database, **kwags)
+        super(VerticaDatabase, self).__init__(host, port, database, **kwargs)
         self.user = user
         self.password = password
         self.connection_timeout = connection_timeout
         self.type_engine = VerticaTypeEngine()
+        self.log_level = log_level
 
     def cancel(self, connection):
         connection.cancel()
@@ -77,7 +79,7 @@ class VerticaDatabase(Database):
     def connect(self):
         import vertica_python
 
-        return vertica_python.connect(
+        connection_options = dict(
             host=self.host,
             port=self.port,
             database=self.database,
@@ -85,8 +87,12 @@ class VerticaDatabase(Database):
             password=self.password,
             connection_timeout=self.connection_timeout,
             unicode_error="replace",
-            log_level=logging.WARNING,
         )
+
+        if self.log_level:
+            connection_options['log_level'] = self.log_level
+
+        return vertica_python.connect(**connection_options)
 
     def trunc_date(self, field, interval):
         trunc_date_interval = self.DATETIME_INTERVALS.get(str(interval), "DD")
