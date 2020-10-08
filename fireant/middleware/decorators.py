@@ -45,11 +45,13 @@ class CancelableConnection:
         self.connection_context_manager = None
         self.connection = None
         self.wait_time_after_close = wait_time_after_close
+        self.previous_signal_handler = None
 
     def __enter__(self):
         """
         self._handle_interrupt_signal gets set as signal handler for SIGINT right after opening the db connection.
         """
+        self.previous_signal_handler = signal.getsignal(signal.SIGINT)
         self.connection_context_manager = self.database.connect()
         self.connection = self.connection_context_manager.__enter__()
         signal.signal(signal.SIGINT, self._handle_interrupt_signal)
@@ -59,7 +61,7 @@ class CancelableConnection:
         """
         self._handle_interrupt_signal gets removed as signal handler for SIGINT right before closing the db connection.
         """
-        signal.signal(signal.SIGINT, signal.default_int_handler)
+        signal.signal(signal.SIGINT, self.previous_signal_handler)
         self.connection_context_manager.__exit__(exception_type, exception_value, traceback)
         if self.wait_time_after_close:
             time.sleep(self.wait_time_after_close)
