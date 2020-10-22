@@ -136,7 +136,7 @@ class FormattingHeatMapRule(FormattingRule):
 
     WHITE = 'FFFFFF'
 
-    def __init__(self, field, color, start_color=None, covers_row=False):
+    def __init__(self, field, color, start_color=None, covers_row=False, reverse_heatmap=False):
         super().__init__(field, color, covers_row)
         self.hsv_color = hex_to_hsv(self.color)
         if start_color:
@@ -146,6 +146,7 @@ class FormattingHeatMapRule(FormattingRule):
             self.hsv_start_color = None
         self.saturation_spread = max(0.50, self.hsv_color[1] - 0.05)
         self.min_val, self.value_range = None, None
+        self.reverse_heatmap = reverse_heatmap
 
     def set_min_max(self, min_val, max_val):
         if not self._is_invalid(min_val) and not self._is_invalid(max_val):
@@ -167,6 +168,8 @@ class FormattingHeatMapRule(FormattingRule):
             return self.WHITE
 
         val_ratio = (value - self.min_val) / self.value_range
+        if self.reverse_heatmap:
+            val_ratio = abs(val_ratio - 1.0)
 
         if self.hsv_start_color is not None:
             if val_ratio <= 0.5:
