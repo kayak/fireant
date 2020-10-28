@@ -3,4 +3,4 @@ pandas==1.1.1
 pypika==0.39.0
 toposort==1.5
 python-dateutil==2.8.1
-cryptography==2.8
+cryptography==3.2
