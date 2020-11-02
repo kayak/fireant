@@ -2,6 +2,7 @@ import signal
 import time
 from functools import wraps
 
+from fireant.exceptions import QueryCancelled
 from fireant.middleware.slow_query_logger import (
     query_logger,
     slow_query_logger,
@@ -65,6 +66,9 @@ class CancelableConnection:
         self.connection_context_manager.__exit__(exception_type, exception_value, traceback)
         if self.wait_time_after_close:
             time.sleep(self.wait_time_after_close)
+
+        if exception_type is KeyboardInterrupt:
+            raise QueryCancelled("The query was cancelled")
 
     def _handle_interrupt_signal(self, sig_num, frame):
         """
