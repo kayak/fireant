@@ -7,6 +7,7 @@ from unittest.mock import (
     patch,
 )
 
+from fireant.exceptions import QueryCancelled
 from fireant.middleware.concurrency import ThreadPoolConcurrencyMiddleware
 from fireant.middleware.decorators import connection_middleware, CancelableConnection
 
@@ -64,6 +65,23 @@ class TestConnectionMiddleware(TestCase):
             call(signal.SIGINT, cancelable_connection_manager._handle_interrupt_signal),
             call(signal.SIGINT, signal.default_int_handler),
         ])
+
+    @patch("fireant.middleware.decorators.signal.signal")
+    def test_cancelable_connection_transforms_keyboard_intterupt_in_cancelled_query(self, mock_attach_signal):
+        mock_connection = MagicMock()
+        mock_database_object = MagicMock()
+        mock_database_object.connect.return_value.__enter__.return_value = mock_connection
+
+        cancelable_connection_manager = CancelableConnection(mock_database_object)
+        with self.assertRaises(QueryCancelled):
+            with cancelable_connection_manager:
+                raise KeyboardInterrupt()
+
+        mock_attach_signal.assert_has_calls([
+            call(signal.SIGINT, cancelable_connection_manager._handle_interrupt_signal),
+            call(signal.SIGINT, signal.default_int_handler),
+        ])
+
 
     @patch("fireant.middleware.decorators.time")
     def test_cancelable_connection_sleeps_if_wait_time_after_close_is_set(self, mock_time):
