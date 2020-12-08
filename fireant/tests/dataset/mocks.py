@@ -3,26 +3,34 @@ from datetime import datetime
 from unittest.mock import MagicMock, Mock
 
 import pandas as pd
+from pypika import Case, JoinType, Table, functions as fn
 
 from fireant import *
 from fireant.dataset.annotations import Annotation
 from fireant.dataset.references import ReferenceType
 from fireant.dataset.totals import get_totals_marker_for_dtype
 from fireant.utils import alias_selector as f
-from pypika import Case, JoinType, Table, functions as fn
 
 
-class TestDatabase(VerticaDatabase):
+class TestDatabaseMixin:
     # Vertica client that uses the vertica_python driver.
 
     connect = Mock()
     get_column_definitions = MagicMock(return_value=[])
 
     def __eq__(self, other):
-        return isinstance(other, TestDatabase)
+        return isinstance(other, TestDatabaseMixin)
 
 
-test_database = TestDatabase()
+class TestVerticaDatabase(TestDatabaseMixin, VerticaDatabase):
+    pass
+
+
+class TestMySQLDatabase(TestDatabaseMixin, MySQLDatabase):
+    pass
+
+
+test_database = TestVerticaDatabase()
 politicians_table = Table("politician", schema="politics")
 politicians_spend_table = Table("politician_spend", schema="politics")
 politicians_staff_table = Table("politician_staff", schema="politics")

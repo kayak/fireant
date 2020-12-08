@@ -5,6 +5,7 @@ from pypika import Order
 import fireant as f
 from fireant.tests.dataset.mocks import (
     Rollup,
+    TestMySQLDatabase,
     mock_dataset_blender,
     mock_staff_dataset,
 )
@@ -70,6 +71,47 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             '"sq0"."$timestamp"="sq1"."$timestamp" '
             'ORDER BY "$timestamp" '
             'LIMIT 200000',
+            str(queries[0]),
+        )
+
+    def test_db_specific_querybuilder_class_used_when_needed(self):
+        blender = (
+            mock_dataset_blender.query()
+            .widget(
+                f.ReactTable(
+                    mock_dataset_blender.fields["candidate-spend"],
+                    mock_dataset_blender.fields["voters"],
+                )
+            )
+            .dimension(f.day(mock_dataset_blender.fields.timestamp))
+        )
+
+        # Given all mocks are based on the Vertica database, this is a quick override to avoid a lot of duplicate mocks!
+        blender.dataset.primary_dataset.database = TestMySQLDatabase()
+
+        queries = blender.sql
+        self.assertEqual(len(queries), 1)
+        self.assertEqual(
+            "SELECT "
+            "`sq0`.`$timestamp` `$timestamp`,"
+            "`sq1`.`$candidate-spend` `$candidate-spend`,"
+            "`sq0`.`$voters` `$voters` "
+            "FROM ("
+            "SELECT DATE_FORMAT(`politician`.`timestamp`,'%Y-%m-%d 00:00:00') `$timestamp`,"
+            "COUNT(`voter`.`id`) `$voters` "
+            "FROM `politics`.`politician` "
+            "JOIN `politics`.`voter` "
+            "ON `politician`.`id`=`voter`.`politician_id` "
+            "GROUP BY `$timestamp`) `sq0` "
+            "LEFT JOIN ("
+            "SELECT TRUNC(`timestamp`,'DD') `$timestamp`,"
+            "SUM(`candidate_spend`) `$candidate-spend` "
+            "FROM `politics`.`politician_spend` "
+            "GROUP BY `$timestamp`"
+            ") `sq1` "
+            "ON `sq0`.`$timestamp`=`sq1`.`$timestamp` "
+            "ORDER BY `$timestamp` "
+            "LIMIT 200000",
             str(queries[0]),
         )
 

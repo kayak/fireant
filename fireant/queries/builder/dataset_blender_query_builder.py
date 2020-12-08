@@ -1,8 +1,9 @@
 import copy
 from typing import List
 
-from pypika import JoinType, Query
+from pypika import JoinType
 
+from fireant.dataset.fields import is_metric_field
 from fireant.queries.builder.dataset_query_builder import DataSetQueryBuilder
 from fireant.queries.finders import (
     find_dataset_fields,
@@ -13,15 +14,9 @@ from fireant.queries.finders import (
 )
 from fireant.queries.sql_transformer import make_slicer_query_with_totals_and_references
 from fireant.reference_helpers import reference_type_alias
-from fireant.utils import (
-    alias_selector,
-    listify,
-    ordered_distinct_list_by_attr,
-    filter_nones,
-)
+from fireant.utils import alias_selector, filter_nones, listify, ordered_distinct_list_by_attr
 from fireant.widgets.base import Widget
 from ..sets import apply_set_dimensions, omit_set_filters
-from fireant.dataset.fields import is_metric_field
 
 
 @listify
@@ -286,9 +281,9 @@ def _get_sq_field_for_blender_field(field, queries, field_maps, reference=None):
 
 
 def _perform_join_operations(
-    dimensions, base_query, base_field_map, join_queries, join_field_maps
+    base_query_cls, dimensions, base_query, base_field_map, join_queries, join_field_maps
 ):
-    blender_query = Query.from_(base_query, immutable=False)
+    blender_query = base_query_cls.from_(base_query, immutable=False)
     for join_sql, join_field_map in zip(join_queries, join_field_maps):
         if join_sql is None:
             continue
@@ -310,14 +305,14 @@ def _perform_join_operations(
     return blender_query
 
 
-def _blend_query(dimensions, metrics, orders, field_maps, queries):
+def _blend_query(base_query_cls, dimensions, metrics, orders, field_maps, queries):
     base_query, *join_queries = queries
     base_field_map, *join_field_maps = field_maps
 
     reference = base_query._references[0] if base_query._references else None
 
     blender_query = _perform_join_operations(
-        dimensions, base_query, base_field_map, join_queries, join_field_maps
+        base_query_cls, dimensions, base_query, base_field_map, join_queries, join_field_maps
     )
 
     # WARNING: In order to make complex fields work, the get_sql for each field is monkey patched in. This must
@@ -550,6 +545,7 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         blended_queries = []
         for queryset in query_sets:
             blended_query = _blend_query(
+                self.dataset.database.query_cls,
                 selected_blender_dimensions,
                 selected_blender_metrics,
                 self.orders,
