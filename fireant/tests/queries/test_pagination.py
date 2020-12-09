@@ -35,17 +35,13 @@ mock_metric_definition.alias = "$votes"
 
 class SimplePaginationTests(TestCase):
     @patch("fireant.queries.pagination._simple_paginate")
-    def test_that_with_no_widgets_using_group_pagination_that_simple_pagination_is_applied(
-        self, mock_paginate
-    ):
+    def test_that_with_no_widgets_using_group_pagination_that_simple_pagination_is_applied(self, mock_paginate):
         paginate(dimx2_date_str_df, [mock_table_widget])
 
         mock_paginate.assert_called_once_with(ANY, ANY, ANY, ANY)
 
     @patch("fireant.queries.pagination._simple_paginate")
-    def test_that_with_group_pagination_and_one_dimension_that_simple_pagination_is_applied(
-        self, mock_paginate
-    ):
+    def test_that_with_group_pagination_and_one_dimension_that_simple_pagination_is_applied(self, mock_paginate):
         paginate(dimx2_str_num_df, [mock_table_widget])
 
         mock_paginate.assert_called_once_with(ANY, ANY, ANY, ANY)
@@ -77,9 +73,7 @@ class SimplePaginationTests(TestCase):
             orders=[(mock_dimension_definition, Order.asc)],
         )
 
-        expected = dimx2_date_str_df.sort_values(
-            by=[mock_dimension_definition.alias], ascending=True
-        )
+        expected = dimx2_date_str_df.sort_values(by=[mock_dimension_definition.alias], ascending=True)
         assert_frame_equal(expected, paginated)
 
     def test_apply_sort_with_one_order_dimension_desc(self):
@@ -89,9 +83,7 @@ class SimplePaginationTests(TestCase):
             orders=[(mock_dimension_definition, Order.desc)],
         )
 
-        expected = dimx2_date_str_df.sort_values(
-            by=[mock_dimension_definition.alias], ascending=False
-        )
+        expected = dimx2_date_str_df.sort_values(by=[mock_dimension_definition.alias], ascending=False)
         assert_frame_equal(expected, paginated)
 
     def test_apply_sort_with_one_order_metric_asc(self):
@@ -101,9 +93,7 @@ class SimplePaginationTests(TestCase):
             orders=[(mock_metric_definition, Order.asc)],
         )
 
-        expected = dimx2_date_str_df.sort_values(
-            by=[mock_metric_definition.alias], ascending=True
-        )
+        expected = dimx2_date_str_df.sort_values(by=[mock_metric_definition.alias], ascending=True)
         assert_frame_equal(expected, paginated)
 
     def test_apply_sort_with_one_order_metric_desc(self):
@@ -113,9 +103,7 @@ class SimplePaginationTests(TestCase):
             orders=[(mock_metric_definition, Order.desc)],
         )
 
-        expected = dimx2_date_str_df.sort_values(
-            by=[mock_metric_definition.alias], ascending=False
-        )
+        expected = dimx2_date_str_df.sort_values(by=[mock_metric_definition.alias], ascending=False)
         assert_frame_equal(expected, paginated)
 
     def test_apply_sort_with_multiple_orders(self):
@@ -143,17 +131,13 @@ class SimplePaginationTests(TestCase):
             offset=5,
         )
 
-        expected = dimx2_date_str_df.sort_values(
-            by=[mock_metric_definition.alias], ascending=True
-        )[5:10]
+        expected = dimx2_date_str_df.sort_values(by=[mock_metric_definition.alias], ascending=True)[5:10]
         assert_frame_equal(expected, paginated)
 
 
 class GroupPaginationTests(TestCase):
     @patch("fireant.queries.pagination._group_paginate")
-    def test_with_one_widget_using_group_pagination_that_group_pagination_is_applied(
-        self, mock_paginate
-    ):
+    def test_with_one_widget_using_group_pagination_that_group_pagination_is_applied(self, mock_paginate):
         paginate(dimx2_date_str_df, [mock_chart_widget, mock_table_widget])
 
         mock_paginate.assert_called_once_with(ANY, ANY, ANY, ANY)
@@ -162,9 +146,7 @@ class GroupPaginationTests(TestCase):
         paginated = paginate(dimx2_date_str_df, [mock_chart_widget], limit=2)
 
         index = dimx2_date_str_df.index
-        reindex = pd.MultiIndex.from_product(
-            [index.levels[0], index.levels[1][:2]], names=index.names
-        )
+        reindex = pd.MultiIndex.from_product([index.levels[0], index.levels[1][:2]], names=index.names)
         expected = dimx2_date_str_df.reindex(reindex).dropna().astype(np.int64)
         assert_frame_equal(expected, paginated)
 
@@ -172,9 +154,7 @@ class GroupPaginationTests(TestCase):
         paginated = paginate(dimx2_date_str_df, [mock_chart_widget], offset=2)
 
         index = dimx2_date_str_df.index
-        reindex = pd.MultiIndex.from_product(
-            [index.levels[0], index.levels[1][2:]], names=index.names
-        )
+        reindex = pd.MultiIndex.from_product([index.levels[0], index.levels[1][2:]], names=index.names)
         expected = dimx2_date_str_df.reindex(reindex)
         assert_frame_equal(expected, paginated)
 
@@ -184,9 +164,7 @@ class GroupPaginationTests(TestCase):
         paginated = paginate(dimx2_date_str_df, [mock_chart_widget], limit=1, offset=1)
 
         index = dimx2_date_str_df.index
-        reindex = pd.MultiIndex.from_product(
-            [index.levels[0], index.levels[1][1:2]], names=index.names
-        )
+        reindex = pd.MultiIndex.from_product([index.levels[0], index.levels[1][1:2]], names=index.names)
         expected = dimx2_date_str_df.reindex(reindex).dropna().astype(np.int64)
         assert_frame_equal(expected, paginated)
 
@@ -197,9 +175,7 @@ class GroupPaginationTests(TestCase):
             orders=[(mock_dimension_definition, Order.asc)],
         )
 
-        expected = dimx2_date_str_df.sort_values(
-            by=[TS, mock_dimension_definition.alias], ascending=True
-        )
+        expected = dimx2_date_str_df.sort_values(by=[TS, mock_dimension_definition.alias], ascending=True)
         assert_frame_equal(expected, paginated)
 
     def test_apply_sort_with_one_order_dimension_desc(self):
@@ -209,9 +185,7 @@ class GroupPaginationTests(TestCase):
             orders=[(mock_dimension_definition, Order.desc)],
         )
 
-        expected = dimx2_date_str_df.sort_values(
-            by=[TS, mock_dimension_definition.alias], ascending=(True, False)
-        )
+        expected = dimx2_date_str_df.sort_values(by=[TS, mock_dimension_definition.alias], ascending=(True, False))
         assert_frame_equal(expected, paginated)
 
     def test_apply_sort_with_one_order_metric_asc(self):
@@ -241,12 +215,7 @@ class GroupPaginationTests(TestCase):
             orders=[(mock_metric_definition, Order.asc)],
         )
 
-        sorted_groups = (
-            dimx3_date_str_str_df.groupby(level=[1, 2])
-            .sum()
-            .sort_values(by="$votes", ascending=True)
-            .index
-        )
+        sorted_groups = dimx3_date_str_str_df.groupby(level=[1, 2]).sum().sort_values(by="$votes", ascending=True).index
         expected = (
             dimx3_date_str_str_df.groupby(level=0)
             .apply(lambda df: df.reset_index(level=0, drop=True).reindex(sorted_groups))
@@ -305,7 +274,7 @@ class GroupPaginationTests(TestCase):
             (44, '2018-08-09'),  # General
             (6, '2018-08-06'),  # City
             (18, '2018-08-04'),  # General
-            (21, '2018-08-20')  # City
+            (21, '2018-08-20'),  # City
         ]
         idx = pd.MultiIndex.from_product(index_values, names=['$created_time', '$category'])
         df = pd.DataFrame(data_values, idx, ['$seeds', '$updated_time'])

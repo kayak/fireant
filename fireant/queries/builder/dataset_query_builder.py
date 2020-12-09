@@ -37,9 +37,7 @@ if TYPE_CHECKING:
     from pypika import PyPikaQueryBuilder
 
 
-class DataSetQueryBuilder(
-    ReferenceQueryBuilderMixin, WidgetQueryBuilderMixin, QueryBuilder
-):
+class DataSetQueryBuilder(ReferenceQueryBuilderMixin, WidgetQueryBuilderMixin, QueryBuilder):
     """
     Data Set queries consist of widgets, dimensions, filters, orders by and references. At least one or more widgets
     is required. All others are optional.
@@ -70,11 +68,7 @@ class DataSetQueryBuilder(
 
     @property
     def reference_groups(self):
-        return list(
-            find_and_group_references_for_dimensions(
-                self.dimensions, self._references
-            ).values()
-        )
+        return list(find_and_group_references_for_dimensions(self.dimensions, self._references).values())
 
     @property
     def sql(self) -> List[Type['PyPikaQueryBuilder']]:
@@ -130,9 +124,7 @@ class DataSetQueryBuilder(
 
         annotation_frame = None
         if dimensions and self.dataset.annotation:
-            alignment_dimension_alias = (
-                self.dataset.annotation.dataset_alignment_field_alias
-            )
+            alignment_dimension_alias = self.dataset.annotation.dataset_alignment_field_alias
             first_dimension = find_field_in_modified_field(dimensions[0])
 
             if first_dimension.alias == alignment_dimension_alias:
@@ -157,9 +149,7 @@ class DataSetQueryBuilder(
                 data_frame[df_key] = operation.apply(data_frame, reference)
 
         data_frame = scrub_totals_from_share_results(data_frame, dimensions)
-        data_frame = special_cases.apply_operations_to_data_frame(
-            operations, data_frame
-        )
+        data_frame = special_cases.apply_operations_to_data_frame(operations, data_frame)
 
         data_frame = paginate(
             data_frame,
@@ -192,9 +182,7 @@ class DataSetQueryBuilder(
         annotation = self.dataset.annotation
 
         # Fetch filters for the dataset's alignment dimension from this query builder
-        dataset_alignment_dimension_filters = self.fetch_query_filters(
-            annotation.dataset_alignment_field_alias
-        )
+        dataset_alignment_dimension_filters = self.fetch_query_filters(annotation.dataset_alignment_field_alias)
 
         # Update fields in filters for the dataset's alignment dimension to the annotation's alignment field
         annotation_alignment_dimension_filters = [
@@ -204,9 +192,7 @@ class DataSetQueryBuilder(
 
         annotation_alignment_field = annotation.alignment_field
         if annotation_alignment_field.data_type == DataType.date:
-            dataset_alignment_dimension = self.fetch_query_dimension(
-                annotation.dataset_alignment_field_alias
-            )
+            dataset_alignment_dimension = self.fetch_query_dimension(annotation.dataset_alignment_field_alias)
 
             if hasattr(dataset_alignment_dimension, "interval_key"):
                 # Use the interval key of the dataset's alignment dimension for the annotation's alignment field
@@ -224,9 +210,7 @@ class DataSetQueryBuilder(
             filters=annotation_alignment_dimension_filters,
         )
 
-        _, annotation_df = fetch_data(
-            self.dataset.database, [annotation_query], [annotation.alignment_field]
-        )
+        _, annotation_df = fetch_data(self.dataset.database, [annotation_query], [annotation.alignment_field])
 
         return annotation_df
 
@@ -277,9 +261,7 @@ class DataSetQueryBuilder(
         try:
             from IPython.display import display
         except ImportError:
-            raise QueryException(
-                "Optional dependency ipython missing. Please install fireant[ipython] to use plot."
-            )
+            raise QueryException("Optional dependency ipython missing. Please install fireant[ipython] to use plot.")
 
         widgets = self.fetch()
         for widget in reversed(widgets):
@@ -294,28 +276,15 @@ class DataSetQueryBuilder(
                 "dataset",
                 "query",
                 *["widget({})".format(repr(widget)) for widget in self._widgets],
-                *[
-                    "dimension({})".format(repr(dimension))
-                    for dimension in self._dimensions
-                ],
+                *["dimension({})".format(repr(dimension)) for dimension in self._dimensions],
                 *[
                     "filter({}{})".format(
                         repr(f),
-                        ", apply_filter_to_totals=True"
-                        if apply_filter_to_totals
-                        else "",
+                        ", apply_filter_to_totals=True" if apply_filter_to_totals else "",
                     )
-                    for f, apply_filter_to_totals in zip(
-                        self._filters, self._apply_filter_to_totals
-                    )
+                    for f, apply_filter_to_totals in zip(self._filters, self._apply_filter_to_totals)
                 ],
-                *[
-                    "reference({})".format(repr(reference))
-                    for reference in self._references
-                ],
-                *[
-                    "orderby({}, {})".format(definition.alias, orientation)
-                    for (definition, orientation) in self.orders
-                ],
+                *["reference({})".format(repr(reference)) for reference in self._references],
+                *["orderby({}, {})".format(definition.alias, orientation) for (definition, orientation) in self.orders],
             ]
         )

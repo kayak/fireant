@@ -120,9 +120,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
     def test_using_datablender_metric_builds_query(self):
         queries = (
             mock_dataset_blender.query()
-            .widget(
-                f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"])
-            )
+            .widget(f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"]))
             .dimension(f.day(mock_dataset_blender.fields.timestamp))
         ).sql
 
@@ -155,9 +153,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
     def test_using_datablender_builds_query_with_mapped_and_unmapped_dimensions(self):
         queries = (
             mock_dataset_blender.query()
-            .widget(
-                f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"])
-            )
+            .widget(f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"]))
             .dimension(
                 f.day(mock_dataset_blender.fields.timestamp),
                 mock_dataset_blender.fields.political_party,
@@ -195,9 +191,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
     def test_apply_metric_filter_to_dataset_field_filters_in_nested_dataset_query(self):
         queries = (
             mock_dataset_blender.query()
-            .widget(
-                f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"])
-            )
+            .widget(f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"]))
             .dimension(f.day(mock_dataset_blender.fields.timestamp))
             .filter(mock_dataset_blender.fields["votes"].gt(10))
         ).sql
@@ -232,9 +226,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
     def test_apply_set_filter_for_metric_in_primary_dataset_query(self):
         queries = (
             mock_dataset_blender.query()
-            .widget(
-                f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"])
-            )
+            .widget(f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"]))
             .dimension(f.day(mock_dataset_blender.fields.timestamp))
             .filter(f.ResultSet(mock_dataset_blender.fields["votes"].gt(10)))
         ).sql
@@ -270,9 +262,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
     def test_apply_set_filter_for_metric_in_secondary_dataset_query(self):
         queries = (
             mock_dataset_blender.query()
-            .widget(
-                f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"])
-            )
+            .widget(f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"]))
             .dimension(f.day(mock_dataset_blender.fields.timestamp))
             .filter(f.ResultSet(mock_dataset_blender.fields["candidate-spend"].gt(500)))
         ).sql
@@ -312,9 +302,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
 
         queries = (
             blender_dataset_with_staff.query()
-            .widget(
-                f.ReactTable(blender_dataset_with_staff.fields.num_staff)
-            )
+            .widget(f.ReactTable(blender_dataset_with_staff.fields.num_staff))
             .dimension(blender_dataset_with_staff.fields['political_party'])
             .filter(f.ResultSet(blender_dataset_with_staff.fields["candidate-id"] == 12))
         ).sql
@@ -351,9 +339,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
 
         queries = (
             blender_dataset_with_staff.query()
-            .widget(
-                f.ReactTable(blender_dataset_with_staff.fields.num_staff)
-            )
+            .widget(f.ReactTable(blender_dataset_with_staff.fields.num_staff))
             .dimension(blender_dataset_with_staff.fields['candidate-id'])
             .filter(f.ResultSet(blender_dataset_with_staff.fields["candidate-id"] == 12))
         ).sql
@@ -375,9 +361,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
     def test_apply_set_filter_for_metric_in_blender_dataset_query(self):
         queries = (
             mock_dataset_blender.query()
-            .widget(
-                f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"])
-            )
+            .widget(f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"]))
             .dimension(f.day(mock_dataset_blender.fields.timestamp))
             .filter(f.ResultSet(mock_dataset_blender.fields["candidate-spend-per-wins"].gt(1000)))
         ).sql
@@ -455,9 +439,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
     def test_apply_set_filter_for_dimension_in_both_dataset_queries(self):
         queries = (
             mock_dataset_blender.query()
-            .widget(
-                f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"])
-            )
+            .widget(f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"]))
             .dimension(f.day(mock_dataset_blender.fields.timestamp))
             .filter(f.ResultSet(mock_dataset_blender.fields['candidate-id'] == 12))
         ).sql
@@ -495,9 +477,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
     def test_apply_set_filter_for_dimension_that_is_also_being_fetched_in_both_dataset_queries(self):
         queries = (
             mock_dataset_blender.query()
-            .widget(
-                f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"])
-            )
+            .widget(f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"]))
             .dimension(mock_dataset_blender.fields['candidate-id'])
             .filter(f.ResultSet(mock_dataset_blender.fields['candidate-id'] == 12))
         ).sql
@@ -536,8 +516,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             ('state', mock_dataset_blender.fields.state.notin(["abc"])),
             ('timestamp', mock_dataset_blender.fields.timestamp.between('date1', 'date2')),
             ('candidate-id', mock_dataset_blender.fields['candidate-id'].between(5, 15)),
-            ('candidate-id', mock_dataset_blender.fields['candidate-id'].isin([1,2,3])),
-            ('candidate-id', mock_dataset_blender.fields['candidate-id'].notin([1,2,3])),
+            ('candidate-id', mock_dataset_blender.fields['candidate-id'].isin([1, 2, 3])),
+            ('candidate-id', mock_dataset_blender.fields['candidate-id'].notin([1, 2, 3])),
         ]:
             fltr_definition = fltr.definition
             while hasattr(fltr_definition, 'definition'):
@@ -575,9 +555,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
     ):
         queries = (
             mock_dataset_blender.query()
-            .widget(
-                f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"])
-            )
+            .widget(f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"]))
             .dimension(f.day(mock_dataset_blender.fields.timestamp))
             .filter(mock_dataset_blender.fields["candidate-id"] == 1)
         ).sql
@@ -615,9 +593,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
     ):
         queries = (
             mock_dataset_blender.query()
-            .widget(
-                f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"])
-            )
+            .widget(f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"]))
             .dimension(f.day(mock_dataset_blender.fields.timestamp))
             .filter(mock_dataset_blender.fields["political_party"] == "d")
         ).sql
@@ -695,9 +671,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
     def test_blend_data_set_on_query_using_joins(self):
         query = (
             mock_dataset_blender.query()
-            .widget(
-                f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"])
-            )
+            .widget(f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"]))
             .dimension(
                 f.day(mock_dataset_blender.fields.timestamp),
                 mock_dataset_blender.fields.state,
@@ -740,9 +714,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
     def test_apply_reference_to_blended_query(self):
         query = (
             mock_dataset_blender.query()
-            .widget(
-                f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"])
-            )
+            .widget(f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"]))
             .dimension(f.day(mock_dataset_blender.fields.timestamp))
             .reference(f.WeekOverWeek(mock_dataset_blender.fields.timestamp))
         )
@@ -805,9 +777,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
     def test_apply_totals_to_blended_query(self):
         queries = (
             mock_dataset_blender.query()
-            .widget(
-                f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"])
-            )
+            .widget(f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"]))
             .dimension(
                 f.day(mock_dataset_blender.fields.timestamp),
                 Rollup(mock_dataset_blender.fields["candidate-id"]),
@@ -878,9 +848,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
     def test_blended_query_with_orderby_mapped_dimension(self):
         queries = (
             mock_dataset_blender.query()
-            .widget(
-                f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"])
-            )
+            .widget(f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"]))
             .dimension(
                 f.day(mock_dataset_blender.fields.timestamp),
                 mock_dataset_blender.fields["candidate-id"],

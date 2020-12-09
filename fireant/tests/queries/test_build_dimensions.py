@@ -318,9 +318,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "all dimensions after the rolled up dimension are _FIREANT_ROLLUP_VALUE_"
-        ):
+        with self.subTest("all dimensions after the rolled up dimension are _FIREANT_ROLLUP_VALUE_"):
             self.assertEqual(
                 "SELECT "
                 'TRUNC("timestamp",\'DD\') "$timestamp",'
@@ -362,9 +360,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "in first rollup dimension's query, the dimension is replaced with _FIREANT_ROLLUP_VALUE_"
-        ):
+        with self.subTest("in first rollup dimension's query, the dimension is replaced with _FIREANT_ROLLUP_VALUE_"):
             self.assertEqual(
                 "SELECT "
                 'TRUNC("timestamp",\'DD\') "$timestamp",'
@@ -435,9 +431,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 str(queries[1]),
             )
 
-        with self.subTest(
-            "base rollup query is same as base query minus the rollup dimension"
-        ):
+        with self.subTest("base rollup query is same as base query minus the rollup dimension"):
             self.assertEqual(
                 "SELECT "
                 'TRUNC("timestamp",\'DD\') "$timestamp",'
@@ -450,9 +444,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 str(queries[2]),
             )
 
-        with self.subTest(
-            "reference total query is shifted without the rollup dimension"
-        ):
+        with self.subTest("reference total query is shifted without the rollup dimension"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
@@ -474,11 +466,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
             .dimension(f.day(mock_dataset.fields.timestamp))
             .dimension(f.Rollup(mock_dataset.fields.political_party))
             .reference(f.DayOverDay(mock_dataset.fields.timestamp))
-            .filter(
-                mock_dataset.fields.timestamp.between(
-                    date(2018, 1, 1), date(2019, 1, 1)
-                )
-            )
+            .filter(mock_dataset.fields.timestamp.between(date(2018, 1, 1), date(2019, 1, 1)))
             .sql
         )
 
@@ -513,9 +501,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 str(queries[1]),
             )
 
-        with self.subTest(
-            "base rollup query is same as base query minus the rollup dimension"
-        ):
+        with self.subTest("base rollup query is same as base query minus the rollup dimension"):
             self.assertEqual(
                 "SELECT "
                 'TRUNC("timestamp",\'DD\') "$timestamp",'
@@ -529,9 +515,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 str(queries[2]),
             )
 
-        with self.subTest(
-            "reference total query is shifted without the rollup dimension"
-        ):
+        with self.subTest("reference total query is shifted without the rollup dimension"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
@@ -554,13 +538,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 mock_dataset.fields.political_party,
                 f.Rollup(f.day(mock_dataset.fields.timestamp)),
             )
-            .filter(
-                f.OmitFromRollup(
-                    mock_dataset.fields.timestamp.between(
-                        date(2018, 1, 1), date(2019, 1, 1)
-                    )
-                )
-            )
+            .filter(f.OmitFromRollup(mock_dataset.fields.timestamp.between(date(2018, 1, 1), date(2019, 1, 1))))
             .sql
         )
 
@@ -580,9 +558,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "base rollup query is same as base query minus the rollup dimension without filter"
-        ):
+        with self.subTest("base rollup query is same as base query minus the rollup dimension without filter"):
             self.assertEqual(
                 "SELECT "
                 '"political_party" "$political_party",'
@@ -606,14 +582,8 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 f.Rollup(f.day(mock_dataset.fields.timestamp)),
             )
             .filter(
-                f.OmitFromRollup(
-                    mock_dataset.fields.timestamp.between(
-                        date(2018, 1, 1), date(2019, 1, 1)
-                    )
-                ),
-                mock_dataset.fields.timestamp.between(
-                    date(2018, 3, 1), date(2019, 9, 1)
-                ),
+                f.OmitFromRollup(mock_dataset.fields.timestamp.between(date(2018, 1, 1), date(2019, 1, 1))),
+                mock_dataset.fields.timestamp.between(date(2018, 3, 1), date(2019, 9, 1)),
             )
             .sql
         )
@@ -635,9 +605,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "base rollup query is same as base query minus the rollup dimension with one filter"
-        ):
+        with self.subTest("base rollup query is same as base query minus the rollup dimension with one filter"):
             self.assertEqual(
                 "SELECT "
                 '"political_party" "$political_party",'
@@ -661,13 +629,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 f.Rollup(mock_dataset.fields.political_party),
                 f.Rollup(f.day(mock_dataset.fields.timestamp)),
             )
-            .filter(
-                f.OmitFromRollup(
-                    mock_dataset.fields.timestamp.between(
-                        date(2018, 1, 1), date(2019, 1, 1)
-                    )
-                )
-            )
+            .filter(f.OmitFromRollup(mock_dataset.fields.timestamp.between(date(2018, 1, 1), date(2019, 1, 1))))
             .sql
         )
 
@@ -687,9 +649,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "base rollup query is same as base query minus the timestamp rollup dimension"
-        ):
+        with self.subTest("base rollup query is same as base query minus the timestamp rollup dimension"):
             self.assertEqual(
                 "SELECT "
                 '"political_party" "$political_party",'
@@ -702,9 +662,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
                 str(queries[1]),
             )
 
-        with self.subTest(
-            "base rollup query is same as base query minus the political party rollup dimension"
-        ):
+        with self.subTest("base rollup query is same as base query minus the political party rollup dimension"):
             self.assertEqual(
                 "SELECT "
                 "'_FIREANT_ROLLUP_VALUE_' \"$political_party\","

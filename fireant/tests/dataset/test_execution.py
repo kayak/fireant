@@ -80,29 +80,23 @@ class TestFetchData(TestCase):
 
         pandas.testing.assert_frame_equal(mocked_result, result)
         database.fetch_dataframes.assert_called_with(
-            'SELECT * FROM "politics"."politician"',
-            'SELECT * FROM "politics"."hints"',
-            parse_dates={}
+            'SELECT * FROM "politics"."politician"', 'SELECT * FROM "politics"."hints"', parse_dates={}
         )
-        reduce_mock.assert_called_once_with(
-            [self.test_result_a, self.test_result_b], (), self.test_dimensions, ()
-        )
+        reduce_mock.assert_called_once_with([self.test_result_a, self.test_result_b], (), self.test_dimensions, ())
 
     @patch("fireant.queries.execution.reduce_result_set")
     def test_fetch_data_strips_rows_over_max_result_set_size(self, reduce_mock):
         database = MagicMock(max_result_set_size=2)
         database.fetch_dataframes.return_value = [
             pd.DataFrame([{"a": 1.0}, {"a": 2.0}, {"a": 3.0}]),
-            pd.DataFrame([{"a": 1.0}])
+            pd.DataFrame([{"a": 1.0}]),
         ]
         reduce_mock.side_effect = lambda *args: args[0]  # let the reduce mock pass on the dataframes unchanged
 
         max_rows_returned, result = fetch_data(database, self.test_queries, self.test_dimensions)
 
         database.fetch_dataframes.assert_called_with(
-            'SELECT * FROM "politics"."politician"',
-            'SELECT * FROM "politics"."hints"',
-            parse_dates={}
+            'SELECT * FROM "politics"."politician"', 'SELECT * FROM "politics"."hints"', parse_dates={}
         )
         assert_frame_equal(result[0], pd.DataFrame([{"a": 1.0}, {"a": 2.0}]))
         assert_frame_equal(result[1], pd.DataFrame([{"a": 1.0}]))
@@ -117,9 +111,7 @@ class TestFetchData(TestCase):
         fetch_data(database, self.test_queries, dimensions)
 
         database.fetch_dataframes.assert_called_with(
-            'SELECT * FROM "politics"."politician"',
-            'SELECT * FROM "politics"."hints"',
-            parse_dates={'$date': {}}
+            'SELECT * FROM "politics"."politician"', 'SELECT * FROM "politics"."hints"', parse_dates={'$date': {}}
         )
 
 
@@ -211,9 +203,7 @@ class ReduceResultSetsWithReferencesTests(TestCase):
             [[date(2019, 1, 2), 1], [date(2019, 1, 3), 2]],
             columns=["$timestamp", "$metric"],
         )
-        ref_df = pd.DataFrame(
-            [[date(2019, 1, 2), 2]], columns=["$timestamp", "$metric_dod"]
-        )
+        ref_df = pd.DataFrame([[date(2019, 1, 2), 2]], columns=["$timestamp", "$metric_dod"])
 
         expected = raw_df.copy()
         expected["$metric_dod_delta"] = pd.Series([-1.0, 2.0], dtype=object)
@@ -244,11 +234,9 @@ class ReduceResultSetsWithReferencesTests(TestCase):
         expected.set_index("$timestamp", inplace=True)
 
         timestamp = mock_dataset.fields.timestamp
-        reference_groups = ([
-            DayOverDay(timestamp),
-            DayOverDay(timestamp, delta=True),
-            DayOverDay(timestamp, delta_percent=True)
-        ],)
+        reference_groups = (
+            [DayOverDay(timestamp), DayOverDay(timestamp, delta=True), DayOverDay(timestamp, delta_percent=True)],
+        )
         dimensions = (timestamp,)
         result = reduce_result_set([raw_df, ref_df], reference_groups, dimensions, ())
 
@@ -270,9 +258,11 @@ class ReduceResultSetsWithReferencesTests(TestCase):
         expected_df.set_index("$timestamp", inplace=True)
 
         timestamp = mock_dataset.fields.timestamp
-        reference_groups = ([
-                                DayOverDay(timestamp),
-                            ],)
+        reference_groups = (
+            [
+                DayOverDay(timestamp),
+            ],
+        )
         dimensions = (timestamp,)
         result = reduce_result_set([raw_df, ref_df], reference_groups, dimensions, ())
 
@@ -297,9 +287,9 @@ class ReduceResultSetsWithTotalsTests(TestCase):
         pandas.testing.assert_frame_equal(expected, result)
 
     def test_reduce_single_result_set_with_dimx2_date_str_totals_date(self):
-        expected = dimx2_date_str_totalsx2_df.loc[
-            (slice(None), slice("Democrat", "Republican")), :
-        ].append(dimx2_date_str_totalsx2_df.iloc[-1])
+        expected = dimx2_date_str_totalsx2_df.loc[(slice(None), slice("Democrat", "Republican")), :].append(
+            dimx2_date_str_totalsx2_df.iloc[-1]
+        )
         raw_df = replace_totals(dimx2_date_str_df)
         totals_df = pd.merge(
             pd.DataFrame([[RollupValue.CONSTANT, RollupValue.CONSTANT]], columns=["$timestamp", "$political_party"]),
@@ -366,14 +356,8 @@ class ReduceResultSetsWithTotalsTests(TestCase):
 
     def test_reduce_single_result_set_with_date_str_str_dimensions_str1_totals(self):
         expected = (
-            dimx3_date_str_str_totalsx3_df.loc[
-                (slice(None), slice(None), slice("California", "Texas")), :
-            ]
-            .append(
-                dimx3_date_str_str_totalsx3_df.loc[(slice(None), "~~totals"), :].iloc[
-                    :-1
-                ]
-            )
+            dimx3_date_str_str_totalsx3_df.loc[(slice(None), slice(None), slice("California", "Texas")), :]
+            .append(dimx3_date_str_str_totalsx3_df.loc[(slice(None), "~~totals"), :].iloc[:-1])
             .sort_index()
         )
 
@@ -393,13 +377,9 @@ class ReduceResultSetsWithTotalsTests(TestCase):
         pandas.testing.assert_frame_equal(expected, result)
 
     def test_reduce_single_result_set_with_date_str_str_dimensions_str2_totals(self):
-        expected = dimx3_date_str_str_totalsx3_df.loc[
-            (slice(None), slice("Democrat", "Republican")), :
-        ]
+        expected = dimx3_date_str_str_totalsx3_df.loc[(slice(None), slice("Democrat", "Republican")), :]
         raw_df = replace_totals(dimx3_date_str_str_df)
-        totals_df = (
-            raw_df.groupby(["$timestamp", "$political_party"]).sum().reset_index()
-        )
+        totals_df = raw_df.groupby(["$timestamp", "$political_party"]).sum().reset_index()
         totals_df["$state"] = RollupValue.CONSTANT
         totals_df = totals_df[["$timestamp", "$political_party", "$state"] + metrics]
 
@@ -434,27 +414,17 @@ class ReduceResultSetsWithTotalsTests(TestCase):
         nulls_totals[index_names[2]] = "~~totals"
 
         expected = (
-            dimx3_date_str_str_totalsx3_df.loc[
-                (slice(None), slice(None), slice("1", "2")), :
-            ]
-            .append(
-                dimx3_date_str_str_totalsx3_df.loc[(slice(None), "~~totals"), :].iloc[
-                    :-1
-                ]
-            )
+            dimx3_date_str_str_totalsx3_df.loc[(slice(None), slice(None), slice("1", "2")), :]
+            .append(dimx3_date_str_str_totalsx3_df.loc[(slice(None), "~~totals"), :].iloc[:-1])
             .append(nulls.set_index(index_names))
             .append(nulls_totals.set_index(index_names))
             .sort_index()
         )
         raw_df = replace_totals(dimx3_date_str_str_df)
-        raw_df = nulls.append(raw_df).sort_values(
-            ["$timestamp", "$political_party", "$state"]
-        )
+        raw_df = nulls.append(raw_df).sort_values(["$timestamp", "$political_party", "$state"])
 
         totals_df = raw_df.groupby("$timestamp").sum().reset_index()
-        null_totals_df = pd.DataFrame(
-            [raw_df[raw_df["$timestamp"].isnull()][metrics].sum()]
-        )
+        null_totals_df = pd.DataFrame([raw_df[raw_df["$timestamp"].isnull()][metrics].sum()])
         null_totals_df["$timestamp"] = None
         totals_df = totals_df.append(null_totals_df)
         totals_df["$political_party"] = RollupValue.CONSTANT

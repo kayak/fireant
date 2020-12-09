@@ -251,7 +251,11 @@ class HighChartsLineChartTransformerTests(TestCase):
         result = (
             HighCharts(title="Time Series, Single Metric")
             .axis(self.chart_class(CumSum(mock_dataset.fields.votes)))
-            .transform(dimx1_date_operation_df, [mock_dataset.fields.timestamp], [],)
+            .transform(
+                dimx1_date_operation_df,
+                [mock_dataset.fields.timestamp],
+                [],
+            )
         )
 
         self.assertEqual(
@@ -319,9 +323,7 @@ class HighChartsLineChartTransformerTests(TestCase):
             self.assertEqual(
                 {
                     "chart": {"height": 240},
-                    "title": {
-                        "text": "Time Series with Datetime/Text Dimensions and Single Metric (Democrat)"
-                    },
+                    "title": {"text": "Time Series with Datetime/Text Dimensions and Single Metric (Democrat)"},
                     "xAxis": {"type": "datetime", "visible": True},
                     "yAxis": [
                         {
@@ -367,9 +369,7 @@ class HighChartsLineChartTransformerTests(TestCase):
             self.assertEqual(
                 {
                     "chart": {"height": 240},
-                    "title": {
-                        "text": "Time Series with Datetime/Text Dimensions and Single Metric (Independent)"
-                    },
+                    "title": {"text": "Time Series with Datetime/Text Dimensions and Single Metric (Independent)"},
                     "xAxis": {"type": "datetime", "visible": True},
                     "yAxis": [
                         {
@@ -385,7 +385,9 @@ class HighChartsLineChartTransformerTests(TestCase):
                         {
                             "color": "#DDDF0D",
                             "dashStyle": "Solid",
-                            "data": [(820454400000, 1076384),],
+                            "data": [
+                                (820454400000, 1076384),
+                            ],
                             "marker": {"fillColor": "#DDDF0D", "symbol": "circle"},
                             "name": "Votes (Independent)",
                             "stacking": self.stacking,
@@ -408,9 +410,7 @@ class HighChartsLineChartTransformerTests(TestCase):
             self.assertEqual(
                 {
                     "chart": {"height": 240},
-                    "title": {
-                        "text": "Time Series with Datetime/Text Dimensions and Single Metric (Republican)"
-                    },
+                    "title": {"text": "Time Series with Datetime/Text Dimensions and Single Metric (Republican)"},
                     "xAxis": {"type": "datetime", "visible": True},
                     "yAxis": [
                         {
@@ -473,9 +473,7 @@ class HighChartsLineChartTransformerTests(TestCase):
             self.assertEqual(
                 {
                     "chart": {"height": 240},
-                    "title": {
-                        "text": "Time Series with two Text Dimensions and Single Metric (Democrat)"
-                    },
+                    "title": {"text": "Time Series with two Text Dimensions and Single Metric (Democrat)"},
                     "xAxis": {
                         "categories": ["Democrat", "Independent", "Republican"],
                         "type": "category",
@@ -495,7 +493,9 @@ class HighChartsLineChartTransformerTests(TestCase):
                         {
                             "color": "#DDDF0D",
                             "dashStyle": "Solid",
-                            "data": [{"x": 0, "y": 8294949},],
+                            "data": [
+                                {"x": 0, "y": 8294949},
+                            ],
                             "marker": {"fillColor": "#DDDF0D", "symbol": "circle"},
                             "name": "Votes (Al Gore)",
                             "stacking": self.stacking,
@@ -581,9 +581,7 @@ class HighChartsLineChartTransformerTests(TestCase):
             self.assertEqual(
                 {
                     "chart": {"height": 240},
-                    "title": {
-                        "text": "Time Series with two Text Dimensions and Single Metric (Independent)"
-                    },
+                    "title": {"text": "Time Series with two Text Dimensions and Single Metric (Independent)"},
                     "xAxis": {
                         "categories": ["Democrat", "Independent", "Republican"],
                         "type": "category",
@@ -603,7 +601,9 @@ class HighChartsLineChartTransformerTests(TestCase):
                         {
                             "color": "#DDDF0D",
                             "dashStyle": "Solid",
-                            "data": [{"x": 1, "y": 1076384},],
+                            "data": [
+                                {"x": 1, "y": 1076384},
+                            ],
                             "marker": {"fillColor": "#DDDF0D", "symbol": "circle"},
                             "name": "Votes (Ross Perot)",
                             "stacking": self.stacking,
@@ -626,9 +626,7 @@ class HighChartsLineChartTransformerTests(TestCase):
             self.assertEqual(
                 {
                     "chart": {"height": 240},
-                    "title": {
-                        "text": "Time Series with two Text Dimensions and Single Metric (Republican)"
-                    },
+                    "title": {"text": "Time Series with two Text Dimensions and Single Metric (Republican)"},
                     "xAxis": {
                         "categories": ["Democrat", "Independent", "Republican"],
                         "type": "category",
@@ -648,7 +646,9 @@ class HighChartsLineChartTransformerTests(TestCase):
                         {
                             "color": "#DDDF0D",
                             "dashStyle": "Solid",
-                            "data": [{"x": 2, "y": 6564547},],
+                            "data": [
+                                {"x": 2, "y": 6564547},
+                            ],
                             "marker": {"fillColor": "#DDDF0D", "symbol": "circle"},
                             "name": "Votes (Bob Dole)",
                             "stacking": self.stacking,
@@ -663,7 +663,9 @@ class HighChartsLineChartTransformerTests(TestCase):
                         {
                             "color": "#55BF3B",
                             "dashStyle": "Solid",
-                            "data": [{"x": 2, "y": 13438835},],
+                            "data": [
+                                {"x": 2, "y": 13438835},
+                            ],
                             "marker": {"fillColor": "#DDDF0D", "symbol": "square"},
                             "name": "Votes (Donald Trump)",
                             "stacking": self.stacking,
@@ -678,7 +680,9 @@ class HighChartsLineChartTransformerTests(TestCase):
                         {
                             "color": "#DF5353",
                             "dashStyle": "Solid",
-                            "data": [{"x": 2, "y": 18403811},],
+                            "data": [
+                                {"x": 2, "y": 18403811},
+                            ],
                             "marker": {"fillColor": "#DDDF0D", "symbol": "diamond"},
                             "name": "Votes (George Bush)",
                             "stacking": self.stacking,
@@ -693,7 +697,9 @@ class HighChartsLineChartTransformerTests(TestCase):
                         {
                             "color": "#7798BF",
                             "dashStyle": "Solid",
-                            "data": [{"x": 2, "y": 9491109},],
+                            "data": [
+                                {"x": 2, "y": 9491109},
+                            ],
                             "marker": {"fillColor": "#DDDF0D", "symbol": "triangle"},
                             "name": "Votes (John McCain)",
                             "stacking": self.stacking,
@@ -708,7 +714,9 @@ class HighChartsLineChartTransformerTests(TestCase):
                         {
                             "color": "#AAEEEE",
                             "dashStyle": "Solid",
-                            "data": [{"x": 2, "y": 8148082},],
+                            "data": [
+                                {"x": 2, "y": 8148082},
+                            ],
                             "marker": {
                                 "fillColor": "#DDDF0D",
                                 "symbol": "triangle-down",
@@ -732,9 +740,7 @@ class HighChartsLineChartTransformerTests(TestCase):
 
     def test_multi_metrics_multi_axis_line_chart(self):
         result = (
-            HighCharts(
-                title="Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"
-            )
+            HighCharts(title="Time Series with Unique Dimension and Multiple Metrics, Multi-Axis")
             .axis(self.chart_class(mock_dataset.fields.votes))
             .axis(self.chart_class(mock_dataset.fields.wins))
             .transform(
@@ -746,9 +752,7 @@ class HighChartsLineChartTransformerTests(TestCase):
 
         self.assertEqual(
             {
-                "title": {
-                    "text": "Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"
-                },
+                "title": {"text": "Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"},
                 "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
@@ -909,9 +913,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         )
 
         result = (
-            HighCharts(
-                title="Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"
-            )
+            HighCharts(title="Time Series with Unique Dimension and Multiple Metrics, Multi-Axis")
             .axis(self.chart_class(mock_dataset.fields.votes))
             .axis(self.chart_class(mock_dataset.fields.wins))
             .transform(
@@ -927,9 +929,7 @@ class HighChartsLineChartTransformerTests(TestCase):
         self.assertEqual(
             result,
             {
-                "title": {
-                    "text": "Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"
-                },
+                "title": {"text": "Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"},
                 "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
@@ -997,9 +997,7 @@ class HighChartsLineChartTransformerTests(TestCase):
 
     def test_multi_dim_with_totals_line_chart(self):
         result = (
-            HighCharts(
-                title="Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"
-            )
+            HighCharts(title="Time Series with Unique Dimension and Multiple Metrics, Multi-Axis")
             .axis(self.chart_class(mock_dataset.fields.votes))
             .axis(self.chart_class(mock_dataset.fields.wins))
             .transform(
@@ -1014,9 +1012,7 @@ class HighChartsLineChartTransformerTests(TestCase):
 
         self.assertEqual(
             {
-                "title": {
-                    "text": "Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"
-                },
+                "title": {"text": "Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"},
                 "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
@@ -1206,9 +1202,7 @@ class HighChartsLineChartTransformerTests(TestCase):
 
     def test_multi_dim_with_totals_on_first_dim_line_chart(self):
         result = (
-            HighCharts(
-                title="Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"
-            )
+            HighCharts(title="Time Series with Unique Dimension and Multiple Metrics, Multi-Axis")
             .axis(self.chart_class(mock_dataset.fields.votes))
             .axis(self.chart_class(mock_dataset.fields.wins))
             .transform(
@@ -1223,9 +1217,7 @@ class HighChartsLineChartTransformerTests(TestCase):
 
         self.assertEqual(
             {
-                "title": {
-                    "text": "Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"
-                },
+                "title": {"text": "Time Series with Unique Dimension and Multiple Metrics, Multi-Axis"},
                 "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
@@ -1547,9 +1539,7 @@ class HighChartsLineChartTransformerTests(TestCase):
 
         self.assertEqual(
             {
-                "title": {
-                    "text": "Time Series with Unique Dimension and Delta Reference"
-                },
+                "title": {"text": "Time Series with Unique Dimension and Delta Reference"},
                 "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
@@ -1727,9 +1717,7 @@ class HighChartsLineChartTransformerTests(TestCase):
 
         self.assertEqual(
             {
-                "title": {
-                    "text": "Time Series with Unique Dimension and Delta Reference"
-                },
+                "title": {"text": "Time Series with Unique Dimension and Delta Reference"},
                 "xAxis": {"type": "datetime", "visible": True},
                 "yAxis": [
                     {
@@ -2445,7 +2433,9 @@ class HighChartsBarChartTransformerTests(TestCase):
             HighCharts(title="Categorical Dimension with Totals")
             .axis(self.chart_class(mock_dataset.fields.votes))
             .transform(
-                dimx1_str_totals_df, [Rollup(mock_dataset.fields.political_party)], [],
+                dimx1_str_totals_df,
+                [Rollup(mock_dataset.fields.political_party)],
+                [],
             )
         )
 
@@ -2494,11 +2484,7 @@ class HighChartsBarChartTransformerTests(TestCase):
         )
 
     def test_cat_uni_dim_with_missing_values(self):
-        df = (
-            dimx2_str_num_df.drop(("Democrat", 1))
-            .drop(("Republican", 2))
-            .drop(("Republican", 10))
-        )
+        df = dimx2_str_num_df.drop(("Democrat", 1)).drop(("Republican", 2)).drop(("Republican", 10))
 
         dimensions = [
             mock_dataset.fields.political_party,
@@ -2768,7 +2754,9 @@ class HighChartsPieChartTransformerTests(TestCase):
         result = (
             HighCharts(title="All Votes", split_dimension=mock_dataset.fields.political_party)
             .axis(self.chart_class(mock_dataset.fields.votes))
-            .transform(dimx2_str_str_df, [mock_dataset.fields.political_party, mock_dataset.fields['candidate-name']], [])
+            .transform(
+                dimx2_str_str_df, [mock_dataset.fields.political_party, mock_dataset.fields['candidate-name']], []
+            )
         )
 
         with self.subTest("returns 3 charts"):
@@ -3569,8 +3557,7 @@ class HighChartsLineChartAnnotationTransformerTests(TestCase):
                         "labels": [
                             {
                                 "point": {"x": 820454400000, "xAxis": 0},
-                                "text": "Bill Clinton, Bob Dole, Ross Perot, "
-                                "Bill Clinton, Bob Dole, Ross Perot",
+                                "text": "Bill Clinton, Bob Dole, Ross Perot, " "Bill Clinton, Bob Dole, Ross Perot",
                             },
                             {
                                 "point": {"x": 946684800000, "xAxis": 0},
@@ -3578,23 +3565,19 @@ class HighChartsLineChartAnnotationTransformerTests(TestCase):
                             },
                             {
                                 "point": {"x": 1072915200000, "xAxis": 0},
-                                "text": "George Bush, John Kerry, George Bush, "
-                                "John Kerry",
+                                "text": "George Bush, John Kerry, George Bush, " "John Kerry",
                             },
                             {
                                 "point": {"x": 1199145600000, "xAxis": 0},
-                                "text": "Barrack Obama, John McCain, Barrack "
-                                "Obama, John McCain",
+                                "text": "Barrack Obama, John McCain, Barrack " "Obama, John McCain",
                             },
                             {
                                 "point": {"x": 1325376000000, "xAxis": 0},
-                                "text": "Barrack Obama, Mitt Romney, Barrack "
-                                "Obama, Mitt Romney",
+                                "text": "Barrack Obama, Mitt Romney, Barrack " "Obama, Mitt Romney",
                             },
                             {
                                 "point": {"x": 1451606400000, "xAxis": 0},
-                                "text": "Donald Trump, Hillary Clinton, Donald "
-                                "Trump, Hillary Clinton",
+                                "text": "Donald Trump, Hillary Clinton, Donald " "Trump, Hillary Clinton",
                             },
                         ]
                     }
@@ -3696,8 +3679,7 @@ class HighChartsLineChartAnnotationTransformerTests(TestCase):
                         "labels": [
                             {
                                 "point": {"x": 820454400000, "xAxis": 0},
-                                "text": "Bill Clinton, Bob Dole, Ross Perot, "
-                                "Bill Clinton, Bob Dole, Ross Perot",
+                                "text": "Bill Clinton, Bob Dole, Ross Perot, " "Bill Clinton, Bob Dole, Ross Perot",
                             },
                             {
                                 "point": {"x": 946684800000, "xAxis": 0},
@@ -3705,23 +3687,19 @@ class HighChartsLineChartAnnotationTransformerTests(TestCase):
                             },
                             {
                                 "point": {"x": 1072915200000, "xAxis": 0},
-                                "text": "George Bush, John Kerry, George Bush, "
-                                "John Kerry",
+                                "text": "George Bush, John Kerry, George Bush, " "John Kerry",
                             },
                             {
                                 "point": {"x": 1199145600000, "xAxis": 0},
-                                "text": "Barrack Obama, John McCain, Barrack "
-                                "Obama, John McCain",
+                                "text": "Barrack Obama, John McCain, Barrack " "Obama, John McCain",
                             },
                             {
                                 "point": {"x": 1325376000000, "xAxis": 0},
-                                "text": "Barrack Obama, Mitt Romney, Barrack "
-                                "Obama, Mitt Romney",
+                                "text": "Barrack Obama, Mitt Romney, Barrack " "Obama, Mitt Romney",
                             },
                             {
                                 "point": {"x": 1451606400000, "xAxis": 0},
-                                "text": "Donald Trump, Hillary Clinton, Donald "
-                                "Trump, Hillary Clinton",
+                                "text": "Donald Trump, Hillary Clinton, Donald " "Trump, Hillary Clinton",
                             },
                         ]
                     }

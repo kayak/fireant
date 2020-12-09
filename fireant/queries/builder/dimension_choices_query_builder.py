@@ -44,21 +44,14 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
         filters = []
         for filter_ in self.filters:
             base_fields = [
-                field
-                for field in filter_.definition.fields_()
-                if all(table == base_table for table in field.tables_)
+                field for field in filter_.definition.fields_() if all(table == base_table for table in field.tables_)
             ]
 
             join_tables = [
-                table
-                for field in filter_.definition.fields_()
-                for table in field.tables_
-                if table != base_table
+                table for field in filter_.definition.fields_() for table in field.tables_ if table != base_table
             ]
 
-            required_joins = find_joins_for_tables(
-                self.dataset.joins, self.dataset.table, join_tables
-            )
+            required_joins = find_joins_for_tables(self.dataset.joins, self.dataset.table, join_tables)
 
             base_fields.extend(
                 [
@@ -83,12 +76,8 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
         """
         dimension_terms = []
         for dimension in self.dimensions:
-            dimension_term = make_term_for_field(
-                dimension, self.dataset.database.trunc_date
-            )
-            dimension_term = dimension_term.replace_table(
-                dimension_term.table, self.hint_table
-            )
+            dimension_term = make_term_for_field(dimension, self.dataset.database.trunc_date)
+            dimension_term = dimension_term.replace_table(dimension_term.table, self.hint_table)
             dimension_terms.append(dimension_term)
 
         return dimension_terms
@@ -143,17 +132,11 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
         dimension_definition = dimension.definition
 
         if self.hint_table:
-            alias_definition = alias_definition.replace_table(
-                alias_definition.table, self.hint_table
-            )
-            dimension_definition = dimension.definition.replace_table(
-                dimension_definition.table, self.hint_table
-            )
+            alias_definition = alias_definition.replace_table(alias_definition.table, self.hint_table)
+            dimension_definition = dimension.definition.replace_table(dimension_definition.table, self.hint_table)
 
         if force_include:
-            include = self.dataset.database.to_char(dimension_definition).isin(
-                [str(x) for x in force_include]
-            )
+            include = self.dataset.database.to_char(dimension_definition).isin([str(x) for x in force_include])
 
             # Ensure that these values are included
             query = query.orderby(include, order=Order.desc)
@@ -180,6 +163,5 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
 
     def __repr__(self):
         return ".".join(
-            ["dataset", self._dimensions[0].alias, "choices"]
-            + ["filter({})".format(repr(f)) for f in self._filters]
+            ["dataset", self._dimensions[0].alias, "choices"] + ["filter({})".format(repr(f)) for f in self._filters]
         )

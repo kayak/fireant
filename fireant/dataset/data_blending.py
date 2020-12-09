@@ -76,10 +76,7 @@ class DataSetBlender:
         #      its object graph
         self.fields = DataSet.Fields(
             ordered_distinct_list_by_attr(
-                [
-                    *_wrap_dataset_fields(primary_dataset),
-                    *_wrap_dataset_fields(secondary_dataset)
-                ],
+                [*_wrap_dataset_fields(primary_dataset), *_wrap_dataset_fields(secondary_dataset)],
             )
         )
 
@@ -104,9 +101,7 @@ class DataSetBlender:
         return isinstance(other, DataSetBlender) and self.fields == other.fields
 
     def __repr__(self):
-        return "BlendedDataSet(fields=[{}])".format(
-            ",".join([repr(f) for f in self.fields])
-        )
+        return "BlendedDataSet(fields=[{}])".format(",".join([repr(f) for f in self.fields]))
 
     def __hash__(self):
         return hash((self.primary_dataset, self.secondary_dataset, self.fields))
@@ -142,9 +137,7 @@ class DataSetBlenderBuilder:
         self.secondary_dataset = secondary
 
     def on(self, dimension_map):
-        return DataSetBlender(
-            self.primary_dataset, self.secondary_dataset, dimension_map
-        )
+        return DataSetBlender(self.primary_dataset, self.secondary_dataset, dimension_map)
 
     def on_dimensions(self):
         """
@@ -156,9 +149,7 @@ class DataSetBlenderBuilder:
 
         for secondary_ds_field in self.secondary_dataset.fields:
             is_aggregate_field = secondary_ds_field.is_aggregate
-            matches_alias_in_primary_dataset = (
-                secondary_ds_field.alias in self.primary_dataset.fields
-            )
+            matches_alias_in_primary_dataset = secondary_ds_field.alias in self.primary_dataset.fields
             if is_aggregate_field or not matches_alias_in_primary_dataset:
                 continue
 
@@ -170,9 +161,5 @@ class DataSetBlenderBuilder:
 
 class DimensionChoicesBlenderQueryBuilder(DimensionChoicesQueryBuilder):
     def filter(self, *filters, **kwargs):
-        filters = [
-            fltr.for_(fltr.field.definition)
-            for fltr in filters
-            if fltr.field.definition in self.dataset.fields
-        ]
+        filters = [fltr.for_(fltr.field.definition) for fltr in filters if fltr.field.definition in self.dataset.fields]
         return super().filter(*filters, **kwargs)

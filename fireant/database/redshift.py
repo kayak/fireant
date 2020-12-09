@@ -11,6 +11,5 @@ class RedshiftDatabase(PostgreSQLDatabase):
     # The pypika query class to use for constructing queries
     query_cls = RedshiftQuery
 
-    def __init__(self, host='localhost', port=5439, database=None,
-                 user=None, password=None, **kwargs):
+    def __init__(self, host='localhost', port=5439, database=None, user=None, password=None, **kwargs):
         super(RedshiftDatabase, self).__init__(host, port, database, user, password, **kwargs)

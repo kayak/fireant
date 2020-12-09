@@ -16,9 +16,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
     def test_reference_with_no_dimensions_or_filters_creates_same_query(self):
         # TODO reduce this to a single query
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .reference(f.DayOverDay(mock_dataset.fields.timestamp))
             .sql
         )
@@ -39,16 +37,10 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
     def test_reference_without_selecting_ref_dimension_using_date_range_filter(self):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(mock_dataset.fields.political_party)
             .reference(f.DayOverDay(mock_dataset.fields.timestamp))
-            .filter(
-                mock_dataset.fields.timestamp.between(
-                    date(2000, 1, 1), date(2000, 3, 1)
-                )
-            )
+            .filter(mock_dataset.fields.timestamp.between(date(2000, 1, 1), date(2000, 3, 1)))
             .sql
         )
 
@@ -67,9 +59,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with filter on reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 '"political_party" "$political_party",'
@@ -85,9 +75,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
     def test_dod(self):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(timestamp_daily)
             .reference(f.DayOverDay(mock_dataset.fields.timestamp))
             .sql
@@ -107,9 +95,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
@@ -123,9 +109,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
     def test_wow(self):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(timestamp_daily)
             .reference(f.WeekOverWeek(mock_dataset.fields.timestamp))
             .sql
@@ -145,9 +129,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('week',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
@@ -161,9 +143,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
     def test_mom(self):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(timestamp_daily)
             .reference(f.MonthOverMonth(mock_dataset.fields.timestamp))
             .sql
@@ -183,9 +163,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('week',4,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
@@ -199,9 +177,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
     def test_qoq(self):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(timestamp_daily)
             .reference(f.QuarterOverQuarter(mock_dataset.fields.timestamp))
             .sql
@@ -221,9 +197,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('week',12,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
@@ -237,9 +211,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
     def test_yoy(self):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(timestamp_daily)
             .reference(f.YearOverYear(mock_dataset.fields.timestamp))
             .sql
@@ -259,9 +231,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('week',52,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
@@ -275,13 +245,11 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
     def test_metric_filters_get_filtered_out(self):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
-                .dimension(timestamp_daily)
-                .filter(mock_dataset.fields.votes > 1)
-                .reference(f.DayOverDay(mock_dataset.fields.timestamp))
-                .sql
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
+            .dimension(timestamp_daily)
+            .filter(mock_dataset.fields.votes > 1)
+            .reference(f.DayOverDay(mock_dataset.fields.timestamp))
+            .sql
         )
 
         self.assertEqual(2, len(queries))
@@ -313,9 +281,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
     def test_mom_with_monthly_interval(self):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(timestamp_monthly)
             .reference(f.MonthOverMonth(mock_dataset.fields.timestamp))
             .sql
@@ -335,9 +301,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('month',1,TRUNC(\"timestamp\",'MM')),'MM') \"$timestamp\","
@@ -351,9 +315,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
     def test_qoq_with_monthly_interval(self):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(timestamp_monthly)
             .reference(f.QuarterOverQuarter(mock_dataset.fields.timestamp))
             .sql
@@ -373,9 +335,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('quarter',1,TRUNC(\"timestamp\",'MM')),'MM') \"$timestamp\","
@@ -389,9 +349,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
 
     def test_yoy_with_monthly_interval(self):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(timestamp_monthly)
             .reference(f.YearOverYear(mock_dataset.fields.timestamp))
             .sql
@@ -411,9 +369,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('year',1,TRUNC(\"timestamp\",'MM')),'MM') \"$timestamp\","
@@ -432,9 +388,7 @@ class QueryBuilderDatetimeReferenceWithDeltaTests(TestCase):
 
     def test_delta(self):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(timestamp_daily)
             .reference(f.DayOverDay(mock_dataset.fields.timestamp, delta=True))
             .sql
@@ -454,9 +408,7 @@ class QueryBuilderDatetimeReferenceWithDeltaTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with filter on reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
@@ -470,9 +422,7 @@ class QueryBuilderDatetimeReferenceWithDeltaTests(TestCase):
 
     def test_delta_percentage(self):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(timestamp_daily)
             .reference(f.DayOverDay(mock_dataset.fields.timestamp, delta_percent=True))
             .sql
@@ -492,9 +442,7 @@ class QueryBuilderDatetimeReferenceWithDeltaTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with filter on reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
@@ -514,9 +462,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
     def test_date_dim_with_weekly_interval(self):
         weekly_timestamp = f.week(mock_dataset.fields.timestamp)
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(weekly_timestamp)
             .reference(f.DayOverDay(weekly_timestamp))
             .sql
@@ -536,9 +482,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with filter on reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'IW')),'IW') \"$timestamp\","
@@ -552,9 +496,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
 
     def test_date_dim_with_weekly_interval_no_interval_on_reference(self):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(f.week(mock_dataset.fields.timestamp))
             .reference(f.DayOverDay(mock_dataset.fields.timestamp))
             .sql
@@ -574,9 +516,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with filter on reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'IW')),'IW') \"$timestamp\","
@@ -590,9 +530,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
 
     def test_date_dim_with_monthly_interval(self):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(f.month(mock_dataset.fields.timestamp))
             .reference(f.DayOverDay(mock_dataset.fields.timestamp))
             .sql
@@ -612,9 +550,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with filter on reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'MM')),'MM') \"$timestamp\","
@@ -628,9 +564,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
 
     def test_date_dim_with_quarterly_interval(self):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(f.quarter(mock_dataset.fields.timestamp))
             .reference(f.DayOverDay(mock_dataset.fields.timestamp))
             .sql
@@ -650,9 +584,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with filter on reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'Q')),'Q') \"$timestamp\","
@@ -666,9 +598,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
 
     def test_date_dim_with_annual_interval(self):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(f.year(mock_dataset.fields.timestamp))
             .reference(f.DayOverDay(mock_dataset.fields.timestamp))
             .sql
@@ -688,9 +618,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with filter on reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'Y')),'Y') \"$timestamp\","
@@ -709,14 +637,10 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
 
     def test_dimension_with_multiple_references(self):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(timestamp_daily)
             .reference(f.DayOverDay(mock_dataset.fields.timestamp))
-            .reference(
-                f.YearOverYear(mock_dataset.fields.timestamp, delta_percent=True)
-            )
+            .reference(f.YearOverYear(mock_dataset.fields.timestamp, delta_percent=True))
             .sql
         )
 
@@ -734,9 +658,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with filter on reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
@@ -748,9 +670,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
                 str(queries[1]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with filter on reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('week',52,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
@@ -764,9 +684,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
 
     def test_adding_duplicate_reference_does_not_join_more_queries(self):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(timestamp_daily)
             .reference(
                 f.DayOverDay(mock_dataset.fields.timestamp),
@@ -789,9 +707,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with filter on reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
@@ -807,9 +723,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
         self,
     ):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(timestamp_daily)
             .reference(
                 f.DayOverDay(mock_dataset.fields.timestamp),
@@ -833,9 +747,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with filter on reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
@@ -851,9 +763,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
         self,
     ):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(timestamp_daily)
             .reference(
                 f.DayOverDay(mock_dataset.fields.timestamp),
@@ -910,9 +820,7 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
 
     def test_reference_queries_with_multiple_dimensions_includes_all_dimensions(self):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(timestamp_daily)
             .dimension(mock_dataset.fields.political_party)
             .reference(f.YearOverYear(mock_dataset.fields.timestamp))
@@ -934,9 +842,7 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with filter on reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('week',52,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
@@ -953,9 +859,7 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
         self,
     ):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(timestamp_daily)
             .dimension(mock_dataset.fields["candidate-name"])
             .reference(f.YearOverYear(mock_dataset.fields.timestamp))
@@ -977,9 +881,7 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with filter on reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('week',52,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
@@ -994,16 +896,10 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
 
     def test_filters_on_reference_dimension_are_adapted_to_reference_interval(self):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(timestamp_daily)
             .reference(f.DayOverDay(mock_dataset.fields.timestamp))
-            .filter(
-                mock_dataset.fields.timestamp.between(
-                    date(2018, 1, 1), date(2018, 1, 31)
-                )
-            )
+            .filter(mock_dataset.fields.timestamp.between(date(2018, 1, 1), date(2018, 1, 31)))
             .sql
         )
 
@@ -1022,9 +918,7 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with filter on reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
@@ -1040,16 +934,10 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
 
     def test_filters_on_other_dimensions_are_not_adapted(self):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(timestamp_daily)
             .reference(f.DayOverDay(mock_dataset.fields.timestamp))
-            .filter(
-                mock_dataset.fields.timestamp.between(
-                    date(2018, 1, 1), date(2018, 1, 31)
-                )
-            )
+            .filter(mock_dataset.fields.timestamp.between(date(2018, 1, 1), date(2018, 1, 31)))
             .filter(mock_dataset.fields.political_party.isin(["d"]))
             .sql
         )
@@ -1070,9 +958,7 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
                 str(queries[0]),
             )
 
-        with self.subTest(
-            "reference query is same as base query with filter on reference dimension shifted"
-        ):
+        with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
@@ -1093,16 +979,10 @@ class QueryBuilderReferencesWithRollupTests(TestCase):
 
     def test_reference_with_rollup_dimension_and_date_range_filter(self):
         queries = (
-            mock_dataset.query.widget(
-                f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes))
-            )
+            mock_dataset.query.widget(f.HighCharts().axis(f.HighCharts.LineSeries(mock_dataset.fields.votes)))
             .dimension(Rollup(timestamp_daily))
             .reference(f.WeekOverWeek(mock_dataset.fields.timestamp))
-            .filter(
-                mock_dataset.fields.timestamp.between(
-                    date(2018, 1, 1), date(2018, 1, 31)
-                )
-            )
+            .filter(mock_dataset.fields.timestamp.between(date(2018, 1, 1), date(2018, 1, 31)))
             .sql
         )
 
@@ -1123,9 +1003,7 @@ class QueryBuilderReferencesWithRollupTests(TestCase):
                 str(base),
             )
 
-        with self.subTest(
-            "reference query shifts timestamp dimension and date range filter by a week"
-        ):
+        with self.subTest("reference query shifts timestamp dimension and date range filter by a week"):
             self.assertEqual(
                 "SELECT "
                 "TRUNC(TIMESTAMPADD('week',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
@@ -1139,9 +1017,7 @@ class QueryBuilderReferencesWithRollupTests(TestCase):
                 str(reference),
             )
 
-        with self.subTest(
-            "totals query selects _FIREANT_ROLLUP_VALUE_ for timestamp dimension"
-        ):
+        with self.subTest("totals query selects _FIREANT_ROLLUP_VALUE_ for timestamp dimension"):
             self.assertEqual(
                 "SELECT "
                 "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","

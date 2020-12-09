@@ -9,6 +9,7 @@ from .test_postgresql import TestPostgreSQL
 
 class TestRedshift(TestPostgreSQL):
     """ Inherits from TestPostgreSQL as Redshift is almost identical to PostgreSQL so the tests are similar """
+
     @classmethod
     def setUpClass(cls):
         cls.database = RedshiftDatabase()
@@ -24,12 +25,14 @@ class TestRedshift(TestPostgreSQL):
         with patch.dict('sys.modules', psycopg2=mock_redshift):
             mock_redshift.connect.return_value = 'OK'
 
-            redshift = RedshiftDatabase('test_host', 1234, 'test_database',
-                                        'test_user', 'password')
+            redshift = RedshiftDatabase('test_host', 1234, 'test_database', 'test_user', 'password')
             result = redshift.connect()
 
         self.assertEqual('OK', result)
         mock_redshift.connect.assert_called_once_with(
-            host='test_host', port=1234, dbname='test_database',
-            user='test_user', password='password',
+            host='test_host',
+            port=1234,
+            dbname='test_database',
+            user='test_user',
+            password='password',
         )

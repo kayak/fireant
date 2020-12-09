@@ -18,21 +18,14 @@ class MSSQLDatabase(Database):
     # The pypika query class to use for constructing queries
     query_cls = MSSQLQuery
 
-    def __init__(
-        self,
-        host='localhost',
-        port=1433,
-        database=None,
-        user=None,
-        password=None,
-        **kwargs
-    ):
+    def __init__(self, host='localhost', port=1433, database=None, user=None, password=None, **kwargs):
         super().__init__(host, port, database, **kwargs)
         self.user = user
         self.password = password
 
     def connect(self):
         import pymssql
+
         return pymssql.connect(
             server=self.host,
             port=self.port,

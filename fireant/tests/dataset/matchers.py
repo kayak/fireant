@@ -19,13 +19,15 @@ class _ElementsMatcher:
         self.elements = elements
 
     def __eq__(self, other):
-        return all([isinstance(actual, self.expected_class)
-                    and expected.alias == actual.alias
-                    for expected, actual in zip(self.elements, other)])
+        return all(
+            [
+                isinstance(actual, self.expected_class) and expected.alias == actual.alias
+                for expected, actual in zip(self.elements, other)
+            ]
+        )
 
     def __repr__(self):
-        return '[{}]'.format(','.join(str(element)
-                                      for element in self.elements))
+        return '[{}]'.format(','.join(str(element) for element in self.elements))
 
 
 class FieldMatcher(_ElementsMatcher):

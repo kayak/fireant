@@ -45,9 +45,7 @@ class SafeRawValueTests(TestCase):
     def test_boolean_value_is_returned_as_self_lower_case(self):
         for value in (True, False):
             with self.subTest("using value=" + str(value)):
-                self.assertEqual(
-                    str(value).lower(), formats.display_value(value, boolean_field)
-                )
+                self.assertEqual(str(value).lower(), formats.display_value(value, boolean_field))
 
 
 class FormatRawValueTests(TestCase):
@@ -88,9 +86,7 @@ class FormatRawValueTests(TestCase):
                 self.assertEqual(value, formats.raw_value(value, boolean_field))
 
     def test_date_value_is_returned_as_iso_date_string(self):
-        self.assertEqual(
-            "2019-01-01T00:00:00", formats.raw_value(date(2019, 1, 1), date_field)
-        )
+        self.assertEqual("2019-01-01T00:00:00", formats.raw_value(date(2019, 1, 1), date_field))
 
     def test_datetime_value_is_returned_as_iso_date_string(self):
         self.assertEqual(
@@ -102,16 +98,12 @@ class FormatRawValueTests(TestCase):
 class FormatDisplayValueTests(TestCase):
     def test_none_returned_as_nan_value_arg(self):
         for expected in ("", "abcdefg"):
-            self.assertEqual(
-                expected, formats.display_value(None, None, null_value=expected)
-            )
+            self.assertEqual(expected, formats.display_value(None, None, null_value=expected))
         self.assertEqual("null", formats.display_value(None, None))
 
     def test_nan_returned_as_string(self):
         for expected in ("", "abcdefg"):
-            self.assertEqual(
-                expected, formats.display_value(np.nan, None, nan_value=expected)
-            )
+            self.assertEqual(expected, formats.display_value(np.nan, None, nan_value=expected))
         self.assertEqual("NaN", formats.display_value(np.nan, None))
 
     def test_inf_returned_as_inf_label(self):
@@ -160,9 +152,7 @@ class FormatDisplayValueTests(TestCase):
     def test_boolean_value_is_returned_as_self_lower_case(self):
         for value in (True, False):
             with self.subTest("using value" + str(value)):
-                self.assertEqual(
-                    str(value).lower(), formats.display_value(value, boolean_field)
-                )
+                self.assertEqual(str(value).lower(), formats.display_value(value, boolean_field))
 
     def test_date_value_with_no_interval_is_returned_as_date_string(self):
         for d in (date(2019, 1, 1), datetime(2019, 1, 1, 12, 30, 2)):
@@ -180,27 +170,21 @@ class FormatDisplayValueTests(TestCase):
     def test_date_value_with_day_interval_is_returned_as_date_string_to_the_day(self):
         for d in (date(2019, 1, 1), datetime(2019, 1, 1, 12, 30, 2)):
             with self.subTest("with " + d.__class__.__name__):
-                self.assertEqual(
-                    "2019-01-01", formats.display_value(d, day(date_field))
-                )
+                self.assertEqual("2019-01-01", formats.display_value(d, day(date_field)))
 
     def test_date_value_with_week_interval_is_returned_as_date_string_to_the_year_and_week_number(
         self,
     ):
         for d in (date(2019, 2, 25), datetime(2019, 2, 25, 12, 30, 2)):
             with self.subTest("with " + d.__class__.__name__):
-                self.assertEqual(
-                    "W08 2019-02-25", formats.display_value(d, week(date_field))
-                )
+                self.assertEqual("W08 2019-02-25", formats.display_value(d, week(date_field)))
 
     def test_date_value_with_month_interval_is_returned_as_date_string_to_the_month_and_year(
         self,
     ):
         for d in (date(2019, 1, 1), datetime(2019, 1, 1, 12, 30, 2)):
             with self.subTest("with " + d.__class__.__name__):
-                self.assertEqual(
-                    "Jan 2019", formats.display_value(d, month(date_field))
-                )
+                self.assertEqual("Jan 2019", formats.display_value(d, month(date_field)))
 
     def test_date_value_with_quarter_interval_is_returned_as_date_string_to_the_quarter_and_year(self):
         dates = (date(2019, m, 1) for m in range(1, 13))

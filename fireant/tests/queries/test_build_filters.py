@@ -37,11 +37,7 @@ class FilterDateFieldTests(TestCase):
     maxDiff = None
 
     def test_eq_expr_str(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.date == "2019-03-06")
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.date == "2019-03-06").sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -55,11 +51,7 @@ class FilterDateFieldTests(TestCase):
         )
 
     def test_eq_expr_date(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.date == date(2019, 3, 6))
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.date == date(2019, 3, 6)).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -109,11 +101,7 @@ class FilterDateFieldTests(TestCase):
         )
 
     def test_ne_expr(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.date != date(2019, 3, 6))
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.date != date(2019, 3, 6)).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -127,11 +115,7 @@ class FilterDateFieldTests(TestCase):
         )
 
     def test_gt_expr(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.date > date(2019, 3, 6))
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.date > date(2019, 3, 6)).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -145,11 +129,7 @@ class FilterDateFieldTests(TestCase):
         )
 
     def test_ge_expr(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.date >= date(2019, 3, 6))
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.date >= date(2019, 3, 6)).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -163,11 +143,7 @@ class FilterDateFieldTests(TestCase):
         )
 
     def test_lt_expr(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.date < date(2019, 3, 6))
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.date < date(2019, 3, 6)).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -181,11 +157,7 @@ class FilterDateFieldTests(TestCase):
         )
 
     def test_le_expr(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.date <= date(2019, 3, 6))
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.date <= date(2019, 3, 6)).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -265,16 +237,10 @@ class FilterDateFieldTests(TestCase):
             ds.fields.date.is_(True)
 
     def test_void_filter_with_no_other_filters(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.date.void())
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.date.void()).sql
 
         self.assertEqual(len(queries), 1)
-        self.assertEqual(
-            'SELECT SUM("number") "$aggr_number" FROM "test" ORDER BY 1 LIMIT 200000', str(queries[0])
-        )
+        self.assertEqual('SELECT SUM("number") "$aggr_number" FROM "test" ORDER BY 1 LIMIT 200000', str(queries[0]))
 
     def test_void_filter_with_a_dimension_filter(self):
         queries = (
@@ -318,11 +284,7 @@ class FilterDateFieldTests(TestCase):
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 class FilterNumberFieldTests(TestCase):
     def test_eq_expr_int(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.number == 1)
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.number == 1).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -331,47 +293,25 @@ class FilterNumberFieldTests(TestCase):
         )
 
     def test_eq_expr_float(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.number == 1.0)
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.number == 1.0).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            'WHERE "number"=1.0 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            "SELECT " 'SUM("number") "$aggr_number" ' 'FROM "test" ' 'WHERE "number"=1.0 ' 'ORDER BY 1 ' 'LIMIT 200000',
             str(queries[0]),
         )
 
     def test_ne_expr(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.number != 5)
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.number != 5).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            'WHERE "number"<>5 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            "SELECT " 'SUM("number") "$aggr_number" ' 'FROM "test" ' 'WHERE "number"<>5 ' 'ORDER BY 1 ' 'LIMIT 200000',
             str(queries[0]),
         )
 
     def test_gt_expr(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.number > 5)
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.number > 5).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -380,29 +320,16 @@ class FilterNumberFieldTests(TestCase):
         )
 
     def test_ge_expr(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.number >= 5)
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.number >= 5).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            'WHERE "number">=5 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            "SELECT " 'SUM("number") "$aggr_number" ' 'FROM "test" ' 'WHERE "number">=5 ' 'ORDER BY 1 ' 'LIMIT 200000',
             str(queries[0]),
         )
 
     def test_lt_expr(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.number < 5)
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.number < 5).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -411,29 +338,16 @@ class FilterNumberFieldTests(TestCase):
         )
 
     def test_le_expr(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.number <= 5)
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.number <= 5).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            'WHERE "number"<=5 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            "SELECT " 'SUM("number") "$aggr_number" ' 'FROM "test" ' 'WHERE "number"<=5 ' 'ORDER BY 1 ' 'LIMIT 200000',
             str(queries[0]),
         )
 
     def test_in_expr(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.number.isin((5, 7)))
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.number.isin((5, 7))).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -447,11 +361,7 @@ class FilterNumberFieldTests(TestCase):
         )
 
     def test_notin_expr(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.number.notin((5, 7)))
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.number.notin((5, 7))).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -465,11 +375,7 @@ class FilterNumberFieldTests(TestCase):
         )
 
     def test_between_expr(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.number.between(5, 7))
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.number.between(5, 7)).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -498,11 +404,7 @@ class FilterNumberFieldTests(TestCase):
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 class FilterTextFieldTests(TestCase):
     def test_eq_expr_str(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.text == "abc")
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.text == "abc").sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -516,11 +418,7 @@ class FilterTextFieldTests(TestCase):
         )
 
     def test_ne_expr_str(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.text != "abc")
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.text != "abc").sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -554,11 +452,7 @@ class FilterTextFieldTests(TestCase):
             ds.fields.text <= "a"
 
     def test_in_expr_date(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.text.isin(("abc", "def")))
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.text.isin(("abc", "def"))).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -572,11 +466,7 @@ class FilterTextFieldTests(TestCase):
         )
 
     def test_notin_expr_date(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.text.notin(("abc", "def")))
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.text.notin(("abc", "def"))).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -594,11 +484,7 @@ class FilterTextFieldTests(TestCase):
             ds.fields.text.between("a", "b")
 
     def test_like_expr_str(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.text.like("abc%"))
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.text.like("abc%")).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -612,11 +498,7 @@ class FilterTextFieldTests(TestCase):
         )
 
     def test_not_like_expr_str(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.text.not_like("abc%"))
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.text.not_like("abc%")).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -633,11 +515,7 @@ class FilterTextFieldTests(TestCase):
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 class FilterBooleanFieldTests(TestCase):
     def test_eq_expr_bool_true(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.boolean == True)
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.boolean == True).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -651,11 +529,7 @@ class FilterBooleanFieldTests(TestCase):
         )
 
     def test_eq_expr_bool_false(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.boolean == False)
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.boolean == False).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -669,38 +543,20 @@ class FilterBooleanFieldTests(TestCase):
         )
 
     def test_eq_expr_number_1(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.boolean == 1)
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.boolean == 1).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            'WHERE "boolean"=1 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            "SELECT " 'SUM("number") "$aggr_number" ' 'FROM "test" ' 'WHERE "boolean"=1 ' 'ORDER BY 1 ' 'LIMIT 200000',
             str(queries[0]),
         )
 
     def test_eq_expr_number_0(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.boolean == 0)
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.boolean == 0).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            'WHERE "boolean"=0 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            "SELECT " 'SUM("number") "$aggr_number" ' 'FROM "test" ' 'WHERE "boolean"=0 ' 'ORDER BY 1 ' 'LIMIT 200000',
             str(queries[0]),
         )
 
@@ -733,11 +589,7 @@ class FilterBooleanFieldTests(TestCase):
             ds.fields.boolean.not_like("%stuff%")
 
     def test_is_true(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.boolean.is_(True))
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.boolean.is_(True)).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -746,11 +598,7 @@ class FilterBooleanFieldTests(TestCase):
         )
 
     def test_is_false(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.boolean.is_(False))
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.boolean.is_(False)).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -767,11 +615,7 @@ class FilterBooleanFieldTests(TestCase):
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 class FilterAggregateNumberFieldTests(TestCase):
     def test_eq_expr_int(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.aggr_number == 1)
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.aggr_number == 1).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -785,11 +629,7 @@ class FilterAggregateNumberFieldTests(TestCase):
         )
 
     def test_eq_expr_float(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.aggr_number == 1.0)
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.aggr_number == 1.0).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -803,11 +643,7 @@ class FilterAggregateNumberFieldTests(TestCase):
         )
 
     def test_ne_expr(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.aggr_number != 5)
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.aggr_number != 5).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -821,11 +657,7 @@ class FilterAggregateNumberFieldTests(TestCase):
         )
 
     def test_gt_expr(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.aggr_number > 5)
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.aggr_number > 5).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -839,11 +671,7 @@ class FilterAggregateNumberFieldTests(TestCase):
         )
 
     def test_ge_expr(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.aggr_number >= 5)
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.aggr_number >= 5).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -857,11 +685,7 @@ class FilterAggregateNumberFieldTests(TestCase):
         )
 
     def test_lt_expr(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.aggr_number < 5)
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.aggr_number < 5).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -875,11 +699,7 @@ class FilterAggregateNumberFieldTests(TestCase):
         )
 
     def test_le_expr(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.aggr_number <= 5)
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.aggr_number <= 5).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -893,11 +713,7 @@ class FilterAggregateNumberFieldTests(TestCase):
         )
 
     def test_in_expr(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.aggr_number.isin((5, 7)))
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.aggr_number.isin((5, 7))).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -911,11 +727,7 @@ class FilterAggregateNumberFieldTests(TestCase):
         )
 
     def test_notin_expr(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.aggr_number.notin((5, 7)))
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.aggr_number.notin((5, 7))).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -929,11 +741,7 @@ class FilterAggregateNumberFieldTests(TestCase):
         )
 
     def test_between_expr(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(ds.fields.aggr_number.between(5, 7))
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(ds.fields.aggr_number.between(5, 7)).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(

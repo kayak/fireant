@@ -1,5 +1,4 @@
 import pickle
-
 from unittest.case import TestCase
 
 from fireant import (
@@ -14,11 +13,11 @@ from fireant import (
 class DatabasePickleTests(TestCase):
     def test_that_database_inst_can_be_pickled(self):
         for db_inst in (
-              MySQLDatabase(),
-              PostgreSQLDatabase(),
-              RedshiftDatabase(),
-              SnowflakeDatabase(),
-              VerticaDatabase(),
+            MySQLDatabase(),
+            PostgreSQLDatabase(),
+            RedshiftDatabase(),
+            SnowflakeDatabase(),
+            VerticaDatabase(),
         ):
             with self.subTest('serialization {}'.format(db_inst.__class__.__name__)):
                 dump = pickle.dumps(db_inst, pickle.HIGHEST_PROTOCOL)

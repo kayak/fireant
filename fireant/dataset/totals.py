@@ -65,15 +65,14 @@ def _scrub_totals_for_multilevel_index_df(data_frame, dimensions):
         return data_frame
 
     # Get the totals marker value for each index level
-    markers = [get_totals_marker_for_dtype(level.dtype)
-               for level in data_frame.index.levels]
+    markers = [get_totals_marker_for_dtype(level.dtype) for level in data_frame.index.levels]
 
     # Create a boolean data frame indicating whether or not the index value equals the totals marker for the dtype
     # corresponding to each index level
-    is_total_marker = pd.DataFrame([[value == marker
-                                     for value, marker in zip(values, markers)]
-                                    for values in data_frame.index],
-                                   index=data_frame.index)
+    is_total_marker = pd.DataFrame(
+        [[value == marker for value, marker in zip(values, markers)] for values in data_frame.index],
+        index=data_frame.index,
+    )
 
     """
     If a row in the data frame is for totals for one index level, all of the subsequent index levels will also use a
@@ -89,8 +88,7 @@ def _scrub_totals_for_multilevel_index_df(data_frame, dimensions):
         is_totals_marker_leaf[column] = np.logical_xor(is_total_marker[column], is_total_marker[prev_column])
 
     # Create a boolean vector for each dimension to mark if that dimension is rolled up
-    rollup_dimensions = np.array([isinstance(dimension, Rollup)
-                                  for dimension in dimensions])
+    rollup_dimensions = np.array([isinstance(dimension, Rollup) for dimension in dimensions])
 
     # Create a boolean pd.Series where False means to remove the row from the data frame.
     mask = (~(~rollup_dimensions & is_totals_marker_leaf)).all(axis=1)

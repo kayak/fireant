@@ -30,14 +30,18 @@ class TestMSSQLDatabase(TestCase):
         with patch.dict('sys.modules', pymssql=mock_pymssql):
             mock_pymssql.connect.return_value = 'OK'
 
-            mssql = MSSQLDatabase(database='test_database', host='test_host', port=1234,
-                                  user='test_user', password='password')
+            mssql = MSSQLDatabase(
+                database='test_database', host='test_host', port=1234, user='test_user', password='password'
+            )
             result = mssql.connect()
 
         self.assertEqual('OK', result)
         mock_pymssql.connect.assert_called_once_with(
-              server='test_host', port=1234, database='test_database',
-              user='test_user', password='password',
+            server='test_host',
+            port=1234,
+            database='test_database',
+            user='test_user',
+            password='password',
         )
 
     def test_convert_date(self):
@@ -117,12 +121,12 @@ class TestMSSQLDatabase(TestCase):
         MSSQLDatabase().get_column_definitions('test_schema', 'test_table')
 
         mock_fetch.assert_called_once_with(
-              'SELECT DISTINCT "COLUMN_NAME","DATA_TYPE" '
-              'FROM "INFORMATION_SCHEMA"."COLUMNS" '
-              'WHERE "TABLE_SCHEMA"=%(schema)s AND "TABLE_NAME"=%(table)s '
-              'ORDER BY "column_name"',
-              connection=None,
-              parameters={'schema': 'test_schema', 'table': 'test_table'}
+            'SELECT DISTINCT "COLUMN_NAME","DATA_TYPE" '
+            'FROM "INFORMATION_SCHEMA"."COLUMNS" '
+            'WHERE "TABLE_SCHEMA"=%(schema)s AND "TABLE_NAME"=%(table)s '
+            'ORDER BY "column_name"',
+            connection=None,
+            parameters={'schema': 'test_schema', 'table': 'test_table'},
         )
 
 

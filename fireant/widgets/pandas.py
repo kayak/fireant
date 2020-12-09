@@ -21,7 +21,7 @@ class Pandas(TransformableWidget):
         transpose=False,
         sort=None,
         ascending=None,
-        max_columns=None
+        max_columns=None,
     ):
         super(Pandas, self).__init__(metric, *metrics)
         self.pivot = pivot
@@ -29,11 +29,7 @@ class Pandas(TransformableWidget):
         self.transpose = transpose
         self.sort = sort
         self.ascending = ascending
-        self.max_columns = (
-            min(max_columns, HARD_MAX_COLUMNS)
-            if max_columns is not None
-            else HARD_MAX_COLUMNS
-        )
+        self.max_columns = min(max_columns, HARD_MAX_COLUMNS) if max_columns is not None else HARD_MAX_COLUMNS
 
     def transform(
         self,
@@ -56,9 +52,7 @@ class Pandas(TransformableWidget):
         """
         result_df = data_frame.copy()
 
-        dimension_aliases = [
-            alias_selector(dimension.alias) for dimension in dimensions
-        ]
+        dimension_aliases = [alias_selector(dimension.alias) for dimension in dimensions]
 
         items = [
             item if reference is None else ReferenceItem(item, reference)
@@ -71,33 +65,23 @@ class Pandas(TransformableWidget):
 
         result_df = result_df[[alias_selector(item.alias) for item in items]]
 
-        hide_dimensions = set(self.hide) | {
-            dimension for dimension in dimensions if dimension.fetch_only
-        }
+        hide_dimensions = set(self.hide) | {dimension for dimension in dimensions if dimension.fetch_only}
         self.hide_data_frame_indexes(result_df, hide_dimensions)
 
-        hide_aliases = {
-            dimension.alias for dimension in hide_dimensions
-        }
+        hide_aliases = {dimension.alias for dimension in hide_dimensions}
 
         if dimensions:
             result_df.index.names = [
-                dimension.label or dimension.alias
-                for dimension in dimensions
-                if dimension.alias not in hide_aliases
+                dimension.label or dimension.alias for dimension in dimensions if dimension.alias not in hide_aliases
             ]
 
         result_df.columns = pd.Index([item.label for item in items], name="Metrics")
 
         pivot_dimensions = [
-            dimension.label or dimension.alias
-            for dimension in self.pivot
-            if dimension.alias not in hide_aliases
+            dimension.label or dimension.alias for dimension in self.pivot if dimension.alias not in hide_aliases
         ]
         result_df, _, _ = self.pivot_data_frame(result_df, pivot_dimensions, self.transpose)
-        return self.add_formatting(dimensions, items, result_df, use_raw_values).fillna(
-            value=formats.BLANK_VALUE
-        )
+        return self.add_formatting(dimensions, items, result_df, use_raw_values).fillna(value=formats.BLANK_VALUE)
 
     @staticmethod
     def _should_data_frame_be_transformed(data_frame, pivot_dimensions, transpose):
@@ -146,15 +130,9 @@ class Pandas(TransformableWidget):
             is_transposed = True
 
         # If there are more than one column levels and the last level is a single metric, drop the level
-        if isinstance(data_frame.columns, pd.MultiIndex) and 1 == len(
-            data_frame.columns.levels[0]
-        ):
-            data_frame.name = data_frame.columns.levels[0][
-                0
-            ]  # capture the name of the metrics column
-            data_frame.columns = data_frame.columns.droplevel(
-                0
-            )  # drop the metrics level
+        if isinstance(data_frame.columns, pd.MultiIndex) and 1 == len(data_frame.columns.levels[0]):
+            data_frame.name = data_frame.columns.levels[0][0]  # capture the name of the metrics column
+            data_frame.columns = data_frame.columns.droplevel(0)  # drop the metrics level
 
         return self.sort_data_frame(data_frame), is_pivoted, is_transposed
 
@@ -171,9 +149,7 @@ class Pandas(TransformableWidget):
         ascending = self.ascending if self.ascending is not None else True
 
         sort = wrap_list(self.sort)
-        sort_columns = [
-            column_names[column] for column in sort if column < len(column_names)
-        ]
+        sort_columns = [column_names[column] for column in sort if column < len(column_names)]
 
         if not sort_columns:
             return data_frame
@@ -183,9 +159,7 @@ class Pandas(TransformableWidget):
         if isinstance(ascending, list) and len(ascending) != len(sort_columns):
             ascending = ascending[0] if len(ascending) > 0 else None
 
-        sorted = unsorted.sort_values(sort_columns, ascending=ascending).set_index(
-            index_names
-        )
+        sorted = unsorted.sort_values(sort_columns, ascending=ascending).set_index(index_names)
 
         # Maintain the single metric name
         if hasattr(data_frame, "name"):
@@ -205,16 +179,10 @@ class Pandas(TransformableWidget):
                 use_raw_value=use_raw_values,
             )
 
-        if (
-            self.transpose
-            or not self.transpose
-            and len(dimensions) == len(self.pivot) > 0
-        ):
+        if self.transpose or not self.transpose and len(dimensions) == len(self.pivot) > 0:
             for item in items:
                 field_display = _get_field_display(item)
-                format_df.loc[items[0].label] = format_df.loc[items[0].label].apply(
-                    field_display
-                )
+                format_df.loc[items[0].label] = format_df.loc[items[0].label].apply(field_display)
 
             return format_df
 

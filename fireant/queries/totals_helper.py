@@ -14,22 +14,14 @@ def adapt_for_totals_query(totals_dimension, dimensions, filters):
     :return:
     """
     is_totals_query = totals_dimension is not None
-    raw_dimensions = [dimension.dimension
-                      if isinstance(dimension, Rollup)
-                      else dimension
-                      for dimension in dimensions]
+    raw_dimensions = [dimension.dimension if isinstance(dimension, Rollup) else dimension for dimension in dimensions]
 
     if not is_totals_query:
         return raw_dimensions, filters
 
     # Get an index to split the dimensions before and after the totals dimension
-    index = [i
-             for i, dimension in enumerate(dimensions)
-             if dimension is totals_dimension][0]
-    totals_dims = [Rollup(dimension)
-                   if i >= index
-                   else dimension
-                   for i, dimension in enumerate(raw_dimensions)]
+    index = [i for i, dimension in enumerate(dimensions) if dimension is totals_dimension][0]
+    totals_dims = [Rollup(dimension) if i >= index else dimension for i, dimension in enumerate(raw_dimensions)]
     totals_filters = find_filters_for_totals(filters)
 
     return totals_dims, totals_filters

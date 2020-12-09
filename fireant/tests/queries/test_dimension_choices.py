@@ -1,7 +1,8 @@
 from unittest import TestCase
 from unittest.mock import (
     ANY,
-    MagicMock, Mock,
+    MagicMock,
+    Mock,
     patch,
 )
 
@@ -127,9 +128,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
             ["state_id", "varchar(128)"],
         ],
     )
-    def test_query_choices_for_filters_from_joins(
-        self, mock_get_column_definitions: Mock, mock_fetch_data: Mock
-    ):
+    def test_query_choices_for_filters_from_joins(self, mock_get_column_definitions: Mock, mock_fetch_data: Mock):
         mock_hint_dataset.fields.political_party.choices.filter(
             mock_hint_dataset.fields["district-name"].isin(["Manhattan"])
         ).filter(mock_hint_dataset.fields["state"].isin(["Texas"])).fetch()
@@ -161,9 +160,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
             ["candidate_name", "varchar(128)"],
         ],
     )
-    def test_query_choices_for_filters_from_base(
-        self, mock_get_column_definitions: Mock, mock_fetch_data: Mock
-    ):
+    def test_query_choices_for_filters_from_base(self, mock_get_column_definitions: Mock, mock_fetch_data: Mock):
         mock_hint_dataset.fields.political_party.choices.filter(
             mock_hint_dataset.fields.candidate_name.isin(["Bill Clinton"])
         ).filter(mock_hint_dataset.fields["election-year"].isin([1992])).fetch()
@@ -190,13 +187,9 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
         "get_column_definitions",
         return_value=[["political_party", "varchar(128)"]],
     )
-    def test_query_choices_for_case_filter(
-        self, mock_get_column_definitions: Mock, mock_fetch_data: Mock
-    ):
+    def test_query_choices_for_case_filter(self, mock_get_column_definitions: Mock, mock_fetch_data: Mock):
         mock_hint_dataset.fields.political_party.choices.filter(
-            mock_hint_dataset.fields.political_party_case.isin(
-                ["Democrat", "Bill Clinton"]
-            )
+            mock_hint_dataset.fields.political_party_case.isin(["Democrat", "Bill Clinton"])
         ).fetch()
 
         mock_fetch_data.assert_called_once_with(
@@ -220,9 +213,7 @@ class DimensionsChoicesQueryBuilderWithHintTableTests(TestCase):
         "get_column_definitions",
         return_value=[["district_name", "varchar(128)"]],
     )
-    def test_query_choices_for_join_dimension(
-        self, mock_get_column_definitions: Mock, mock_fetch_data: Mock
-    ):
+    def test_query_choices_for_join_dimension(self, mock_get_column_definitions: Mock, mock_fetch_data: Mock):
         mock_hint_dataset.fields["district-name"].choices.fetch()
 
         mock_fetch_data.assert_called_once_with(
@@ -342,7 +333,7 @@ class DimensionsChoicesFetchTests(TestCase):
                     data_type=DataType.text,
                     hyperlink_template="http://example.com/{political_party}",
                 )
-            ]
+            ],
         )
         df = pd.DataFrame({'political_party': ['a', 'b', 'c']}).set_index('political_party')
         mock_fetch_data.return_value = 100, df

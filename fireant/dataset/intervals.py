@@ -10,9 +10,7 @@ class NumericInterval(DimensionModifier):
         super().__init__(dimension)
 
     def __eq__(self, other):
-        return all([isinstance(other, NumericInterval),
-                    self.size == other.size,
-                    self.offset == other.offset])
+        return all([isinstance(other, NumericInterval), self.size == other.size, self.offset == other.offset])
 
     def __hash__(self):
         return hash(repr(self))
@@ -27,8 +25,7 @@ class DatetimeInterval(DimensionModifier):
         self.interval_key = interval_key
 
     def __eq__(self, other):
-        return isinstance(other, DatetimeInterval) \
-               and self.alias == other.alias
+        return isinstance(other, DatetimeInterval) and self.alias == other.alias
 
     def __repr__(self):
         wrapped_key = super().__getattribute__('wrapped_key')
@@ -39,5 +36,4 @@ class DatetimeInterval(DimensionModifier):
         return hash(repr(self))
 
 
-hour, day, week, month, quarter, year = [partial(DatetimeInterval, interval_key=key)
-                                         for key in DATETIME_INTERVALS]
+hour, day, week, month, quarter, year = [partial(DatetimeInterval, interval_key=key) for key in DATETIME_INTERVALS]

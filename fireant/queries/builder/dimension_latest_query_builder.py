@@ -30,9 +30,7 @@ class DimensionLatestQueryBuilder(QueryBuilder):
         The dataset query extends this with metrics, references, and totals.
         """
         if not self.dimensions:
-            raise QueryException(
-                "Must select at least one dimension to query latest values"
-            )
+            raise QueryException("Must select at least one dimension to query latest values")
 
         query = make_latest_query(
             database=self.dataset.database,

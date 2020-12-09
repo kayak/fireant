@@ -12,14 +12,11 @@ def _reindex_deduplicate(left, right, fill_value=None):
     combined_index = left.index.append(right.index)
     dededuplicated_index = combined_index[~combined_index.duplicated()]
     left_reindex, right_reindex = [
-        _reindex_with_nans(df, dededuplicated_index, fill_value=fill_value)
-        for df in (left, right)
+        _reindex_with_nans(df, dededuplicated_index, fill_value=fill_value) for df in (left, right)
     ]
     return left_reindex, right_reindex
 
 
 def df_subtract(left, right, fill_value=None):
-    left_reindex, right_reindex = _reindex_deduplicate(
-        left, right, fill_value=fill_value
-    )
+    left_reindex, right_reindex = _reindex_deduplicate(left, right, fill_value=fill_value)
     return left_reindex.subtract(right_reindex)

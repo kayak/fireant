@@ -1,13 +1,14 @@
 from unittest import TestCase
 
-import fireant as f
-from fireant.queries.builder import add_hints
-from fireant.tests.dataset.mocks import mock_dataset
-from fireant.widgets.base import MetricRequiredException
 from pypika import (
     MySQLQuery,
     VerticaQuery,
 )
+
+import fireant as f
+from fireant.queries.builder import add_hints
+from fireant.tests.dataset.mocks import mock_dataset
+from fireant.widgets.base import MetricRequiredException
 
 
 class QueryBuilderTests(TestCase):
@@ -42,15 +43,11 @@ class QueryBuilderValidationTests(TestCase):
 
     def test_highcharts_requires_at_least_one_axis(self):
         with self.assertRaises(MetricRequiredException):
-            mock_dataset.query \
-                .widget(f.HighCharts()) \
-                .dimension(mock_dataset.fields.timestamp) \
-                .sql
+            mock_dataset.query.widget(f.HighCharts()).dimension(mock_dataset.fields.timestamp).sql
 
     def test_ReactTable_requires_at_least_one_metric(self):
         with self.assertRaises(TypeError):
-            mock_dataset.query \
-                .widget(f.ReactTable())
+            mock_dataset.query.widget(f.ReactTable())
 
 
 class QueryHintsTests(TestCase):

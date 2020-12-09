@@ -14,6 +14,7 @@ from fireant.utils import groupby, ordered_distinct_list, ordered_distinct_list_
 if TYPE_CHECKING:
     from fireant import Field
 
+
 class MissingTableJoinException(DataSetException):
     pass
 
@@ -77,9 +78,7 @@ def find_joins_for_tables(joins, base_table, required_tables):
         table = required_tables.pop()
 
         if table not in slicer_joins:
-            raise MissingTableJoinException(
-                "Could not find a join for table {}".format(str(table))
-            )
+            raise MissingTableJoinException("Could not find a join for table {}".format(str(table)))
 
         join = slicer_joins[table]
         tables_required_for_join = set(join.criterion.tables_) - {
@@ -87,9 +86,7 @@ def find_joins_for_tables(joins, base_table, required_tables):
             join.table,
         }
 
-        dependencies[join] |= {
-            slicer_joins[table] for table in tables_required_for_join
-        }
+        dependencies[join] |= {slicer_joins[table] for table in tables_required_for_join}
         required_tables += tables_required_for_join - {d.table for d in dependencies}
 
     try:
@@ -103,9 +100,7 @@ def find_metrics_for_widgets(widgets):
     :return:
         an ordered, distinct list of metrics used in all widgets as part of this query.
     """
-    return ordered_distinct_list_by_attr(
-        [metric for widget in widgets for metric in widget.metrics]
-    )
+    return ordered_distinct_list_by_attr([metric for widget in widgets for metric in widget.metrics])
 
 
 def find_operations_for_widgets(widgets):
@@ -113,9 +108,7 @@ def find_operations_for_widgets(widgets):
     :return:
         an ordered, distinct list of metrics used in all widgets as part of this query.
     """
-    return ordered_distinct_list_by_attr(
-        [operation for widget in widgets for operation in widget.operations]
-    )
+    return ordered_distinct_list_by_attr([operation for widget in widgets for operation in widget.operations])
 
 
 def find_dataset_fields(metrics):
@@ -126,11 +119,7 @@ def find_dataset_fields(metrics):
     """
     from fireant.dataset.fields import Field
 
-    return [
-        field or metric
-        for metric in metrics
-        for field in metric.definition.find_(Field)
-    ]
+    return [field or metric for metric in metrics for field in metric.definition.find_(Field)]
 
 
 def find_share_operations(operations):
@@ -151,9 +140,7 @@ def find_share_dimensions(dimensions, operations):
     return [
         dimension_map[operation.over.alias]
         for operation in operations
-        if isinstance(operation, Share)
-        and operation.over is not None
-        and operation.over.alias in dimension_map
+        if isinstance(operation, Share) and operation.over is not None and operation.over.alias in dimension_map
     ]
 
 
@@ -234,9 +221,7 @@ def find_and_group_references_for_dimensions(dimensions, references):
     def get_dimension_time_unit_and_interval(reference):
         defaults = (reference.time_unit, 1)
         time_unit, interval_muliplier = (
-            interval_weekdays.get(reference.time_unit, defaults)
-            if align_weekdays
-            else defaults
+            interval_weekdays.get(reference.time_unit, defaults) if align_weekdays else defaults
         )
 
         field = find_field_in_modified_field(reference.field)

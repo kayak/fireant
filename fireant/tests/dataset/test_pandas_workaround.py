@@ -21,9 +21,7 @@ class TestSubtract(TestCase):
                 [17, 18],
             ],
             columns=["happy", "sad"],
-            index=pd.MultiIndex.from_product(
-                [["a", "b", None], [0, 1, np.nan]], names=["l0", "l1"]
-            ),
+            index=pd.MultiIndex.from_product([["a", "b", None], [0, 1, np.nan]], names=["l0", "l1"]),
         )
         df1 = pd.DataFrame(
             data=[
@@ -38,9 +36,7 @@ class TestSubtract(TestCase):
                 [17, 18],
             ],
             columns=["happy", "sad"],
-            index=pd.MultiIndex.from_product(
-                [["b", "c", None], [1, 2, np.nan]], names=["l0", "l1"]
-            ),
+            index=pd.MultiIndex.from_product([["b", "c", None], [1, 2, np.nan]], names=["l0", "l1"]),
         )
 
         result = df_subtract(df0, df1, fill_value=0)

@@ -25,14 +25,16 @@ class TestPostgreSQL(TestCase):
         with patch.dict('sys.modules', psycopg2=mock_postgresql):
             mock_postgresql.connect.return_value = 'OK'
 
-            postgresql = PostgreSQLDatabase('test_host', 1234, 'test_database',
-                                            'test_user', 'password')
+            postgresql = PostgreSQLDatabase('test_host', 1234, 'test_database', 'test_user', 'password')
             result = postgresql.connect()
 
         self.assertEqual('OK', result)
         mock_postgresql.connect.assert_called_once_with(
-              host='test_host', port=1234, dbname='test_database',
-              user='test_user', password='password',
+            host='test_host',
+            port=1234,
+            dbname='test_database',
+            user='test_user',
+            password='password',
         )
 
     def test_trunc_hour(self):
@@ -96,10 +98,10 @@ class TestPostgreSQL(TestCase):
         PostgreSQLDatabase().get_column_definitions('test_schema', 'test_table')
 
         mock_fetch.assert_called_once_with(
-              'SELECT DISTINCT "column_name","data_type" ' \
-              'FROM "INFORMATION_SCHEMA"."columns" ' \
-              'WHERE "table_schema"=%(schema)s AND "table_name"=%(table)s ' \
-              'ORDER BY "column_name"',
-              connection=None,
-              parameters={'schema': 'test_schema', 'table': 'test_table'}
+            'SELECT DISTINCT "column_name","data_type" '
+            'FROM "INFORMATION_SCHEMA"."columns" '
+            'WHERE "table_schema"=%(schema)s AND "table_name"=%(table)s '
+            'ORDER BY "column_name"',
+            connection=None,
+            parameters={'schema': 'test_schema', 'table': 'test_table'},
         )

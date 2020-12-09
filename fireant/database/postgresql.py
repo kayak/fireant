@@ -1,5 +1,6 @@
 from pypika import (
-    Parameter, PostgreSQLQuery,
+    Parameter,
+    PostgreSQLQuery,
     Table,
     functions as fn,
     terms,
@@ -25,15 +26,7 @@ class PostgreSQLDatabase(Database):
     # The pypika query class to use for constructing queries
     query_cls = PostgreSQLQuery
 
-    def __init__(
-        self,
-        host="localhost",
-        port=5432,
-        database=None,
-        user=None,
-        password=None,
-        **kwargs
-    ):
+    def __init__(self, host="localhost", port=5432, database=None, user=None, password=None, **kwargs):
         super().__init__(host, port, database, **kwargs)
         self.user = user
         self.password = password

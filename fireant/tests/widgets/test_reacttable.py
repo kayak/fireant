@@ -124,10 +124,12 @@ class FormattingRulesTests(TestCase):
 
     def test_formatting_heatmap_rule_with_just_one_value(self):
         # This test is to eliminate division by zero
-        df = pd.DataFrame.from_dict({
-            "$metric0": [1],
-            "$timestamp": [0],
-        }).set_index('$timestamp')
+        df = pd.DataFrame.from_dict(
+            {
+                "$metric0": [1],
+                "$timestamp": [0],
+            }
+        ).set_index('$timestamp')
 
         result = ReactTable(
             self.dataset.fields.metric0,
@@ -264,14 +266,16 @@ class FormattingRulesTests(TestCase):
                     {'Header': '100', 'accessor': '100'},
                     {'Header': '200', 'accessor': '200'},
                     {'Header': '300', 'accessor': '300'},
-                    {'Header': '400', 'accessor': '400'}
+                    {'Header': '400', 'accessor': '400'},
                 ],
                 "data": [
-                    {'$metrics': {'raw': 'Metric0'},
-                     '100': {'display': '1', 'raw': 1},
-                     '200': {'display': '2', 'raw': 2},
-                     '300': {'color': 'EEEEEE', 'display': '3', 'raw': 3, 'text_color': '212121'},
-                     '400': {'color': 'EEEEEE', 'display': '4', 'raw': 4, 'text_color': '212121'}}
+                    {
+                        '$metrics': {'raw': 'Metric0'},
+                        '100': {'display': '1', 'raw': 1},
+                        '200': {'display': '2', 'raw': 2},
+                        '300': {'color': 'EEEEEE', 'display': '3', 'raw': 3, 'text_color': '212121'},
+                        '400': {'color': 'EEEEEE', 'display': '4', 'raw': 4, 'text_color': '212121'},
+                    }
                 ],
             },
             result,
@@ -315,12 +319,7 @@ class FormattingRulesTests(TestCase):
                     },
                     {
                         "$metric0": {"display": "4", "raw": 4},
-                        "$metric0_dod": {
-                            "display": "12",
-                            "raw": 12,
-                            "color": "EEEEEE",
-                            'text_color': '212121'
-                        },
+                        "$metric0_dod": {"display": "12", "raw": 12, "color": "EEEEEE", 'text_color': '212121'},
                     },
                 ],
             },
@@ -343,28 +342,12 @@ class FormattingRulesTests(TestCase):
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "CumSum(Metric0)", "accessor": "$cumsum(metric0)"}
-                ],
+                "columns": [{"Header": "CumSum(Metric0)", "accessor": "$cumsum(metric0)"}],
                 "data": [
                     {"$cumsum(metric0)": {"display": "1", "raw": 1}},
                     {"$cumsum(metric0)": {"display": "3", "raw": 3}},
-                    {
-                        "$cumsum(metric0)": {
-                            "display": "6",
-                            "raw": 6,
-                            "color": "EEEEEE",
-                            'text_color': '212121'
-                        }
-                    },
-                    {
-                        "$cumsum(metric0)": {
-                            "display": "10",
-                            "raw": 10,
-                            "color": "EEEEEE",
-                            'text_color': '212121'
-                        }
-                    },
+                    {"$cumsum(metric0)": {"display": "6", "raw": 6, "color": "EEEEEE", 'text_color': '212121'}},
+                    {"$cumsum(metric0)": {"display": "10", "raw": 10, "color": "EEEEEE", 'text_color': '212121'}},
                 ],
             },
             result,
@@ -402,21 +385,11 @@ class FormattingRulesTests(TestCase):
                     },
                     {
                         "$cumsum(metric0)": {"display": "6", "raw": 6},
-                        "$cumsum(metric0)_dod": {
-                            "display": "15",
-                            "raw": 15,
-                            "color": "EEEEEE",
-                            'text_color': '212121'
-                        }
+                        "$cumsum(metric0)_dod": {"display": "15", "raw": 15, "color": "EEEEEE", 'text_color': '212121'},
                     },
                     {
                         "$cumsum(metric0)": {"display": "10", "raw": 10},
-                        "$cumsum(metric0)_dod": {
-                            "display": "27",
-                            "raw": 27,
-                            "color": "EEEEEE",
-                            'text_color': '212121'
-                        }
+                        "$cumsum(metric0)_dod": {"display": "27", "raw": 27, "color": "EEEEEE", 'text_color': '212121'},
                     },
                 ],
             },
@@ -460,9 +433,7 @@ class ReactTableTransformerTests(TestCase):
     maxDiff = None
 
     def test_single_metric(self):
-        result = ReactTable(mock_dataset.fields.votes).transform(
-            dimx0_metricx1_df, [], []
-        )
+        result = ReactTable(mock_dataset.fields.votes).transform(dimx0_metricx1_df, [], [])
 
         self.assertEqual(
             {
@@ -473,9 +444,7 @@ class ReactTableTransformerTests(TestCase):
         )
 
     def test_multiple_metrics(self):
-        result = ReactTable(
-            mock_dataset.fields.votes, mock_dataset.fields.wins
-        ).transform(dimx0_metricx2_df, [], [])
+        result = ReactTable(mock_dataset.fields.votes, mock_dataset.fields.wins).transform(dimx0_metricx2_df, [], [])
 
         self.assertEqual(
             {
@@ -494,9 +463,7 @@ class ReactTableTransformerTests(TestCase):
         )
 
     def test_multiple_metrics_reversed(self):
-        result = ReactTable(
-            mock_dataset.fields.wins, mock_dataset.fields.votes
-        ).transform(dimx0_metricx2_df, [], [])
+        result = ReactTable(mock_dataset.fields.wins, mock_dataset.fields.votes).transform(dimx0_metricx2_df, [], [])
 
         self.assertEqual(
             {
@@ -515,9 +482,7 @@ class ReactTableTransformerTests(TestCase):
         )
 
     def test_time_series_dim(self):
-        result = ReactTable(mock_dataset.fields.wins).transform(
-            dimx1_date_df, [day(mock_dataset.fields.timestamp)], []
-        )
+        result = ReactTable(mock_dataset.fields.wins).transform(dimx1_date_df, [day(mock_dataset.fields.timestamp)], [])
 
         self.assertEqual(
             {
@@ -633,9 +598,7 @@ class ReactTableTransformerTests(TestCase):
         )
 
     def test_dimx1_str(self):
-        result = ReactTable(mock_dataset.fields.wins).transform(
-            dimx1_str_df, [mock_dataset.fields.political_party], []
-        )
+        result = ReactTable(mock_dataset.fields.wins).transform(dimx1_str_df, [mock_dataset.fields.political_party], [])
 
         self.assertEqual(
             {
@@ -671,9 +634,7 @@ class ReactTableTransformerTests(TestCase):
         )
 
     def test_dimx1_int(self):
-        result = ReactTable(mock_dataset.fields.wins).transform(
-            dimx1_num_df, [mock_dataset.fields["candidate-id"]], []
-        )
+        result = ReactTable(mock_dataset.fields.wins).transform(dimx1_num_df, [mock_dataset.fields["candidate-id"]], [])
 
         self.assertEqual(
             {
@@ -781,9 +742,7 @@ class ReactTableTransformerTests(TestCase):
             day(mock_dataset.fields.timestamp),
             Rollup(mock_dataset.fields.political_party),
         ]
-        result = ReactTable(mock_dataset.fields.wins).transform(
-            dimx2_date_str_totals_df, dimensions, []
-        )
+        result = ReactTable(mock_dataset.fields.wins).transform(dimx2_date_str_totals_df, dimensions, [])
 
         self.assertIn("data", result)
         result["data"] = result["data"][-3:]  # shorten the results to make the test easier to read
@@ -839,13 +798,9 @@ class ReactTableTransformerTests(TestCase):
             Rollup(day(mock_dataset.fields.timestamp)),
             Rollup(mock_dataset.fields.political_party),
         ]
-        result = ReactTable(mock_dataset.fields.wins).transform(
-            dimx2_date_str_totalsx2_df, dimensions, []
-        )
+        result = ReactTable(mock_dataset.fields.wins).transform(dimx2_date_str_totalsx2_df, dimensions, [])
         self.assertIn("data", result)
-        result["data"] = (
-            result["data"][:3] + result["data"][-1:]
-        )  # shorten the results to make the test easier to read
+        result["data"] = result["data"][:3] + result["data"][-1:]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
@@ -907,9 +862,7 @@ class ReactTableTransformerTests(TestCase):
             mock_dataset.fields.political_party,
         ]
         references = [ElectionOverElection(mock_dataset.fields.timestamp)]
-        result = ReactTable(mock_dataset.fields.votes).transform(
-            dimx2_date_str_ref_df, dimensions, references
-        )
+        result = ReactTable(mock_dataset.fields.votes).transform(dimx2_date_str_ref_df, dimensions, references)
 
         self.assertIn("data", result)
         result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
@@ -958,9 +911,9 @@ class ReactTableTransformerTests(TestCase):
             mock_dataset.fields.political_party,
         ]
         references = [ElectionOverElection(mock_dataset.fields.timestamp)]
-        result = ReactTable(
-            mock_dataset.fields.votes, mock_dataset.fields.wins
-        ).transform(dimx2_date_str_ref_df, dimensions, references)
+        result = ReactTable(mock_dataset.fields.votes, mock_dataset.fields.wins).transform(
+            dimx2_date_str_ref_df, dimensions, references
+        )
 
         self.assertIn("data", result)
         result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
@@ -1011,9 +964,7 @@ class ReactTableTransformerTests(TestCase):
 
     def test_transpose(self):
         dimensions = [mock_dataset.fields.political_party]
-        result = ReactTable(mock_dataset.fields.wins, transpose=True).transform(
-            dimx1_str_df, dimensions, []
-        )
+        result = ReactTable(mock_dataset.fields.wins, transpose=True).transform(dimx1_str_df, dimensions, [])
 
         self.assertEqual(
             {
@@ -1036,9 +987,9 @@ class ReactTableTransformerTests(TestCase):
         )
 
     def test_transpose_without_dimension(self):
-        result = ReactTable(
-            mock_dataset.fields.votes, mock_dataset.fields.wins, transpose=True
-        ).transform(dimx1_none_df, [], [])
+        result = ReactTable(mock_dataset.fields.votes, mock_dataset.fields.wins, transpose=True).transform(
+            dimx1_none_df, [], []
+        )
 
         self.assertEqual(
             {
@@ -1062,9 +1013,9 @@ class ReactTableTransformerTests(TestCase):
             day(mock_dataset.fields.timestamp),
             mock_dataset.fields.political_party,
         ]
-        result = ReactTable(
-            mock_dataset.fields.wins, hide=[mock_dataset.fields.political_party]
-        ).transform(dimx2_date_str_df, dimensions, [])
+        result = ReactTable(mock_dataset.fields.wins, hide=[mock_dataset.fields.political_party]).transform(
+            dimx2_date_str_df, dimensions, []
+        )
 
         self.assertIn("data", result)
         result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
@@ -1077,20 +1028,14 @@ class ReactTableTransformerTests(TestCase):
                 ],
                 'data': [
                     {
-                        '$timestamp': {
-                            'display': '1996-01-01',
-                            'raw': '1996-01-01T00:00:00'
-                        },
-                        '$wins': {'display': '2', 'raw': 2}
+                        '$timestamp': {'display': '1996-01-01', 'raw': '1996-01-01T00:00:00'},
+                        '$wins': {'display': '2', 'raw': 2},
                     },
                     {
-                        '$timestamp': {
-                            'display': '1996-01-01',
-                            'raw': '1996-01-01T00:00:00'
-                        },
-                        '$wins': {'display': '0', 'raw': 0}
-                    }
-                ]
+                        '$timestamp': {'display': '1996-01-01', 'raw': '1996-01-01T00:00:00'},
+                        '$wins': {'display': '0', 'raw': 0},
+                    },
+                ],
             },
             result,
         )
@@ -1115,20 +1060,14 @@ class ReactTableTransformerTests(TestCase):
                 ],
                 'data': [
                     {
-                        '$timestamp': {
-                            'display': '1996-01-01',
-                            'raw': '1996-01-01T00:00:00'
-                        },
-                        '$wins': {'display': '2', 'raw': 2}
+                        '$timestamp': {'display': '1996-01-01', 'raw': '1996-01-01T00:00:00'},
+                        '$wins': {'display': '2', 'raw': 2},
                     },
                     {
-                        '$timestamp': {
-                            'display': '1996-01-01',
-                            'raw': '1996-01-01T00:00:00'
-                        },
-                        '$wins': {'display': '0', 'raw': 0}
-                    }
-                ]
+                        '$timestamp': {'display': '1996-01-01', 'raw': '1996-01-01T00:00:00'},
+                        '$wins': {'display': '0', 'raw': 0},
+                    },
+                ],
             },
             result,
         )
@@ -1138,9 +1077,9 @@ class ReactTableTransformerTests(TestCase):
             day(mock_dataset.fields.timestamp),
             mock_dataset.fields.political_party,
         ]
-        result = ReactTable(
-            mock_dataset.fields.wins, pivot=[mock_dataset.fields.timestamp]
-        ).transform(dimx2_date_str_df, dimensions, [])
+        result = ReactTable(mock_dataset.fields.wins, pivot=[mock_dataset.fields.timestamp]).transform(
+            dimx2_date_str_df, dimensions, []
+        )
 
         self.assertIn("data", result)
         result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
@@ -1195,9 +1134,9 @@ class ReactTableTransformerTests(TestCase):
             day(mock_dataset.fields.timestamp),
             mock_dataset.fields.political_party,
         ]
-        result = ReactTable(
-            mock_dataset.fields.wins, pivot=[mock_dataset.fields.timestamp], sort=[0]
-        ).transform(dimx2_date_str_df, dimensions, [])
+        result = ReactTable(mock_dataset.fields.wins, pivot=[mock_dataset.fields.timestamp], sort=[0]).transform(
+            dimx2_date_str_df, dimensions, []
+        )
 
         self.assertIn("data", result)
         result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
@@ -1252,9 +1191,9 @@ class ReactTableTransformerTests(TestCase):
             day(mock_dataset.fields.timestamp),
             mock_dataset.fields.political_party,
         ]
-        result = ReactTable(
-            mock_dataset.fields.wins, pivot=[mock_dataset.fields.political_party]
-        ).transform(dimx2_date_str_df, dimensions, [])
+        result = ReactTable(mock_dataset.fields.wins, pivot=[mock_dataset.fields.political_party]).transform(
+            dimx2_date_str_df, dimensions, []
+        )
 
         self.assertIn("data", result)
         result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
@@ -1473,9 +1412,9 @@ class ReactTableTransformerTests(TestCase):
         )
 
     def test_dimx1_int_metricx1_pivot_dim1_same_as_transpose(self):
-        result = ReactTable(
-            mock_dataset.fields.wins, pivot=[mock_dataset.fields["candidate-id"]]
-        ).transform(dimx1_num_df, [mock_dataset.fields["candidate-id"]], [])
+        result = ReactTable(mock_dataset.fields.wins, pivot=[mock_dataset.fields["candidate-id"]]).transform(
+            dimx1_num_df, [mock_dataset.fields["candidate-id"]], []
+        )
 
         self.assertEqual(
             {
@@ -1634,9 +1573,7 @@ class ReactTableTransformerTests(TestCase):
         )
 
     def test_dimx1_date_metricx1(self):
-        result = ReactTable(mock_dataset.fields.wins).transform(
-            dimx1_date_df, [day(mock_dataset.fields.timestamp)], []
-        )
+        result = ReactTable(mock_dataset.fields.wins).transform(dimx1_date_df, [day(mock_dataset.fields.timestamp)], [])
 
         self.assertEqual(
             {
@@ -1697,14 +1634,12 @@ class ReactTableTransformerTests(TestCase):
             day(mock_dataset.fields.timestamp),
             Rollup(mock_dataset.fields.political_party),
         ]
-        result = ReactTable(
-            mock_dataset.fields.votes, pivot=[mock_dataset.fields.political_party]
-        ).transform(dimx2_date_str_totalsx2_df, dimensions, [])
+        result = ReactTable(mock_dataset.fields.votes, pivot=[mock_dataset.fields.political_party]).transform(
+            dimx2_date_str_totalsx2_df, dimensions, []
+        )
 
         self.assertIn("data", result)
-        result["data"] = (
-            result["data"][:2] + result["data"][-1:]
-        )  # shorten the results to make the test easier to read
+        result["data"] = result["data"][:2] + result["data"][-1:]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
@@ -1761,14 +1696,12 @@ class ReactTableTransformerTests(TestCase):
     def test_dimx2_date_str_pivot_dim2_rollup_all(self):
         political_party = Rollup(mock_dataset.fields.political_party)
         dimensions = [Rollup(day(mock_dataset.fields.timestamp)), political_party]
-        result = ReactTable(
-            mock_dataset.fields.wins, mock_dataset.fields.votes, pivot=[political_party]
-        ).transform(dimx2_date_str_totalsx2_df, dimensions, [])
+        result = ReactTable(mock_dataset.fields.wins, mock_dataset.fields.votes, pivot=[political_party]).transform(
+            dimx2_date_str_totalsx2_df, dimensions, []
+        )
 
         self.assertIn("data", result)
-        result["data"] = (
-            result["data"][:2] + result["data"][-1:]
-        )  # shorten the results to make the test easier to read
+        result["data"] = result["data"][:2] + result["data"][-1:]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
@@ -1861,9 +1794,9 @@ class ReactTableTransformerTests(TestCase):
     def test_dimx2_pivot_both_dims_and_transpose(self):
         political_party = Rollup(mock_dataset.fields.political_party)
         dimensions = [Rollup(day(mock_dataset.fields.timestamp)), political_party]
-        result = ReactTable(
-            mock_dataset.fields.wins, mock_dataset.fields.votes, pivot=[political_party]
-        ).transform(dimx2_date_str_totalsx2_df, dimensions, [])
+        result = ReactTable(mock_dataset.fields.wins, mock_dataset.fields.votes, pivot=[political_party]).transform(
+            dimx2_date_str_totalsx2_df, dimensions, []
+        )
 
         self.assertIn("data", result)
         result["data"] = result["data"][:4]  # shorten the results to make the test easier to read
@@ -2112,9 +2045,7 @@ class ReactTableHyperlinkTransformerTests(TestCase):
     maxDiff = None
 
     def test_add_hyperlink_with_formatted_values(self):
-        result = ReactTable(mock_dataset.fields.wins).transform(
-            dimx1_str_df, [mock_dataset.fields.political_party], []
-        )
+        result = ReactTable(mock_dataset.fields.wins).transform(dimx1_str_df, [mock_dataset.fields.political_party], [])
 
         self.assertEqual(
             {
@@ -2151,9 +2082,7 @@ class ReactTableHyperlinkTransformerTests(TestCase):
 
     def test_do_not_add_hyperlink_to_pivoted_dimensions(self):
         dimensions = [mock_dataset.fields.political_party]
-        result = ReactTable(mock_dataset.fields.wins, pivot=dimensions).transform(
-            dimx1_str_df, dimensions, []
-        )
+        result = ReactTable(mock_dataset.fields.wins, pivot=dimensions).transform(dimx1_str_df, dimensions, [])
 
         self.assertEqual(
             {
@@ -2176,9 +2105,7 @@ class ReactTableHyperlinkTransformerTests(TestCase):
         )
 
     def test_dim_with_hyperlink_depending_on_another_dim_not_included_if_other_dim_is_not_selected(self):
-        result = ReactTable(mock_dataset.fields.wins).transform(
-            dimx1_str_df, [mock_dataset.fields.political_party], []
-        )
+        result = ReactTable(mock_dataset.fields.wins).transform(dimx1_str_df, [mock_dataset.fields.political_party], [])
 
         self.assertIn("data", result)
         result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
@@ -2342,9 +2269,7 @@ class ReactTableReferenceItemFormatTests(TestCase):
             "data_type": DataType.number,
         }
 
-        ref = ElectionOverElection(
-            mock_dataset.fields.timestamp, delta=True, delta_percent=True
-        )
+        ref = ElectionOverElection(mock_dataset.fields.timestamp, delta=True, delta_percent=True)
         ref_item = ReferenceItem(mock_dataset.fields.wins_with_style, ref)
 
         self.assert_object_dict(ref_item, exp_ref_item, self.ref_item_attrs)

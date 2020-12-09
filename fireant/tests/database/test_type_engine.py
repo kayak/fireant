@@ -2,7 +2,6 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from fireant.database import TypeEngine
-
 from fireant.database.sql_types import (
     ANSIType,
     Char,
@@ -14,14 +13,14 @@ class TestBaseTypeEngine(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.type_engine = TypeEngine(
-              db_to_ansi_mapper={
-                  'char': Char,
-                  'int': Integer,
-              },
-              ansi_to_db_mapper={
-                  'CHAR': 'char',
-                  'INTEGER': 'integer',
-              }
+            db_to_ansi_mapper={
+                'char': Char,
+                'int': Integer,
+            },
+            ansi_to_db_mapper={
+                'CHAR': 'char',
+                'INTEGER': 'integer',
+            },
         )
 
     def test_split_data_type_without_argument(self):

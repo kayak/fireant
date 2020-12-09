@@ -1,7 +1,9 @@
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from pypika import (
-    Parameter, Table, functions as fn,
+    Parameter,
+    Table,
+    functions as fn,
     terms,
 )
 from pypika.dialects import SnowflakeQuery
@@ -33,20 +35,21 @@ class SnowflakeDatabase(Database):
     # The pypika query class to use for constructing queries
     query_cls = SnowflakeQuery
 
-    DATETIME_INTERVALS = {
-        'hour': 'HH',
-        'day': 'DD',
-        'week': 'IW',
-        'month': 'MM',
-        'quarter': 'Q',
-        'year': 'Y'
-    }
+    DATETIME_INTERVALS = {'hour': 'HH', 'day': 'DD', 'week': 'IW', 'month': 'MM', 'quarter': 'Q', 'year': 'Y'}
     _private_key = None
 
-    def __init__(self, user='snowflake', password=None,
-                 account='snowflake', database='snowflake',
-                 private_key_data=None, private_key_password=None,
-                 region=None, warehouse=None, **kwags):
+    def __init__(
+        self,
+        user='snowflake',
+        password=None,
+        account='snowflake',
+        database='snowflake',
+        private_key_data=None,
+        private_key_password=None,
+        region=None,
+        warehouse=None,
+        **kwags,
+    ):
         super(SnowflakeDatabase, self).__init__(database=database, **kwags)
         self.user = user
         self.password = password
@@ -59,13 +62,15 @@ class SnowflakeDatabase(Database):
     def connect(self):
         import snowflake
 
-        return snowflake.connector.connect(database=self.database,
-                                           account=self.account,
-                                           user=self.user,
-                                           password=self.password,
-                                           private_key=self._get_private_key(),
-                                           region=self.region,
-                                           warehouse=self.warehouse)
+        return snowflake.connector.connect(
+            database=self.database,
+            account=self.account,
+            user=self.user,
+            password=self.password,
+            private_key=self._get_private_key(),
+            region=self.region,
+            warehouse=self.warehouse,
+        )
 
     def trunc_date(self, field, interval):
         trunc_date_interval = self.DATETIME_INTERVALS.get(str(interval), 'DD')
@@ -84,17 +89,17 @@ class SnowflakeDatabase(Database):
         if self.private_key_data is None:
             return None
 
-        private_key_password = None \
-            if self.private_key_password is None \
-            else self.private_key_password.encode()
+        private_key_password = None if self.private_key_password is None else self.private_key_password.encode()
 
-        pkey = serialization.load_pem_private_key(self.private_key_data.encode(),
-                                                  private_key_password,
-                                                  backend=default_backend())
+        pkey = serialization.load_pem_private_key(
+            self.private_key_data.encode(), private_key_password, backend=default_backend()
+        )
 
-        return pkey.private_bytes(encoding=serialization.Encoding.DER,
-                                  format=serialization.PrivateFormat.PKCS8,
-                                  encryption_algorithm=serialization.NoEncryption())
+        return pkey.private_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
 
     def get_column_definitions(self, schema, table, connection=None):
         columns = Table('COLUMNS', schema='INFORMATION_SCHEMA')

@@ -6,7 +6,6 @@ from unittest.mock import (
 
 from pypika import Field
 
-from fireant.middleware.concurrency import ThreadPoolConcurrencyMiddleware
 from fireant.database import Database
 from fireant.middleware.decorators import connection_middleware
 
@@ -44,7 +43,6 @@ class TestBaseDatabase(TestCase):
 
         self.assertEqual(1, len(db.middlewares))
         self.assertIs(db.middlewares[0], connection_middleware)
-
 
     @patch.object(Database, 'fetch')
     @patch.object(Database, 'connect')

@@ -10,7 +10,7 @@ from pypika import (
 )
 from pypika.terms import Function
 
-from fireant.middleware.decorators import (apply_middlewares, connection_middleware)
+from fireant.middleware.decorators import apply_middlewares, connection_middleware
 
 
 class Database(object):
@@ -113,9 +113,7 @@ class Database(object):
         connection = kwargs.get("connection")
         dataframes = []
         for query in queries:
-            dataframes.append(
-                pd.read_sql(query, connection, coerce_float=True, parse_dates=parse_dates)
-            )
+            dataframes.append(pd.read_sql(query, connection, coerce_float=True, parse_dates=parse_dates))
         return dataframes
 
     def fetch_dataframe(self, query, **kwargs):
