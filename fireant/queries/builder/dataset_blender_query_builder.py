@@ -3,6 +3,7 @@ from typing import List
 
 from pypika import JoinType, Query
 
+from fireant.dataset.fields import is_metric_field
 from fireant.queries.builder.dataset_query_builder import DataSetQueryBuilder
 from fireant.queries.finders import (
     find_dataset_fields,
@@ -21,7 +22,6 @@ from fireant.utils import (
 )
 from fireant.widgets.base import Widget
 from ..sets import apply_set_dimensions, omit_set_filters
-from fireant.dataset.fields import is_metric_field
 
 
 @listify
@@ -288,7 +288,7 @@ def _get_sq_field_for_blender_field(field, queries, field_maps, reference=None):
 def _perform_join_operations(
     dimensions, base_query, base_field_map, join_queries, join_field_maps
 ):
-    blender_query = Query.from_(base_query, immutable=False)
+    blender_query = base_query.QUERY_CLS.from_(base_query, immutable=False)
     for join_sql, join_field_map in zip(join_queries, join_field_maps):
         if join_sql is None:
             continue
