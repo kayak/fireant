@@ -6,11 +6,24 @@
 -r requirements-extras-postgresql.txt
 -r requirements-extras-mssql.txt
 -r requirements-extras-ipython.txt
-mock
-bumpversion
-black
+
+# Builds
 wheel==0.30.0
+
+# Testing / CI
+mock
+tox==3.14.3
+tox-venv==0.4.0
+tox-gh-actions==0.3.0
+coverage==5.1
+
+# Utilities
+bumpversion==0.5.3
 watchdog==0.8.3
-flake8==3.5.0
+
+# Docs
 sphinx==2.2.0
 sphinx-rtd-theme==0.4.3
+
+# Formatting
+black==20.8b1
