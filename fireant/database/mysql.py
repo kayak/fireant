@@ -37,6 +37,7 @@ class _CustomMySQLInterval(terms.Function):
     Fireant needs a more flexible Interval query string generator than this
     to mimicking the Vertica TRUNC function, so this is defined locally here.
     """
+
     def __init__(self, field, unit):
         super().__init__('INTERVAL', field, unit)
         self.field = field
@@ -51,11 +52,13 @@ class MySQLDatabase(Database):
     """
     MySQL client that uses the PyMySQL module.
     """
+
     # The pypika query class to use for constructing queries
     query_cls = MySQLQuery
 
-    def __init__(self, host='localhost', port=3306, database=None,
-                 user=None, password=None, charset='utf8mb4', **kwags):
+    def __init__(
+        self, host='localhost', port=3306, database=None, user=None, password=None, charset='utf8mb4', **kwags
+    ):
         super(MySQLDatabase, self).__init__(host, port, database, **kwags)
         self.user = user
         self.password = password
@@ -93,10 +96,17 @@ class MySQLDatabase(Database):
         :return: pymysql Connection class
         """
         import pymysql
+
         connection_class = self._get_connection_class()
-        return connection_class(host=self.host, port=self.port, db=self.database,
-                                user=self.user, password=self.password,
-                                charset=self.charset, cursorclass=pymysql.cursors.Cursor)
+        return connection_class(
+            host=self.host,
+            port=self.port,
+            db=self.database,
+            user=self.user,
+            password=self.password,
+            charset=self.charset,
+            cursorclass=pymysql.cursors.Cursor,
+        )
 
     def trunc_date(self, field, interval):
         if interval == 'hour':
@@ -108,9 +118,11 @@ class MySQLDatabase(Database):
         elif interval == 'month':
             return _DateFormat(field, '%Y-%m-01')
         elif interval == 'quarter':
-            return _MakeDate(_Year(_Timestamp(field)), 1) \
-                   + _CustomMySQLInterval(_Quarter(_Timestamp(field)), 'QUARTER') \
-                   - Interval(quarters=1, dialect=Dialects.MYSQL)
+            return (
+                _MakeDate(_Year(_Timestamp(field)), 1)
+                + _CustomMySQLInterval(_Quarter(_Timestamp(field)), 'QUARTER')
+                - Interval(quarters=1, dialect=Dialects.MYSQL)
+            )
         elif interval == 'year':
             return _DateFormat(field, '%Y-01-01')
         else:
@@ -127,13 +139,14 @@ class MySQLDatabase(Database):
     def get_column_definitions(self, schema, table, connection=None):
         columns = Table('columns', schema='INFORMATION_SCHEMA')
 
-        columns_query = MySQLQuery \
-            .from_(columns) \
-            .select(columns.column_name, columns.column_type) \
-            .where(columns.table_schema == Parameter('%(schema)s')) \
-            .where(columns.field('table_name') == Parameter('%(table)s')) \
-            .distinct() \
+        columns_query = (
+            MySQLQuery.from_(columns)
+            .select(columns.column_name, columns.column_type)
+            .where(columns.table_schema == Parameter('%(schema)s'))
+            .where(columns.field('table_name') == Parameter('%(table)s'))
+            .distinct()
             .orderby(columns.column_name)
+        )
 
         return self.fetch(str(columns_query), parameters=dict(schema=schema, table=table), connection=connection)
 
@@ -145,9 +158,7 @@ class MySQLDatabase(Database):
         :param file_path: The path of the file to be imported.
         :param connection: (Optional) The connection to execute this query with.
         """
-        import_query = MySQLQuery \
-            .load(file_path) \
-            .into(table)
+        import_query = MySQLQuery.load(file_path).into(table)
 
         self.execute(str(import_query), connection=connection)
 
@@ -159,10 +170,7 @@ class MySQLDatabase(Database):
         :param columns: The columns of the new temporary table.
         :param connection: (Optional) The connection to execute this query with.
         """
-        create_query = MySQLQuery \
-            .create_table(table) \
-            .temporary() \
-            .columns(*columns)
+        create_query = MySQLQuery.create_table(table).temporary().columns(*columns)
 
         self.execute(str(create_query), connection=connection)
 
@@ -174,10 +182,7 @@ class MySQLDatabase(Database):
         :param select_query: The query to be used for selecting data of an existing table for the new temporary table.
         :param connection: (Optional) The connection to execute this query with.
         """
-        create_query = MySQLQuery \
-            .create_table(table) \
-            .temporary() \
-            .as_select(select_query)
+        create_query = MySQLQuery.create_table(table).temporary().as_select(select_query)
 
         self.execute(str(create_query), connection=connection)
 

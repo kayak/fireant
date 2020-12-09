@@ -1,14 +1,8 @@
 from unittest import TestCase
 
 from fireant import *
-from fireant.tests.dataset.mocks import mock_dataset
 
-test_field = Field('my_field',
-                   None,
-                   label='My Field',
-                   prefix='a',
-                   suffix='b',
-                   precision=2)
+test_field = Field('my_field', None, label='My Field', prefix='a', suffix='b', precision=2)
 
 
 class OperationBuilderTests(TestCase):

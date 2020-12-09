@@ -2,15 +2,7 @@ from unittest import TestCase
 
 from pypika.queries import Column as PypikaColumn
 
-from fireant.database import (
-    MySQLDatabase,
-    VerticaDatabase,
-    TypeEngine,
-    Column,
-    ColumnsTransformer,
-    make_columns,
-)
-
+from fireant.database import Column, ColumnsTransformer, MySQLDatabase, TypeEngine, VerticaDatabase, make_columns
 from fireant.database.sql_types import (
     ANSIType,
     Char,
@@ -23,14 +15,14 @@ class TestColumns(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.type_engine = TypeEngine(
-              db_to_ansi_mapper={
-                  'char': Char,
-                  'int': Integer,
-              },
-              ansi_to_db_mapper={
-                  'CHAR': 'char',
-                  'INTEGER': 'integer',
-              }
+            db_to_ansi_mapper={
+                'char': Char,
+                'int': Integer,
+            },
+            ansi_to_db_mapper={
+                'CHAR': 'char',
+                'INTEGER': 'integer',
+            },
         )
 
     def test_column_representation(self):
@@ -106,4 +98,3 @@ class TestColumnsTransformer(TestCase):
         self.assertEqual('b', db_cols[1].name)
         self.assertEqual('varchar', db_cols[0].type)
         self.assertEqual('varchar(100)', db_cols[1].type)
-

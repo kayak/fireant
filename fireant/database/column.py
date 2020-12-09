@@ -5,6 +5,7 @@ class Column:
     """
     Represents an abstract database column.
     """
+
     def __init__(self, column_name, column_type):
         self.name = column_name
         self.type = column_type
@@ -17,8 +18,8 @@ class Column:
 
     def __str__(self):
         return '{name} {type}'.format(
-              name=self.name,
-              type=str(self.type),
+            name=self.name,
+            type=str(self.type),
         )
 
     def to_database_column(self, type_engine):
@@ -30,8 +31,8 @@ class Column:
         :return: A database specific representation of the column.
         """
         return '{name} {type}'.format(
-              name=self.name,
-              type=type_engine.from_ansi(self.type),
+            name=self.name,
+            type=type_engine.from_ansi(self.type),
         )
 
     def to_pypika_column(self, type_engine):
@@ -42,8 +43,8 @@ class Column:
         :return: A Pypika Column instance.
         """
         return PypikaColumn(
-              column_name=self.name,
-              column_type=type_engine.from_ansi(self.type),
+            column_name=self.name,
+            column_type=type_engine.from_ansi(self.type),
         )
 
 
@@ -100,4 +101,3 @@ class ColumnsTransformer:
         """
         ansi_columns = ColumnsTransformer.database_to_ansi(columns, from_db)
         return ColumnsTransformer.ansi_to_database(ansi_columns, to_db)
-

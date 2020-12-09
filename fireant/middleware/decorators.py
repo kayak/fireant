@@ -10,7 +10,6 @@ from fireant.middleware.slow_query_logger import (
 
 
 def log_middleware(func):
-
     @wraps(func)
     def wrapper(database, *queries, **kwargs):
         results = []
@@ -22,8 +21,7 @@ def log_middleware(func):
             results.append(func(database, query, **kwargs)[0])
 
             duration = round(time.time() - start_time, 4)
-            query_log_msg = '[{duration} seconds]: {query}'.format(duration=duration,
-                                                                   query=query)
+            query_log_msg = '[{duration} seconds]: {query}'.format(duration=duration, query=query)
             query_logger.info(query_log_msg)
 
             if database.slow_query_log_min_seconds is not None and duration >= database.slow_query_log_min_seconds:
@@ -78,7 +76,6 @@ class CancelableConnection:
 
 
 def connection_middleware(func):
-
     @wraps(func)
     def wrapper(database, *queries, **kwargs):
         connection = kwargs.pop('connection', None)
@@ -92,7 +89,6 @@ def connection_middleware(func):
 
 
 def apply_middlewares(wrapped_func):
-
     @wraps(wrapped_func)
     def wrapper(database, *args, **kwargs):
         func = wrapped_func

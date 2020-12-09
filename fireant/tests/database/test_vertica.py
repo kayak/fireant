@@ -5,7 +5,7 @@ from unittest.mock import (
     patch,
 )
 
-from pypika import (Column as PypikaColumn, Field, VerticaQuery)
+from pypika import Column as PypikaColumn, Field, VerticaQuery
 
 from fireant.database import (
     VerticaDatabase,
@@ -15,7 +15,6 @@ from fireant.database.sql_types import VarChar
 
 
 class TestVertica(TestCase):
-
     def test_defaults(self):
         vertica = VerticaDatabase()
 
@@ -31,8 +30,7 @@ class TestVertica(TestCase):
         with patch.dict('sys.modules', vertica_python=mock_vertica):
             mock_vertica.connect.return_value = 'OK'
 
-            vertica = VerticaDatabase('test_host', 1234, 'test_database',
-                                      'test_user', 'password', 300, logging.WARNING)
+            vertica = VerticaDatabase('test_host', 1234, 'test_database', 'test_user', 'password', 300, logging.WARNING)
             result = vertica.connect()
 
         self.assertEqual('OK', result)
@@ -107,16 +105,16 @@ class TestVertica(TestCase):
     def test_get_column_definitions(self, mock_fetch):
         VerticaDatabase().get_column_definitions('test_schema', 'test_table')
 
-        expected_query = ('(SELECT DISTINCT "column_name","data_type" FROM "view_columns" '
-                          'WHERE "table_schema"=:schema AND "table_name"=:table) '
-                          'UNION '
-                          '(SELECT DISTINCT "column_name","data_type" FROM "columns" '
-                          'WHERE "table_schema"=:schema AND "table_name"=:table)')
+        expected_query = (
+            '(SELECT DISTINCT "column_name","data_type" FROM "view_columns" '
+            'WHERE "table_schema"=:schema AND "table_name"=:table) '
+            'UNION '
+            '(SELECT DISTINCT "column_name","data_type" FROM "columns" '
+            'WHERE "table_schema"=:schema AND "table_name"=:table)'
+        )
 
         mock_fetch.assert_called_once_with(
-              expected_query,
-              connection=None,
-              parameters={'schema': 'test_schema', 'table': 'test_table'}
+            expected_query, connection=None, parameters={'schema': 'test_schema', 'table': 'test_table'}
         )
 
     @patch.object(VerticaDatabase, 'execute')
@@ -124,8 +122,7 @@ class TestVertica(TestCase):
         VerticaDatabase().import_csv('abc', '/path/to/file')
 
         mock_execute.assert_called_once_with(
-              'COPY "abc" FROM LOCAL \'/path/to/file\' PARSER fcsvparser(header=false)',
-              connection=None
+            'COPY "abc" FROM LOCAL \'/path/to/file\' PARSER fcsvparser(header=false)', connection=None
         )
 
     @patch.object(VerticaDatabase, 'execute')
@@ -135,8 +132,7 @@ class TestVertica(TestCase):
         VerticaDatabase().create_temporary_table_from_columns('abc', columns)
 
         mock_execute.assert_called_once_with(
-              'CREATE LOCAL TEMPORARY TABLE "abc" ("a" varchar,"b" varchar(100)) ON COMMIT PRESERVE ROWS',
-              connection=None
+            'CREATE LOCAL TEMPORARY TABLE "abc" ("a" varchar,"b" varchar(100)) ON COMMIT PRESERVE ROWS', connection=None
         )
 
     @patch.object(VerticaDatabase, 'execute')
@@ -146,8 +142,7 @@ class TestVertica(TestCase):
         VerticaDatabase().create_temporary_table_from_select('def', query)
 
         mock_execute.assert_called_once_with(
-              'CREATE LOCAL TEMPORARY TABLE "def" ON COMMIT PRESERVE ROWS AS (SELECT * FROM "abc")',
-              connection=None
+            'CREATE LOCAL TEMPORARY TABLE "def" ON COMMIT PRESERVE ROWS AS (SELECT * FROM "abc")', connection=None
         )
 
 

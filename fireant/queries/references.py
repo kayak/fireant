@@ -6,9 +6,7 @@ from .field_helper import make_term_for_field
 from .finders import find_field_in_modified_field
 
 
-def adapt_for_reference_query(
-    reference_parts, database, dimensions, metrics, filters, references
-):
+def adapt_for_reference_query(reference_parts, database, dimensions, metrics, filters, references):
     if reference_parts is None:
         return dimensions, metrics, filters
 

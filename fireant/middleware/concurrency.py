@@ -3,7 +3,6 @@ from multiprocessing.pool import ThreadPool
 
 
 class ThreadPoolConcurrencyMiddleware:
-
     def __init__(self, max_processes=1):
         self.max_processes = max_processes
 

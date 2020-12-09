@@ -1,17 +1,15 @@
 from copy import deepcopy
+from typing import List, Tuple
 
 from pypika import (
     Case,
     terms,
 )
-from typing import (
-    Tuple,
-    List,
-)
 
 from fireant.dataset.fields import (
     DataType,
-    Field, is_metric_field,
+    Field,
+    is_metric_field,
 )
 from fireant.dataset.modifiers import (
     DimensionModifier,
@@ -48,10 +46,19 @@ def _make_set_dimension(set_filter: Field, target_dataset: 'DataSet') -> Field:
     # When using data blending, the dataset table of the set filter needs to be re-mapped to the table in the
     # target dataset (i.e. primary or secondary). The easiest way to do that is to select the field in the
     # target dataset directly.
-    if target_dataset and not is_metric and isinstance(old_definition, (
-        terms.ContainsCriterion, terms.NullCriterion,
-        terms.BetweenCriterion, terms.BitwiseAndCriterion,
-    )):
+    if (
+        target_dataset
+        and not is_metric
+        and isinstance(
+            old_definition,
+            (
+                terms.ContainsCriterion,
+                terms.NullCriterion,
+                terms.BetweenCriterion,
+                terms.BitwiseAndCriterion,
+            ),
+        )
+    ):
         target_dataset_definition = deepcopy(target_dataset.fields[set_dimension.alias].definition)
 
         if not isinstance(old_definition.term, (terms.ValueWrapper, terms.Function)):
@@ -84,14 +91,8 @@ def _make_set_dimension(set_filter: Field, target_dataset: 'DataSet') -> Field:
         set_dimension.alias = alias_selector("set({})".format(old_definition_sql))
 
     set_dimension.data_type = DataType.text
-    set_dimension.label = (
-        "Set({})".format(old_definition_sql)
-        if not set_filter.set_label
-        else set_filter.set_label
-    )
-    set_dimension.definition = (
-        Case().when(old_definition, set_term).else_(complement_term)
-    )
+    set_dimension.label = "Set({})".format(old_definition_sql) if not set_filter.set_label else set_filter.set_label
+    set_dimension.definition = Case().when(old_definition, set_term).else_(complement_term)
 
     # Necessary for set feature to work properly with data blending's field mapping.
     set_dimension.is_artificial = True
@@ -140,9 +141,7 @@ def apply_set_dimensions(fields, filters, target_dataset: 'DataSet') -> List[Fie
     if not set_filters:
         return [*fields]
 
-    fields_per_set_filter = {
-        set_filter.field: set_filter for set_filter in set_filters
-    }
+    fields_per_set_filter = {set_filter.field: set_filter for set_filter in set_filters}
     fields_that_are_not_selected = set(fields_per_set_filter.keys())
 
     fields_with_set_dimensions = []

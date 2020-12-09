@@ -91,9 +91,7 @@ def wrap_styling(value, use_raw_value=False, prefix=None, suffix=None):
     if value is None or use_raw_value:
         return value
 
-    return "{prefix}{value}{suffix}".format(
-        prefix=prefix or "", suffix=suffix or "", value=value
-    )
+    return "{prefix}{value}{suffix}".format(prefix=prefix or "", suffix=suffix or "", value=value)
 
 
 @filter_kwargs
@@ -122,11 +120,7 @@ def safe_value(value):
     if value in TOTALS_MARKERS:
         return TOTALS_VALUE
 
-    return (
-        date_as_string(value, interval_key="iso")
-        if isinstance(value, date)
-        else str(value)
-    )
+    return date_as_string(value, interval_key="iso") if isinstance(value, date) else str(value)
 
 
 @filter_kwargs
@@ -180,7 +174,12 @@ FIELD_DISPLAY_FORMATTER = {
 
 
 def display_value(
-    value, field, date_as=date_as_string, nan_value=NAN_VALUE, null_value=NULL_VALUE, use_raw_value=False,
+    value,
+    field,
+    date_as=date_as_string,
+    nan_value=NAN_VALUE,
+    null_value=NULL_VALUE,
+    use_raw_value=False,
 ):
     """
     Converts a metric value into the display value by applying formatting.
@@ -212,12 +211,9 @@ def display_value(
         return TOTALS_LABEL
 
     format_kwargs = {
-        key: getattr(field, key, None)
-        for key in ("prefix", "suffix", "thousands", "precision", "interval_key")
+        key: getattr(field, key, None) for key in ("prefix", "suffix", "thousands", "precision", "interval_key")
     }
-    format_kwargs = {
-        key: value for key, value in format_kwargs.items() if value is not None
-    }
+    format_kwargs = {key: value for key, value in format_kwargs.items() if value is not None}
 
     formatter = FIELD_DISPLAY_FORMATTER.get(field.data_type, _identity)
     return formatter(value, date_as=date_as, use_raw_value=use_raw_value, **format_kwargs)

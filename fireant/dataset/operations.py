@@ -86,9 +86,7 @@ class _BaseOperation(Operation):
 class _Cumulative(_BaseOperation):
     def __init__(self, arg):
         super(_Cumulative, self).__init__(
-            alias="{}({})".format(
-                self.__class__.__name__.lower(), getattr(arg, "alias", arg)
-            ),
+            alias="{}({})".format(self.__class__.__name__.lower(), getattr(arg, "alias", arg)),
             label="{}({})".format(self.__class__.__name__, getattr(arg, "label", arg)),
             args=[arg],
             prefix=getattr(arg, "prefix"),
@@ -127,9 +125,7 @@ class _Cumulative(_BaseOperation):
         base_values_after_operation = data_frame[base_values_after_operation_key]
 
         # recalculate the delta using the values on which the operation is already performed
-        ref_delta_df = base_values_after_operation.subtract(
-            reference_values_after_operation, fill_value=0
-        )
+        ref_delta_df = base_values_after_operation.subtract(reference_values_after_operation, fill_value=0)
         # recalculate the delta percent
         return calculate_delta_percent(reference_values_after_operation, ref_delta_df)
 
@@ -171,12 +167,8 @@ class CumMean(_Cumulative):
 class RollingOperation(_BaseOperation):
     def __init__(self, arg, window, min_periods=None):
         super(RollingOperation, self).__init__(
-            alias="{}({},{})".format(
-                self.__class__.__name__.lower(), getattr(arg, "alias", arg), window
-            ),
-            label="{}({},{})".format(
-                self.__class__.__name__, getattr(arg, "label", arg), window
-            ),
+            alias="{}({},{})".format(self.__class__.__name__.lower(), getattr(arg, "alias", arg), window),
+            label="{}({},{})".format(self.__class__.__name__, getattr(arg, "label", arg), window),
             args=[arg],
             prefix=getattr(arg, "prefix"),
             suffix=getattr(arg, "suffix"),
@@ -189,9 +181,7 @@ class RollingOperation(_BaseOperation):
     def _should_adjust(self, other_operations):
         # Need to figure out if this rolling operation is has the largest window, and if it's the first of multiple
         # rolling operations if there are more than one operation sharing the largest window.
-        first_max_rolling = list(
-            sorted(other_operations, key=lambda operation: operation.window)
-        )[0]
+        first_max_rolling = list(sorted(other_operations, key=lambda operation: operation.window))[0]
 
         return first_max_rolling is self
 
@@ -219,11 +209,10 @@ class Share(_BaseOperation):
     def __init__(self, metric: Field, over: Field = None, precision=2):
         super(Share, self).__init__(
             alias="share({},{})".format(
-                getattr(metric, "alias", metric), getattr(over, "alias", over),
+                getattr(metric, "alias", metric),
+                getattr(over, "alias", over),
             ),
-            label="Share of {} over {}".format(
-                getattr(metric, "label", metric), getattr(over, "label", over)
-            ),
+            label="Share of {} over {}".format(getattr(metric, "label", metric), getattr(over, "label", over)),
             args=[metric, over],
             suffix="%",
             precision=precision,
@@ -261,9 +250,7 @@ class Share(_BaseOperation):
         base_values_after_operation = data_frame[base_values_after_operation_key]
 
         # recalculate the delta using the values on which the operation is already performed
-        ref_delta_df = base_values_after_operation.subtract(
-            reference_values_after_operation, fill_value=0
-        )
+        ref_delta_df = base_values_after_operation.subtract(reference_values_after_operation, fill_value=0)
         if reference.delta_percent:
             # recalculate the delta percent
             ref_delta_df = calculate_delta_percent(reference_values_after_operation, ref_delta_df)
@@ -288,9 +275,7 @@ class Share(_BaseOperation):
         over_dim_value = get_totals_marker_for_dtype(data_frame.index.levels[idx].dtype)
         totals_alias = (slice(None),) * idx + (slice(over_dim_value, over_dim_value),)
 
-        totals = reduce_data_frame_levels(
-            data_frame.loc[totals_alias, f_metric_alias], group_levels
-        )
+        totals = reduce_data_frame_levels(data_frame.loc[totals_alias, f_metric_alias], group_levels)
 
         def apply_totals(group_df):
             if not isinstance(totals, pd.Series):

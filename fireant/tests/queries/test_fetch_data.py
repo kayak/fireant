@@ -12,16 +12,14 @@ from fireant.dataset.references import ReferenceFilter
 from fireant.queries.sets import _make_set_dimension
 from fireant.tests.database.mock_database import TestDatabase
 from fireant.tests.dataset.matchers import FieldMatcher, PypikaQueryMatcher
-from fireant.tests.dataset.mocks import (mock_category_annotation_dataset, mock_dataset, mock_date_annotation_dataset)
+from fireant.tests.dataset.mocks import mock_category_annotation_dataset, mock_dataset, mock_date_annotation_dataset
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 @patch("fireant.queries.builder.dataset_query_builder.paginate")
 @patch("fireant.queries.builder.dataset_query_builder.fetch_data", return_value=(100, MagicMock()))
 class FindShareDimensionsTests(TestCase):
-    def test_find_no_share_dimensions_with_no_share_operation(
-        self, mock_fetch_data: Mock, mock_paginate: Mock
-    ):
+    def test_find_no_share_dimensions_with_no_share_operation(self, mock_fetch_data: Mock, mock_paginate: Mock):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
 
@@ -35,12 +33,8 @@ class FindShareDimensionsTests(TestCase):
 
         mock_fetch_data.assert_called_once_with(ANY, ANY, ANY, [], ANY)
 
-    def test_find_share_dimensions_with_a_single_share_operation(
-        self, mock_fetch_data: Mock, mock_paginate: Mock
-    ):
-        mock_widget = f.Widget(
-            Share(mock_dataset.fields.votes, over=mock_dataset.fields.state)
-        )
+    def test_find_share_dimensions_with_a_single_share_operation(self, mock_fetch_data: Mock, mock_paginate: Mock):
+        mock_widget = f.Widget(Share(mock_dataset.fields.votes, over=mock_dataset.fields.state))
         mock_widget.transform = Mock()
 
         dimensions = (
@@ -51,13 +45,9 @@ class FindShareDimensionsTests(TestCase):
 
         mock_dataset.query.widget(mock_widget).dimension(*dimensions).fetch()
 
-        mock_fetch_data.assert_called_once_with(
-            ANY, ANY, ANY, FieldMatcher(mock_dataset.fields.state), ANY
-        )
+        mock_fetch_data.assert_called_once_with(ANY, ANY, ANY, FieldMatcher(mock_dataset.fields.state), ANY)
 
-    def test_find_share_dimensions_with_a_multiple_share_operations(
-        self, mock_fetch_data: Mock, mock_paginate: Mock
-    ):
+    def test_find_share_dimensions_with_a_multiple_share_operations(self, mock_fetch_data: Mock, mock_paginate: Mock):
         mock_widget = f.Widget(
             Share(mock_dataset.fields.votes, over=mock_dataset.fields.state),
             Share(mock_dataset.fields.wins, over=mock_dataset.fields.state),
@@ -72,9 +62,7 @@ class FindShareDimensionsTests(TestCase):
 
         mock_dataset.query.widget(mock_widget).dimension(*dimensions).fetch()
 
-        mock_fetch_data.assert_called_once_with(
-            ANY, ANY, ANY, FieldMatcher(mock_dataset.fields.state), ANY
-        )
+        mock_fetch_data.assert_called_once_with(ANY, ANY, ANY, FieldMatcher(mock_dataset.fields.state), ANY)
 
     def test_find_share_dimensions_with_a_multiple_share_operations_over_different_dimensions(
         self, mock_fetch_data: Mock, mock_paginate: Mock
@@ -93,9 +81,7 @@ class FindShareDimensionsTests(TestCase):
 
         mock_dataset.query.widget(mock_widget).dimension(*dimensions).fetch()
 
-        expected = FieldMatcher(
-            mock_dataset.fields.state, mock_dataset.fields.political_party
-        )
+        expected = FieldMatcher(mock_dataset.fields.state, mock_dataset.fields.political_party)
         mock_fetch_data.assert_called_once_with(ANY, ANY, ANY, expected, ANY)
 
 
@@ -127,61 +113,40 @@ class QueryBuilderFetchDataTests(TestCase):
         )
         mock_widget = f.Widget(dataset.fields.metric0)
         mock_widget.transform = Mock()
-        reference_filter = ReferenceFilter(
-            dataset.fields.metric0,
-            ComparisonOperator.gt,
-            5
-        )
+        reference_filter = ReferenceFilter(dataset.fields.metric0, ComparisonOperator.gt, 5)
         reference = f.DayOverDay(dataset.fields.timestamp, filters=[reference_filter])
 
         df = pd.DataFrame.from_dict({"$value": [1]})
         mock_fetch.return_value = 100, df
         mock_apply_reference_filters.return_value = df
 
-        (
-            dataset.query()
-            .dimension(dataset.fields.timestamp)
-            .widget(mock_widget)
-            .reference(reference)
-        ).fetch()
+        (dataset.query().dimension(dataset.fields.timestamp).widget(mock_widget).reference(reference)).fetch()
 
         mock_apply_reference_filters.assert_called_once_with(df, reference)
 
-    def test_pass_slicer_database_as_arg(
-        self, mock_fetch_data: Mock, *args
-    ):
+    def test_pass_slicer_database_as_arg(self, mock_fetch_data: Mock, *args):
+        mock_widget = f.Widget(mock_dataset.fields.votes)
+        mock_widget.transform = Mock()
+
+        mock_dataset.query.widget(mock_widget).fetch()
+
+        mock_fetch_data.assert_called_once_with(mock_dataset.database, ANY, ANY, ANY, ANY)
+
+    def test_pass_query_from_builder_as_arg(self, mock_fetch_data: Mock, *args):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
 
         mock_dataset.query.widget(mock_widget).fetch()
 
         mock_fetch_data.assert_called_once_with(
-            mock_dataset.database, ANY, ANY, ANY, ANY
-        )
-
-    def test_pass_query_from_builder_as_arg(
-        self, mock_fetch_data: Mock, *args
-    ):
-        mock_widget = f.Widget(mock_dataset.fields.votes)
-        mock_widget.transform = Mock()
-
-        mock_dataset.query.widget(mock_widget).fetch()
-
-        mock_fetch_data.assert_called_once_with(
             ANY,
-            [
-                PypikaQueryMatcher(
-                    'SELECT SUM("votes") "$votes" FROM "politics"."politician" ORDER BY 1 LIMIT 200000'
-                )
-            ],
+            [PypikaQueryMatcher('SELECT SUM("votes") "$votes" FROM "politics"."politician" ORDER BY 1 LIMIT 200000')],
             ANY,
             ANY,
             ANY,
         )
 
-    def test_builder_dimensions_as_arg_with_zero_dimensions(
-        self, mock_fetch_data: Mock, *args
-    ):
+    def test_builder_dimensions_as_arg_with_zero_dimensions(self, mock_fetch_data: Mock, *args):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
 
@@ -189,9 +154,7 @@ class QueryBuilderFetchDataTests(TestCase):
 
         mock_fetch_data.assert_called_once_with(ANY, ANY, [], ANY, ANY)
 
-    def test_builder_dimensions_as_arg_with_one_dimension(
-        self, mock_fetch_data: Mock, *args
-    ):
+    def test_builder_dimensions_as_arg_with_one_dimension(self, mock_fetch_data: Mock, *args):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
 
@@ -199,45 +162,33 @@ class QueryBuilderFetchDataTests(TestCase):
 
         mock_dataset.query.widget(mock_widget).dimension(*dimensions).fetch()
 
-        mock_fetch_data.assert_called_once_with(
-            ANY, ANY, FieldMatcher(*dimensions), ANY, ANY
-        )
+        mock_fetch_data.assert_called_once_with(ANY, ANY, FieldMatcher(*dimensions), ANY, ANY)
 
-    def test_builder_dimensions_as_arg_with_one_replaced_set_dimension(
-        self, mock_fetch_data: Mock, *args
-    ):
+    def test_builder_dimensions_as_arg_with_one_replaced_set_dimension(self, mock_fetch_data: Mock, *args):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
 
         dimensions = [mock_dataset.fields.state]
 
-        set_filter = f.ResultSet(dimensions[0]=='On')
+        set_filter = f.ResultSet(dimensions[0] == 'On')
         mock_dataset.query.widget(mock_widget).dimension(*dimensions).filter(set_filter).fetch()
 
         set_dimension = _make_set_dimension(set_filter, mock_dataset)
-        mock_fetch_data.assert_called_once_with(
-            ANY, ANY, FieldMatcher(set_dimension), ANY, ANY
-        )
+        mock_fetch_data.assert_called_once_with(ANY, ANY, FieldMatcher(set_dimension), ANY, ANY)
 
-    def test_builder_dimensions_as_arg_with_a_non_replaced_set_dimension(
-        self, mock_fetch_data: Mock, *args
-    ):
+    def test_builder_dimensions_as_arg_with_a_non_replaced_set_dimension(self, mock_fetch_data: Mock, *args):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
 
         dimensions = [mock_dataset.fields.state]
 
-        set_filter = f.ResultSet(dimensions[0]=='On', will_replace_referenced_dimension=False)
+        set_filter = f.ResultSet(dimensions[0] == 'On', will_replace_referenced_dimension=False)
         mock_dataset.query.widget(mock_widget).dimension(*dimensions).filter(set_filter).fetch()
 
         set_dimension = _make_set_dimension(set_filter, mock_dataset)
-        mock_fetch_data.assert_called_once_with(
-            ANY, ANY, FieldMatcher(set_dimension, dimensions[0]), ANY, ANY
-        )
+        mock_fetch_data.assert_called_once_with(ANY, ANY, FieldMatcher(set_dimension, dimensions[0]), ANY, ANY)
 
-    def test_builder_dimensions_as_arg_with_multiple_dimensions(
-        self, mock_fetch_data: Mock, *args
-    ):
+    def test_builder_dimensions_as_arg_with_multiple_dimensions(self, mock_fetch_data: Mock, *args):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
 
@@ -249,18 +200,14 @@ class QueryBuilderFetchDataTests(TestCase):
 
         mock_dataset.query.widget(mock_widget).dimension(*dimensions).fetch()
 
-        mock_fetch_data.assert_called_once_with(
-            ANY, ANY, FieldMatcher(*dimensions), ANY, ANY
-        )
+        mock_fetch_data.assert_called_once_with(ANY, ANY, FieldMatcher(*dimensions), ANY, ANY)
 
     def test_call_transform_on_widget(self, mock_fetch_data: Mock, mock_paginate: Mock, *args):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
 
         # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
-        mock_dataset.query.dimension(mock_dataset.fields.timestamp).widget(
-            mock_widget
-        ).fetch()
+        mock_dataset.query.dimension(mock_dataset.fields.timestamp).widget(mock_widget).fetch()
 
         mock_widget.transform.assert_called_once_with(
             mock_paginate.return_value,
@@ -269,18 +216,12 @@ class QueryBuilderFetchDataTests(TestCase):
             None,
         )
 
-    def test_returns_results_from_widget_transform(
-        self, *args
-    ):
+    def test_returns_results_from_widget_transform(self, *args):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
 
         # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
-        result = (
-            mock_dataset.query.dimension(mock_dataset.fields.timestamp)
-            .widget(mock_widget)
-            .fetch()
-        )
+        result = mock_dataset.query.dimension(mock_dataset.fields.timestamp).widget(mock_widget).fetch()
 
         self.assertListEqual(result, [mock_widget.transform.return_value])
 
@@ -290,11 +231,7 @@ class QueryBuilderFetchDataTests(TestCase):
         mock_widget.transform = Mock()
         dataset.return_additional_metadata = True
 
-        result = (
-            dataset.query.dimension(dataset.fields.timestamp)
-            .widget(mock_widget)
-            .fetch()
-        )
+        result = dataset.query.dimension(dataset.fields.timestamp).widget(mock_widget).fetch()
 
         self.assertEqual(
             dict(data=[mock_widget.transform.return_value], metadata=dict(max_rows_returned=100)),
@@ -309,15 +246,11 @@ class QueryBuilderFetchDataTests(TestCase):
 @patch("fireant.queries.builder.dataset_query_builder.paginate")
 @patch("fireant.queries.builder.dataset_query_builder.fetch_data", return_value=(100, MagicMock()))
 class QueryBuilderPaginationTests(TestCase):
-    def test_paginate_is_called(
-            self, mock_fetch_data: Mock, mock_paginate: Mock, *mocks
-    ):
+    def test_paginate_is_called(self, mock_fetch_data: Mock, mock_paginate: Mock, *mocks):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
         # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
-        mock_dataset.query.dimension(mock_dataset.fields.timestamp).widget(
-            mock_widget
-        ).fetch()
+        mock_dataset.query.dimension(mock_dataset.fields.timestamp).widget(mock_widget).fetch()
 
         mock_paginate.assert_called_once_with(
             mock_fetch_data.return_value[1],
@@ -327,16 +260,12 @@ class QueryBuilderPaginationTests(TestCase):
             orders=[(mock_dataset.fields.timestamp, None)],
         )
 
-    def test_pagination_applied_with_limit(
-            self, mock_fetch_data: Mock, mock_paginate: Mock, *mocks
-    ):
+    def test_pagination_applied_with_limit(self, mock_fetch_data: Mock, mock_paginate: Mock, *mocks):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
 
         # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
-        mock_dataset.query.dimension(mock_dataset.fields.timestamp).widget(
-            mock_widget
-        ).limit_client(15).fetch()
+        mock_dataset.query.dimension(mock_dataset.fields.timestamp).widget(mock_widget).limit_client(15).fetch()
 
         mock_paginate.assert_called_once_with(
             mock_fetch_data.return_value[1],
@@ -346,16 +275,14 @@ class QueryBuilderPaginationTests(TestCase):
             orders=[(mock_dataset.fields.timestamp, None)],
         )
 
-    def test_pagination_applied_with_offset(
-            self, mock_fetch_data: Mock, mock_paginate: Mock, *mocks
-    ):
+    def test_pagination_applied_with_offset(self, mock_fetch_data: Mock, mock_paginate: Mock, *mocks):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
 
         # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
-        mock_dataset.query.dimension(mock_dataset.fields.timestamp).widget(
-            mock_widget
-        ).limit_client(15).offset_client(20).fetch()
+        mock_dataset.query.dimension(mock_dataset.fields.timestamp).widget(mock_widget).limit_client(15).offset_client(
+            20
+        ).fetch()
 
         mock_paginate.assert_called_once_with(
             mock_fetch_data.return_value[1],
@@ -365,16 +292,14 @@ class QueryBuilderPaginationTests(TestCase):
             orders=[(mock_dataset.fields.timestamp, None)],
         )
 
-    def test_pagination_applied_with_orders(
-            self, mock_fetch_data: Mock, mock_paginate: Mock, *mocks
-    ):
+    def test_pagination_applied_with_orders(self, mock_fetch_data: Mock, mock_paginate: Mock, *mocks):
         mock_widget = f.Widget(mock_dataset.fields.votes)
         mock_widget.transform = Mock()
 
         # Need to keep widget the last call in the chain otherwise the object gets cloned and the assertion won't work
-        mock_dataset.query.dimension(mock_dataset.fields.timestamp).widget(
-            mock_widget
-        ).orderby(mock_dataset.fields.votes, Order.asc).fetch()
+        mock_dataset.query.dimension(mock_dataset.fields.timestamp).widget(mock_widget).orderby(
+            mock_dataset.fields.votes, Order.asc
+        ).fetch()
 
         orders = [(mock_dataset.fields.votes, Order.asc)]
         mock_paginate.assert_called_once_with(
@@ -384,6 +309,7 @@ class QueryBuilderPaginationTests(TestCase):
             offset=None,
             orders=orders,
         )
+
 
 @patch("fireant.queries.builder.dataset_query_builder.fetch_data", return_value=(100, MagicMock()))
 class QueryBuilderAnnotationTests(TestCase):
@@ -404,12 +330,8 @@ class QueryBuilderAnnotationTests(TestCase):
     def test_fetch_annotation_single_date_dimension(self, mock_fetch_data: Mock):
         dims = [mock_date_annotation_dataset.fields.timestamp]
 
-        mock_date_annotation_dataset.query.widget(self.mock_widget).dimension(
-            *dims
-        ).fetch()
-        fetch_annotation_args, fetch_data_args = self.get_fetch_call_args(
-            mock_fetch_data
-        )
+        mock_date_annotation_dataset.query.widget(self.mock_widget).dimension(*dims).fetch()
+        fetch_annotation_args, fetch_data_args = self.get_fetch_call_args(mock_fetch_data)
 
         self.assertEqual(
             (
@@ -455,9 +377,7 @@ class QueryBuilderAnnotationTests(TestCase):
         widget.transform = Mock()
 
         mock_category_annotation_dataset.query.widget(widget).dimension(*dims).fetch()
-        fetch_annotation_args, fetch_data_args = self.get_fetch_call_args(
-            mock_fetch_data
-        )
+        fetch_annotation_args, fetch_data_args = self.get_fetch_call_args(mock_fetch_data)
 
         self.assertEqual(
             (
@@ -471,9 +391,7 @@ class QueryBuilderAnnotationTests(TestCase):
                         'GROUP BY "$political_party","$district-name"'
                     )
                 ],
-                FieldMatcher(
-                    mock_category_annotation_dataset.annotation.alignment_field
-                ),
+                FieldMatcher(mock_category_annotation_dataset.annotation.alignment_field),
             ),
             fetch_annotation_args,
         )
@@ -505,12 +423,8 @@ class QueryBuilderAnnotationTests(TestCase):
             mock_date_annotation_dataset.fields.political_party,
         ]
 
-        mock_date_annotation_dataset.query.widget(self.mock_widget).dimension(
-            *dims
-        ).fetch()
-        fetch_annotation_args, fetch_data_args = self.get_fetch_call_args(
-            mock_fetch_data
-        )
+        mock_date_annotation_dataset.query.widget(self.mock_widget).dimension(*dims).fetch()
+        fetch_annotation_args, fetch_data_args = self.get_fetch_call_args(mock_fetch_data)
 
         self.assertEqual(
             (
@@ -554,9 +468,7 @@ class QueryBuilderAnnotationTests(TestCase):
     def test_fetch_annotation_invalid_first_dimension(self, mock_fetch_data: Mock):
         dims = [mock_date_annotation_dataset.fields.political_party]
 
-        mock_date_annotation_dataset.query.widget(self.mock_widget).dimension(
-            *dims
-        ).fetch()
+        mock_date_annotation_dataset.query.widget(self.mock_widget).dimension(*dims).fetch()
 
         mock_fetch_data.assert_called_once_with(
             mock_date_annotation_dataset.database,
@@ -579,17 +491,11 @@ class QueryBuilderAnnotationTests(TestCase):
     def test_fetch_annotation_no_dimension(self, mock_fetch_data: Mock):
         dims = []
 
-        mock_date_annotation_dataset.query.widget(self.mock_widget).dimension(
-            *dims
-        ).fetch()
+        mock_date_annotation_dataset.query.widget(self.mock_widget).dimension(*dims).fetch()
 
         mock_fetch_data.assert_called_once_with(
             mock_date_annotation_dataset.database,
-            [
-                PypikaQueryMatcher(
-                    'SELECT SUM("votes") "$votes" FROM "politics"."politician" ORDER BY 1 LIMIT 200000'
-                )
-            ],
+            [PypikaQueryMatcher('SELECT SUM("votes") "$votes" FROM "politics"."politician" ORDER BY 1 LIMIT 200000')],
             FieldMatcher(*dims),
             [],
             [],
@@ -598,12 +504,10 @@ class QueryBuilderAnnotationTests(TestCase):
     def test_fetch_annotation_with_filter(self, mock_fetch_data: Mock):
         dims = [mock_date_annotation_dataset.fields.timestamp]
 
-        mock_date_annotation_dataset.query.widget(self.mock_widget).dimension(
-            *dims
-        ).filter(mock_date_annotation_dataset.fields.timestamp == "2020-01-01").fetch()
-        fetch_annotation_args, fetch_data_args = self.get_fetch_call_args(
-            mock_fetch_data
-        )
+        mock_date_annotation_dataset.query.widget(self.mock_widget).dimension(*dims).filter(
+            mock_date_annotation_dataset.fields.timestamp == "2020-01-01"
+        ).fetch()
+        fetch_annotation_args, fetch_data_args = self.get_fetch_call_args(mock_fetch_data)
 
         self.assertEqual(
             (
@@ -651,14 +555,10 @@ class QueryBuilderAnnotationTests(TestCase):
             mock_date_annotation_dataset.fields.political_party,
         ]
 
-        mock_date_annotation_dataset.query.widget(self.mock_widget).dimension(
-            *dims
-        ).filter(
+        mock_date_annotation_dataset.query.widget(self.mock_widget).dimension(*dims).filter(
             mock_date_annotation_dataset.fields.political_party == "Democrat"
         ).fetch()
-        fetch_annotation_args, fetch_data_args = self.get_fetch_call_args(
-            mock_fetch_data
-        )
+        fetch_annotation_args, fetch_data_args = self.get_fetch_call_args(mock_fetch_data)
 
         self.assertEqual(
             (

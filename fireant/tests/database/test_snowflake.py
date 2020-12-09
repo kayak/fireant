@@ -31,20 +31,21 @@ class TestSnowflake(TestCase):
         with patch.dict('sys.modules', snowflake=mock_snowflake):
             mock_connector.connect.return_value = 'OK'
 
-            snowflake = SnowflakeDatabase(user='test_user',
-                                          password='test_pass',
-                                          account='test_account',
-                                          database='test_database')
+            snowflake = SnowflakeDatabase(
+                user='test_user', password='test_pass', account='test_account', database='test_database'
+            )
             result = snowflake.connect()
 
         self.assertEqual('OK', result)
-        mock_connector.connect.assert_called_once_with(user='test_user',
-                                                       password='test_pass',
-                                                       account='test_account',
-                                                       database='test_database',
-                                                       private_key=None,
-                                                       region=None,
-                                                       warehouse=None)
+        mock_connector.connect.assert_called_once_with(
+            user='test_user',
+            password='test_pass',
+            account='test_account',
+            database='test_database',
+            private_key=None,
+            region=None,
+            warehouse=None,
+        )
 
     @patch('fireant.database.snowflake.serialization')
     def test_connect_with_pkey(self, mock_serialization):
@@ -56,29 +57,31 @@ class TestSnowflake(TestCase):
         with patch.dict('sys.modules', snowflake=mock_snowflake):
             mock_connector.connect.return_value = 'OK'
 
-            snowflake = SnowflakeDatabase(user='test_user',
-                                          private_key_data='abcdefg',
-                                          private_key_password='1234',
-                                          account='test_account',
-                                          database='test_database')
+            snowflake = SnowflakeDatabase(
+                user='test_user',
+                private_key_data='abcdefg',
+                private_key_password='1234',
+                account='test_account',
+                database='test_database',
+            )
             result = snowflake.connect()
 
         with self.subTest('returns connection'):
             self.assertEqual('OK', result)
 
         with self.subTest('connects with credentials'):
-            mock_serialization.load_pem_private_key.assert_called_once_with(b'abcdefg',
-                                                                            b'1234',
-                                                                            backend=ANY)
+            mock_serialization.load_pem_private_key.assert_called_once_with(b'abcdefg', b'1234', backend=ANY)
 
         with self.subTest('connects with credentials'):
-            mock_connector.connect.assert_called_once_with(user='test_user',
-                                                           password=None,
-                                                           account='test_account',
-                                                           database='test_database',
-                                                           private_key=mock_pkey.private_bytes.return_value,
-                                                           region=None,
-                                                           warehouse=None)
+            mock_connector.connect.assert_called_once_with(
+                user='test_user',
+                password=None,
+                account='test_account',
+                database='test_database',
+                private_key=mock_pkey.private_bytes.return_value,
+                region=None,
+                warehouse=None,
+            )
 
     def test_trunc_hour(self):
         result = SnowflakeDatabase().trunc_date(Field('date'), 'hour')
@@ -140,10 +143,10 @@ class TestSnowflake(TestCase):
         SnowflakeDatabase().get_column_definitions('test_schema', 'test_table')
 
         mock_fetch.assert_called_once_with(
-              'SELECT DISTINCT COLUMN_NAME,DATA_TYPE '
-              'FROM INFORMATION_SCHEMA.COLUMNS '
-              'WHERE TABLE_SCHEMA=%(schema)s AND TABLE_NAME=%(table)s '
-              'ORDER BY column_name',
-              connection=None,
-              parameters={'schema': 'test_schema', 'table': 'test_table'}
+            'SELECT DISTINCT COLUMN_NAME,DATA_TYPE '
+            'FROM INFORMATION_SCHEMA.COLUMNS '
+            'WHERE TABLE_SCHEMA=%(schema)s AND TABLE_NAME=%(table)s '
+            'ORDER BY column_name',
+            connection=None,
+            parameters={'schema': 'test_schema', 'table': 'test_table'},
         )

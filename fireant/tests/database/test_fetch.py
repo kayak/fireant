@@ -30,10 +30,9 @@ class FetchDataTests(TestCase):
         with patch('fireant.queries.execution.pd.read_sql', return_value=self.mock_data_frame) as mock_read_sql:
             self.database.fetch_dataframe(self.mock_query, parse_dates="hi")
 
-            mock_read_sql.assert_called_once_with(self.mock_query,
-                                                  self.mock_connection,
-                                                  coerce_float=True,
-                                                  parse_dates="hi")
+            mock_read_sql.assert_called_once_with(
+                self.mock_query, self.mock_connection, coerce_float=True, parse_dates="hi"
+            )
 
 
 @patch('fireant.queries.execution.pd.read_sql')
@@ -68,10 +67,9 @@ class FetchDataLoggingTests(TestCase):
 
     @patch.object(time, 'time')
     @patch('fireant.middleware.decorators.slow_query_logger')
-    def test_warning_slow_query_logger_called_with_duration_and_query_if_over_slow_query_limit(self,
-                                                                                               mock_logger,
-                                                                                               mock_time,
-                                                                                               *mocks):
+    def test_warning_slow_query_logger_called_with_duration_and_query_if_over_slow_query_limit(
+        self, mock_logger, mock_time, *mocks
+    ):
         mock_time.side_effect = [1520520255.0, 1520520277.0]
         self.database.fetch_dataframe(self.mock_query)
 
@@ -79,10 +77,9 @@ class FetchDataLoggingTests(TestCase):
 
     @patch.object(time, 'time')
     @patch('fireant.middleware.decorators.slow_query_logger')
-    def test_warning_slow_query_logger_not_called_with_duration_and_query_if_not_over_slow_query_limit(self,
-                                                                                                       mock_logger,
-                                                                                                       mock_time,
-                                                                                                       *mocks):
+    def test_warning_slow_query_logger_not_called_with_duration_and_query_if_not_over_slow_query_limit(
+        self, mock_logger, mock_time, *mocks
+    ):
         mock_time.side_effect = [1520520763.0, 1520520764.0]
         self.database.fetch_dataframe(self.mock_query)
 

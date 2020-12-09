@@ -28,18 +28,15 @@ class Matplotlib(ChartWidget, TransformableWidget):
 
     def transform(self, data_frame, dimensions, references, annotation_frame=None):
         import matplotlib.pyplot as plt
+
         result_df = data_frame.copy()
 
-        hide_dimensions = {
-            dimension for dimension in dimensions if dimension.fetch_only
-        }
+        hide_dimensions = {dimension for dimension in dimensions if dimension.fetch_only}
         self.hide_data_frame_indexes(result_df, hide_dimensions)
 
         n_axes = len(self.items)
         figsize = (14, 5 * n_axes)
-        fig, plt_axes = plt.subplots(n_axes,
-                                     sharex='row',
-                                     figsize=figsize)
+        fig, plt_axes = plt.subplots(n_axes, sharex='row', figsize=figsize)
         fig.suptitle(self.title)
 
         if not hasattr(plt_axes, '__iter__'):
@@ -57,13 +54,13 @@ class Matplotlib(ChartWidget, TransformableWidget):
                     f_metric_label = reference_label(metric, reference)
 
                     plot = self.get_plot_func_for_series_type(result_df[f_metric_key], f_metric_label, series)
-                    plot(ax=plt_axis,
-                         label=axis.label,
-                         color=series_color,
-                         stacked=series.stacking is not None,
-                         linestyle=next(linestyles)) \
-                        .legend(loc='center left',
-                                bbox_to_anchor=(1, 0.5))
+                    plot(
+                        ax=plt_axis,
+                        label=axis.label,
+                        color=series_color,
+                        stacked=series.stacking is not None,
+                        linestyle=next(linestyles),
+                    ).legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
         return plt_axes
 

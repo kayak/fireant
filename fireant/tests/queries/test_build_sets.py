@@ -30,11 +30,7 @@ class ResultSetTests(TestCase):
     maxDiff = None
 
     def test_no_metric_is_removed_when_result_set_metric_filter_is_present(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(f.ResultSet(ds.fields.aggr_number > 10))
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(f.ResultSet(ds.fields.aggr_number > 10)).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -139,11 +135,7 @@ class ResultSetTests(TestCase):
         queries = (
             ds.query.widget(f.Pandas(ds.fields.aggr_number))
             .dimension(ds.fields.text)
-            .filter(
-                f.ResultSet(
-                    ds.fields.text == "abc", will_replace_referenced_dimension=False
-                )
-            )
+            .filter(f.ResultSet(ds.fields.text == "abc", will_replace_referenced_dimension=False))
             .sql
         )
 
@@ -183,11 +175,7 @@ class ResultSetTests(TestCase):
         )
 
     def test_dimension_is_inserted_in_dimensions_even_when_not_selected(self):
-        queries = (
-            ds.query.widget(f.Pandas(ds.fields.aggr_number))
-            .filter(f.ResultSet(ds.fields.text == "abc"))
-            .sql
-        )
+        queries = ds.query.widget(f.Pandas(ds.fields.aggr_number)).filter(f.ResultSet(ds.fields.text == "abc")).sql
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
@@ -306,9 +294,7 @@ class ResultSetTests(TestCase):
         queries = (
             ds.query.widget(f.Pandas(ds.fields.aggr_number))
             .dimension(ds.fields.text)
-            .filter(
-                f.ResultSet(ds.fields.text == "abc", complement_label="Text is NOT ABC")
-            )
+            .filter(f.ResultSet(ds.fields.text == "abc", complement_label="Text is NOT ABC"))
             .sql
         )
 
@@ -360,8 +346,8 @@ class ResultSetTests(TestCase):
             ('text', ds.fields.text.notin(["abc"])),
             ('date', ds.fields.date.between('date1', 'date2')),
             ('number', ds.fields.number.between(5, 15)),
-            ('number', ds.fields.number.isin([1,2,3])),
-            ('number', ds.fields.number.notin([1,2,3])),
+            ('number', ds.fields.number.isin([1, 2, 3])),
+            ('number', ds.fields.number.notin([1, 2, 3])),
         ]:
             fltr_sql = fltr.definition.get_sql(quote_char="")
 

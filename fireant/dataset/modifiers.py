@@ -76,6 +76,7 @@ class DimensionModifier(Modifier):
     """
     Base class for all dimension modifiers.
     """
+
     wrapped_key = "dimension"
 
 
@@ -83,6 +84,7 @@ class FilterModifier(Modifier):
     """
     Base class for all filter modifiers.
     """
+
     wrapped_key = "filter"
 
     @immutable
@@ -102,6 +104,7 @@ class Rollup(DimensionModifier):
     """
     A field modifier that will make totals be calculated for the wrapped dimension.
     """
+
     @property
     def groupable(self):
         """
@@ -120,6 +123,7 @@ class OmitFromRollup(FilterModifier):
     A filter modifier that will make the wrapped filter not apply for any total calculations, which might be
     available if an affected field has a `Rollup` dimension modifier set.
     """
+
     pass
 
 
@@ -128,9 +132,15 @@ class ResultSet(FilterModifier):
     A filter modifier that will make the wrapped filter not filter the data. Instead, it will create new dimensions
     for representing membership of a set, given the wrapped filter's conditional.
     """
+
     def __init__(
-        self, *args, set_label=None, complement_label=None, will_replace_referenced_dimension=True,
-        will_group_complement=True, **kwargs
+        self,
+        *args,
+        set_label=None,
+        complement_label=None,
+        will_replace_referenced_dimension=True,
+        will_group_complement=True,
+        **kwargs,
     ):
         """
         :param set_label: A string that will be used for naming the sub-set of the data, for which the

@@ -76,7 +76,6 @@ class Filter(FieldModifier):
 
 
 class ComparatorFilter(Filter):
-
     def __init__(self, field, operator, value):
         self.operator = operator
         self.value = value

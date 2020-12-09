@@ -46,7 +46,7 @@ def fetch_data(
         if row_count > database.max_result_set_size:
             logger.warning('row_count_over_max', extra={'row_count': len(result_df), 'database': str(database)})
             # drop all result rows above database.max_result_set_size in place
-            result_df.drop(result_df.index[database.max_result_set_size:], inplace=True)
+            result_df.drop(result_df.index[database.max_result_set_size :], inplace=True)
 
     logger.info('max_rows_returned', extra={'row_count': max_rows_returned, 'database': str(database)})
     return max_rows_returned, reduce_result_set(results, reference_groups, dimensions, share_dimensions)
@@ -72,10 +72,7 @@ def reduce_result_set(
     result_groups = chunks(results, 1 + len(reference_groups))
 
     dimension_keys = [alias_selector(d.alias) for d in dimensions]
-    totals_dimension_keys = [
-        alias_selector(d.alias)
-        for d in find_totals_dimensions(dimensions, share_dimensions)
-    ]
+    totals_dimension_keys = [alias_selector(d.alias) for d in find_totals_dimensions(dimensions, share_dimensions)]
     dimension_dtypes = result_groups[0][0][dimension_keys].dtypes
 
     # Reduce each group to one data frame per rolled up dimension
@@ -138,9 +135,7 @@ def _make_reference_data_frame(base_df, ref_df, reference):
     :param reference:
     :return:
     """
-    metric_column_indices = [
-        i for i, column in enumerate(ref_df.columns) if column not in base_df.columns
-    ]
+    metric_column_indices = [i for i, column in enumerate(ref_df.columns) if column not in base_df.columns]
     ref_columns = [ref_df.columns[i] for i in metric_column_indices]
 
     if not (reference.delta or reference.delta_percent):
@@ -154,8 +149,7 @@ def _make_reference_data_frame(base_df, ref_df, reference):
     base_df, ref_df = base_df[base_columns].copy(), ref_df[ref_columns].copy()
     # Both data frame columns are renamed in order to perform the calculation below.
     base_df.columns = ref_df.columns = [
-        column.replace(reference.reference_type.alias, reference.alias)
-        for column in ref_columns
+        column.replace(reference.reference_type.alias, reference.alias) for column in ref_columns
     ]
 
     ref_delta_df = df_subtract(base_df, ref_df, fill_value=0)

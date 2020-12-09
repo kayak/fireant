@@ -26,6 +26,7 @@ class _Container(object):
         )
         dataset.dimensions.my_dimension1
     """
+
     def __new__(cls, *args, **kwargs):
         """
         Because we override __getattr__ we need to implement __new__ in order for pickling to work correctly:
@@ -80,9 +81,7 @@ class _Container(object):
         return isinstance(other, _Container) and all(
             [
                 a is not None and b is not None and a.alias == b.alias
-                for a, b in itertools.zip_longest(
-                    self._items.values(), getattr(other, "_items", {}).values()
-                )
+                for a, b in itertools.zip_longest(self._items.values(), getattr(other, "_items", {}).values())
             ]
         )
 

@@ -241,19 +241,13 @@ mock_dataset_blender = (
         Field(
             "candidate-spend-per-voters",
             label="Average Candidate Spend per Voters",
-            definition=(
-                mock_spend_dataset.fields["candidate-spend"]
-                / mock_dataset.fields["voters"]
-            ),
+            definition=(mock_spend_dataset.fields["candidate-spend"] / mock_dataset.fields["voters"]),
             data_type=DataType.number,
         ),
         Field(
             "candidate-spend-per-wins",
             label="Average Candidate Spend per Wins",
-            definition=(
-                mock_spend_dataset.fields["candidate-spend"]
-                / mock_dataset.fields["wins"]
-            ),
+            definition=(mock_spend_dataset.fields["candidate-spend"] / mock_dataset.fields["wins"]),
             data_type=DataType.number,
         ),
     )
@@ -431,9 +425,7 @@ candidates = OrderedDict(
 
 states = OrderedDict(((1, "Texas"), (2, "California")))
 
-elections = OrderedDict(
-    ((1, "1996"), (2, "2000"), (3, "2004"), (4, "2008"), (5, "2012"), (6, "2016"))
-)
+elections = OrderedDict(((1, "1996"), (2, "2000"), (3, "2004"), (4, "2008"), (5, "2012"), (6, "2016")))
 
 election_candidates = {
     1: {"candidates": [1, 2, 3], "winner": 1},
@@ -575,39 +567,23 @@ dimx0_metricx1_df = pd.DataFrame(mock_politics_database[[f("votes")]].sum()).T
 metrics = [f("votes"), f("wins"), f("wins_with_style"), f("turnout")]
 dimx0_metricx2_df = pd.DataFrame(mock_politics_database[metrics].sum()).T
 
-dimx1_date_df = (
-    mock_politics_database[[f("timestamp")] + metrics].groupby(f("timestamp")).sum()
-)
+dimx1_date_df = mock_politics_database[[f("timestamp")] + metrics].groupby(f("timestamp")).sum()
 
-dimx1_date_meticx1_votes_df = (
-    mock_politics_database[[f("timestamp")] + [f("votes")]]
-    .groupby(f("timestamp"))
-    .sum()
-)
+dimx1_date_meticx1_votes_df = mock_politics_database[[f("timestamp")] + [f("votes")]].groupby(f("timestamp")).sum()
 
 no_index_df = pd.DataFrame(dimx1_date_df.sum()).T
 
-dimx1_str_df = (
-    mock_politics_database[[f("political_party")] + metrics]
-    .groupby(f("political_party"))
-    .sum()
+dimx1_str_df = mock_politics_database[[f("political_party")] + metrics].groupby(f("political_party")).sum()
+
+dimx2_date_index_str_df = mock_politics_database[[f("timestamp"), f("candidate-name")]].set_index(f("timestamp"))
+
+dimx2_category_index_str_df = mock_politics_database[[f("political_party"), f("candidate-name")]].set_index(
+    f("political_party")
 )
-
-dimx2_date_index_str_df = mock_politics_database[
-    [f("timestamp"), f("candidate-name")]
-].set_index(f("timestamp"))
-
-dimx2_category_index_str_df = mock_politics_database[
-    [f("political_party"), f("candidate-name")]
-].set_index(f("political_party"))
 
 dimx1_none_df = pd.DataFrame(mock_politics_database[metrics].sum()).T
 
-dimx1_num_df = (
-    mock_politics_database[[f("candidate-id")] + metrics]
-    .groupby(f("candidate-id"))
-    .sum()
-)
+dimx1_num_df = mock_politics_database[[f("candidate-id")] + metrics].groupby(f("candidate-id")).sum()
 
 dimx2_str_num_df = (
     mock_politics_database[[f("political_party"), f("candidate-id")] + metrics]
@@ -628,9 +604,7 @@ dimx2_date_str_df = (
 )
 
 dimx2_date_bool_df = (
-    mock_politics_database[[f("timestamp"), f("winner"), f("votes")]]
-    .groupby([f("timestamp"), f("winner")])
-    .sum()
+    mock_politics_database[[f("timestamp"), f("winner"), f("votes")]].groupby([f("timestamp"), f("winner")]).sum()
 )
 
 dimx2_date_num_df = (
@@ -709,41 +683,26 @@ def totals(data_frame, dimensions, columns):
         groupby_levels = data_frame.index.names[:i]
 
         if groupby_levels:
-            level_totals_df = (
-                data_frame[columns].groupby(level=groupby_levels).apply(_totals)
-            )
+            level_totals_df = data_frame[columns].groupby(level=groupby_levels).apply(_totals)
 
-            missing_dims = set(data_frame.index.names) - set(
-                level_totals_df.index.names
-            )
+            missing_dims = set(data_frame.index.names) - set(level_totals_df.index.names)
             if missing_dims:
                 for dim in missing_dims:
-                    dtype = data_frame.index.levels[
-                        data_frame.index.names.index(dim)
-                    ].dtype
+                    dtype = data_frame.index.levels[data_frame.index.names.index(dim)].dtype
                     level_totals_df[dim] = get_totals_marker_for_dtype(dtype)
                     level_totals_df.set_index(dim, append=True, inplace=True)
 
                 level_totals_df = level_totals_df.reorder_levels(data_frame.index.names)
 
         else:
-            totals_index_values = [
-                get_totals_marker_for_dtype(level.dtype)
-                for level in data_frame.index.levels
-            ]
+            totals_index_values = [get_totals_marker_for_dtype(level.dtype) for level in data_frame.index.levels]
             level_totals_df = pd.DataFrame(
                 [data_frame[columns].apply(_totals)],
                 columns=columns,
-                index=pd.MultiIndex.from_tuples(
-                    [totals_index_values], names=data_frame.index.names
-                ),
+                index=pd.MultiIndex.from_tuples([totals_index_values], names=data_frame.index.names),
             )
 
-        totals_df = (
-            totals_df.append(level_totals_df)
-            if totals_df is not None
-            else level_totals_df
-        )
+        totals_df = totals_df.append(level_totals_df) if totals_df is not None else level_totals_df
 
     return data_frame.append(totals_df).sort_index()
 
@@ -764,9 +723,7 @@ def totals(data_frame, dimensions, columns):
 
 dimx1_str_totals_df = totals(dimx1_str_df, [f("political_party")], _columns)
 dimx2_date_str_totals_df = totals(dimx2_date_str_df, [f("political_party")], _columns)
-dimx2_date_str_totalsx2_df = totals(
-    dimx2_date_str_df, [f("timestamp"), f("political_party")], _columns
-)
+dimx2_date_str_totalsx2_df = totals(dimx2_date_str_df, [f("timestamp"), f("political_party")], _columns)
 dimx3_date_str_str_totalsx3_df = totals(
     dimx3_date_str_str_df, [f("timestamp"), f("political_party"), f("state")], _columns
 )

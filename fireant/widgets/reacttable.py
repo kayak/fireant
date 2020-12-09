@@ -3,8 +3,8 @@ import re
 from collections import OrderedDict, defaultdict
 from functools import partial
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 from fireant.dataset.fields import (
     DataType,
@@ -47,7 +47,7 @@ def hex_to_rgb(hex_val):
     """
     https://stackoverflow.com/questions/29643352/converting-hex-to-rgb-value-in-python
     """
-    return tuple(int(hex_val[i:i + 2], 16) for i in (0, 2, 4))
+    return tuple(int(hex_val[i : i + 2], 16) for i in (0, 2, 4))
 
 
 def rgb_to_hex(rgb_val):
@@ -102,8 +102,8 @@ class FormattingRule:
         Determines, using the luminance of the background color, whether the text color should be light or dark.
         """
         rgb_bg_color = hex_to_rgb(background_color)
-        luminance = (0.299 * rgb_bg_color[0] + 0.587 * rgb_bg_color[1] + 0.114 * rgb_bg_color[2]) / 255;
-        return 'FDFDFD' if luminance < 0.5 else '212121';
+        luminance = (0.299 * rgb_bg_color[0] + 0.587 * rgb_bg_color[1] + 0.114 * rgb_bg_color[2]) / 255
+        return 'FDFDFD' if luminance < 0.5 else '212121'
 
     def get_field_selector(self):
         return alias_selector(self.field.get_alias())
@@ -152,7 +152,6 @@ class FormattingHeatMapRule(FormattingRule):
         if not self._is_invalid(min_val) and not self._is_invalid(max_val):
             self.min_val = min_val
             self.value_range = max_val - min_val
-
 
     @staticmethod
     def _is_invalid(val):
@@ -244,6 +243,7 @@ class ReactTable(Pandas):
                         defaultSortMethod={(a, b, desc) => ReactTableDefaults.defaultSortMethod(a.raw, b.raw, desc)}>
             </ReactTable>;
     """
+
     def __init__(
         self,
         metric,
@@ -264,7 +264,7 @@ class ReactTable(Pandas):
             transpose=transpose,
             sort=sort,
             ascending=ascending,
-            max_columns=max_columns
+            max_columns=max_columns,
         )
         self.formatting_rules_map = defaultdict(list)
         self.min_max_map = {}
@@ -275,9 +275,7 @@ class ReactTable(Pandas):
                 self.min_max_map[field_selector] = [np.inf, -np.inf]
 
     def __repr__(self):
-        return "{}({})".format(
-            self.__class__.__name__, ",".join(str(m) for m in self.items)
-        )
+        return "{}({})".format(self.__class__.__name__, ",".join(str(m) for m in self.items))
 
     @staticmethod
     def map_hyperlink_templates(df, dimensions):
@@ -308,15 +306,12 @@ class ReactTable(Pandas):
                 continue
 
             required_hyperlink_parameters = [
-                alias_selector(argument[1:-1])
-                for argument in pattern.findall(hyperlink_template)
+                alias_selector(argument[1:-1]) for argument in pattern.findall(hyperlink_template)
             ]
 
             # Check that all of the required dimensions are in the result data set. Only include the hyperlink template
             # in the return value of this function if all are present.
-            unavailable_hyperlink_parameters = set(required_hyperlink_parameters) & set(
-                df.index.names
-            )
+            unavailable_hyperlink_parameters = set(required_hyperlink_parameters) & set(df.index.names)
             if not unavailable_hyperlink_parameters:
                 continue
 
@@ -374,10 +369,7 @@ class ReactTable(Pandas):
             }]
         """
         columns = []
-        if (
-            not isinstance(data_frame.index, pd.MultiIndex)
-            and data_frame.index.name is None
-        ):
+        if not isinstance(data_frame.index, pd.MultiIndex) and data_frame.index.name is None:
             return columns
 
         for f_dimension_alias in data_frame.index.names:
@@ -468,9 +460,7 @@ class ReactTable(Pandas):
                 is_totals = column_value in TOTALS_MARKERS | {TOTALS_LABEL}
 
                 # All column definitions have a header
-                column = {
-                    "Header": get_header(column_value, f_dimension_alias, is_totals)
-                }
+                column = {"Header": get_header(column_value, f_dimension_alias, is_totals)}
 
                 level_values = previous_level_values + (column_value,)
                 if group is not None:
@@ -480,9 +470,7 @@ class ReactTable(Pandas):
                     column["columns"] = _make_columns(next_level_df, level_values)
 
                 else:
-                    column["accessor"] = ".".join(
-                        safe_value(value) for value in level_values
-                    )
+                    column["accessor"] = ".".join(safe_value(value) for value in level_values)
 
                 if is_totals:
                     column["className"] = "fireant-totals"
@@ -492,9 +480,7 @@ class ReactTable(Pandas):
             return columns
 
         # If the query only has a single metric, that level will be dropped, and set as data_frame.name
-        dropped_metric_level_name = (
-            (data_frame.name,) if hasattr(data_frame, "name") else ()
-        )
+        dropped_metric_level_name = (data_frame.name,) if hasattr(data_frame, "name") else ()
 
         return _make_columns(data_frame.columns.to_frame(), dropped_metric_level_name)
 
@@ -523,9 +509,7 @@ class ReactTable(Pandas):
             # at this point, otherwise the hyperlink template will not be included.
             if not is_totals and key in dimension_hyperlink_templates:
                 try:
-                    data["hyperlink"] = dimension_hyperlink_templates[key].format(
-                        **index_values
-                    )
+                    data["hyperlink"] = dimension_hyperlink_templates[key].format(**index_values)
                 except KeyError:
                     pass
 
@@ -541,14 +525,8 @@ class ReactTable(Pandas):
     def _get_row_value_accessor(series, fields, key):
         index_names = series.index.names or []
 
-        accessor_fields = [
-            fields[field_alias]
-            for field_alias in index_names
-            if field_alias is not None
-        ]
-        accessor = [
-            safe_value(value) for value, field in zip(key, accessor_fields)
-        ] or key
+        accessor_fields = [fields[field_alias] for field_alias in index_names if field_alias is not None]
+        accessor = [safe_value(value) for value, field in zip(key, accessor_fields)] or key
 
         return accessor
 
@@ -612,7 +590,13 @@ class ReactTable(Pandas):
                     rule.set_min_max(*self.min_max_map[rule.get_field_selector()])
 
     def transform_data(
-        self, data_frame, field_map, hide_aliases, dimension_hyperlink_templates, is_transposed, is_pivoted,
+        self,
+        data_frame,
+        field_map,
+        hide_aliases,
+        dimension_hyperlink_templates,
+        is_transposed,
+        is_pivoted,
     ):
         """
         Builds a list of dicts containing the data for ReactTable. This aligns with the accessors set by
@@ -660,9 +644,7 @@ class ReactTable(Pandas):
             index = wrap_list(index)
             # Get a list of values from the index. These can be metrics or dimensions so it checks in the item map if
             # there is a display value for the value
-            index_values = (
-                [_get_field_label(value) for value in index] if is_transposed else index
-            )
+            index_values = [_get_field_label(value) for value in index] if is_transposed else index
             index_display_values = OrderedDict(zip(index_names, index_values))
             row_index = self.transform_row_index(
                 index_display_values, field_map, dimension_hyperlink_templates, hide_aliases, row_colors
@@ -704,9 +686,7 @@ class ReactTable(Pandas):
         """
         result_df = data_frame.copy()
 
-        dimension_map = {
-            alias_selector(dimension.alias): dimension for dimension in dimensions
-        }
+        dimension_map = {alias_selector(dimension.alias): dimension for dimension in dimensions}
 
         metric_map = OrderedDict(
             [
@@ -733,9 +713,7 @@ class ReactTable(Pandas):
         }
         metric_aliases = list(metric_map.keys())
 
-        hide_aliases = {
-            alias_selector(dimension.alias) for dimension in self.hide
-        }
+        hide_aliases = {alias_selector(dimension.alias) for dimension in self.hide}
 
         for dimension in dimensions:
             if dimension.fetch_only:

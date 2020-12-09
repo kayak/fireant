@@ -1,9 +1,9 @@
 import numpy as np
-from fireant import utils
-from fireant.utils import immutable
 from pypika import functions as fn
 from pypika.queries import QueryBuilder
 
+from fireant import utils
+from fireant.utils import immutable
 from .modifiers import FieldModifier
 
 
@@ -44,11 +44,7 @@ class Reference(FieldModifier):
         self.filters = filters
 
     def __eq__(self, other):
-        return (
-            isinstance(self, Reference)
-            and self.field is other.field
-            and self.alias == other.alias
-        )
+        return isinstance(self, Reference) and self.field is other.field and self.alias == other.alias
 
     def __hash__(self):
         return hash("reference{}{}".format(self.alias, self.field))
@@ -73,11 +69,7 @@ class ReferenceType(object):
         return Reference(dimension, self, delta=delta, delta_percent=delta_percent, filters=filters)
 
     def __eq__(self, other):
-        return (
-            isinstance(self, ReferenceType)
-            and self.time_unit == other.time_unit
-            and self.interval == other.interval
-        )
+        return isinstance(self, ReferenceType) and self.time_unit == other.time_unit and self.interval == other.interval
 
     def __hash__(self):
         return hash("reference" + self.alias)
@@ -90,9 +82,7 @@ QuarterOverQuarter = ReferenceType("qoq", "QoQ", "quarter", 1)
 YearOverYear = ReferenceType("yoy", "YoY", "year", 1)
 
 
-def reference_term(
-    reference: Reference, original_query: QueryBuilder, ref_query: QueryBuilder
-):
+def reference_term(reference: Reference, original_query: QueryBuilder, ref_query: QueryBuilder):
     """
     Part of query building. Given a reference, the original dataset query, and the ref query, creates the pypika for
     the reference that should be selected in the reference container query.
@@ -111,9 +101,7 @@ def reference_term(
 
     if reference.delta:
         if reference.delta_percent:
-            return lambda metric: (original_field(metric) - ref_field(metric)) * (
-                100 / fn.NullIf(ref_field(metric), 0)
-            )
+            return lambda metric: (original_field(metric) - ref_field(metric)) * (100 / fn.NullIf(ref_field(metric), 0))
 
         return lambda metric: original_field(metric) - ref_field(metric)
 

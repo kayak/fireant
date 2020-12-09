@@ -36,11 +36,7 @@ class Widget:
         if 0 == len(self.items):
             raise MetricRequiredException(str(self))
 
-        return [
-            metric
-            for group in self.items
-            for metric in getattr(group, "metrics", [group])
-        ]
+        return [metric for group in self.items for metric in getattr(group, "metrics", [group])]
 
     def __deepcopy__(self, memodict={}):
         for item in self.items:
@@ -55,9 +51,7 @@ class Widget:
         return isinstance(other, self.__class__) and self.items == other.items
 
     def __repr__(self):
-        return "{}({})".format(
-            self.__class__.__name__, ",".join(str(m) for m in self.items)
-        )
+        return "{}({})".format(self.__class__.__name__, ",".join(str(m) for m in self.items))
 
 
 class TransformableWidget(Widget):

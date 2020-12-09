@@ -27,10 +27,26 @@ class SlicerContainerTests(TestCase):
 
     def test_iter_fields(self):
         field_aliases = {field.alias for field in mock_dataset.fields}
-        self.assertSetEqual(field_aliases, {'votes', 'wins', 'voters', 'turnout', 'wins_with_style',
-                                            'timestamp', 'timestamp2', 'join_timestamp',
-                                            'political_party',
-                                            'candidate-id', 'candidate-name',
-                                            'election-id', 'election-year',
-                                            'district-id', 'district-name',
-                                            'state', 'winner', 'deepjoin'})
+        self.assertSetEqual(
+            field_aliases,
+            {
+                'votes',
+                'wins',
+                'voters',
+                'turnout',
+                'wins_with_style',
+                'timestamp',
+                'timestamp2',
+                'join_timestamp',
+                'political_party',
+                'candidate-id',
+                'candidate-name',
+                'election-id',
+                'election-year',
+                'district-id',
+                'district-name',
+                'state',
+                'winner',
+                'deepjoin',
+            },
+        )

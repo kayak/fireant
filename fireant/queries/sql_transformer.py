@@ -7,7 +7,6 @@ from fireant.database import Database
 from fireant.dataset.fields import Field
 from fireant.dataset.filters import Filter
 from fireant.dataset.joins import Join
-from fireant.dataset.modifiers import Rollup
 from fireant.utils import (
     alias_selector,
     flatten,
@@ -69,27 +68,24 @@ def make_slicer_query_with_totals_and_references(
     ```
     """
     totals_dimensions = find_totals_dimensions(
-        dimensions, share_dimensions,
+        dimensions,
+        share_dimensions,
     )
     totals_dimensions_and_none = [None] + totals_dimensions[::-1]
 
-    reference_groups = find_and_group_references_for_dimensions(
-        dimensions, references
-    )
+    reference_groups = find_and_group_references_for_dimensions(dimensions, references)
     reference_groups_and_none = [(None, None)] + list(reference_groups.items())
 
     queries = []
     for totals_dimension in totals_dimensions_and_none:
         (dimensions_with_totals, filters_with_totals) = adapt_for_totals_query(
-            totals_dimension, dimensions, filters,
+            totals_dimension,
+            dimensions,
+            filters,
         )
 
         for reference_parts, references in reference_groups_and_none:
-            (
-                dimensions_with_ref,
-                metrics_with_ref,
-                filters_with_ref,
-            ) = adapt_for_reference_query(
+            (dimensions_with_ref, metrics_with_ref, filters_with_ref,) = adapt_for_reference_query(
                 reference_parts,
                 database,
                 dimensions_with_totals,
@@ -173,11 +169,7 @@ def make_slicer_query(
 
     # Add filters
     for fltr in filters:
-        query = (
-            query.having(fltr.definition)
-            if fltr.is_aggregate
-            else query.where(fltr.definition)
-        )
+        query = query.having(fltr.definition) if fltr.is_aggregate else query.where(fltr.definition)
 
     # Add metrics
     metric_terms = [make_term_for_field(metric) for metric in metrics]

@@ -25,7 +25,6 @@ class DataSetBlenderIntegrationTests(TestCase):
                     definition=t0.timestamp,
                     data_type=DataType.date,
                 ),
-
                 Field(
                     "metric0",
                     label="Metric0",
@@ -52,13 +51,9 @@ class DataSetBlenderIntegrationTests(TestCase):
                 ),
             ],
         )
-        blend_ds = primary_ds.blend(secondary_ds).on(
-            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
-        )
+        blend_ds = primary_ds.blend(secondary_ds).on({primary_ds.fields.timestamp: secondary_ds.fields.timestamp})
 
-        sql = (
-            blend_ds.query().dimension(blend_ds.fields.timestamp).widget(ReactTable(blend_ds.fields.metric0))
-        ).sql
+        sql = (blend_ds.query().dimension(blend_ds.fields.timestamp).widget(ReactTable(blend_ds.fields.metric0))).sql
 
         (query,) = sql
         self.assertEqual(
@@ -123,9 +118,7 @@ class DataSetBlenderIntegrationTests(TestCase):
         )
 
         sql = (
-            blend_ds.query()
-            .dimension(blend_ds.fields.timestamp)
-            .widget(ReactTable(blend_ds.fields.metric_share))
+            blend_ds.query().dimension(blend_ds.fields.timestamp).widget(ReactTable(blend_ds.fields.metric_share))
         ).sql
 
         (query,) = sql
@@ -219,7 +212,7 @@ class DataSetBlenderIntegrationTests(TestCase):
         )
 
     def test_select_unmapped_dimension_from_secondary_but_only_metric_from_primary(
-            self,
+        self,
     ):
         db = Database()
         t0, t1 = Tables("test0", "test1")
@@ -265,14 +258,12 @@ class DataSetBlenderIntegrationTests(TestCase):
                 ),
             ],
         )
-        blend_ds = primary_ds.blend(secondary_ds).on(
-            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
-        )
+        blend_ds = primary_ds.blend(secondary_ds).on({primary_ds.fields.timestamp: secondary_ds.fields.timestamp})
 
         sql = (
             blend_ds.query()
-                .dimension(blend_ds.fields.timestamp, blend_ds.fields.account)
-                .widget(ReactTable(blend_ds.fields.metric0))
+            .dimension(blend_ds.fields.timestamp, blend_ds.fields.account)
+            .widget(ReactTable(blend_ds.fields.metric0))
         ).sql
 
         (query,) = sql
@@ -301,7 +292,7 @@ class DataSetBlenderIntegrationTests(TestCase):
         )
 
     def test_select_unmapped_dimension_from_primary_but_only_metric_from_secondary(
-            self,
+        self,
     ):
         db = Database()
         t0, t1 = Tables("test0", "test1")
@@ -347,14 +338,12 @@ class DataSetBlenderIntegrationTests(TestCase):
                 ),
             ],
         )
-        blend_ds = primary_ds.blend(secondary_ds).on(
-            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
-        )
+        blend_ds = primary_ds.blend(secondary_ds).on({primary_ds.fields.timestamp: secondary_ds.fields.timestamp})
 
         sql = (
             blend_ds.query()
-                .dimension(blend_ds.fields.timestamp, blend_ds.fields.account)
-                .widget(ReactTable(blend_ds.fields.metric1))
+            .dimension(blend_ds.fields.timestamp, blend_ds.fields.account)
+            .widget(ReactTable(blend_ds.fields.metric1))
         ).sql
 
         (query,) = sql
@@ -383,7 +372,7 @@ class DataSetBlenderIntegrationTests(TestCase):
         )
 
     def test_filter_unmapped_dimension_from_primary_with_only_metric_selected_from_secondary(
-            self,
+        self,
     ):
         db = Database()
         t0, t1 = Tables("test0", "test1")
@@ -423,15 +412,13 @@ class DataSetBlenderIntegrationTests(TestCase):
                 ),
             ],
         )
-        blend_ds = primary_ds.blend(secondary_ds).on(
-            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
-        )
+        blend_ds = primary_ds.blend(secondary_ds).on({primary_ds.fields.timestamp: secondary_ds.fields.timestamp})
 
         sql = (
             blend_ds.query()
-                .dimension(blend_ds.fields.timestamp)
-                .widget(ReactTable(blend_ds.fields.metric1))
-                .filter(blend_ds.fields.account.isin(["123"]))
+            .dimension(blend_ds.fields.timestamp)
+            .widget(ReactTable(blend_ds.fields.metric1))
+            .filter(blend_ds.fields.account.isin(["123"]))
         ).sql
 
         (query,) = sql
@@ -451,7 +438,7 @@ class DataSetBlenderIntegrationTests(TestCase):
         )
 
     def test_select_unmapped_dimension_from_primary_and_metrics_from_both_datasets(
-            self,
+        self,
     ):
         db = Database()
         t0, t1 = Tables("test0", "test1")
@@ -497,14 +484,12 @@ class DataSetBlenderIntegrationTests(TestCase):
                 ),
             ],
         )
-        blend_ds = primary_ds.blend(secondary_ds).on(
-            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
-        )
+        blend_ds = primary_ds.blend(secondary_ds).on({primary_ds.fields.timestamp: secondary_ds.fields.timestamp})
 
         sql = (
             blend_ds.query()
-                .dimension(blend_ds.fields.timestamp, blend_ds.fields.account)
-                .widget(ReactTable(blend_ds.fields.metric0, blend_ds.fields.metric1))
+            .dimension(blend_ds.fields.timestamp, blend_ds.fields.account)
+            .widget(ReactTable(blend_ds.fields.metric0, blend_ds.fields.metric1))
         ).sql
 
         (query,) = sql
@@ -575,15 +560,9 @@ class DataSetBlenderIntegrationTests(TestCase):
                 ),
             ],
         )
-        blend_ds = primary_ds.blend(secondary_ds).on(
-            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
-        )
+        blend_ds = primary_ds.blend(secondary_ds).on({primary_ds.fields.timestamp: secondary_ds.fields.timestamp})
 
-        sql = (
-            blend_ds.query()
-            .dimension(blend_ds.fields.timestamp)
-            .widget(ReactTable(blend_ds.fields.metric0))
-        ).sql
+        sql = (blend_ds.query().dimension(blend_ds.fields.timestamp).widget(ReactTable(blend_ds.fields.metric0))).sql
 
         (query,) = sql
         self.assertEqual(
@@ -622,9 +601,7 @@ class DataSetBlenderIntegrationTests(TestCase):
                 ),
             ],
         )
-        blend_ds = primary_ds.blend(secondary_ds).on(
-            {primary_ds.fields.a: secondary_ds.fields.b}
-        )
+        blend_ds = primary_ds.blend(secondary_ds).on({primary_ds.fields.a: secondary_ds.fields.b})
 
         sql = (
             blend_ds.query()
@@ -696,9 +673,7 @@ class DataSetBlenderIntegrationTests(TestCase):
                 ),
             ],
         )
-        blend_ds = primary_ds.blend(secondary_ds).on(
-            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
-        )
+        blend_ds = primary_ds.blend(secondary_ds).on({primary_ds.fields.timestamp: secondary_ds.fields.timestamp})
 
         sql = (
             blend_ds.query()
@@ -793,9 +768,7 @@ class DataSetBlenderIntegrationTests(TestCase):
                 ),
             ],
         )
-        blend_ds = primary_ds.blend(secondary_ds).on(
-            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
-        )
+        blend_ds = primary_ds.blend(secondary_ds).on({primary_ds.fields.timestamp: secondary_ds.fields.timestamp})
 
         sql = (
             blend_ds.query()
@@ -891,9 +864,7 @@ class DataSetBlenderIntegrationTests(TestCase):
                 ),
             ],
         )
-        blend_ds = primary_ds.blend(secondary_ds).on(
-            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
-        )
+        blend_ds = primary_ds.blend(secondary_ds).on({primary_ds.fields.timestamp: secondary_ds.fields.timestamp})
 
         sql = (
             blend_ds.query()
@@ -989,21 +960,21 @@ class DataSetBlenderIntegrationTests(TestCase):
                 ),
             ],
         )
-        blend_ds = primary_ds.blend(secondary_ds).on(
-            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
-        ).extra_fields(
-            Field(
-                "blended_metric",
-                label="Blended Metric",
-                definition=secondary_ds.fields.other_metric_name / secondary_ds.fields.metric_2,
-                data_type=DataType.number,
+        blend_ds = (
+            primary_ds.blend(secondary_ds)
+            .on({primary_ds.fields.timestamp: secondary_ds.fields.timestamp})
+            .extra_fields(
+                Field(
+                    "blended_metric",
+                    label="Blended Metric",
+                    definition=secondary_ds.fields.other_metric_name / secondary_ds.fields.metric_2,
+                    data_type=DataType.number,
+                )
             )
         )
 
         query = (
-            blend_ds.query()
-                .dimension(blend_ds.fields.timestamp)
-                .widget(f.Widget(blend_ds.fields.blended_metric))
+            blend_ds.query().dimension(blend_ds.fields.timestamp).widget(f.Widget(blend_ds.fields.blended_metric))
         ).sql[0]
 
         self.assertEqual(
@@ -1057,15 +1028,13 @@ class DataSetBlenderIntegrationTests(TestCase):
                 ),
             ],
         )
-        blend_ds = primary_ds.blend(secondary_ds).on(
-            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
-        )
+        blend_ds = primary_ds.blend(secondary_ds).on({primary_ds.fields.timestamp: secondary_ds.fields.timestamp})
 
         query = (
             blend_ds.query()
-                .dimension(blend_ds.fields.timestamp)
-                .widget(f.Widget(blend_ds.fields.metric0))
-                .filter(blend_ds.fields.metric1.between(10, 20))
+            .dimension(blend_ds.fields.timestamp)
+            .widget(f.Widget(blend_ds.fields.metric0))
+            .filter(blend_ds.fields.metric1.between(10, 20))
         ).sql[0]
 
         self.assertEqual(
@@ -1130,18 +1099,12 @@ class DataSetBlenderIntegrationTests(TestCase):
                 ),
             ],
         )
-        blend_ds = primary_ds.blend(secondary_ds).on(
-            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
-        )
+        blend_ds = primary_ds.blend(secondary_ds).on({primary_ds.fields.timestamp: secondary_ds.fields.timestamp})
 
         sql = (
             blend_ds.query()
             .dimension(blend_ds.fields.timestamp)
-            .widget(
-                f.Widget(
-                    f.Share(blend_ds.fields.metric0, over=blend_ds.fields.timestamp)
-                )
-            )
+            .widget(f.Widget(f.Share(blend_ds.fields.metric0, over=blend_ds.fields.timestamp)))
             .filter(f.OmitFromRollup(blend_ds.fields.metric1.between(10, 20)))
         ).sql
 
@@ -1228,18 +1191,12 @@ class DataSetBlenderIntegrationTests(TestCase):
                 ),
             ],
         )
-        blend_ds = primary_ds.blend(secondary_ds).on(
-            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
-        )
+        blend_ds = primary_ds.blend(secondary_ds).on({primary_ds.fields.timestamp: secondary_ds.fields.timestamp})
 
         sql = (
             blend_ds.query()
             .dimension(blend_ds.fields.timestamp)
-            .widget(
-                f.Widget(
-                    f.Share(blend_ds.fields.metric0, over=blend_ds.fields.timestamp)
-                )
-            )
+            .widget(f.Widget(f.Share(blend_ds.fields.metric0, over=blend_ds.fields.timestamp)))
         ).sql
 
         (query_1, query_2) = sql
@@ -1302,18 +1259,12 @@ class DataSetBlenderIntegrationTests(TestCase):
                 ),
             ],
         )
-        blend_ds = primary_ds.blend(secondary_ds).on(
-            {primary_ds.fields.timestamp: secondary_ds.fields.timestamp}
-        )
+        blend_ds = primary_ds.blend(secondary_ds).on({primary_ds.fields.timestamp: secondary_ds.fields.timestamp})
 
         sql = (
             blend_ds.query()
             .dimension(blend_ds.fields.timestamp)
-            .widget(
-                f.Widget(
-                    f.Share(blend_ds.fields.metric1, over=blend_ds.fields.timestamp)
-                )
-            )
+            .widget(f.Widget(f.Share(blend_ds.fields.metric1, over=blend_ds.fields.timestamp)))
         ).sql
 
         (query_1, query_2) = sql
@@ -1378,9 +1329,7 @@ class DataSetBlenderIntegrationTests(TestCase):
                 Field(
                     "sum",
                     label="sum of two metrics in different datasets",
-                    definition=(
-                        primary_ds.fields["metric0"] + secondary_ds.fields["metric1"]
-                    ),
+                    definition=(primary_ds.fields["metric0"] + secondary_ds.fields["metric1"]),
                     data_type=DataType.number,
                 )
             )
@@ -1389,9 +1338,7 @@ class DataSetBlenderIntegrationTests(TestCase):
         sql = (
             blend_ds.query()
             .dimension(blend_ds.fields.timestamp)
-            .widget(
-                f.Widget(f.Share(blend_ds.fields.sum, over=blend_ds.fields.timestamp))
-            )
+            .widget(f.Widget(f.Share(blend_ds.fields.sum, over=blend_ds.fields.timestamp)))
         ).sql
 
         (query_1, query_2) = sql
@@ -1528,10 +1475,12 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
         cls.tertiary_ds.id = 2
         cls.blend_ds = (
             cls.primary_ds.blend(cls.secondary_ds)
-            .on({
-                cls.primary_ds.fields.timestamp: cls.secondary_ds.fields.timestamp,
-                cls.primary_ds.fields.another_dimension: cls.secondary_ds.fields.another_dimension,
-            })
+            .on(
+                {
+                    cls.primary_ds.fields.timestamp: cls.secondary_ds.fields.timestamp,
+                    cls.primary_ds.fields.another_dimension: cls.secondary_ds.fields.another_dimension,
+                }
+            )
             .blend(cls.tertiary_ds)
             .on({cls.primary_ds.fields.timestamp: cls.tertiary_ds.fields.timestamp})
         )
@@ -1569,8 +1518,8 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
     def test_select_dimension_that_is_only_in_two_out_of_three_datasets(self):
         (query,) = (
             self.blend_ds.query()
-                .dimension(self.blend_ds.fields.another_dimension)
-                .widget(ReactTable(self.blend_ds.fields.metric2))
+            .dimension(self.blend_ds.fields.another_dimension)
+            .widget(ReactTable(self.blend_ds.fields.metric2))
         ).sql
 
         self.assertEqual(
@@ -1585,8 +1534,8 @@ class MultipleDatasetsBlendedEdgeCaseTests(TestCase):
     def test_select_dimension_in_third_dataset(self):
         (query,) = (
             self.blend_ds.query()
-                .dimension(self.blend_ds.fields.timestamp)
-                .widget(ReactTable(self.blend_ds.fields.metric2))
+            .dimension(self.blend_ds.fields.timestamp)
+            .widget(ReactTable(self.blend_ds.fields.metric2))
         ).sql
 
         self.assertEqual(
@@ -1692,9 +1641,7 @@ class DataSetBlenderMultipleDatasetsTests(TestCase):
         self.maxDiff = None
 
         (query,) = (
-            blender.query()
-            .dimension(blender.fields.timestamp)
-            .widget(ReactTable(blender.fields.metric_share))
+            blender.query().dimension(blender.fields.timestamp).widget(ReactTable(blender.fields.metric_share))
         ).sql
 
         self.assertEqual(

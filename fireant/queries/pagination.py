@@ -15,10 +15,7 @@ def _get_window(limit, offset):
 
 def _get_sorting_schema(orders) -> Tuple[list, bool]:
     sort_values, ascending = zip(
-        *[
-            (alias_selector(field.alias), orientation is Order.asc)
-            for field, orientation in orders
-        ]
+        *[(alias_selector(field.alias), orientation is Order.asc) for field, orientation in orders]
     )
     return list(sort_values), ascending
 
@@ -78,9 +75,7 @@ def _simple_paginate(data_frame, start=None, end=None, orders=()):
 
 def _index_isnull(data_frame):
     if isinstance(data_frame.index, pd.MultiIndex):
-        return [
-            any(pd.isnull(value) for value in level) for level in list(data_frame.index)
-        ]
+        return [any(pd.isnull(value) for value in level) for level in list(data_frame.index)]
 
     return pd.isnull(data_frame.index)
 
@@ -150,7 +145,7 @@ def _group_paginate(data_frame, start=None, end=None, orders=()):
         """
         if bool in {type(x) for x in sorted_dimension_values}:
             num_missing_entries_in_boolean_mask = len(index_slice)
-            index_slice = [False]*len(dfx.index)
+            index_slice = [False] * len(dfx.index)
 
             for i in range(num_missing_entries_in_boolean_mask):
                 index_slice[i] = True
@@ -160,8 +155,4 @@ def _group_paginate(data_frame, start=None, end=None, orders=()):
 
         return dfx.loc[index_slice, :].append(dfx[isnull])
 
-    return (
-        data_frame.sort_values(data_frame.index.names[0], ascending=True)
-        .groupby(level=0)
-        .apply(_apply_pagination)
-    )
+    return data_frame.sort_values(data_frame.index.names[0], ascending=True).groupby(level=0).apply(_apply_pagination)

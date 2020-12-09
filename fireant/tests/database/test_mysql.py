@@ -5,7 +5,7 @@ from unittest.mock import (
     patch,
 )
 
-from pypika import (Column as PypikaColumn, Field, MySQLQuery)
+from pypika import Column as PypikaColumn, Field, MySQLQuery
 
 from fireant.database import MySQLDatabase
 from fireant.database.mysql import MySQLTypeEngine
@@ -30,13 +30,19 @@ class TestMySQLDatabase(TestCase):
         with patch.dict('sys.modules', pymysql=mock_pymysql):
             mock_pymysql.connect.return_value = 'OK'
 
-            mysql = MySQLDatabase(database='test_database', host='test_host', port=1234,
-                                  user='test_user', password='password')
+            mysql = MySQLDatabase(
+                database='test_database', host='test_host', port=1234, user='test_user', password='password'
+            )
             mysql.connect()
 
         mock_connection_class.return_value.assert_called_once_with(
-              host='test_host', port=1234, db='test_database', charset='utf8mb4',
-              user='test_user', password='password', cursorclass=ANY
+            host='test_host',
+            port=1234,
+            db='test_database',
+            charset='utf8mb4',
+            user='test_user',
+            password='password',
+            cursorclass=ANY,
         )
 
     def test_trunc_hour(self):
@@ -52,7 +58,9 @@ class TestMySQLDatabase(TestCase):
     def test_trunc_week(self):
         result = self.mysql.trunc_date(Field('date'), 'week')
 
-        self.assertEqual('DATE_FORMAT(DATE_SUB("date",INTERVAL WEEKDAY("date") DAY),\'%Y-%m-%d 00:00:00\')', str(result))
+        self.assertEqual(
+            'DATE_FORMAT(DATE_SUB("date",INTERVAL WEEKDAY("date") DAY),\'%Y-%m-%d 00:00:00\')', str(result)
+        )
 
     def test_trunc_month(self):
         result = self.mysql.trunc_date(Field('date'), 'month')
@@ -64,7 +72,7 @@ class TestMySQLDatabase(TestCase):
 
         self.assertEqual(
             'MAKEDATE(YEAR(TIMESTAMP("date")),1)+INTERVAL QUARTER(TIMESTAMP("date")) QUARTER-INTERVAL 1 QUARTER',
-            str(result)
+            str(result),
         )
 
     def test_trunc_year(self):
@@ -118,12 +126,12 @@ class TestMySQLDatabase(TestCase):
         MySQLDatabase().get_column_definitions('test_schema', 'test_table')
 
         mock_fetch.assert_called_once_with(
-              'SELECT DISTINCT `column_name`,`column_type` '
-              'FROM `INFORMATION_SCHEMA`.`columns` '
-              'WHERE `table_schema`=%(schema)s AND `table_name`=%(table)s '
-              'ORDER BY `column_name`',
-              connection=None,
-              parameters={'schema': 'test_schema', 'table': 'test_table'}
+            'SELECT DISTINCT `column_name`,`column_type` '
+            'FROM `INFORMATION_SCHEMA`.`columns` '
+            'WHERE `table_schema`=%(schema)s AND `table_name`=%(table)s '
+            'ORDER BY `column_name`',
+            connection=None,
+            parameters={'schema': 'test_schema', 'table': 'test_table'},
         )
 
     @patch.object(MySQLDatabase, 'execute')
@@ -131,8 +139,7 @@ class TestMySQLDatabase(TestCase):
         MySQLDatabase().import_csv('abc', '/path/to/file')
 
         mock_execute.assert_called_once_with(
-              'LOAD DATA LOCAL INFILE \'/path/to/file\' INTO TABLE `abc` FIELDS TERMINATED BY \',\'',
-              connection=None
+            'LOAD DATA LOCAL INFILE \'/path/to/file\' INTO TABLE `abc` FIELDS TERMINATED BY \',\'', connection=None
         )
 
     @patch.object(MySQLDatabase, 'execute')
@@ -142,8 +149,7 @@ class TestMySQLDatabase(TestCase):
         MySQLDatabase().create_temporary_table_from_columns('abc', columns)
 
         mock_execute.assert_called_once_with(
-              'CREATE TEMPORARY TABLE "abc" ("a" varchar,"b" varchar(100))',
-              connection=None
+            'CREATE TEMPORARY TABLE "abc" ("a" varchar,"b" varchar(100))', connection=None
         )
 
     @patch.object(MySQLDatabase, 'execute')
@@ -153,8 +159,8 @@ class TestMySQLDatabase(TestCase):
         MySQLDatabase().create_temporary_table_from_select('def', query)
 
         mock_execute.assert_called_once_with(
-              'CREATE TEMPORARY TABLE "def" AS (SELECT * FROM "abc")',
-              connection=None,
+            'CREATE TEMPORARY TABLE "def" AS (SELECT * FROM "abc")',
+            connection=None,
         )
 
 

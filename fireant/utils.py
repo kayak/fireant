@@ -154,14 +154,7 @@ def getdeepattr(d, keys, default_value=None):
 def apply_kwargs(f, *args, **kwargs):
     argspec = inspect.getfullargspec(f)
     allowed = set(argspec.args[-len(argspec.defaults or ()) :])
-    return f(
-        *args,
-        **{
-            key: kwarg
-            for key, kwarg in kwargs.items()
-            if argspec.varkw or key in allowed
-        }
-    )
+    return f(*args, **{key: kwarg for key, kwarg in kwargs.items() if argspec.varkw or key in allowed})
 
 
 def filter_kwargs(f):

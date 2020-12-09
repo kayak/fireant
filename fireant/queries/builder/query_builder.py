@@ -24,18 +24,11 @@ class QueryException(DataSetException):
 
 
 def add_hints(queries, hint=None):
-    return [
-        query.hint(hint)
-        if hint is not None and hasattr(query.__class__, "hint")
-        else query
-        for query in queries
-    ]
+    return [query.hint(hint) if hint is not None and hasattr(query.__class__, "hint") else query for query in queries]
 
 
 def get_column_names(database, table):
-    column_definitions = database.get_column_definitions(
-        table._schema._name, table._table_name
-    )
+    column_definitions = database.get_column_definitions(table._schema._name, table._table_name)
 
     return {column_definition[0] for column_definition in column_definitions}
 
@@ -48,9 +41,7 @@ def validate_fields(fields, dataset):
         return
 
     raise DataSetException(
-          "Only fields from dataset can be used in a dataset query. Found invalid fields: {}.".format(
-                ", ".join(invalid)
-          )
+        "Only fields from dataset can be used in a dataset query. Found invalid fields: {}.".format(", ".join(invalid))
     )
 
 
@@ -106,9 +97,7 @@ class QueryBuilder(object):
         """
         validate_fields(dimensions, self.dataset)
         aliases = {dimension.alias for dimension in self._dimensions}
-        self._dimensions += [
-            dimension for dimension in dimensions if dimension.alias not in aliases
-        ]
+        self._dimensions += [dimension for dimension in dimensions if dimension.alias not in aliases]
 
     @immutable
     def filter(self, *filters):
@@ -277,9 +266,11 @@ class QueryBuilder(object):
         return query.offset(self._query_offset)
 
     def _transform_for_return(self, widget_data, **metadata) -> Union[dict, list]:
-        return dict(data=widget_data, metadata=dict(**metadata)) \
-            if self.dataset.return_additional_metadata \
+        return (
+            dict(data=widget_data, metadata=dict(**metadata))
+            if self.dataset.return_additional_metadata
             else widget_data
+        )
 
 
 class ReferenceQueryBuilderMixin:
@@ -331,8 +322,6 @@ class WidgetQueryBuilderMixin:
         :return:
             A copy of the query with the widgets added.
         """
-        validate_fields(
-              [field for widget in widgets for field in widget.metrics], self.dataset
-        )
+        validate_fields([field for widget in widgets for field in widget.metrics], self.dataset)
 
         self._widgets += widgets

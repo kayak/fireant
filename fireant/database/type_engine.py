@@ -5,6 +5,7 @@ class TypeEngine:
     """
     Base class for database type conversions.
     """
+
     def __init__(self, db_to_ansi_mapper, ansi_to_db_mapper):
         self.db_to_ansi_mapper = db_to_ansi_mapper
         self.ansi_to_db_mapper = ansi_to_db_mapper

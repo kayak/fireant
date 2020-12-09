@@ -1,7 +1,6 @@
-import logging
-
 from pypika import (
-    Parameter, Tables,
+    Parameter,
+    Tables,
     VerticaQuery,
     functions as fn,
     terms,
@@ -64,7 +63,7 @@ class VerticaDatabase(Database):
         password=None,
         connection_timeout=None,
         log_level=None,
-        **kwargs
+        **kwargs,
     ):
         super(VerticaDatabase, self).__init__(host, port, database, **kwargs)
         self.user = user
@@ -104,11 +103,15 @@ class VerticaDatabase(Database):
     def get_column_definitions(self, schema, table, connection=None):
         view_columns, table_columns = Tables('view_columns', 'columns')
 
-        view_query = VerticaQuery.from_(view_columns) \
-            .select(view_columns.column_name, view_columns.data_type) \
-            .where((view_columns.table_schema == Parameter(':schema'))
-                   & (view_columns.field('table_name') == Parameter(':table'))) \
+        view_query = (
+            VerticaQuery.from_(view_columns)
+            .select(view_columns.column_name, view_columns.data_type)
+            .where(
+                (view_columns.table_schema == Parameter(':schema'))
+                & (view_columns.field('table_name') == Parameter(':table'))
+            )
             .distinct()
+        )
 
         table_query = (
             VerticaQuery.from_(table_columns, immutable=False)
@@ -121,9 +124,7 @@ class VerticaDatabase(Database):
         )
 
         return self.fetch(
-            str(view_query + table_query),
-            parameters=dict(schema=schema, table=table),
-            connection=connection
+            str(view_query + table_query), parameters=dict(schema=schema, table=table), connection=connection
         )
 
     def import_csv(self, table, file_path, connection=None):
@@ -146,13 +147,7 @@ class VerticaDatabase(Database):
         :param columns: The columns of the new temporary table.
         :param connection: (Optional) The connection to execute this query with.
         """
-        create_query = (
-            VerticaQuery.create_table(table)
-            .temporary()
-            .local()
-            .preserve_rows()
-            .columns(*columns)
-        )
+        create_query = VerticaQuery.create_table(table).temporary().local().preserve_rows().columns(*columns)
 
         self.execute(str(create_query), connection=connection)
 
@@ -164,13 +159,7 @@ class VerticaDatabase(Database):
         :param select_query: The query to be used for selecting data of an existing table for the new temporary table.
         :param connection: (Optional) The connection to execute this query with.
         """
-        create_query = (
-            VerticaQuery.create_table(table)
-            .temporary()
-            .local()
-            .preserve_rows()
-            .as_select(select_query)
-        )
+        create_query = VerticaQuery.create_table(table).temporary().local().preserve_rows().as_select(select_query)
 
         self.execute(str(create_query), connection=connection)
 
@@ -224,6 +213,4 @@ class VerticaTypeEngine(TypeEngine):
     }
 
     def __init__(self):
-        super(VerticaTypeEngine, self).__init__(
-            self.vertica_to_ansi_mapper, self.ansi_to_vertica_mapper
-        )
+        super(VerticaTypeEngine, self).__init__(self.vertica_to_ansi_mapper, self.ansi_to_vertica_mapper)
