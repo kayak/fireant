@@ -1,3 +1,4 @@
+import copy
 from unittest import TestCase
 
 from pypika import Order
@@ -75,15 +76,16 @@ class DataSetBlenderQueryBuilderTests(TestCase):
         )
 
     def test_db_specific_querybuilder_class_used_when_needed(self):
+        dataset_blender = copy.deepcopy(mock_dataset_blender)
         blender = (
-            mock_dataset_blender.query()
+            dataset_blender.query()
             .widget(
                 f.ReactTable(
-                    mock_dataset_blender.fields["candidate-spend"],
-                    mock_dataset_blender.fields["voters"],
+                    dataset_blender.fields["candidate-spend"],
+                    dataset_blender.fields["voters"],
                 )
             )
-            .dimension(f.day(mock_dataset_blender.fields.timestamp))
+            .dimension(f.day(dataset_blender.fields.timestamp))
         )
 
         # Given all mocks are based on the Vertica database, this is a quick override to avoid a lot of duplicate mocks!
