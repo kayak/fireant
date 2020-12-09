@@ -7,9 +7,6 @@
 -r requirements-extras-mssql.txt
 -r requirements-extras-ipython.txt
 
-# Builds
-wheel==0.30.0
-
 # Testing / CI
 tox==3.14.3
 tox-venv==0.4.0
