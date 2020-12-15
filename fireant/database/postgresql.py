@@ -49,7 +49,7 @@ class PostgreSQLDatabase(Database):
         return fn.DateAdd(str(date_part), interval, field)
 
     def get_column_definitions(self, schema, table, connection=None):
-        columns = Table("columns", schema="INFORMATION_SCHEMA")
+        columns = Table("columns", schema="information_schema")
 
         columns_query = (
             PostgreSQLQuery.from_(columns, immutable=False)
