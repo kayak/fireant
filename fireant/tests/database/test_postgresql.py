@@ -99,7 +99,7 @@ class TestPostgreSQL(TestCase):
 
         mock_fetch.assert_called_once_with(
             'SELECT DISTINCT "column_name","data_type" '
-            'FROM "INFORMATION_SCHEMA"."columns" '
+            'FROM "information_schema"."columns" '
             'WHERE "table_schema"=%(schema)s AND "table_name"=%(table)s '
             'ORDER BY "column_name"',
             connection=None,
