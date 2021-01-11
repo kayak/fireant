@@ -452,6 +452,69 @@ class HighChartsLineChartTransformerTests(TestCase):
                 result[2],
             )
 
+    def test_single_metric_with_a_split_dimension_dimx2_date_str_with_totalsx2_line_chart(self):
+        dimensions = [
+            Rollup(mock_dataset.fields.timestamp),
+            Rollup(mock_dataset.fields.political_party),
+        ]
+        result = (
+            HighCharts(
+                title="Time Series with Datetime/Text Dimensions, Single Metric and Totals",
+                split_dimension=dimensions[1],
+            )
+            .axis(self.chart_class(mock_dataset.fields.votes))
+            .transform(dimx2_date_str_totalsx2_df, dimensions, [])
+        )
+
+        with self.subTest("returns 4 charts"):
+            self.assertEqual(len(result), 4)
+
+        with self.subTest("for Totals split (4th chart)"):
+            self.assertEqual(
+                {
+                    "chart": {"height": 240},
+                    "title": {"text": "Time Series with Datetime/Text Dimensions, Single Metric and Totals (Totals)"},
+                    "xAxis": {"type": "datetime", "visible": True},
+                    "yAxis": [
+                        {
+                            "id": "0",
+                            "labels": {"style": {"color": None}},
+                            "title": {"text": None},
+                            "visible": True,
+                        }
+                    ],
+                    "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                    "legend": {"useHTML": True},
+                    "series": [
+                        {
+                            "color": "#DDDF0D",
+                            "dashStyle": "Solid",
+                            "data": [
+                                (820454400000, 15220449),
+                                (946684800000, 16662017),
+                                (1072915200000, 19614932),
+                                (1199145600000, 21294215),
+                                (1325376000000, 20572210),
+                                (1451606400000, 18310513),
+                            ],
+                            "marker": {"fillColor": "#DDDF0D", "symbol": "circle"},
+                            "name": "Votes (Totals)",
+                            "stacking": self.stacking,
+                            "tooltip": {
+                                "valueDecimals": None,
+                                "valuePrefix": None,
+                                "valueSuffix": None,
+                            },
+                            "type": self.chart_type,
+                            "yAxis": "0",
+                        },
+                    ],
+                    "annotations": [],
+                    "colors": DEFAULT_COLORS,
+                },
+                result[3],
+            )
+
     def test_single_metric_with_a_split_dimension_dimx2_str_str_line_chart(self):
         dimensions = [
             mock_dataset.fields.political_party,
