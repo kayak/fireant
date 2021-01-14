@@ -1,7 +1,7 @@
 import itertools
-from datetime import timedelta
-
 import pandas as pd
+
+from datetime import timedelta
 
 from fireant import (
     formats,
@@ -111,20 +111,18 @@ class HighCharts(ChartWidget, TransformableWidget):
         render_group = []
         split_dimension = self.split_dimension
 
-        if split_dimension:
+        if split_dimension and split_dimension.data_type != DataType.date:
             split_dimension_alias = alias_selector(split_dimension.alias)
 
-            categories = self._categories(
-                result_df,
-                dimension_map,
-                split_dimension_alias,
-            )
+            # Categories method cannot be reused here, given the totals label wouldn't be correctly
+            # mapped to the totals value in the split dimension column.
+            values, _ = self._values_and_dimension(result_df, dimension_map, split_dimension_alias)
 
-            for category in categories:
+            for value in values:
                 render_group.append(
                     [
-                        result_df.xs(category, level=split_dimension_alias, drop_level=False),
-                        formats.display_value(category, split_dimension) or category,
+                        result_df.xs(value, level=split_dimension_alias, drop_level=False),
+                        formats.display_value(value, split_dimension) or value,
                     ]
                 )
 
@@ -236,7 +234,7 @@ class HighCharts(ChartWidget, TransformableWidget):
             **extra,
         }
 
-    def _categories(self, data_frame, dimension_map, dimension_alias=None):
+    def _values_and_dimension(self, data_frame, dimension_map, dimension_alias=None):
         is_mi = isinstance(data_frame.index, pd.MultiIndex)
         levels = data_frame.index.levels if is_mi else [data_frame.index]
 
@@ -257,12 +255,14 @@ class HighCharts(ChartWidget, TransformableWidget):
         if first_level is not None and first_level.name is not None:
             dimension_alias = first_level.name
             dimension = dimension_map[dimension_alias]
-            return [
-                formats.display_value(category, dimension) or category if not pd.isnull(category) else None
-                for category in first_level
-            ]
+            return [value if not pd.isnull(value) else None for value in first_level], dimension
 
-        return []
+        return [], None
+
+    def _categories(self, data_frame, dimension_map, dimension_alias=None):
+        values, dimension = self._values_and_dimension(data_frame, dimension_map, dimension_alias)
+
+        return [formats.display_value(value, dimension) or value for value in values]
 
     def _render_x_axis(self, dimensions, categories):
         """
