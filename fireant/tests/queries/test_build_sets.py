@@ -338,6 +338,46 @@ class ResultSetTests(TestCase):
             str(queries[0]),
         )
 
+    def test_dimension_is_replaced_when_references_are_present(self):
+        queries = (
+            ds.query.widget(f.Pandas(ds.fields.aggr_number))
+            .dimension(ds.fields.date)
+            .dimension(ds.fields.boolean)
+            .reference(f.WeekOverWeek(ds.fields.date))
+            .filter(f.ResultSet(ds.fields.text == "abc"))
+            .sql
+        )
+
+        self.assertEqual(len(queries), 2)
+
+        with self.subTest("base query"):
+            self.assertEqual(
+                "SELECT "
+                '"date" "$date",'
+                '"boolean" "$boolean",'
+                "CASE WHEN \"text\"='abc' THEN 'set(text=''abc'')' ELSE 'complement(text=''abc'')' END \"$text\","
+                'SUM("number") "$aggr_number" '
+                'FROM "test" '
+                'GROUP BY "$date","$boolean","$text" '
+                'ORDER BY "$date","$boolean","$text" '
+                'LIMIT 200000',
+                str(queries[0]),
+            )
+
+        with self.subTest("ref query"):
+            self.assertEqual(
+                "SELECT "
+                'TIMESTAMPADD(\'week\',1,"date") "$date",'
+                '"boolean" "$boolean",'
+                "CASE WHEN \"text\"='abc' THEN 'set(text=''abc'')' ELSE 'complement(text=''abc'')' END \"$text\","
+                'SUM("number") "$aggr_number_wow" '
+                'FROM "test" '
+                'GROUP BY "$date","$boolean","$text" '
+                'ORDER BY "$date","$boolean","$text" '
+                'LIMIT 200000',
+                str(queries[1]),
+            )
+
     def test_dimension_filter_variations_with_sets(self):
         for field_alias, fltr in [
             ('text', ds.fields.text.like("%abc%")),
