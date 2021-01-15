@@ -684,6 +684,17 @@ class PandasTransformerSortTests(TestCase):
         )
 
         self.assertEqual(['Metrics', 'Company'], list(result.columns.names))
+        self.assertEqual(
+            [
+                ('Metric1', 'C1'),
+                ('Metric1', 'C2'),
+                ('Metric1', 'Totals'),
+                ('Metric2', 'C1'),
+                ('Metric2', 'C2'),
+                ('Metric2', 'Totals'),
+            ],
+            result.columns.values.tolist(),
+        )
         self.assertEqual(['Locale'], list(result.index.names))
         self.assertEqual(['za', 'Totals'], result.index.values.tolist())
         self.assertEqual([['2', '1', '3', '2', '2', '4'], ['', '', '3', '', '', '4']], result.values.tolist())
