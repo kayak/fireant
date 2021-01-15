@@ -1,14 +1,27 @@
+from collections import OrderedDict
 from functools import partial
-from typing import Iterable
+from typing import Iterable, Union
 
 import pandas as pd
 
 from fireant import formats
-from fireant.dataset.fields import Field
+from fireant.dataset.fields import DataType, Field
 from fireant.utils import alias_selector, wrap_list
 from .base import ReferenceItem, TransformableWidget
+from fireant.dataset.totals import DATE_TOTALS, NUMBER_TOTALS, TEXT_TOTALS
+from fireant.formats import TOTALS_LABEL, TOTALS_VALUE
+from fireant.reference_helpers import reference_alias
 
 HARD_MAX_COLUMNS = 24
+
+METRICS_DIMENSION_ALIAS = "metrics"
+F_METRICS_DIMENSION_ALIAS = alias_selector(METRICS_DIMENSION_ALIAS)
+
+
+class TotalsItem:
+    alias = TOTALS_VALUE
+    label = TOTALS_LABEL
+    prefix = suffix = precision = None
 
 
 class Pandas(TransformableWidget):
@@ -52,36 +65,78 @@ class Pandas(TransformableWidget):
         """
         result_df = data_frame.copy()
 
-        dimension_aliases = [alias_selector(dimension.alias) for dimension in dimensions]
+        dimension_map = {alias_selector(dimension.alias): dimension for dimension in dimensions}
+        dimension_aliases = dimension_map.keys()
+        metric_map = OrderedDict(
+            [
+                (
+                    alias_selector(reference_alias(item, ref)),
+                    ReferenceItem(item, ref) if ref is not None else item,
+                )
+                for item in self.items
+                for ref in [None] + references
+            ]
+        )
+        metric_aliases = metric_map.keys()
 
-        items = [
-            item if reference is None else ReferenceItem(item, reference)
-            for item in self.items
-            for reference in [None] + references
-        ]
+        field_map = {
+            **metric_map,
+            **dimension_map,
+            # Add an extra item to map the totals markers to it's label
+            NUMBER_TOTALS: TotalsItem,
+            TEXT_TOTALS: TotalsItem,
+            DATE_TOTALS: TotalsItem,
+            TOTALS_LABEL: TotalsItem,
+            alias_selector(METRICS_DIMENSION_ALIAS): Field(
+                METRICS_DIMENSION_ALIAS, None, data_type=DataType.text, label=""
+            ),
+        }
 
         if isinstance(result_df.index, pd.MultiIndex):
             result_df = result_df.reorder_levels(dimension_aliases)
 
-        result_df = result_df[[alias_selector(item.alias) for item in items]]
+        result_df = result_df[metric_aliases]
 
         hide_dimensions = set(self.hide) | {dimension for dimension in dimensions if dimension.fetch_only}
         self.hide_data_frame_indexes(result_df, hide_dimensions)
-
         hide_aliases = {dimension.alias for dimension in hide_dimensions}
 
         if dimensions:
             result_df.index.names = [
-                dimension.label or dimension.alias for dimension in dimensions if dimension.alias not in hide_aliases
+                alias_selector(dimension.alias) for dimension in dimensions if dimension.alias not in hide_aliases
             ]
 
-        result_df.columns = pd.Index([item.label for item in items], name="Metrics")
+        result_df.columns.name = 'Metrics'
 
         pivot_dimensions = [
-            dimension.label or dimension.alias for dimension in self.pivot if dimension.alias not in hide_aliases
+            alias_selector(dimension.alias) for dimension in self.pivot if dimension.alias not in hide_aliases
         ]
         result_df, _, _ = self.pivot_data_frame(result_df, pivot_dimensions, self.transpose)
-        return self.add_formatting(dimensions, items, result_df, use_raw_values).fillna(value=formats.BLANK_VALUE)
+        result_df = self.add_formatting(dimensions, list(metric_map.values()), result_df, use_raw_values).fillna(
+            value=formats.BLANK_VALUE
+        )
+        return self.transform_df_schema(result_df, field_map)
+
+    def transform_df_schema(self, data_frame: pd.DataFrame, field_map: dict) -> pd.DataFrame:
+        data_frame.index.names = self._transform_index_values(data_frame.index.names, field_map)
+        data_frame.columns.names = self._transform_index_values(data_frame.columns.names, field_map)
+        data_frame.index = self._build_index(data_frame.index, field_map)
+        data_frame.columns = self._build_index(data_frame.columns, field_map)
+        return data_frame
+
+    @staticmethod
+    def _build_index(idx: Union[pd.Index, pd.MultiIndex], field_map: dict) -> Union[pd.Index, pd.MultiIndex]:
+        if isinstance(idx, pd.MultiIndex):
+            return pd.MultiIndex.from_tuples(
+                [Pandas._transform_index_values(level, field_map) for level in idx.tolist()], names=idx.names
+            )
+
+        new_idx = Pandas._transform_index_values(idx.tolist(), field_map)
+        return pd.Index(new_idx, name=idx.name)
+
+    @staticmethod
+    def _transform_index_values(idx: list, field_map: dict) -> list:
+        return [field_map[item].label if item in field_map else item for item in idx]
 
     @staticmethod
     def _should_data_frame_be_transformed(data_frame, pivot_dimensions, transpose):
@@ -182,7 +237,8 @@ class Pandas(TransformableWidget):
         if self.transpose or not self.transpose and len(dimensions) == len(self.pivot) > 0:
             for item in items:
                 field_display = _get_field_display(item)
-                format_df.loc[items[0].label] = format_df.loc[items[0].label].apply(field_display)
+                alias = alias_selector(items[0].alias)
+                format_df.loc[alias] = format_df.loc[alias].apply(field_display)
 
             return format_df
 
@@ -192,7 +248,7 @@ class Pandas(TransformableWidget):
             return format_df
 
         for item in items:
-            key = item.label
+            key = alias_selector(item.alias)
             field_display = _get_field_display(item)
             format_df[key] = (
                 format_df[key].apply(field_display)

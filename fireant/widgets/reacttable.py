@@ -19,7 +19,7 @@ from fireant.dataset.totals import (
 )
 from fireant.formats import (
     RAW_VALUE,
-    TOTALS_VALUE,
+    TOTALS_LABEL,
     display_value,
     json_value,
     raw_value,
@@ -35,11 +35,8 @@ from fireant.utils import (
     wrap_list,
 )
 from .base import ReferenceItem
-from .pandas import Pandas
+from .pandas import F_METRICS_DIMENSION_ALIAS, METRICS_DIMENSION_ALIAS, Pandas, TotalsItem
 
-TOTALS_LABEL = "Totals"
-METRICS_DIMENSION_ALIAS = "metrics"
-F_METRICS_DIMENSION_ALIAS = alias_selector(METRICS_DIMENSION_ALIAS)
 _display_value = partial(display_value, nan_value="", null_value="")
 
 
@@ -206,12 +203,6 @@ def map_index_level(index, level, func):
     assert level == 0
 
     return index.map(func)
-
-
-class TotalsItem:
-    alias = TOTALS_VALUE
-    label = TOTALS_LABEL
-    prefix = suffix = precision = None
 
 
 class ReactTable(Pandas):

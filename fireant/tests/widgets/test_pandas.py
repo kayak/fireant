@@ -5,7 +5,10 @@ from unittest import TestCase
 import numpy as np
 import pandas as pd
 import pandas.testing
+from pypika import Table
+from pypika.analytics import Sum
 
+from fireant import DataSet, DataType, Field, Rollup
 from fireant.tests.dataset.mocks import (
     CumSum,
     ElectionOverElection,
@@ -19,6 +22,7 @@ from fireant.tests.dataset.mocks import (
     dimx2_date_str_ref_df,
     mock_dataset,
     no_index_df,
+    test_database,
 )
 from fireant.utils import alias_selector as f
 from fireant.widgets.pandas import Pandas
@@ -651,3 +655,46 @@ class PandasTransformerSortTests(TestCase):
         expected = expected.applymap(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
+
+    def test_pivoted_df_transformation_formats_totals_correctly(self):
+        test_table = Table('test')
+
+        ds = DataSet(
+            table=test_table,
+            database=test_database,
+            fields=[
+                Field('date', label='Date', definition=test_table.date, data_type=DataType.date),
+                Field('locale', label='Locale', definition=test_table.locale, data_type=DataType.text),
+                Field('company', label='Company', definition=test_table.text, data_type=DataType.text),
+                Field('metric1', label='Metric1', definition=Sum(test_table.number), data_type=DataType.number),
+                Field('metric2', label='Metric2', definition=Sum(test_table.number), data_type=DataType.number),
+            ],
+        )
+
+        df = pd.DataFrame.from_dict(
+            {
+                '$metric1': {('~~totals', '~~totals'): 3, ('za', '~~totals'): 3, ('za', 'C1'): 2, ('za', 'C2'): 1},
+                '$metric2': {('~~totals', '~~totals'): 4, ('za', '~~totals'): 4, ('za', 'C1'): 2, ('za', 'C2'): 2},
+            }
+        )
+        df.index.names = [f(ds.fields.locale.alias), f(ds.fields.company.alias)]
+
+        result = Pandas(ds.fields.metric1, ds.fields.metric2, pivot=[ds.fields.company]).transform(
+            df, [Rollup(ds.fields.locale), Rollup(ds.fields.company)], [], use_raw_values=True
+        )
+
+        self.assertEqual(['Metrics', 'Company'], list(result.columns.names))
+        self.assertEqual(
+            [
+                ('Metric1', 'C1'),
+                ('Metric1', 'C2'),
+                ('Metric1', 'Totals'),
+                ('Metric2', 'C1'),
+                ('Metric2', 'C2'),
+                ('Metric2', 'Totals'),
+            ],
+            result.columns.values.tolist(),
+        )
+        self.assertEqual(['Locale'], list(result.index.names))
+        self.assertEqual(['za', 'Totals'], result.index.values.tolist())
+        self.assertEqual([['2', '1', '3', '2', '2', '4'], ['', '', '3', '', '', '4']], result.values.tolist())
