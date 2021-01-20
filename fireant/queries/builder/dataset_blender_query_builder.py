@@ -1,9 +1,9 @@
 import copy
+
 from typing import List
+from pypika import JoinType, terms
 
-from pypika import JoinType
-
-from fireant.dataset.fields import is_metric_field
+from fireant.dataset.fields import Field, is_metric_field
 from fireant.queries.builder.dataset_query_builder import DataSetQueryBuilder
 from fireant.queries.finders import (
     find_dataset_fields,
@@ -16,7 +16,7 @@ from fireant.queries.sql_transformer import make_slicer_query_with_totals_and_re
 from fireant.reference_helpers import reference_type_alias
 from fireant.utils import alias_selector, filter_nones, listify, ordered_distinct_list_by_attr
 from fireant.widgets.base import Widget
-from ..sets import apply_set_dimensions, omit_set_filters
+from fireant.queries.sets import apply_set_dimensions, omit_set_filters
 
 
 @listify
@@ -226,6 +226,53 @@ def _blender_join_criteria(base_query, join_query, dimensions, base_field_map, j
     return join_criteria
 
 
+def _deepcopy_recursive(node):
+    if isinstance(node, terms.ValueWrapper):
+        return node
+
+    cloned_node = copy.deepcopy(node)
+
+    if hasattr(node, 'definition'):
+        cloned_node.definition = _deepcopy_recursive(cloned_node.definition)
+    if hasattr(node, 'term'):
+        cloned_node.term = _deepcopy_recursive(cloned_node.term)
+    if hasattr(node, 'left'):
+        cloned_node.left = _deepcopy_recursive(cloned_node.left)
+    if hasattr(node, 'right'):
+        cloned_node.right = _deepcopy_recursive(cloned_node.right)
+    if hasattr(node, 'value'):
+        cloned_node.value = _deepcopy_recursive(cloned_node.value)
+
+    # Case expressions
+    if hasattr(node, '_cases'):
+        cloned_cases = []
+
+        for (criterion, value) in cloned_node._cases:
+            cloned_cases.append((_deepcopy_recursive(criterion), _deepcopy_recursive(value)))
+
+        cloned_node._cases = cloned_cases
+    if hasattr(node, '_else'):
+        cloned_node._else = _deepcopy_recursive(cloned_node._else)
+
+    # Function expressions
+    if hasattr(node, 'params'):
+        cloned_node.params = [_deepcopy_recursive(param) for param in cloned_node.params]
+    if hasattr(node, 'args'):
+        cloned_node.args = [_deepcopy_recursive(arg) for arg in cloned_node.args]
+
+    # Modifiers
+    if hasattr(cloned_node, 'metric'):
+        cloned_node.metric = _deepcopy_recursive(cloned_node.metric)
+    if hasattr(cloned_node, 'dimension'):
+        cloned_node.dimension = _deepcopy_recursive(cloned_node.dimension)
+    if hasattr(cloned_node, 'filter'):
+        cloned_node.filter = _deepcopy_recursive(cloned_node.filter)
+    if hasattr(cloned_node, 'field'):
+        cloned_node.field = _deepcopy_recursive(cloned_node.field)
+
+    return cloned_node
+
+
 def _get_sq_field_for_blender_field(field, queries, field_maps, reference=None):
     unmodified_field = find_field_in_modified_field(field)
     field_alias = alias_selector(reference_type_alias(field, reference))
@@ -242,10 +289,16 @@ def _get_sq_field_for_blender_field(field, queries, field_maps, reference=None):
         # case #1 modified fields, ex. day(timestamp) or rollup(dimension)
         return field.for_(subquery_field).as_(field_alias)
 
-    # Need to copy the metrics if there are references so that the `get_sql` monkey patch does not conflict
-    definition = copy.deepcopy(field.definition)
+    # Need to copy the metrics if there are references so that the `get_sql` monkey patch does not conflict.
+    # Given some of them might have nested metrics themselves, the clone process is performed recursively.
+
+    definition = field.definition
+
+    while isinstance(definition, Field):
+        definition = definition.definition
+
     # case #2: complex blender fields
-    return definition.as_(field_alias)
+    return _deepcopy_recursive(definition).as_(field_alias)
 
 
 def _perform_join_operations(dimensions, base_query, base_field_map, join_queries, join_field_maps):
@@ -267,33 +320,50 @@ def _perform_join_operations(dimensions, base_query, base_field_map, join_querie
     return blender_query
 
 
-def _blend_query(dimensions, metrics, orders, field_maps, queries):
+def _blend_query(dimensions, metrics, orders, field_maps, queries, query_builder):
     base_query, *join_queries = queries
     base_field_map, *join_field_maps = field_maps
 
     reference = base_query._references[0] if base_query._references else None
-
     blender_query = _perform_join_operations(dimensions, base_query, base_field_map, join_queries, join_field_maps)
+
+    mocked_metrics = set()
 
     # WARNING: In order to make complex fields work, the get_sql for each field is monkey patched in. This must
     # happen here because a complex metric by definition references values selected from the dataset subqueries.
-
     for metric in find_dataset_fields(metrics):
         subquery_field = _get_sq_field_for_blender_field(metric, queries, field_maps, reference)
+        metric._origin_get_sql = metric.get_sql
         metric.get_sql = subquery_field.get_sql
+        mocked_metrics.add(metric)
+
+    # WARNING: Artificial dimensions (i.e. dimensions created dynamically), which depend on a metric,
+    # can only be properly mapped once the metrics' get_sql methods are monkey patched. That's the case
+    # for set dimensions. Therefore, dimensions needs to be re-read from the query builder.
+    dimensions = query_builder.dimensions
 
     sq_dimensions = [_get_sq_field_for_blender_field(d, queries, field_maps) for d in dimensions]
     sq_metrics = [_get_sq_field_for_blender_field(m, queries, field_maps, reference) for m in metrics]
+
     blender_query = blender_query.select(*sq_dimensions).select(*sq_metrics)
 
     for field, orientation in orders:
-        if any(dimension is field for dimension in dimensions):
-            # Don't add the reference type to dimensions
+        # Comparing fields using the is operator (i.e. object id) doesn't work for set
+        # dimensions, which are dynamically generated. The dunder hash of Field class
+        # does the job properly properly though, given set dimensions are treated
+        # in particular while object id is used for anything else.
+        if not is_metric_field(field):
+            # Don't add the reference type to dimensions.
             orderby_field = _get_sq_field_for_blender_field(field, queries, field_maps)
         else:
             orderby_field = _get_sq_field_for_blender_field(field, queries, field_maps, reference)
 
         blender_query = blender_query.orderby(orderby_field, order=orientation)
+
+    # Undo the get_sql's mocks above, otherwise reused datasets might produce different results. This issue can
+    # affect tests, for instance.
+    for metric in mocked_metrics:
+        metric.get_sql = metric._origin_get_sql
 
     return blender_query
 
@@ -486,6 +556,7 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
                 self.orders,
                 filtered_field_maps,
                 queryset,
+                self,
             )
             blended_query = self._apply_pagination(blended_query)
 

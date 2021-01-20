@@ -474,6 +474,77 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             str(queries[0]),
         )
 
+    def test_apply_set_filter_for_dimension_with_reference_in_both_dataset_queries(self):
+        queries = (
+            mock_dataset_blender.query()
+            .widget(f.ReactTable(mock_dataset_blender.fields["candidate-spend-per-wins"]))
+            .dimension(f.day(mock_dataset_blender.fields.timestamp))
+            .reference(f.WeekOverWeek(mock_dataset_blender.fields.timestamp))
+            .filter(f.ResultSet(mock_dataset_blender.fields['candidate-id'] == 12))
+        ).sql
+
+        self.assertEqual(len(queries), 2)
+
+        with self.subTest("base query"):
+            self.assertEqual(
+                "SELECT "
+                '"sq0"."$timestamp" "$timestamp",'
+                '"sq0"."$candidate-id" "$candidate-id",'
+                '"sq1"."$candidate-spend"/"sq0"."$wins" "$candidate-spend-per-wins" '
+                "FROM ("
+                "SELECT "
+                'TRUNC("timestamp",\'DD\') "$timestamp",'
+                'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' ELSE \'complement(candidate_id=12)\' END "$candidate-id",'
+                'SUM("is_winner") "$wins" '
+                'FROM "politics"."politician" '
+                'GROUP BY "$timestamp","$candidate-id"'
+                ') "sq0" '
+                "LEFT JOIN ("
+                "SELECT "
+                'TRUNC("timestamp",\'DD\') "$timestamp",'
+                'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' ELSE \'complement(candidate_id=12)\' END "$candidate-id",'
+                'SUM("candidate_spend") "$candidate-spend" '
+                'FROM "politics"."politician_spend" '
+                'GROUP BY "$timestamp","$candidate-id"'
+                ') "sq1" '
+                "ON "
+                '"sq0"."$timestamp"="sq1"."$timestamp" '
+                'AND "sq0"."$candidate-id"="sq1"."$candidate-id" '
+                'ORDER BY "$timestamp","$candidate-id" '
+                'LIMIT 200000',
+                str(queries[0]),
+            )
+
+        with self.subTest("ref query"):
+            self.assertEqual(
+                "SELECT "
+                '"sq0"."$timestamp" "$timestamp",'
+                '"sq0"."$candidate-id" "$candidate-id",'
+                '"sq1"."$candidate-spend_wow"/"sq0"."$wins_wow" "$candidate-spend-per-wins_wow" '
+                "FROM ("
+                "SELECT "
+                'TRUNC(TIMESTAMPADD(\'week\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
+                'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' ELSE \'complement(candidate_id=12)\' END "$candidate-id",'
+                'SUM("is_winner") "$wins_wow" '
+                'FROM "politics"."politician" '
+                'GROUP BY "$timestamp","$candidate-id"'
+                ') "sq0" '
+                "LEFT JOIN ("
+                "SELECT "
+                'TRUNC(TIMESTAMPADD(\'week\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
+                'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' ELSE \'complement(candidate_id=12)\' END "$candidate-id",'
+                'SUM("candidate_spend") "$candidate-spend_wow" '
+                'FROM "politics"."politician_spend" '
+                'GROUP BY "$timestamp","$candidate-id"'
+                ') "sq1" '
+                "ON "
+                '"sq0"."$timestamp"="sq1"."$timestamp" '
+                'AND "sq0"."$candidate-id"="sq1"."$candidate-id" '
+                'ORDER BY "$timestamp","$candidate-id" '
+                'LIMIT 200000',
+                str(queries[1]),
+            )
+
     def test_apply_set_filter_for_dimension_that_is_also_being_fetched_in_both_dataset_queries(self):
         queries = (
             mock_dataset_blender.query()
