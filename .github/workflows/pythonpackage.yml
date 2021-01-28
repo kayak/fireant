@@ -27,7 +27,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install cython
           pip install -r requirements-dev.txt
-          pip install coveralls==3.0.0
+          pip install "coveralls<3.0.0"
 
       - name: Run test suite
         env:
@@ -35,4 +35,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           tox
-          coveralls --service=github-actions
+          coveralls

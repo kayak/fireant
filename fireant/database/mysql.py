@@ -11,6 +11,7 @@ from pypika.terms import CustomFunction, Interval, Parameter
 from . import sql_types
 from .base import Database
 from .type_engine import TypeEngine
+from ..exceptions import QueryCancelled
 
 _DateFormat = CustomFunction('DATE_FORMAT', ['field', 'date_format'])
 _DateSub = CustomFunction('DATE_SUB', ['field', 'interval'])
@@ -57,37 +58,22 @@ class MySQLDatabase(Database):
     query_cls = MySQLQuery
 
     def __init__(
-        self, host='localhost', port=3306, database=None, user=None, password=None, charset='utf8mb4', **kwags
+        self,
+        host='localhost',
+        port=3306,
+        database=None,
+        user=None,
+        password=None,
+        charset='utf8mb4',
+        read_timeout=None,
+        **kwargs,
     ):
-        super(MySQLDatabase, self).__init__(host, port, database, **kwags)
+        super(MySQLDatabase, self).__init__(host, port, database, **kwargs)
         self.user = user
         self.password = password
         self.charset = charset
+        self.read_timeout = read_timeout
         self.type_engine = MySQLTypeEngine()
-
-    def _get_connection_class(self):
-        # Nesting inside a function so the import does not cause issues if users have not installed the 'mysql' extra
-        # when installing
-        import pymysql
-
-        class MySQLConnection(pymysql.connections.Connection):
-            """
-            PyMySQL has deprecated context managers in the connection class.
-            To make the functionality consistent with other database drivers, we override
-            the context manager to return the connection instead of the cursor object.
-
-            This also fixes an issue where connections were not being closed in the current PyMySQL
-            context manager implementation!
-            https://github.com/PyMySQL/PyMySQL/issues/735
-            """
-
-            def __enter__(self):
-                return self
-
-            def __exit__(self, exc, value, traceback):
-                self.close()
-
-        return MySQLConnection
 
     def connect(self):
         """
@@ -97,16 +83,28 @@ class MySQLDatabase(Database):
         """
         import pymysql
 
-        connection_class = self._get_connection_class()
-        return connection_class(
+        return pymysql.connect(
             host=self.host,
             port=self.port,
             db=self.database,
             user=self.user,
             password=self.password,
             charset=self.charset,
+            read_timeout=self.read_timeout,
             cursorclass=pymysql.cursors.Cursor,
         )
+
+    def cancel(self, connection):
+        try:
+            connection.kill(connection.thread_id())
+        except RuntimeError:
+            # The kill operation seems to always throw a RuntimeError after sending the command while reading the
+            # OK packet. Ignore this exception and raise our own QueryCancelled.
+            # A bunch of other errors will be thrown as well because the socket has been set to None and calls are still
+            # being made to the connector, but that's fine.
+            pass
+        finally:
+            raise QueryCancelled("Query was cancelled")
 
     def trunc_date(self, field, interval):
         if interval == 'hour':
