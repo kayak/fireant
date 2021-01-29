@@ -10,6 +10,7 @@ from pypika import (
 )
 from pypika.terms import Function
 
+from fireant.exceptions import QueryCancelled
 from fireant.middleware.decorators import apply_middlewares, connection_middleware
 
 
@@ -49,6 +50,10 @@ class Database(object):
         """
         if hasattr(connection, "cancel"):
             connection.cancel()
+        else:
+            # A default cancel for databases for which no specific cancel is implemented
+            # This will force an exit of the connection context manager
+            raise QueryCancelled("Query was cancelled")
 
     def get_column_definitions(self, schema, table, connection=None):
         """
