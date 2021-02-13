@@ -2,8 +2,8 @@ from pypika import (
     Parameter,
     PostgreSQLQuery,
     Table,
-    functions as fn,
     terms,
+    Dialects,
 )
 
 from .base import Database
@@ -46,7 +46,8 @@ class PostgreSQLDatabase(Database):
         return DateTrunc(field, str(interval))
 
     def date_add(self, field, date_part, interval):
-        return fn.DateAdd(str(date_part), interval, field)
+        interval_term = terms.Interval(**{f'{str(date_part)}s': interval, 'dialect': Dialects.POSTGRESQL})
+        return field + interval_term
 
     def get_column_definitions(self, schema, table, connection=None):
         columns = Table("columns", schema="information_schema")
