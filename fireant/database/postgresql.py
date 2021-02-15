@@ -5,6 +5,8 @@ from pypika import (
     terms,
     Dialects,
 )
+from pypika.terms import Node
+from pypika.utils import format_quotes
 
 from .base import Database
 
@@ -16,6 +18,27 @@ class DateTrunc(terms.Function):
 
     def __init__(self, field, date_format, alias=None):
         super(DateTrunc, self).__init__('DATE_TRUNC', date_format, field, alias=alias)
+
+
+class PostgreSQLTimestamp(Node):
+
+    def __init__(self, timestamp):
+        self.timestamp = timestamp
+
+    def get_sql(self, secondary_quote_char: str = "'", **kwargs) -> str:
+        formatted_timestamp = format_quotes(self.timestamp.isoformat(), secondary_quote_char)
+        return f"TIMESTAMP {formatted_timestamp}"
+
+
+class PostgresDateAdd(terms.Function):
+
+    def __init__(self, field, date_part, interval):
+        wrapped_field = self.wrap_constant(field, PostgreSQLTimestamp)
+        interval_term = terms.Interval(**{f'{str(date_part)}s': interval, 'dialect': Dialects.POSTGRESQL})
+        super().__init__('DATEADD', wrapped_field, interval_term)
+
+    def get_function_sql(self, **kwargs):
+        return " + ".join(arg.get_sql(with_alias=False, **kwargs) for arg in self.args)
 
 
 class PostgreSQLDatabase(Database):
@@ -46,8 +69,7 @@ class PostgreSQLDatabase(Database):
         return DateTrunc(field, str(interval))
 
     def date_add(self, field, date_part, interval):
-        interval_term = terms.Interval(**{f'{str(date_part)}s': interval, 'dialect': Dialects.POSTGRESQL})
-        return field + interval_term
+        return PostgresDateAdd(field, date_part, interval)
 
     def get_column_definitions(self, schema, table, connection=None):
         columns = Table("columns", schema="information_schema")
