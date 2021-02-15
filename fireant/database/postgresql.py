@@ -21,7 +21,6 @@ class DateTrunc(terms.Function):
 
 
 class PostgreSQLTimestamp(Node):
-
     def __init__(self, timestamp):
         self.timestamp = timestamp
 
@@ -31,7 +30,6 @@ class PostgreSQLTimestamp(Node):
 
 
 class PostgresDateAdd(terms.Function):
-
     def __init__(self, field, date_part, interval):
         wrapped_field = self.wrap_constant(field, PostgreSQLTimestamp)
         interval_term = terms.Interval(**{f'{str(date_part)}s': interval, 'dialect': Dialects.POSTGRESQL})
