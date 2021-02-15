@@ -65,32 +65,32 @@ class TestPostgreSQL(TestCase):
     def test_date_add_hour(self):
         result = self.database.date_add(Field('date'), 'hour', 1)
 
-        self.assertEqual('DATE_ADD(\'hour\',1,"date")', str(result))
+        self.assertEqual('"date"+INTERVAL \'1 HOUR\'', str(result))
 
     def test_date_add_day(self):
         result = self.database.date_add(Field('date'), 'day', 1)
 
-        self.assertEqual('DATE_ADD(\'day\',1,"date")', str(result))
+        self.assertEqual('"date"+INTERVAL \'1 DAY\'', str(result))
 
     def test_date_add_week(self):
         result = self.database.date_add(Field('date'), 'week', 1)
 
-        self.assertEqual('DATE_ADD(\'week\',1,"date")', str(result))
+        self.assertEqual('"date"+INTERVAL \'1 WEEK\'', str(result))
 
     def test_date_add_month(self):
         result = self.database.date_add(Field('date'), 'month', 1)
 
-        self.assertEqual('DATE_ADD(\'month\',1,"date")', str(result))
+        self.assertEqual('"date"+INTERVAL \'1 MONTH\'', str(result))
 
     def test_date_add_quarter(self):
         result = self.database.date_add(Field('date'), 'quarter', 1)
 
-        self.assertEqual('DATE_ADD(\'quarter\',1,"date")', str(result))
+        self.assertEqual('"date"+INTERVAL \'1 QUARTER\'', str(result))
 
     def test_date_add_year(self):
         result = self.database.date_add(Field('date'), 'year', 1)
 
-        self.assertEqual('DATE_ADD(\'year\',1,"date")', str(result))
+        self.assertEqual('"date"+INTERVAL \'1 YEAR\'', str(result))
 
     # noinspection SqlDialectInspection,SqlNoDataSourceInspection
     @patch.object(PostgreSQLDatabase, 'fetch')
