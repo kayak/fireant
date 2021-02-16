@@ -85,7 +85,7 @@ class TestPostgreSQL(TestCase):
     def test_date_add_quarter(self):
         result = self.database.date_add(Field('date'), 'quarter', 1)
 
-        self.assertEqual('"date" + INTERVAL \'1 QUARTER\'', str(result))
+        self.assertEqual('"date" + INTERVAL \'3 MONTH\'', str(result))
 
     def test_date_add_year(self):
         result = self.database.date_add(Field('date'), 'year', 1)

@@ -32,11 +32,15 @@ class PostgreSQLTimestamp(Node):
 class PostgresDateAdd(terms.Function):
     def __init__(self, field, date_part, interval):
         wrapped_field = self.wrap_constant(field, PostgreSQLTimestamp)
+        if date_part == "quarter":
+            date_part = "month"
+            interval *= 3
+
         interval_term = terms.Interval(**{f'{str(date_part)}s': interval, 'dialect': Dialects.POSTGRESQL})
         super().__init__('DATEADD', wrapped_field, interval_term)
 
     def get_function_sql(self, **kwargs):
-        return " + ".join(arg.get_sql(with_alias=False, **kwargs) for arg in self.args)
+        return " + ".join(self.get_arg_sql(arg, **kwargs) for arg in self.args)
 
 
 class PostgreSQLDatabase(Database):
