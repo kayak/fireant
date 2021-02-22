@@ -462,6 +462,10 @@ class ReactTable(Pandas):
 
                 else:
                     column["accessor"] = ".".join(safe_value(value) for value in level_values)
+                    # path_accessor can be useful for front-end code e.g. if specifying a custom accessor function.
+                    # Use cases for this include if the value of the nested column name includes a '.' character,
+                    # which breaks the default nested column access functionality.
+                    column["path_accessor"] = [safe_value(value) for value in level_values]
 
                 if is_totals:
                     column["className"] = "fireant-totals"
