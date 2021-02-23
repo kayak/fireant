@@ -43,20 +43,20 @@ class FormattingRulesTests(TestCase):
     @classmethod
     def setUpClass(cls):
         db = TestDatabase()
-        t0 = Table("test0")
+        t0 = Table('test0')
         cls.dataset = DataSet(
             table=t0,
             database=db,
             fields=[
                 Field(
-                    "timestamp",
-                    label="Timestamp",
+                    'timestamp',
+                    label='Timestamp',
                     definition=t0.timestamp,
                     data_type=DataType.number,
                 ),
                 Field(
-                    "metric0",
-                    label="Metric0",
+                    'metric0',
+                    label='Metric0',
                     definition=t0.metric,
                     data_type=DataType.number,
                 ),
@@ -65,11 +65,11 @@ class FormattingRulesTests(TestCase):
 
         cls.df = pd.DataFrame.from_dict(
             {
-                "$timestamp": [100, 200, 300, 400],
-                "$metric0": [1, 2, 3, 4],
-                "$metric0_dod": [1, 5, 9, 12],
-                "$cumsum(metric0)": [1, 3, 6, 10],
-                "$cumsum(metric0)_dod": [1, 6, 15, 27],
+                '$timestamp': [100, 200, 300, 400],
+                '$metric0': [1, 2, 3, 4],
+                '$metric0_dod': [1, 5, 9, 12],
+                '$cumsum(metric0)': [1, 3, 6, 10],
+                '$cumsum(metric0)_dod': [1, 6, 15, 27],
             }
         ).set_index('$timestamp')
 
@@ -79,19 +79,19 @@ class FormattingRulesTests(TestCase):
             formatting_rules=[
                 FormattingHeatMapRule(
                     FormattingField(metric=self.dataset.fields.metric0),
-                    "ff0000",
+                    'ff0000',
                 )
             ],
         ).transform(self.df, [], [])
 
         self.assertEqual(
             {
-                "columns": [{"Header": "Metric0", "accessor": "$metric0"}],
-                "data": [
-                    {"$metric0": {"display": "1", "raw": 1, "color": "fff2f2", 'text_color': '212121'}},
-                    {"$metric0": {"display": "2", "raw": 2, "color": "ffa2a2", 'text_color': '212121'}},
-                    {"$metric0": {"display": "3", "raw": 3, "color": "ff5151", 'text_color': '212121'}},
-                    {"$metric0": {"display": "4", "raw": 4, "color": "ff0000", 'text_color': 'FDFDFD'}},
+                'columns': [{'Header': 'Metric0', 'accessor': '$metric0', 'path_accessor': ['$metric0']}],
+                'data': [
+                    {'$metric0': {'display': '1', 'raw': 1, 'color': 'fff2f2', 'text_color': '212121'}},
+                    {'$metric0': {'display': '2', 'raw': 2, 'color': 'ffa2a2', 'text_color': '212121'}},
+                    {'$metric0': {'display': '3', 'raw': 3, 'color': 'ff5151', 'text_color': '212121'}},
+                    {'$metric0': {'display': '4', 'raw': 4, 'color': 'ff0000', 'text_color': 'FDFDFD'}},
                 ],
             },
             result,
@@ -103,7 +103,7 @@ class FormattingRulesTests(TestCase):
             formatting_rules=[
                 FormattingHeatMapRule(
                     FormattingField(metric=self.dataset.fields.metric0),
-                    "ff0000",
+                    'ff0000',
                     reverse_heatmap=True,
                 )
             ],
@@ -111,12 +111,12 @@ class FormattingRulesTests(TestCase):
 
         self.assertEqual(
             {
-                "columns": [{"Header": "Metric0", "accessor": "$metric0"}],
-                "data": [
-                    {"$metric0": {"display": "1", "raw": 1, "color": "ff0000", 'text_color': 'FDFDFD'}},
-                    {"$metric0": {"display": "2", "raw": 2, "color": "ff5151", 'text_color': '212121'}},
-                    {"$metric0": {"display": "3", "raw": 3, "color": "ffa2a2", 'text_color': '212121'}},
-                    {"$metric0": {"display": "4", "raw": 4, "color": "fff2f2", 'text_color': '212121'}},
+                'columns': [{'Header': 'Metric0', 'accessor': '$metric0', 'path_accessor': ['$metric0']}],
+                'data': [
+                    {'$metric0': {'display': '1', 'raw': 1, 'color': 'ff0000', 'text_color': 'FDFDFD'}},
+                    {'$metric0': {'display': '2', 'raw': 2, 'color': 'ff5151', 'text_color': '212121'}},
+                    {'$metric0': {'display': '3', 'raw': 3, 'color': 'ffa2a2', 'text_color': '212121'}},
+                    {'$metric0': {'display': '4', 'raw': 4, 'color': 'fff2f2', 'text_color': '212121'}},
                 ],
             },
             result,
@@ -126,8 +126,8 @@ class FormattingRulesTests(TestCase):
         # This test is to eliminate division by zero
         df = pd.DataFrame.from_dict(
             {
-                "$metric0": [1],
-                "$timestamp": [0],
+                '$metric0': [1],
+                '$timestamp': [0],
             }
         ).set_index('$timestamp')
 
@@ -136,16 +136,16 @@ class FormattingRulesTests(TestCase):
             formatting_rules=[
                 FormattingHeatMapRule(
                     FormattingField(metric=self.dataset.fields.metric0),
-                    "ff0000",
+                    'ff0000',
                 )
             ],
         ).transform(df, [], [])
 
         self.assertEqual(
             {
-                "columns": [{"Header": "Metric0", "accessor": "$metric0"}],
-                "data": [
-                    {"$metric0": {"display": "1", "raw": 1, "color": "FFFFFF", 'text_color': '212121'}},
+                'columns': [{'Header': 'Metric0', 'accessor': '$metric0', 'path_accessor': ['$metric0']}],
+                'data': [
+                    {'$metric0': {'display': '1', 'raw': 1, 'color': 'FFFFFF', 'text_color': '212121'}},
                 ],
             },
             result,
@@ -157,20 +157,20 @@ class FormattingRulesTests(TestCase):
             formatting_rules=[
                 FormattingHeatMapRule(
                     FormattingField(metric=self.dataset.fields.metric0),
-                    "ff0000",
-                    start_color="00ff00",
+                    'ff0000',
+                    start_color='00ff00',
                 )
             ],
         ).transform(self.df, [], [])
 
         self.assertEqual(
             {
-                "columns": [{"Header": "Metric0", "accessor": "$metric0"}],
-                "data": [
-                    {"$metric0": {"display": "1", "raw": 1, "color": "00ff00", 'text_color': '212121'}},
-                    {"$metric0": {"display": "2", "raw": 2, "color": "aaffaa", 'text_color': '212121'}},
-                    {"$metric0": {"display": "3", "raw": 3, "color": "ffa2a2", 'text_color': '212121'}},
-                    {"$metric0": {"display": "4", "raw": 4, "color": "ff0000", 'text_color': 'FDFDFD'}},
+                'columns': [{'Header': 'Metric0', 'accessor': '$metric0', 'path_accessor': ['$metric0']}],
+                'data': [
+                    {'$metric0': {'display': '1', 'raw': 1, 'color': '00ff00', 'text_color': '212121'}},
+                    {'$metric0': {'display': '2', 'raw': 2, 'color': 'aaffaa', 'text_color': '212121'}},
+                    {'$metric0': {'display': '3', 'raw': 3, 'color': 'ffa2a2', 'text_color': '212121'}},
+                    {'$metric0': {'display': '4', 'raw': 4, 'color': 'ff0000', 'text_color': 'FDFDFD'}},
                 ],
             },
             result,
@@ -184,19 +184,19 @@ class FormattingRulesTests(TestCase):
                     FormattingField(metric=self.dataset.fields.metric0),
                     ComparisonOperator.gt,
                     2,
-                    "EEEEEE",
+                    'EEEEEE',
                 )
             ],
         ).transform(self.df, [], [])
 
         self.assertEqual(
             {
-                "columns": [{"Header": "Metric0", "accessor": "$metric0"}],
-                "data": [
-                    {"$metric0": {"display": "1", "raw": 1}},
-                    {"$metric0": {"display": "2", "raw": 2}},
-                    {"$metric0": {"display": "3", "raw": 3, "color": "EEEEEE", 'text_color': '212121'}},
-                    {"$metric0": {"display": "4", "raw": 4, "color": "EEEEEE", 'text_color': '212121'}},
+                'columns': [{'Header': 'Metric0', 'accessor': '$metric0', 'path_accessor': ['$metric0']}],
+                'data': [
+                    {'$metric0': {'display': '1', 'raw': 1}},
+                    {'$metric0': {'display': '2', 'raw': 2}},
+                    {'$metric0': {'display': '3', 'raw': 3, 'color': 'EEEEEE', 'text_color': '212121'}},
+                    {'$metric0': {'display': '4', 'raw': 4, 'color': 'EEEEEE', 'text_color': '212121'}},
                 ],
             },
             result,
@@ -210,7 +210,7 @@ class FormattingRulesTests(TestCase):
                     FormattingField(metric=self.dataset.fields.metric0),
                     ComparisonOperator.gt,
                     2,
-                    "EEEEEE",
+                    'EEEEEE',
                     covers_row=True,
                 )
             ],
@@ -218,26 +218,26 @@ class FormattingRulesTests(TestCase):
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Timestamp", "accessor": "$timestamp"},
-                    {"Header": "Metric0", "accessor": "$metric0"},
+                'columns': [
+                    {'Header': 'Timestamp', 'accessor': '$timestamp'},
+                    {'Header': 'Metric0', 'accessor': '$metric0', 'path_accessor': ['$metric0']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "$metric0": {"display": "1", "raw": 1},
-                        "$timestamp": {"display": "100", "raw": 100},
+                        '$metric0': {'display': '1', 'raw': 1},
+                        '$timestamp': {'display': '100', 'raw': 100},
                     },
                     {
-                        "$metric0": {"display": "2", "raw": 2},
-                        "$timestamp": {"display": "200", "raw": 200},
+                        '$metric0': {'display': '2', 'raw': 2},
+                        '$timestamp': {'display': '200', 'raw': 200},
                     },
                     {
-                        "$metric0": {"display": "3", "raw": 3, "color": "EEEEEE", 'text_color': '212121'},
-                        "$timestamp": {"display": "300", "raw": 300, "color": "EEEEEE", 'text_color': '212121'},
+                        '$metric0': {'display': '3', 'raw': 3, 'color': 'EEEEEE', 'text_color': '212121'},
+                        '$timestamp': {'display': '300', 'raw': 300, 'color': 'EEEEEE', 'text_color': '212121'},
                     },
                     {
-                        "$metric0": {"display": "4", "raw": 4, "color": "EEEEEE", 'text_color': '212121'},
-                        "$timestamp": {"display": "400", "raw": 400, "color": "EEEEEE", 'text_color': '212121'},
+                        '$metric0': {'display': '4', 'raw': 4, 'color': 'EEEEEE', 'text_color': '212121'},
+                        '$timestamp': {'display': '400', 'raw': 400, 'color': 'EEEEEE', 'text_color': '212121'},
                     },
                 ],
             },
@@ -252,7 +252,7 @@ class FormattingRulesTests(TestCase):
                     FormattingField(metric=self.dataset.fields.metric0),
                     ComparisonOperator.gt,
                     2,
-                    "EEEEEE",
+                    'EEEEEE',
                     covers_row=True,
                 )
             ],
@@ -261,14 +261,14 @@ class FormattingRulesTests(TestCase):
 
         self.assertEqual(
             {
-                "columns": [
+                'columns': [
                     {'Header': '', 'accessor': '$metrics'},
-                    {'Header': '100', 'accessor': '100'},
-                    {'Header': '200', 'accessor': '200'},
-                    {'Header': '300', 'accessor': '300'},
-                    {'Header': '400', 'accessor': '400'},
+                    {'Header': '100', 'accessor': '100', 'path_accessor': ['100']},
+                    {'Header': '200', 'accessor': '200', 'path_accessor': ['200']},
+                    {'Header': '300', 'accessor': '300', 'path_accessor': ['300']},
+                    {'Header': '400', 'accessor': '400', 'path_accessor': ['400']},
                 ],
-                "data": [
+                'data': [
                     {
                         '$metrics': {'raw': 'Metric0'},
                         '100': {'display': '1', 'raw': 1},
@@ -293,33 +293,33 @@ class FormattingRulesTests(TestCase):
                     ),
                     ComparisonOperator.gt,
                     6,
-                    "EEEEEE",
+                    'EEEEEE',
                 )
             ],
         ).transform(self.df, [], [reference])
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Metric0", "accessor": "$metric0"},
-                    {"Header": "Metric0 DoD", "accessor": "$metric0_dod"},
+                'columns': [
+                    {'Header': 'Metric0', 'accessor': '$metric0', 'path_accessor': ['$metric0']},
+                    {'Header': 'Metric0 DoD', 'accessor': '$metric0_dod', 'path_accessor': ['$metric0_dod']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "$metric0": {"display": "1", "raw": 1},
-                        "$metric0_dod": {"display": "1", "raw": 1},
+                        '$metric0': {'display': '1', 'raw': 1},
+                        '$metric0_dod': {'display': '1', 'raw': 1},
                     },
                     {
-                        "$metric0": {"display": "2", "raw": 2},
-                        "$metric0_dod": {"display": "5", "raw": 5},
+                        '$metric0': {'display': '2', 'raw': 2},
+                        '$metric0_dod': {'display': '5', 'raw': 5},
                     },
                     {
-                        "$metric0": {"display": "3", "raw": 3},
-                        "$metric0_dod": {"display": "9", "raw": 9, "color": "EEEEEE", 'text_color': '212121'},
+                        '$metric0': {'display': '3', 'raw': 3},
+                        '$metric0_dod': {'display': '9', 'raw': 9, 'color': 'EEEEEE', 'text_color': '212121'},
                     },
                     {
-                        "$metric0": {"display": "4", "raw": 4},
-                        "$metric0_dod": {"display": "12", "raw": 12, "color": "EEEEEE", 'text_color': '212121'},
+                        '$metric0': {'display': '4', 'raw': 4},
+                        '$metric0_dod': {'display': '12', 'raw': 12, 'color': 'EEEEEE', 'text_color': '212121'},
                     },
                 ],
             },
@@ -335,19 +335,21 @@ class FormattingRulesTests(TestCase):
                     FormattingField(operation=operation),
                     ComparisonOperator.gt,
                     5,
-                    "EEEEEE",
+                    'EEEEEE',
                 )
             ],
         ).transform(self.df, [], [])
 
         self.assertEqual(
             {
-                "columns": [{"Header": "CumSum(Metric0)", "accessor": "$cumsum(metric0)"}],
-                "data": [
-                    {"$cumsum(metric0)": {"display": "1", "raw": 1}},
-                    {"$cumsum(metric0)": {"display": "3", "raw": 3}},
-                    {"$cumsum(metric0)": {"display": "6", "raw": 6, "color": "EEEEEE", 'text_color': '212121'}},
-                    {"$cumsum(metric0)": {"display": "10", "raw": 10, "color": "EEEEEE", 'text_color': '212121'}},
+                'columns': [
+                    {'Header': 'CumSum(Metric0)', 'accessor': '$cumsum(metric0)', 'path_accessor': ['$cumsum(metric0)']}
+                ],
+                'data': [
+                    {'$cumsum(metric0)': {'display': '1', 'raw': 1}},
+                    {'$cumsum(metric0)': {'display': '3', 'raw': 3}},
+                    {'$cumsum(metric0)': {'display': '6', 'raw': 6, 'color': 'EEEEEE', 'text_color': '212121'}},
+                    {'$cumsum(metric0)': {'display': '10', 'raw': 10, 'color': 'EEEEEE', 'text_color': '212121'}},
                 ],
             },
             result,
@@ -363,33 +365,41 @@ class FormattingRulesTests(TestCase):
                     FormattingField(operation=operation, reference=reference),
                     ComparisonOperator.gt,
                     10,
-                    "EEEEEE",
+                    'EEEEEE',
                 )
             ],
         ).transform(self.df, [], [reference])
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "CumSum(Metric0)", "accessor": "$cumsum(metric0)"},
-                    {"Header": "CumSum(Metric0) DoD", "accessor": "$cumsum(metric0)_dod"},
+                'columns': [
+                    {
+                        'Header': 'CumSum(Metric0)',
+                        'accessor': '$cumsum(metric0)',
+                        'path_accessor': ['$cumsum(metric0)'],
+                    },
+                    {
+                        'Header': 'CumSum(Metric0) DoD',
+                        'accessor': '$cumsum(metric0)_dod',
+                        'path_accessor': ['$cumsum(metric0)_dod'],
+                    },
                 ],
-                "data": [
+                'data': [
                     {
-                        "$cumsum(metric0)": {"display": "1", "raw": 1},
-                        "$cumsum(metric0)_dod": {"display": "1", "raw": 1},
+                        '$cumsum(metric0)': {'display': '1', 'raw': 1},
+                        '$cumsum(metric0)_dod': {'display': '1', 'raw': 1},
                     },
                     {
-                        "$cumsum(metric0)": {"display": "3", "raw": 3},
-                        "$cumsum(metric0)_dod": {"display": "6", "raw": 6},
+                        '$cumsum(metric0)': {'display': '3', 'raw': 3},
+                        '$cumsum(metric0)_dod': {'display': '6', 'raw': 6},
                     },
                     {
-                        "$cumsum(metric0)": {"display": "6", "raw": 6},
-                        "$cumsum(metric0)_dod": {"display": "15", "raw": 15, "color": "EEEEEE", 'text_color': '212121'},
+                        '$cumsum(metric0)': {'display': '6', 'raw': 6},
+                        '$cumsum(metric0)_dod': {'display': '15', 'raw': 15, 'color': 'EEEEEE', 'text_color': '212121'},
                     },
                     {
-                        "$cumsum(metric0)": {"display": "10", "raw": 10},
-                        "$cumsum(metric0)_dod": {"display": "27", "raw": 27, "color": "EEEEEE", 'text_color': '212121'},
+                        '$cumsum(metric0)': {'display': '10', 'raw': 10},
+                        '$cumsum(metric0)_dod': {'display': '27', 'raw': 27, 'color': 'EEEEEE', 'text_color': '212121'},
                     },
                 ],
             },
@@ -404,25 +414,25 @@ class FormattingRulesTests(TestCase):
                     FormattingField(metric=self.dataset.fields.metric0),
                     ComparisonOperator.gt,
                     3,
-                    "EEEEEE",
+                    'EEEEEE',
                 ),
                 FormattingConditionRule(
                     FormattingField(metric=self.dataset.fields.metric0),
                     ComparisonOperator.lt,
                     2,
-                    "AAAAAA",
+                    'AAAAAA',
                 ),
             ],
         ).transform(self.df, [], [])
 
         self.assertEqual(
             {
-                "columns": [{"Header": "Metric0", "accessor": "$metric0"}],
-                "data": [
-                    {"$metric0": {"display": "1", "raw": 1, "color": "AAAAAA", 'text_color': '212121'}},
-                    {"$metric0": {"display": "2", "raw": 2}},
-                    {"$metric0": {"display": "3", "raw": 3}},
-                    {"$metric0": {"display": "4", "raw": 4, "color": "EEEEEE", 'text_color': '212121'}},
+                'columns': [{'Header': 'Metric0', 'accessor': '$metric0', 'path_accessor': ['$metric0']}],
+                'data': [
+                    {'$metric0': {'display': '1', 'raw': 1, 'color': 'AAAAAA', 'text_color': '212121'}},
+                    {'$metric0': {'display': '2', 'raw': 2}},
+                    {'$metric0': {'display': '3', 'raw': 3}},
+                    {'$metric0': {'display': '4', 'raw': 4, 'color': 'EEEEEE', 'text_color': '212121'}},
                 ],
             },
             result,
@@ -437,8 +447,8 @@ class ReactTableTransformerTests(TestCase):
 
         self.assertEqual(
             {
-                "columns": [{"Header": "Votes", "accessor": "$votes"}],
-                "data": [{"$votes": {"display": "111,674,336", "raw": 111674336}}],
+                'columns': [{'Header': 'Votes', 'accessor': '$votes', 'path_accessor': ['$votes']}],
+                'data': [{'$votes': {'display': '111,674,336', 'raw': 111674336}}],
             },
             result,
         )
@@ -448,14 +458,14 @@ class ReactTableTransformerTests(TestCase):
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Votes", "accessor": "$votes"},
-                    {"Header": "Wins", "accessor": "$wins"},
+                'columns': [
+                    {'Header': 'Votes', 'accessor': '$votes', 'path_accessor': ['$votes']},
+                    {'Header': 'Wins', 'accessor': '$wins', 'path_accessor': ['$wins']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "$votes": {"display": "111,674,336", "raw": 111674336},
-                        "$wins": {"display": "12", "raw": 12},
+                        '$votes': {'display': '111,674,336', 'raw': 111674336},
+                        '$wins': {'display': '12', 'raw': 12},
                     }
                 ],
             },
@@ -467,14 +477,14 @@ class ReactTableTransformerTests(TestCase):
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Wins", "accessor": "$wins"},
-                    {"Header": "Votes", "accessor": "$votes"},
+                'columns': [
+                    {'Header': 'Wins', 'accessor': '$wins', 'path_accessor': ['$wins']},
+                    {'Header': 'Votes', 'accessor': '$votes', 'path_accessor': ['$votes']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "$votes": {"display": "111,674,336", "raw": 111674336},
-                        "$wins": {"display": "12", "raw": 12},
+                        '$votes': {'display': '111,674,336', 'raw': 111674336},
+                        '$wins': {'display': '12', 'raw': 12},
                     }
                 ],
             },
@@ -486,52 +496,52 @@ class ReactTableTransformerTests(TestCase):
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Timestamp", "accessor": "$timestamp"},
-                    {"Header": "Wins", "accessor": "$wins"},
+                'columns': [
+                    {'Header': 'Timestamp', 'accessor': '$timestamp'},
+                    {'Header': 'Wins', 'accessor': '$wins', 'path_accessor': ['$wins']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "$timestamp": {
-                            "display": "1996-01-01",
-                            "raw": "1996-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '1996-01-01',
+                            'raw': '1996-01-01T00:00:00',
                         },
-                        "$wins": {"display": "2", "raw": 2},
+                        '$wins': {'display': '2', 'raw': 2},
                     },
                     {
-                        "$timestamp": {
-                            "display": "2000-01-01",
-                            "raw": "2000-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2000-01-01',
+                            'raw': '2000-01-01T00:00:00',
                         },
-                        "$wins": {"display": "2", "raw": 2},
+                        '$wins': {'display': '2', 'raw': 2},
                     },
                     {
-                        "$timestamp": {
-                            "display": "2004-01-01",
-                            "raw": "2004-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2004-01-01',
+                            'raw': '2004-01-01T00:00:00',
                         },
-                        "$wins": {"display": "2", "raw": 2},
+                        '$wins': {'display': '2', 'raw': 2},
                     },
                     {
-                        "$timestamp": {
-                            "display": "2008-01-01",
-                            "raw": "2008-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2008-01-01',
+                            'raw': '2008-01-01T00:00:00',
                         },
-                        "$wins": {"display": "2", "raw": 2},
+                        '$wins': {'display': '2', 'raw': 2},
                     },
                     {
-                        "$timestamp": {
-                            "display": "2012-01-01",
-                            "raw": "2012-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2012-01-01',
+                            'raw': '2012-01-01T00:00:00',
                         },
-                        "$wins": {"display": "2", "raw": 2},
+                        '$wins': {'display': '2', 'raw': 2},
                     },
                     {
-                        "$timestamp": {
-                            "display": "2016-01-01",
-                            "raw": "2016-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2016-01-01',
+                            'raw': '2016-01-01T00:00:00',
                         },
-                        "$wins": {"display": "2", "raw": 2},
+                        '$wins': {'display': '2', 'raw': 2},
                     },
                 ],
             },
@@ -545,52 +555,52 @@ class ReactTableTransformerTests(TestCase):
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Timestamp", "accessor": "$timestamp"},
-                    {"Header": "CumSum(Votes)", "accessor": "$cumsum(votes)"},
+                'columns': [
+                    {'Header': 'Timestamp', 'accessor': '$timestamp'},
+                    {'Header': 'CumSum(Votes)', 'accessor': '$cumsum(votes)', 'path_accessor': ['$cumsum(votes)']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "$timestamp": {
-                            "display": "1996-01-01",
-                            "raw": "1996-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '1996-01-01',
+                            'raw': '1996-01-01T00:00:00',
                         },
-                        "$cumsum(votes)": {"display": "15,220,449", "raw": 15220449},
+                        '$cumsum(votes)': {'display': '15,220,449', 'raw': 15220449},
                     },
                     {
-                        "$timestamp": {
-                            "display": "2000-01-01",
-                            "raw": "2000-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2000-01-01',
+                            'raw': '2000-01-01T00:00:00',
                         },
-                        "$cumsum(votes)": {"display": "31,882,466", "raw": 31882466},
+                        '$cumsum(votes)': {'display': '31,882,466', 'raw': 31882466},
                     },
                     {
-                        "$timestamp": {
-                            "display": "2004-01-01",
-                            "raw": "2004-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2004-01-01',
+                            'raw': '2004-01-01T00:00:00',
                         },
-                        "$cumsum(votes)": {"display": "51,497,398", "raw": 51497398},
+                        '$cumsum(votes)': {'display': '51,497,398', 'raw': 51497398},
                     },
                     {
-                        "$timestamp": {
-                            "display": "2008-01-01",
-                            "raw": "2008-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2008-01-01',
+                            'raw': '2008-01-01T00:00:00',
                         },
-                        "$cumsum(votes)": {"display": "72,791,613", "raw": 72791613},
+                        '$cumsum(votes)': {'display': '72,791,613', 'raw': 72791613},
                     },
                     {
-                        "$timestamp": {
-                            "display": "2012-01-01",
-                            "raw": "2012-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2012-01-01',
+                            'raw': '2012-01-01T00:00:00',
                         },
-                        "$cumsum(votes)": {"display": "93,363,823", "raw": 93363823},
+                        '$cumsum(votes)': {'display': '93,363,823', 'raw': 93363823},
                     },
                     {
-                        "$timestamp": {
-                            "display": "2016-01-01",
-                            "raw": "2016-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2016-01-01',
+                            'raw': '2016-01-01T00:00:00',
                         },
-                        "$cumsum(votes)": {"display": "111,674,336", "raw": 111674336},
+                        '$cumsum(votes)': {'display': '111,674,336', 'raw': 111674336},
                     },
                 ],
             },
@@ -602,31 +612,31 @@ class ReactTableTransformerTests(TestCase):
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Party", "accessor": "$political_party"},
-                    {"Header": "Wins", "accessor": "$wins"},
+                'columns': [
+                    {'Header': 'Party', 'accessor': '$political_party'},
+                    {'Header': 'Wins', 'accessor': '$wins', 'path_accessor': ['$wins']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "$political_party": {
-                            "raw": "Democrat",
-                            "hyperlink": "http://example.com/Democrat",
+                        '$political_party': {
+                            'raw': 'Democrat',
+                            'hyperlink': 'http://example.com/Democrat',
                         },
-                        "$wins": {"display": "6", "raw": 6.0},
+                        '$wins': {'display': '6', 'raw': 6.0},
                     },
                     {
-                        "$political_party": {
-                            "raw": "Independent",
-                            "hyperlink": "http://example.com/Independent",
+                        '$political_party': {
+                            'raw': 'Independent',
+                            'hyperlink': 'http://example.com/Independent',
                         },
-                        "$wins": {"display": "0", "raw": 0.0},
+                        '$wins': {'display': '0', 'raw': 0.0},
                     },
                     {
-                        "$political_party": {
-                            "raw": "Republican",
-                            "hyperlink": "http://example.com/Republican",
+                        '$political_party': {
+                            'raw': 'Republican',
+                            'hyperlink': 'http://example.com/Republican',
                         },
-                        "$wins": {"display": "6", "raw": 6.0},
+                        '$wins': {'display': '6', 'raw': 6.0},
                     },
                 ],
             },
@@ -634,58 +644,58 @@ class ReactTableTransformerTests(TestCase):
         )
 
     def test_dimx1_int(self):
-        result = ReactTable(mock_dataset.fields.wins).transform(dimx1_num_df, [mock_dataset.fields["candidate-id"]], [])
+        result = ReactTable(mock_dataset.fields.wins).transform(dimx1_num_df, [mock_dataset.fields['candidate-id']], [])
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Candidate ID", "accessor": "$candidate-id"},
-                    {"Header": "Wins", "accessor": "$wins"},
+                'columns': [
+                    {'Header': 'Candidate ID', 'accessor': '$candidate-id'},
+                    {'Header': 'Wins', 'accessor': '$wins', 'path_accessor': ['$wins']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "$candidate-id": {"display": "1", "raw": 1.0},
-                        "$wins": {"display": "2", "raw": 2.0},
+                        '$candidate-id': {'display': '1', 'raw': 1.0},
+                        '$wins': {'display': '2', 'raw': 2.0},
                     },
                     {
-                        "$candidate-id": {"display": "2", "raw": 2.0},
-                        "$wins": {"display": "0", "raw": 0.0},
+                        '$candidate-id': {'display': '2', 'raw': 2.0},
+                        '$wins': {'display': '0', 'raw': 0.0},
                     },
                     {
-                        "$candidate-id": {"display": "3", "raw": 3.0},
-                        "$wins": {"display": "0", "raw": 0.0},
+                        '$candidate-id': {'display': '3', 'raw': 3.0},
+                        '$wins': {'display': '0', 'raw': 0.0},
                     },
                     {
-                        "$candidate-id": {"display": "4", "raw": 4.0},
-                        "$wins": {"display": "4", "raw": 4.0},
+                        '$candidate-id': {'display': '4', 'raw': 4.0},
+                        '$wins': {'display': '4', 'raw': 4.0},
                     },
                     {
-                        "$candidate-id": {"display": "5", "raw": 5.0},
-                        "$wins": {"display": "0", "raw": 0.0},
+                        '$candidate-id': {'display': '5', 'raw': 5.0},
+                        '$wins': {'display': '0', 'raw': 0.0},
                     },
                     {
-                        "$candidate-id": {"display": "6", "raw": 6.0},
-                        "$wins": {"display": "0", "raw": 0.0},
+                        '$candidate-id': {'display': '6', 'raw': 6.0},
+                        '$wins': {'display': '0', 'raw': 0.0},
                     },
                     {
-                        "$candidate-id": {"display": "7", "raw": 7.0},
-                        "$wins": {"display": "4", "raw": 4.0},
+                        '$candidate-id': {'display': '7', 'raw': 7.0},
+                        '$wins': {'display': '4', 'raw': 4.0},
                     },
                     {
-                        "$candidate-id": {"display": "8", "raw": 8.0},
-                        "$wins": {"display": "0", "raw": 0.0},
+                        '$candidate-id': {'display': '8', 'raw': 8.0},
+                        '$wins': {'display': '0', 'raw': 0.0},
                     },
                     {
-                        "$candidate-id": {"display": "9", "raw": 9.0},
-                        "$wins": {"display": "0", "raw": 0.0},
+                        '$candidate-id': {'display': '9', 'raw': 9.0},
+                        '$wins': {'display': '0', 'raw': 0.0},
                     },
                     {
-                        "$candidate-id": {"display": "10", "raw": 10.0},
-                        "$wins": {"display": "2", "raw": 2.0},
+                        '$candidate-id': {'display': '10', 'raw': 10.0},
+                        '$wins': {'display': '2', 'raw': 2.0},
                     },
                     {
-                        "$candidate-id": {"display": "11", "raw": 11.0},
-                        "$wins": {"display": "0", "raw": 0.0},
+                        '$candidate-id': {'display': '11', 'raw': 11.0},
+                        '$wins': {'display': '0', 'raw': 0.0},
                     },
                 ],
             },
@@ -699,38 +709,38 @@ class ReactTableTransformerTests(TestCase):
             [],
         )
 
-        self.assertIn("data", result)
-        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Timestamp", "accessor": "$timestamp"},
-                    {"Header": "Party", "accessor": "$political_party"},
-                    {"Header": "Wins", "accessor": "$wins"},
+                'columns': [
+                    {'Header': 'Timestamp', 'accessor': '$timestamp'},
+                    {'Header': 'Party', 'accessor': '$political_party'},
+                    {'Header': 'Wins', 'accessor': '$wins', 'path_accessor': ['$wins']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "$political_party": {
-                            "raw": "Democrat",
-                            "hyperlink": "http://example.com/Democrat",
+                        '$political_party': {
+                            'raw': 'Democrat',
+                            'hyperlink': 'http://example.com/Democrat',
                         },
-                        "$timestamp": {
-                            "display": "1996-01-01",
-                            "raw": "1996-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '1996-01-01',
+                            'raw': '1996-01-01T00:00:00',
                         },
-                        "$wins": {"display": "2", "raw": 2.0},
+                        '$wins': {'display': '2', 'raw': 2.0},
                     },
                     {
-                        "$political_party": {
-                            "raw": "Independent",
-                            "hyperlink": "http://example.com/Independent",
+                        '$political_party': {
+                            'raw': 'Independent',
+                            'hyperlink': 'http://example.com/Independent',
                         },
-                        "$timestamp": {
-                            "display": "1996-01-01",
-                            "raw": "1996-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '1996-01-01',
+                            'raw': '1996-01-01T00:00:00',
                         },
-                        "$wins": {"display": "0", "raw": 0.0},
+                        '$wins': {'display': '0', 'raw': 0.0},
                     },
                 ],
             },
@@ -744,49 +754,49 @@ class ReactTableTransformerTests(TestCase):
         ]
         result = ReactTable(mock_dataset.fields.wins).transform(dimx2_date_str_totals_df, dimensions, [])
 
-        self.assertIn("data", result)
-        result["data"] = result["data"][-3:]  # shorten the results to make the test easier to read
+        self.assertIn('data', result)
+        result['data'] = result['data'][-3:]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Timestamp", "accessor": "$timestamp"},
-                    {"Header": "Party", "accessor": "$political_party"},
-                    {"Header": "Wins", "accessor": "$wins"},
+                'columns': [
+                    {'Header': 'Timestamp', 'accessor': '$timestamp'},
+                    {'Header': 'Party', 'accessor': '$political_party'},
+                    {'Header': 'Wins', 'accessor': '$wins', 'path_accessor': ['$wins']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "$political_party": {
-                            "raw": "Democrat",
-                            "hyperlink": "http://example.com/Democrat",
+                        '$political_party': {
+                            'raw': 'Democrat',
+                            'hyperlink': 'http://example.com/Democrat',
                         },
-                        "$timestamp": {
-                            "display": "2016-01-01",
-                            "raw": "2016-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2016-01-01',
+                            'raw': '2016-01-01T00:00:00',
                         },
-                        "$wins": {"display": "0", "raw": 0.0},
+                        '$wins': {'display': '0', 'raw': 0.0},
                     },
                     {
-                        "$political_party": {
-                            "raw": "Republican",
-                            "hyperlink": "http://example.com/Republican",
+                        '$political_party': {
+                            'raw': 'Republican',
+                            'hyperlink': 'http://example.com/Republican',
                         },
-                        "$timestamp": {
-                            "display": "2016-01-01",
-                            "raw": "2016-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2016-01-01',
+                            'raw': '2016-01-01T00:00:00',
                         },
-                        "$wins": {"display": "2", "raw": 2.0},
+                        '$wins': {'display': '2', 'raw': 2.0},
                     },
                     {
-                        "$political_party": {
-                            "display": "Totals",
-                            "raw": "$totals",
+                        '$political_party': {
+                            'display': 'Totals',
+                            'raw': '$totals',
                         },
-                        "$timestamp": {
-                            "display": "2016-01-01",
-                            "raw": "2016-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2016-01-01',
+                            'raw': '2016-01-01T00:00:00',
                         },
-                        "$wins": {"display": "2", "raw": 2.0},
+                        '$wins': {'display': '2', 'raw': 2.0},
                     },
                 ],
             },
@@ -799,57 +809,57 @@ class ReactTableTransformerTests(TestCase):
             Rollup(mock_dataset.fields.political_party),
         ]
         result = ReactTable(mock_dataset.fields.wins).transform(dimx2_date_str_totalsx2_df, dimensions, [])
-        self.assertIn("data", result)
-        result["data"] = result["data"][:3] + result["data"][-1:]  # shorten the results to make the test easier to read
+        self.assertIn('data', result)
+        result['data'] = result['data'][:3] + result['data'][-1:]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Timestamp", "accessor": "$timestamp"},
-                    {"Header": "Party", "accessor": "$political_party"},
-                    {"Header": "Wins", "accessor": "$wins"},
+                'columns': [
+                    {'Header': 'Timestamp', 'accessor': '$timestamp'},
+                    {'Header': 'Party', 'accessor': '$political_party'},
+                    {'Header': 'Wins', 'accessor': '$wins', 'path_accessor': ['$wins']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "$political_party": {
-                            "raw": "Democrat",
-                            "hyperlink": "http://example.com/Democrat",
+                        '$political_party': {
+                            'raw': 'Democrat',
+                            'hyperlink': 'http://example.com/Democrat',
                         },
-                        "$timestamp": {
-                            "display": "1996-01-01",
-                            "raw": "1996-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '1996-01-01',
+                            'raw': '1996-01-01T00:00:00',
                         },
-                        "$wins": {"display": "2", "raw": 2.0},
+                        '$wins': {'display': '2', 'raw': 2.0},
                     },
                     {
-                        "$political_party": {
-                            "raw": "Independent",
-                            "hyperlink": "http://example.com/Independent",
+                        '$political_party': {
+                            'raw': 'Independent',
+                            'hyperlink': 'http://example.com/Independent',
                         },
-                        "$timestamp": {
-                            "display": "1996-01-01",
-                            "raw": "1996-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '1996-01-01',
+                            'raw': '1996-01-01T00:00:00',
                         },
-                        "$wins": {"display": "0", "raw": 0.0},
+                        '$wins': {'display': '0', 'raw': 0.0},
                     },
                     {
-                        "$political_party": {
-                            "raw": "Republican",
-                            "hyperlink": "http://example.com/Republican",
+                        '$political_party': {
+                            'raw': 'Republican',
+                            'hyperlink': 'http://example.com/Republican',
                         },
-                        "$timestamp": {
-                            "display": "1996-01-01",
-                            "raw": "1996-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '1996-01-01',
+                            'raw': '1996-01-01T00:00:00',
                         },
-                        "$wins": {"display": "0", "raw": 0.0},
+                        '$wins': {'display': '0', 'raw': 0.0},
                     },
                     {
-                        "$political_party": {
-                            "display": "Totals",
-                            "raw": "$totals",
+                        '$political_party': {
+                            'display': 'Totals',
+                            'raw': '$totals',
                         },
-                        "$timestamp": {"display": "Totals", "raw": "$totals"},
-                        "$wins": {"display": "12", "raw": 12.0},
+                        '$timestamp': {'display': 'Totals', 'raw': '$totals'},
+                        '$wins': {'display': '12', 'raw': 12.0},
                     },
                 ],
             },
@@ -864,41 +874,41 @@ class ReactTableTransformerTests(TestCase):
         references = [ElectionOverElection(mock_dataset.fields.timestamp)]
         result = ReactTable(mock_dataset.fields.votes).transform(dimx2_date_str_ref_df, dimensions, references)
 
-        self.assertIn("data", result)
-        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Timestamp", "accessor": "$timestamp"},
-                    {"Header": "Party", "accessor": "$political_party"},
-                    {"Header": "Votes", "accessor": "$votes"},
-                    {"Header": "Votes EoE", "accessor": "$votes_eoe"},
+                'columns': [
+                    {'Header': 'Timestamp', 'accessor': '$timestamp'},
+                    {'Header': 'Party', 'accessor': '$political_party'},
+                    {'Header': 'Votes', 'accessor': '$votes', 'path_accessor': ['$votes']},
+                    {'Header': 'Votes EoE', 'accessor': '$votes_eoe', 'path_accessor': ['$votes_eoe']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "$political_party": {
-                            "raw": "Republican",
-                            "hyperlink": "http://example.com/Republican",
+                        '$political_party': {
+                            'raw': 'Republican',
+                            'hyperlink': 'http://example.com/Republican',
                         },
-                        "$timestamp": {
-                            "display": "1996-01-01",
-                            "raw": "1996-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '1996-01-01',
+                            'raw': '1996-01-01T00:00:00',
                         },
-                        "$votes": {"display": "6,564,547", "raw": 6564547},
-                        "$votes_eoe": {"display": "7,579,518", "raw": 7579518},
+                        '$votes': {'display': '6,564,547', 'raw': 6564547},
+                        '$votes_eoe': {'display': '7,579,518', 'raw': 7579518},
                     },
                     {
-                        "$political_party": {
-                            "raw": "Democrat",
-                            "hyperlink": "http://example.com/Democrat",
+                        '$political_party': {
+                            'raw': 'Democrat',
+                            'hyperlink': 'http://example.com/Democrat',
                         },
-                        "$timestamp": {
-                            "display": "2000-01-01",
-                            "raw": "2000-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2000-01-01',
+                            'raw': '2000-01-01T00:00:00',
                         },
-                        "$votes": {"display": "8,294,949", "raw": 8294949},
-                        "$votes_eoe": {"display": "1,076,384", "raw": 1076384},
+                        '$votes': {'display': '8,294,949', 'raw': 8294949},
+                        '$votes_eoe': {'display': '1,076,384', 'raw': 1076384},
                     },
                 ],
             },
@@ -915,47 +925,47 @@ class ReactTableTransformerTests(TestCase):
             dimx2_date_str_ref_df, dimensions, references
         )
 
-        self.assertIn("data", result)
-        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Timestamp", "accessor": "$timestamp"},
-                    {"Header": "Party", "accessor": "$political_party"},
-                    {"Header": "Votes", "accessor": "$votes"},
-                    {"Header": "Votes EoE", "accessor": "$votes_eoe"},
-                    {"Header": "Wins", "accessor": "$wins"},
-                    {"Header": "Wins EoE", "accessor": "$wins_eoe"},
+                'columns': [
+                    {'Header': 'Timestamp', 'accessor': '$timestamp'},
+                    {'Header': 'Party', 'accessor': '$political_party'},
+                    {'Header': 'Votes', 'accessor': '$votes', 'path_accessor': ['$votes']},
+                    {'Header': 'Votes EoE', 'accessor': '$votes_eoe', 'path_accessor': ['$votes_eoe']},
+                    {'Header': 'Wins', 'accessor': '$wins', 'path_accessor': ['$wins']},
+                    {'Header': 'Wins EoE', 'accessor': '$wins_eoe', 'path_accessor': ['$wins_eoe']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "$political_party": {
-                            "raw": "Republican",
-                            "hyperlink": "http://example.com/Republican",
+                        '$political_party': {
+                            'raw': 'Republican',
+                            'hyperlink': 'http://example.com/Republican',
                         },
-                        "$timestamp": {
-                            "display": "1996-01-01",
-                            "raw": "1996-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '1996-01-01',
+                            'raw': '1996-01-01T00:00:00',
                         },
-                        "$votes": {"display": "6,564,547", "raw": 6564547},
-                        "$votes_eoe": {"display": "7,579,518", "raw": 7579518},
-                        "$wins": {"display": "0", "raw": 0},
-                        "$wins_eoe": {"display": "2", "raw": 2},
+                        '$votes': {'display': '6,564,547', 'raw': 6564547},
+                        '$votes_eoe': {'display': '7,579,518', 'raw': 7579518},
+                        '$wins': {'display': '0', 'raw': 0},
+                        '$wins_eoe': {'display': '2', 'raw': 2},
                     },
                     {
-                        "$political_party": {
-                            "raw": "Democrat",
-                            "hyperlink": "http://example.com/Democrat",
+                        '$political_party': {
+                            'raw': 'Democrat',
+                            'hyperlink': 'http://example.com/Democrat',
                         },
-                        "$timestamp": {
-                            "display": "2000-01-01",
-                            "raw": "2000-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2000-01-01',
+                            'raw': '2000-01-01T00:00:00',
                         },
-                        "$votes": {"display": "8,294,949", "raw": 8294949},
-                        "$votes_eoe": {"display": "1,076,384", "raw": 1076384},
-                        "$wins": {"display": "0", "raw": 0},
-                        "$wins_eoe": {"display": "0", "raw": 0},
+                        '$votes': {'display': '8,294,949', 'raw': 8294949},
+                        '$votes_eoe': {'display': '1,076,384', 'raw': 1076384},
+                        '$wins': {'display': '0', 'raw': 0},
+                        '$wins_eoe': {'display': '0', 'raw': 0},
                     },
                 ],
             },
@@ -968,18 +978,18 @@ class ReactTableTransformerTests(TestCase):
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "", "accessor": "$metrics"},
-                    {"Header": "Democrat", "accessor": "Democrat"},
-                    {"Header": "Independent", "accessor": "Independent"},
-                    {"Header": "Republican", "accessor": "Republican"},
+                'columns': [
+                    {'Header': '', 'accessor': '$metrics'},
+                    {'Header': 'Democrat', 'accessor': 'Democrat', 'path_accessor': ['Democrat']},
+                    {'Header': 'Independent', 'accessor': 'Independent', 'path_accessor': ['Independent']},
+                    {'Header': 'Republican', 'accessor': 'Republican', 'path_accessor': ['Republican']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "$metrics": {"raw": "Wins"},
-                        "Democrat": {"display": "6", "raw": 6.0},
-                        "Independent": {"display": "0", "raw": 0.0},
-                        "Republican": {"display": "6", "raw": 6.0},
+                        '$metrics': {'raw': 'Wins'},
+                        'Democrat': {'display': '6', 'raw': 6.0},
+                        'Independent': {'display': '0', 'raw': 0.0},
+                        'Republican': {'display': '6', 'raw': 6.0},
                     }
                 ],
             },
@@ -993,16 +1003,16 @@ class ReactTableTransformerTests(TestCase):
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "", "accessor": "$metrics"},
-                    {"Header": "", "accessor": "0"},
+                'columns': [
+                    {'Header': '', 'accessor': '$metrics'},
+                    {'Header': '', 'accessor': '0', 'path_accessor': ['0']},
                 ],
-                "data": [
+                'data': [
                     {
-                        0: {"display": "111,674,336", "raw": 111674336},
-                        "$metrics": {"raw": "Votes"},
+                        0: {'display': '111,674,336', 'raw': 111674336},
+                        '$metrics': {'raw': 'Votes'},
                     },
-                    {0: {"display": "12", "raw": 12}, "$metrics": {"raw": "Wins"}},
+                    {0: {'display': '12', 'raw': 12}, '$metrics': {'raw': 'Wins'}},
                 ],
             },
             result,
@@ -1017,14 +1027,14 @@ class ReactTableTransformerTests(TestCase):
             dimx2_date_str_df, dimensions, []
         )
 
-        self.assertIn("data", result)
-        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
                 'columns': [
                     {'Header': 'Timestamp', 'accessor': '$timestamp'},
-                    {'Header': 'Wins', 'accessor': '$wins'},
+                    {'Header': 'Wins', 'accessor': '$wins', 'path_accessor': ['$wins']},
                 ],
                 'data': [
                     {
@@ -1049,14 +1059,14 @@ class ReactTableTransformerTests(TestCase):
         result = ReactTable(mock_dataset.fields.wins).transform(dimx2_date_str_df, dimensions, [])
         dimensions[1].fetch_only = False
 
-        self.assertIn("data", result)
-        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
                 'columns': [
                     {'Header': 'Timestamp', 'accessor': '$timestamp'},
-                    {'Header': 'Wins', 'accessor': '$wins'},
+                    {'Header': 'Wins', 'accessor': '$wins', 'path_accessor': ['$wins']},
                 ],
                 'data': [
                     {
@@ -1081,47 +1091,71 @@ class ReactTableTransformerTests(TestCase):
             dimx2_date_str_df, dimensions, []
         )
 
-        self.assertIn("data", result)
-        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Party", "accessor": "$political_party"},
-                    {"Header": "1996-01-01", "accessor": "$wins.1996-01-01T00:00:00"},
-                    {"Header": "2000-01-01", "accessor": "$wins.2000-01-01T00:00:00"},
-                    {"Header": "2004-01-01", "accessor": "$wins.2004-01-01T00:00:00"},
-                    {"Header": "2008-01-01", "accessor": "$wins.2008-01-01T00:00:00"},
-                    {"Header": "2012-01-01", "accessor": "$wins.2012-01-01T00:00:00"},
-                    {"Header": "2016-01-01", "accessor": "$wins.2016-01-01T00:00:00"},
-                ],
-                "data": [
+                'columns': [
+                    {'Header': 'Party', 'accessor': '$political_party'},
                     {
-                        "$political_party": {
-                            "raw": "Democrat",
-                            "hyperlink": "http://example.com/Democrat",
+                        'Header': '1996-01-01',
+                        'accessor': '$wins.1996-01-01T00:00:00',
+                        'path_accessor': ['$wins', '1996-01-01T00:00:00'],
+                    },
+                    {
+                        'Header': '2000-01-01',
+                        'accessor': '$wins.2000-01-01T00:00:00',
+                        'path_accessor': ['$wins', '2000-01-01T00:00:00'],
+                    },
+                    {
+                        'Header': '2004-01-01',
+                        'accessor': '$wins.2004-01-01T00:00:00',
+                        'path_accessor': ['$wins', '2004-01-01T00:00:00'],
+                    },
+                    {
+                        'Header': '2008-01-01',
+                        'accessor': '$wins.2008-01-01T00:00:00',
+                        'path_accessor': ['$wins', '2008-01-01T00:00:00'],
+                    },
+                    {
+                        'Header': '2012-01-01',
+                        'accessor': '$wins.2012-01-01T00:00:00',
+                        'path_accessor': ['$wins', '2012-01-01T00:00:00'],
+                    },
+                    {
+                        'Header': '2016-01-01',
+                        'accessor': '$wins.2016-01-01T00:00:00',
+                        'path_accessor': ['$wins', '2016-01-01T00:00:00'],
+                    },
+                ],
+                'data': [
+                    {
+                        '$political_party': {
+                            'raw': 'Democrat',
+                            'hyperlink': 'http://example.com/Democrat',
                         },
-                        "$wins": {
-                            "1996-01-01T00:00:00": {"display": "2", "raw": 2.0},
-                            "2000-01-01T00:00:00": {"display": "0", "raw": 0.0},
-                            "2004-01-01T00:00:00": {"display": "0", "raw": 0.0},
-                            "2008-01-01T00:00:00": {"display": "2", "raw": 2.0},
-                            "2012-01-01T00:00:00": {"display": "2", "raw": 2.0},
-                            "2016-01-01T00:00:00": {"display": "0", "raw": 0.0},
+                        '$wins': {
+                            '1996-01-01T00:00:00': {'display': '2', 'raw': 2.0},
+                            '2000-01-01T00:00:00': {'display': '0', 'raw': 0.0},
+                            '2004-01-01T00:00:00': {'display': '0', 'raw': 0.0},
+                            '2008-01-01T00:00:00': {'display': '2', 'raw': 2.0},
+                            '2012-01-01T00:00:00': {'display': '2', 'raw': 2.0},
+                            '2016-01-01T00:00:00': {'display': '0', 'raw': 0.0},
                         },
                     },
                     {
-                        "$political_party": {
-                            "raw": "Independent",
-                            "hyperlink": "http://example.com/Independent",
+                        '$political_party': {
+                            'raw': 'Independent',
+                            'hyperlink': 'http://example.com/Independent',
                         },
-                        "$wins": {
-                            "1996-01-01T00:00:00": {"display": "0", "raw": 0.0},
-                            "2000-01-01T00:00:00": {"display": "", "raw": None},
-                            "2004-01-01T00:00:00": {"display": "", "raw": None},
-                            "2008-01-01T00:00:00": {"display": "", "raw": None},
-                            "2012-01-01T00:00:00": {"display": "", "raw": None},
-                            "2016-01-01T00:00:00": {"display": "", "raw": None},
+                        '$wins': {
+                            '1996-01-01T00:00:00': {'display': '0', 'raw': 0.0},
+                            '2000-01-01T00:00:00': {'display': '', 'raw': None},
+                            '2004-01-01T00:00:00': {'display': '', 'raw': None},
+                            '2008-01-01T00:00:00': {'display': '', 'raw': None},
+                            '2012-01-01T00:00:00': {'display': '', 'raw': None},
+                            '2016-01-01T00:00:00': {'display': '', 'raw': None},
                         },
                     },
                 ],
@@ -1138,47 +1172,71 @@ class ReactTableTransformerTests(TestCase):
             dimx2_date_str_df, dimensions, []
         )
 
-        self.assertIn("data", result)
-        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Party", "accessor": "$political_party"},
-                    {"Header": "1996-01-01", "accessor": "$wins.1996-01-01T00:00:00"},
-                    {"Header": "2000-01-01", "accessor": "$wins.2000-01-01T00:00:00"},
-                    {"Header": "2004-01-01", "accessor": "$wins.2004-01-01T00:00:00"},
-                    {"Header": "2008-01-01", "accessor": "$wins.2008-01-01T00:00:00"},
-                    {"Header": "2012-01-01", "accessor": "$wins.2012-01-01T00:00:00"},
-                    {"Header": "2016-01-01", "accessor": "$wins.2016-01-01T00:00:00"},
-                ],
-                "data": [
+                'columns': [
+                    {'Header': 'Party', 'accessor': '$political_party'},
                     {
-                        "$political_party": {
-                            "raw": "Democrat",
-                            "hyperlink": "http://example.com/Democrat",
+                        'Header': '1996-01-01',
+                        'accessor': '$wins.1996-01-01T00:00:00',
+                        'path_accessor': ['$wins', '1996-01-01T00:00:00'],
+                    },
+                    {
+                        'Header': '2000-01-01',
+                        'accessor': '$wins.2000-01-01T00:00:00',
+                        'path_accessor': ['$wins', '2000-01-01T00:00:00'],
+                    },
+                    {
+                        'Header': '2004-01-01',
+                        'accessor': '$wins.2004-01-01T00:00:00',
+                        'path_accessor': ['$wins', '2004-01-01T00:00:00'],
+                    },
+                    {
+                        'Header': '2008-01-01',
+                        'accessor': '$wins.2008-01-01T00:00:00',
+                        'path_accessor': ['$wins', '2008-01-01T00:00:00'],
+                    },
+                    {
+                        'Header': '2012-01-01',
+                        'accessor': '$wins.2012-01-01T00:00:00',
+                        'path_accessor': ['$wins', '2012-01-01T00:00:00'],
+                    },
+                    {
+                        'Header': '2016-01-01',
+                        'accessor': '$wins.2016-01-01T00:00:00',
+                        'path_accessor': ['$wins', '2016-01-01T00:00:00'],
+                    },
+                ],
+                'data': [
+                    {
+                        '$political_party': {
+                            'raw': 'Democrat',
+                            'hyperlink': 'http://example.com/Democrat',
                         },
-                        "$wins": {
-                            "1996-01-01T00:00:00": {"display": "2", "raw": 2.0},
-                            "2000-01-01T00:00:00": {"display": "0", "raw": 0.0},
-                            "2004-01-01T00:00:00": {"display": "0", "raw": 0.0},
-                            "2008-01-01T00:00:00": {"display": "2", "raw": 2.0},
-                            "2012-01-01T00:00:00": {"display": "2", "raw": 2.0},
-                            "2016-01-01T00:00:00": {"display": "0", "raw": 0.0},
+                        '$wins': {
+                            '1996-01-01T00:00:00': {'display': '2', 'raw': 2.0},
+                            '2000-01-01T00:00:00': {'display': '0', 'raw': 0.0},
+                            '2004-01-01T00:00:00': {'display': '0', 'raw': 0.0},
+                            '2008-01-01T00:00:00': {'display': '2', 'raw': 2.0},
+                            '2012-01-01T00:00:00': {'display': '2', 'raw': 2.0},
+                            '2016-01-01T00:00:00': {'display': '0', 'raw': 0.0},
                         },
                     },
                     {
-                        "$political_party": {
-                            "raw": "Independent",
-                            "hyperlink": "http://example.com/Independent",
+                        '$political_party': {
+                            'raw': 'Independent',
+                            'hyperlink': 'http://example.com/Independent',
                         },
-                        "$wins": {
-                            "1996-01-01T00:00:00": {"display": "0", "raw": 0.0},
-                            "2000-01-01T00:00:00": {"display": "", "raw": None},
-                            "2004-01-01T00:00:00": {"display": "", "raw": None},
-                            "2008-01-01T00:00:00": {"display": "", "raw": None},
-                            "2012-01-01T00:00:00": {"display": "", "raw": None},
-                            "2016-01-01T00:00:00": {"display": "", "raw": None},
+                        '$wins': {
+                            '1996-01-01T00:00:00': {'display': '0', 'raw': 0.0},
+                            '2000-01-01T00:00:00': {'display': '', 'raw': None},
+                            '2004-01-01T00:00:00': {'display': '', 'raw': None},
+                            '2008-01-01T00:00:00': {'display': '', 'raw': None},
+                            '2012-01-01T00:00:00': {'display': '', 'raw': None},
+                            '2016-01-01T00:00:00': {'display': '', 'raw': None},
                         },
                     },
                 ],
@@ -1195,38 +1253,42 @@ class ReactTableTransformerTests(TestCase):
             dimx2_date_str_df, dimensions, []
         )
 
-        self.assertIn("data", result)
-        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Timestamp", "accessor": "$timestamp"},
-                    {"Header": "Democrat", "accessor": "$wins.Democrat"},
-                    {"Header": "Independent", "accessor": "$wins.Independent"},
-                    {"Header": "Republican", "accessor": "$wins.Republican"},
-                ],
-                "data": [
+                'columns': [
+                    {'Header': 'Timestamp', 'accessor': '$timestamp'},
+                    {'Header': 'Democrat', 'accessor': '$wins.Democrat', 'path_accessor': ['$wins', 'Democrat']},
                     {
-                        "$timestamp": {
-                            "display": "1996-01-01",
-                            "raw": "1996-01-01T00:00:00",
+                        'Header': 'Independent',
+                        'accessor': '$wins.Independent',
+                        'path_accessor': ['$wins', 'Independent'],
+                    },
+                    {'Header': 'Republican', 'accessor': '$wins.Republican', 'path_accessor': ['$wins', 'Republican']},
+                ],
+                'data': [
+                    {
+                        '$timestamp': {
+                            'display': '1996-01-01',
+                            'raw': '1996-01-01T00:00:00',
                         },
-                        "$wins": {
-                            "Democrat": {"display": "2", "raw": 2.0},
-                            "Independent": {"display": "0", "raw": 0.0},
-                            "Republican": {"display": "0", "raw": 0.0},
+                        '$wins': {
+                            'Democrat': {'display': '2', 'raw': 2.0},
+                            'Independent': {'display': '0', 'raw': 0.0},
+                            'Republican': {'display': '0', 'raw': 0.0},
                         },
                     },
                     {
-                        "$timestamp": {
-                            "display": "2000-01-01",
-                            "raw": "2000-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2000-01-01',
+                            'raw': '2000-01-01T00:00:00',
                         },
-                        "$wins": {
-                            "Democrat": {"display": "0", "raw": 0.0},
-                            "Independent": {"display": "", "raw": None},
-                            "Republican": {"display": "2", "raw": 2.0},
+                        '$wins': {
+                            'Democrat': {'display': '0', 'raw': 0.0},
+                            'Independent': {'display': '', 'raw': None},
+                            'Republican': {'display': '2', 'raw': 2.0},
                         },
                     },
                 ],
@@ -1245,61 +1307,85 @@ class ReactTableTransformerTests(TestCase):
             pivot=[mock_dataset.fields.political_party],
         ).transform(dimx2_date_str_df, dimensions, [])
 
-        self.assertIn("data", result)
-        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Timestamp", "accessor": "$timestamp"},
+                'columns': [
+                    {'Header': 'Timestamp', 'accessor': '$timestamp'},
                     {
-                        "Header": "Votes",
-                        "columns": [
-                            {"Header": "Democrat", "accessor": "$votes.Democrat"},
-                            {"Header": "Independent", "accessor": "$votes.Independent"},
-                            {"Header": "Republican", "accessor": "$votes.Republican"},
+                        'Header': 'Votes',
+                        'columns': [
+                            {
+                                'Header': 'Democrat',
+                                'accessor': '$votes.Democrat',
+                                'path_accessor': ['$votes', 'Democrat'],
+                            },
+                            {
+                                'Header': 'Independent',
+                                'accessor': '$votes.Independent',
+                                'path_accessor': ['$votes', 'Independent'],
+                            },
+                            {
+                                'Header': 'Republican',
+                                'accessor': '$votes.Republican',
+                                'path_accessor': ['$votes', 'Republican'],
+                            },
                         ],
                     },
                     {
-                        "Header": "Wins",
-                        "columns": [
-                            {"Header": "Democrat", "accessor": "$wins.Democrat"},
-                            {"Header": "Independent", "accessor": "$wins.Independent"},
-                            {"Header": "Republican", "accessor": "$wins.Republican"},
+                        'Header': 'Wins',
+                        'columns': [
+                            {
+                                'Header': 'Democrat',
+                                'accessor': '$wins.Democrat',
+                                'path_accessor': ['$wins', 'Democrat'],
+                            },
+                            {
+                                'Header': 'Independent',
+                                'accessor': '$wins.Independent',
+                                'path_accessor': ['$wins', 'Independent'],
+                            },
+                            {
+                                'Header': 'Republican',
+                                'accessor': '$wins.Republican',
+                                'path_accessor': ['$wins', 'Republican'],
+                            },
                         ],
                     },
                 ],
-                "data": [
+                'data': [
                     {
-                        "$timestamp": {
-                            "display": "1996-01-01",
-                            "raw": "1996-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '1996-01-01',
+                            'raw': '1996-01-01T00:00:00',
                         },
-                        "$votes": {
-                            "Democrat": {"display": "7,579,518", "raw": 7579518},
-                            "Independent": {"display": "1,076,384", "raw": 1076384},
-                            "Republican": {"display": "6,564,547", "raw": 6564547},
+                        '$votes': {
+                            'Democrat': {'display': '7,579,518', 'raw': 7579518},
+                            'Independent': {'display': '1,076,384', 'raw': 1076384},
+                            'Republican': {'display': '6,564,547', 'raw': 6564547},
                         },
-                        "$wins": {
-                            "Democrat": {"display": "2", "raw": 2},
-                            "Independent": {"display": "0", "raw": 0},
-                            "Republican": {"display": "0", "raw": 0},
+                        '$wins': {
+                            'Democrat': {'display': '2', 'raw': 2},
+                            'Independent': {'display': '0', 'raw': 0},
+                            'Republican': {'display': '0', 'raw': 0},
                         },
                     },
                     {
-                        "$timestamp": {
-                            "display": "2000-01-01",
-                            "raw": "2000-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2000-01-01',
+                            'raw': '2000-01-01T00:00:00',
                         },
-                        "$votes": {
-                            "Democrat": {"display": "8,294,949", "raw": 8294949},
-                            "Independent": {"display": "", "raw": None},
-                            "Republican": {"display": "8,367,068", "raw": 8367068},
+                        '$votes': {
+                            'Democrat': {'display': '8,294,949', 'raw': 8294949},
+                            'Independent': {'display': '', 'raw': None},
+                            'Republican': {'display': '8,367,068', 'raw': 8367068},
                         },
-                        "$wins": {
-                            "Democrat": {"display": "0", "raw": 0},
-                            "Independent": {"display": "", "raw": None},
-                            "Republican": {"display": "2", "raw": 2},
+                        '$wins': {
+                            'Democrat': {'display': '0', 'raw': 0},
+                            'Independent': {'display': '', 'raw': None},
+                            'Republican': {'display': '2', 'raw': 2},
                         },
                     },
                 ],
@@ -1319,91 +1405,117 @@ class ReactTableTransformerTests(TestCase):
             pivot=[mock_dataset.fields.political_party],
         ).transform(dimx2_date_str_ref_df, dimensions, references)
 
-        self.assertIn("data", result)
-        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Timestamp", "accessor": "$timestamp"},
+                'columns': [
+                    {'Header': 'Timestamp', 'accessor': '$timestamp'},
                     {
-                        "Header": "Votes",
-                        "columns": [
-                            {"Header": "Republican", "accessor": "$votes.Republican"},
-                            {"Header": "Democrat", "accessor": "$votes.Democrat"},
-                        ],
-                    },
-                    {
-                        "Header": "Votes EoE",
-                        "columns": [
+                        'Header': 'Votes',
+                        'columns': [
                             {
-                                "Header": "Republican",
-                                "accessor": "$votes_eoe.Republican",
+                                'Header': 'Republican',
+                                'accessor': '$votes.Republican',
+                                'path_accessor': ['$votes', 'Republican'],
                             },
-                            {"Header": "Democrat", "accessor": "$votes_eoe.Democrat"},
-                        ],
-                    },
-                    {
-                        "Header": "Wins",
-                        "columns": [
-                            {"Header": "Republican", "accessor": "$wins.Republican"},
-                            {"Header": "Democrat", "accessor": "$wins.Democrat"},
-                        ],
-                    },
-                    {
-                        "Header": "Wins EoE",
-                        "columns": [
                             {
-                                "Header": "Republican",
-                                "accessor": "$wins_eoe.Republican",
+                                'Header': 'Democrat',
+                                'accessor': '$votes.Democrat',
+                                'path_accessor': ['$votes', 'Democrat'],
                             },
-                            {"Header": "Democrat", "accessor": "$wins_eoe.Democrat"},
+                        ],
+                    },
+                    {
+                        'Header': 'Votes EoE',
+                        'columns': [
+                            {
+                                'Header': 'Republican',
+                                'accessor': '$votes_eoe.Republican',
+                                'path_accessor': ['$votes_eoe', 'Republican'],
+                            },
+                            {
+                                'Header': 'Democrat',
+                                'accessor': '$votes_eoe.Democrat',
+                                'path_accessor': ['$votes_eoe', 'Democrat'],
+                            },
+                        ],
+                    },
+                    {
+                        'Header': 'Wins',
+                        'columns': [
+                            {
+                                'Header': 'Republican',
+                                'accessor': '$wins.Republican',
+                                'path_accessor': ['$wins', 'Republican'],
+                            },
+                            {
+                                'Header': 'Democrat',
+                                'accessor': '$wins.Democrat',
+                                'path_accessor': ['$wins', 'Democrat'],
+                            },
+                        ],
+                    },
+                    {
+                        'Header': 'Wins EoE',
+                        'columns': [
+                            {
+                                'Header': 'Republican',
+                                'accessor': '$wins_eoe.Republican',
+                                'path_accessor': ['$wins_eoe', 'Republican'],
+                            },
+                            {
+                                'Header': 'Democrat',
+                                'accessor': '$wins_eoe.Democrat',
+                                'path_accessor': ['$wins_eoe', 'Democrat'],
+                            },
                         ],
                     },
                 ],
-                "data": [
+                'data': [
                     {
-                        "$timestamp": {
-                            "display": "1996-01-01",
-                            "raw": "1996-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '1996-01-01',
+                            'raw': '1996-01-01T00:00:00',
                         },
-                        "$votes": {
-                            "Democrat": {"display": "", "raw": None},
-                            "Republican": {"display": "6,564,547", "raw": 6564547.0},
+                        '$votes': {
+                            'Democrat': {'display': '', 'raw': None},
+                            'Republican': {'display': '6,564,547', 'raw': 6564547.0},
                         },
-                        "$votes_eoe": {
-                            "Democrat": {"display": "", "raw": None},
-                            "Republican": {"display": "7,579,518", "raw": 7579518.0},
+                        '$votes_eoe': {
+                            'Democrat': {'display': '', 'raw': None},
+                            'Republican': {'display': '7,579,518', 'raw': 7579518.0},
                         },
-                        "$wins": {
-                            "Democrat": {"display": "", "raw": None},
-                            "Republican": {"display": "0", "raw": 0.0},
+                        '$wins': {
+                            'Democrat': {'display': '', 'raw': None},
+                            'Republican': {'display': '0', 'raw': 0.0},
                         },
-                        "$wins_eoe": {
-                            "Democrat": {"display": "", "raw": None},
-                            "Republican": {"display": "2", "raw": 2.0},
+                        '$wins_eoe': {
+                            'Democrat': {'display': '', 'raw': None},
+                            'Republican': {'display': '2', 'raw': 2.0},
                         },
                     },
                     {
-                        "$timestamp": {
-                            "display": "2000-01-01",
-                            "raw": "2000-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2000-01-01',
+                            'raw': '2000-01-01T00:00:00',
                         },
-                        "$votes": {
-                            "Democrat": {"display": "8,294,949", "raw": 8294949.0},
-                            "Republican": {"display": "8,367,068", "raw": 8367068.0},
+                        '$votes': {
+                            'Democrat': {'display': '8,294,949', 'raw': 8294949.0},
+                            'Republican': {'display': '8,367,068', 'raw': 8367068.0},
                         },
-                        "$votes_eoe": {
-                            "Democrat": {"display": "1,076,384", "raw": 1076384.0},
-                            "Republican": {"display": "6,564,547", "raw": 6564547.0},
+                        '$votes_eoe': {
+                            'Democrat': {'display': '1,076,384', 'raw': 1076384.0},
+                            'Republican': {'display': '6,564,547', 'raw': 6564547.0},
                         },
-                        "$wins": {
-                            "Democrat": {"display": "0", "raw": 0.0},
-                            "Republican": {"display": "2", "raw": 2.0},
+                        '$wins': {
+                            'Democrat': {'display': '0', 'raw': 0.0},
+                            'Republican': {'display': '2', 'raw': 2.0},
                         },
-                        "$wins_eoe": {
-                            "Democrat": {"display": "0", "raw": 0.0},
-                            "Republican": {"display": "0", "raw": 0.0},
+                        '$wins_eoe': {
+                            'Democrat': {'display': '0', 'raw': 0.0},
+                            'Republican': {'display': '0', 'raw': 0.0},
                         },
                     },
                 ],
@@ -1412,40 +1524,40 @@ class ReactTableTransformerTests(TestCase):
         )
 
     def test_dimx1_int_metricx1_pivot_dim1_same_as_transpose(self):
-        result = ReactTable(mock_dataset.fields.wins, pivot=[mock_dataset.fields["candidate-id"]]).transform(
-            dimx1_num_df, [mock_dataset.fields["candidate-id"]], []
+        result = ReactTable(mock_dataset.fields.wins, pivot=[mock_dataset.fields['candidate-id']]).transform(
+            dimx1_num_df, [mock_dataset.fields['candidate-id']], []
         )
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "", "accessor": "$metrics"},
-                    {"Header": "1", "accessor": "1"},
-                    {"Header": "2", "accessor": "2"},
-                    {"Header": "3", "accessor": "3"},
-                    {"Header": "4", "accessor": "4"},
-                    {"Header": "5", "accessor": "5"},
-                    {"Header": "6", "accessor": "6"},
-                    {"Header": "7", "accessor": "7"},
-                    {"Header": "8", "accessor": "8"},
-                    {"Header": "9", "accessor": "9"},
-                    {"Header": "10", "accessor": "10"},
-                    {"Header": "11", "accessor": "11"},
+                'columns': [
+                    {'Header': '', 'accessor': '$metrics'},
+                    {'Header': '1', 'accessor': '1', 'path_accessor': ['1']},
+                    {'Header': '2', 'accessor': '2', 'path_accessor': ['2']},
+                    {'Header': '3', 'accessor': '3', 'path_accessor': ['3']},
+                    {'Header': '4', 'accessor': '4', 'path_accessor': ['4']},
+                    {'Header': '5', 'accessor': '5', 'path_accessor': ['5']},
+                    {'Header': '6', 'accessor': '6', 'path_accessor': ['6']},
+                    {'Header': '7', 'accessor': '7', 'path_accessor': ['7']},
+                    {'Header': '8', 'accessor': '8', 'path_accessor': ['8']},
+                    {'Header': '9', 'accessor': '9', 'path_accessor': ['9']},
+                    {'Header': '10', 'accessor': '10', 'path_accessor': ['10']},
+                    {'Header': '11', 'accessor': '11', 'path_accessor': ['11']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "$metrics": {"raw": "Wins"},
-                        "1": {"display": "2", "raw": 2.0},
-                        "2": {"display": "0", "raw": 0.0},
-                        "3": {"display": "0", "raw": 0.0},
-                        "4": {"display": "4", "raw": 4.0},
-                        "5": {"display": "0", "raw": 0.0},
-                        "6": {"display": "0", "raw": 0.0},
-                        "7": {"display": "4", "raw": 4.0},
-                        "8": {"display": "0", "raw": 0.0},
-                        "9": {"display": "0", "raw": 0.0},
-                        "10": {"display": "2", "raw": 2.0},
-                        "11": {"display": "0", "raw": 0.0},
+                        '$metrics': {'raw': 'Wins'},
+                        '1': {'display': '2', 'raw': 2.0},
+                        '2': {'display': '0', 'raw': 0.0},
+                        '3': {'display': '0', 'raw': 0.0},
+                        '4': {'display': '4', 'raw': 4.0},
+                        '5': {'display': '0', 'raw': 0.0},
+                        '6': {'display': '0', 'raw': 0.0},
+                        '7': {'display': '4', 'raw': 4.0},
+                        '8': {'display': '0', 'raw': 0.0},
+                        '9': {'display': '0', 'raw': 0.0},
+                        '10': {'display': '2', 'raw': 2.0},
+                        '11': {'display': '0', 'raw': 0.0},
                     }
                 ],
             },
@@ -1455,60 +1567,60 @@ class ReactTableTransformerTests(TestCase):
     def test_dimx1_int_metricx1_transpose(self):
         result = ReactTable(
             mock_dataset.fields.wins,
-            pivot=[mock_dataset.fields["candidate-id"]],
+            pivot=[mock_dataset.fields['candidate-id']],
             transpose=True,
-        ).transform(dimx1_num_df, [mock_dataset.fields["candidate-id"]], [])
+        ).transform(dimx1_num_df, [mock_dataset.fields['candidate-id']], [])
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Candidate ID", "accessor": "$candidate-id"},
-                    {"Header": "Wins", "accessor": "$wins"},
+                'columns': [
+                    {'Header': 'Candidate ID', 'accessor': '$candidate-id'},
+                    {'Header': 'Wins', 'accessor': '$wins', 'path_accessor': ['$wins']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "$candidate-id": {"display": "1", "raw": 1.0},
-                        "$wins": {"display": "2", "raw": 2.0},
+                        '$candidate-id': {'display': '1', 'raw': 1.0},
+                        '$wins': {'display': '2', 'raw': 2.0},
                     },
                     {
-                        "$candidate-id": {"display": "2", "raw": 2.0},
-                        "$wins": {"display": "0", "raw": 0.0},
+                        '$candidate-id': {'display': '2', 'raw': 2.0},
+                        '$wins': {'display': '0', 'raw': 0.0},
                     },
                     {
-                        "$candidate-id": {"display": "3", "raw": 3.0},
-                        "$wins": {"display": "0", "raw": 0.0},
+                        '$candidate-id': {'display': '3', 'raw': 3.0},
+                        '$wins': {'display': '0', 'raw': 0.0},
                     },
                     {
-                        "$candidate-id": {"display": "4", "raw": 4.0},
-                        "$wins": {"display": "4", "raw": 4.0},
+                        '$candidate-id': {'display': '4', 'raw': 4.0},
+                        '$wins': {'display': '4', 'raw': 4.0},
                     },
                     {
-                        "$candidate-id": {"display": "5", "raw": 5.0},
-                        "$wins": {"display": "0", "raw": 0.0},
+                        '$candidate-id': {'display': '5', 'raw': 5.0},
+                        '$wins': {'display': '0', 'raw': 0.0},
                     },
                     {
-                        "$candidate-id": {"display": "6", "raw": 6.0},
-                        "$wins": {"display": "0", "raw": 0.0},
+                        '$candidate-id': {'display': '6', 'raw': 6.0},
+                        '$wins': {'display': '0', 'raw': 0.0},
                     },
                     {
-                        "$candidate-id": {"display": "7", "raw": 7.0},
-                        "$wins": {"display": "4", "raw": 4.0},
+                        '$candidate-id': {'display': '7', 'raw': 7.0},
+                        '$wins': {'display': '4', 'raw': 4.0},
                     },
                     {
-                        "$candidate-id": {"display": "8", "raw": 8.0},
-                        "$wins": {"display": "0", "raw": 0.0},
+                        '$candidate-id': {'display': '8', 'raw': 8.0},
+                        '$wins': {'display': '0', 'raw': 0.0},
                     },
                     {
-                        "$candidate-id": {"display": "9", "raw": 9.0},
-                        "$wins": {"display": "0", "raw": 0.0},
+                        '$candidate-id': {'display': '9', 'raw': 9.0},
+                        '$wins': {'display': '0', 'raw': 0.0},
                     },
                     {
-                        "$candidate-id": {"display": "10", "raw": 10.0},
-                        "$wins": {"display": "2", "raw": 2.0},
+                        '$candidate-id': {'display': '10', 'raw': 10.0},
+                        '$wins': {'display': '2', 'raw': 2.0},
                     },
                     {
-                        "$candidate-id": {"display": "11", "raw": 11.0},
-                        "$wins": {"display": "0", "raw": 0.0},
+                        '$candidate-id': {'display': '11', 'raw': 11.0},
+                        '$wins': {'display': '0', 'raw': 0.0},
                     },
                 ],
             },
@@ -1519,53 +1631,53 @@ class ReactTableTransformerTests(TestCase):
         result = ReactTable(
             mock_dataset.fields.wins,
             mock_dataset.fields.votes,
-            pivot=[mock_dataset.fields["candidate-id"]],
-        ).transform(dimx1_num_df, [mock_dataset.fields["candidate-id"]], [])
+            pivot=[mock_dataset.fields['candidate-id']],
+        ).transform(dimx1_num_df, [mock_dataset.fields['candidate-id']], [])
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "", "accessor": "$metrics"},
-                    {"Header": "1", "accessor": "1"},
-                    {"Header": "2", "accessor": "2"},
-                    {"Header": "3", "accessor": "3"},
-                    {"Header": "4", "accessor": "4"},
-                    {"Header": "5", "accessor": "5"},
-                    {"Header": "6", "accessor": "6"},
-                    {"Header": "7", "accessor": "7"},
-                    {"Header": "8", "accessor": "8"},
-                    {"Header": "9", "accessor": "9"},
-                    {"Header": "10", "accessor": "10"},
-                    {"Header": "11", "accessor": "11"},
+                'columns': [
+                    {'Header': '', 'accessor': '$metrics'},
+                    {'Header': '1', 'accessor': '1', 'path_accessor': ['1']},
+                    {'Header': '2', 'accessor': '2', 'path_accessor': ['2']},
+                    {'Header': '3', 'accessor': '3', 'path_accessor': ['3']},
+                    {'Header': '4', 'accessor': '4', 'path_accessor': ['4']},
+                    {'Header': '5', 'accessor': '5', 'path_accessor': ['5']},
+                    {'Header': '6', 'accessor': '6', 'path_accessor': ['6']},
+                    {'Header': '7', 'accessor': '7', 'path_accessor': ['7']},
+                    {'Header': '8', 'accessor': '8', 'path_accessor': ['8']},
+                    {'Header': '9', 'accessor': '9', 'path_accessor': ['9']},
+                    {'Header': '10', 'accessor': '10', 'path_accessor': ['10']},
+                    {'Header': '11', 'accessor': '11', 'path_accessor': ['11']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "1": {"display": "2", "raw": 2.0},
-                        "2": {"display": "0", "raw": 0.0},
-                        "3": {"display": "0", "raw": 0.0},
-                        "4": {"display": "4", "raw": 4.0},
-                        "5": {"display": "0", "raw": 0.0},
-                        "6": {"display": "0", "raw": 0.0},
-                        "7": {"display": "4", "raw": 4.0},
-                        "8": {"display": "0", "raw": 0.0},
-                        "9": {"display": "0", "raw": 0.0},
-                        "10": {"display": "2", "raw": 2.0},
-                        "11": {"display": "0", "raw": 0.0},
-                        "$metrics": {"raw": "Wins"},
+                        '1': {'display': '2', 'raw': 2.0},
+                        '2': {'display': '0', 'raw': 0.0},
+                        '3': {'display': '0', 'raw': 0.0},
+                        '4': {'display': '4', 'raw': 4.0},
+                        '5': {'display': '0', 'raw': 0.0},
+                        '6': {'display': '0', 'raw': 0.0},
+                        '7': {'display': '4', 'raw': 4.0},
+                        '8': {'display': '0', 'raw': 0.0},
+                        '9': {'display': '0', 'raw': 0.0},
+                        '10': {'display': '2', 'raw': 2.0},
+                        '11': {'display': '0', 'raw': 0.0},
+                        '$metrics': {'raw': 'Wins'},
                     },
                     {
-                        "1": {"display": "7,579,518", "raw": 7579518.0},
-                        "2": {"display": "6,564,547", "raw": 6564547.0},
-                        "3": {"display": "1,076,384", "raw": 1076384.0},
-                        "4": {"display": "18,403,811", "raw": 18403811.0},
-                        "5": {"display": "8,294,949", "raw": 8294949.0},
-                        "6": {"display": "9,578,189", "raw": 9578189.0},
-                        "7": {"display": "24,227,234", "raw": 24227234.0},
-                        "8": {"display": "9,491,109", "raw": 9491109.0},
-                        "9": {"display": "8,148,082", "raw": 8148082.0},
-                        "10": {"display": "13,438,835", "raw": 13438835.0},
-                        "11": {"display": "4,871,678", "raw": 4871678.0},
-                        "$metrics": {"raw": "Votes"},
+                        '1': {'display': '7,579,518', 'raw': 7579518.0},
+                        '2': {'display': '6,564,547', 'raw': 6564547.0},
+                        '3': {'display': '1,076,384', 'raw': 1076384.0},
+                        '4': {'display': '18,403,811', 'raw': 18403811.0},
+                        '5': {'display': '8,294,949', 'raw': 8294949.0},
+                        '6': {'display': '9,578,189', 'raw': 9578189.0},
+                        '7': {'display': '24,227,234', 'raw': 24227234.0},
+                        '8': {'display': '9,491,109', 'raw': 9491109.0},
+                        '9': {'display': '8,148,082', 'raw': 8148082.0},
+                        '10': {'display': '13,438,835', 'raw': 13438835.0},
+                        '11': {'display': '4,871,678', 'raw': 4871678.0},
+                        '$metrics': {'raw': 'Votes'},
                     },
                 ],
             },
@@ -1577,52 +1689,52 @@ class ReactTableTransformerTests(TestCase):
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Timestamp", "accessor": "$timestamp"},
-                    {"Header": "Wins", "accessor": "$wins"},
+                'columns': [
+                    {'Header': 'Timestamp', 'accessor': '$timestamp'},
+                    {'Header': 'Wins', 'accessor': '$wins', 'path_accessor': ['$wins']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "$timestamp": {
-                            "display": "1996-01-01",
-                            "raw": "1996-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '1996-01-01',
+                            'raw': '1996-01-01T00:00:00',
                         },
-                        "$wins": {"display": "2", "raw": 2.0},
+                        '$wins': {'display': '2', 'raw': 2.0},
                     },
                     {
-                        "$timestamp": {
-                            "display": "2000-01-01",
-                            "raw": "2000-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2000-01-01',
+                            'raw': '2000-01-01T00:00:00',
                         },
-                        "$wins": {"display": "2", "raw": 2.0},
+                        '$wins': {'display': '2', 'raw': 2.0},
                     },
                     {
-                        "$timestamp": {
-                            "display": "2004-01-01",
-                            "raw": "2004-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2004-01-01',
+                            'raw': '2004-01-01T00:00:00',
                         },
-                        "$wins": {"display": "2", "raw": 2.0},
+                        '$wins': {'display': '2', 'raw': 2.0},
                     },
                     {
-                        "$timestamp": {
-                            "display": "2008-01-01",
-                            "raw": "2008-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2008-01-01',
+                            'raw': '2008-01-01T00:00:00',
                         },
-                        "$wins": {"display": "2", "raw": 2.0},
+                        '$wins': {'display': '2', 'raw': 2.0},
                     },
                     {
-                        "$timestamp": {
-                            "display": "2012-01-01",
-                            "raw": "2012-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2012-01-01',
+                            'raw': '2012-01-01T00:00:00',
                         },
-                        "$wins": {"display": "2", "raw": 2.0},
+                        '$wins': {'display': '2', 'raw': 2.0},
                     },
                     {
-                        "$timestamp": {
-                            "display": "2016-01-01",
-                            "raw": "2016-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2016-01-01',
+                            'raw': '2016-01-01T00:00:00',
                         },
-                        "$wins": {"display": "2", "raw": 2.0},
+                        '$wins': {'display': '2', 'raw': 2.0},
                     },
                 ],
             },
@@ -1638,54 +1750,63 @@ class ReactTableTransformerTests(TestCase):
             dimx2_date_str_totalsx2_df, dimensions, []
         )
 
-        self.assertIn("data", result)
-        result["data"] = result["data"][:2] + result["data"][-1:]  # shorten the results to make the test easier to read
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2] + result['data'][-1:]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Timestamp", "accessor": "$timestamp"},
-                    {"Header": "Democrat", "accessor": "$votes.Democrat"},
-                    {"Header": "Independent", "accessor": "$votes.Independent"},
-                    {"Header": "Republican", "accessor": "$votes.Republican"},
+                'columns': [
+                    {'Header': 'Timestamp', 'accessor': '$timestamp'},
+                    {'Header': 'Democrat', 'accessor': '$votes.Democrat', 'path_accessor': ['$votes', 'Democrat']},
                     {
-                        "Header": "Totals",
-                        "accessor": "$votes.$totals",
-                        "className": "fireant-totals",
+                        'Header': 'Independent',
+                        'accessor': '$votes.Independent',
+                        'path_accessor': ['$votes', 'Independent'],
+                    },
+                    {
+                        'Header': 'Republican',
+                        'accessor': '$votes.Republican',
+                        'path_accessor': ['$votes', 'Republican'],
+                    },
+                    {
+                        'Header': 'Totals',
+                        'accessor': '$votes.$totals',
+                        'path_accessor': ['$votes', '$totals'],
+                        'className': 'fireant-totals',
                     },
                 ],
-                "data": [
+                'data': [
                     {
-                        "$timestamp": {
-                            "display": "1996-01-01",
-                            "raw": "1996-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '1996-01-01',
+                            'raw': '1996-01-01T00:00:00',
                         },
-                        "$votes": {
-                            "$totals": {"display": "15,220,449", "raw": 15220449.0},
-                            "Democrat": {"display": "7,579,518", "raw": 7579518.0},
-                            "Independent": {"display": "1,076,384", "raw": 1076384.0},
-                            "Republican": {"display": "6,564,547", "raw": 6564547.0},
+                        '$votes': {
+                            '$totals': {'display': '15,220,449', 'raw': 15220449.0},
+                            'Democrat': {'display': '7,579,518', 'raw': 7579518.0},
+                            'Independent': {'display': '1,076,384', 'raw': 1076384.0},
+                            'Republican': {'display': '6,564,547', 'raw': 6564547.0},
                         },
                     },
                     {
-                        "$timestamp": {
-                            "display": "2000-01-01",
-                            "raw": "2000-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2000-01-01',
+                            'raw': '2000-01-01T00:00:00',
                         },
-                        "$votes": {
-                            "$totals": {"display": "16,662,017", "raw": 16662017.0},
-                            "Democrat": {"display": "8,294,949", "raw": 8294949.0},
-                            "Independent": {"display": "", "raw": None},
-                            "Republican": {"display": "8,367,068", "raw": 8367068.0},
+                        '$votes': {
+                            '$totals': {'display': '16,662,017', 'raw': 16662017.0},
+                            'Democrat': {'display': '8,294,949', 'raw': 8294949.0},
+                            'Independent': {'display': '', 'raw': None},
+                            'Republican': {'display': '8,367,068', 'raw': 8367068.0},
                         },
                     },
                     {
-                        "$timestamp": {"display": "Totals", "raw": "$totals"},
-                        "$votes": {
-                            "$totals": {"display": "111,674,336", "raw": 111674336.0},
-                            "Democrat": {"display": "", "raw": None},
-                            "Independent": {"display": "", "raw": None},
-                            "Republican": {"display": "", "raw": None},
+                        '$timestamp': {'display': 'Totals', 'raw': '$totals'},
+                        '$votes': {
+                            '$totals': {'display': '111,674,336', 'raw': 111674336.0},
+                            'Democrat': {'display': '', 'raw': None},
+                            'Independent': {'display': '', 'raw': None},
+                            'Republican': {'display': '', 'raw': None},
                         },
                     },
                 ],
@@ -1700,90 +1821,116 @@ class ReactTableTransformerTests(TestCase):
             dimx2_date_str_totalsx2_df, dimensions, []
         )
 
-        self.assertIn("data", result)
-        result["data"] = result["data"][:2] + result["data"][-1:]  # shorten the results to make the test easier to read
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2] + result['data'][-1:]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Timestamp", "accessor": "$timestamp"},
+                'columns': [
+                    {'Header': 'Timestamp', 'accessor': '$timestamp'},
                     {
-                        "Header": "Votes",
-                        "columns": [
-                            {"Header": "Democrat", "accessor": "$votes.Democrat"},
-                            {"Header": "Independent", "accessor": "$votes.Independent"},
-                            {"Header": "Republican", "accessor": "$votes.Republican"},
+                        'Header': 'Votes',
+                        'columns': [
                             {
-                                "Header": "Totals",
-                                "accessor": "$votes.$totals",
-                                "className": "fireant-totals",
+                                'Header': 'Democrat',
+                                'accessor': '$votes.Democrat',
+                                'path_accessor': ['$votes', 'Democrat'],
+                            },
+                            {
+                                'Header': 'Independent',
+                                'accessor': '$votes.Independent',
+                                'path_accessor': ['$votes', 'Independent'],
+                            },
+                            {
+                                'Header': 'Republican',
+                                'accessor': '$votes.Republican',
+                                'path_accessor': ['$votes', 'Republican'],
+                            },
+                            {
+                                'Header': 'Totals',
+                                'accessor': '$votes.$totals',
+                                'path_accessor': ['$votes', '$totals'],
+                                'className': 'fireant-totals',
                             },
                         ],
                     },
                     {
-                        "Header": "Wins",
-                        "columns": [
-                            {"Header": "Democrat", "accessor": "$wins.Democrat"},
-                            {"Header": "Independent", "accessor": "$wins.Independent"},
-                            {"Header": "Republican", "accessor": "$wins.Republican"},
+                        'Header': 'Wins',
+                        'columns': [
                             {
-                                "Header": "Totals",
-                                "accessor": "$wins.$totals",
-                                "className": "fireant-totals",
+                                'Header': 'Democrat',
+                                'accessor': '$wins.Democrat',
+                                'path_accessor': ['$wins', 'Democrat'],
+                            },
+                            {
+                                'Header': 'Independent',
+                                'accessor': '$wins.Independent',
+                                'path_accessor': ['$wins', 'Independent'],
+                            },
+                            {
+                                'Header': 'Republican',
+                                'accessor': '$wins.Republican',
+                                'path_accessor': ['$wins', 'Republican'],
+                            },
+                            {
+                                'Header': 'Totals',
+                                'accessor': '$wins.$totals',
+                                'path_accessor': ['$wins', '$totals'],
+                                'className': 'fireant-totals',
                             },
                         ],
                     },
                 ],
-                "data": [
+                'data': [
                     {
-                        "$timestamp": {
-                            "display": "1996-01-01",
-                            "raw": "1996-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '1996-01-01',
+                            'raw': '1996-01-01T00:00:00',
                         },
-                        "$votes": {
-                            "$totals": {"display": "15,220,449", "raw": 15220449.0},
-                            "Democrat": {"display": "7,579,518", "raw": 7579518.0},
-                            "Independent": {"display": "1,076,384", "raw": 1076384.0},
-                            "Republican": {"display": "6,564,547", "raw": 6564547.0},
+                        '$votes': {
+                            '$totals': {'display': '15,220,449', 'raw': 15220449.0},
+                            'Democrat': {'display': '7,579,518', 'raw': 7579518.0},
+                            'Independent': {'display': '1,076,384', 'raw': 1076384.0},
+                            'Republican': {'display': '6,564,547', 'raw': 6564547.0},
                         },
-                        "$wins": {
-                            "$totals": {"display": "2", "raw": 2.0},
-                            "Democrat": {"display": "2", "raw": 2.0},
-                            "Independent": {"display": "0", "raw": 0.0},
-                            "Republican": {"display": "0", "raw": 0.0},
+                        '$wins': {
+                            '$totals': {'display': '2', 'raw': 2.0},
+                            'Democrat': {'display': '2', 'raw': 2.0},
+                            'Independent': {'display': '0', 'raw': 0.0},
+                            'Republican': {'display': '0', 'raw': 0.0},
                         },
                     },
                     {
-                        "$timestamp": {
-                            "display": "2000-01-01",
-                            "raw": "2000-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2000-01-01',
+                            'raw': '2000-01-01T00:00:00',
                         },
-                        "$votes": {
-                            "$totals": {"display": "16,662,017", "raw": 16662017.0},
-                            "Democrat": {"display": "8,294,949", "raw": 8294949.0},
-                            "Independent": {"display": "", "raw": None},
-                            "Republican": {"display": "8,367,068", "raw": 8367068.0},
+                        '$votes': {
+                            '$totals': {'display': '16,662,017', 'raw': 16662017.0},
+                            'Democrat': {'display': '8,294,949', 'raw': 8294949.0},
+                            'Independent': {'display': '', 'raw': None},
+                            'Republican': {'display': '8,367,068', 'raw': 8367068.0},
                         },
-                        "$wins": {
-                            "$totals": {"display": "2", "raw": 2.0},
-                            "Democrat": {"display": "0", "raw": 0.0},
-                            "Independent": {"display": "", "raw": None},
-                            "Republican": {"display": "2", "raw": 2.0},
+                        '$wins': {
+                            '$totals': {'display': '2', 'raw': 2.0},
+                            'Democrat': {'display': '0', 'raw': 0.0},
+                            'Independent': {'display': '', 'raw': None},
+                            'Republican': {'display': '2', 'raw': 2.0},
                         },
                     },
                     {
-                        "$timestamp": {"display": "Totals", "raw": "$totals"},
-                        "$votes": {
-                            "$totals": {"display": "111,674,336", "raw": 111674336.0},
-                            "Democrat": {"display": "", "raw": None},
-                            "Independent": {"display": "", "raw": None},
-                            "Republican": {"display": "", "raw": None},
+                        '$timestamp': {'display': 'Totals', 'raw': '$totals'},
+                        '$votes': {
+                            '$totals': {'display': '111,674,336', 'raw': 111674336.0},
+                            'Democrat': {'display': '', 'raw': None},
+                            'Independent': {'display': '', 'raw': None},
+                            'Republican': {'display': '', 'raw': None},
                         },
-                        "$wins": {
-                            "$totals": {"display": "12", "raw": 12.0},
-                            "Democrat": {"display": "", "raw": None},
-                            "Independent": {"display": "", "raw": None},
-                            "Republican": {"display": "", "raw": None},
+                        '$wins': {
+                            '$totals': {'display': '12', 'raw': 12.0},
+                            'Democrat': {'display': '', 'raw': None},
+                            'Independent': {'display': '', 'raw': None},
+                            'Republican': {'display': '', 'raw': None},
                         },
                     },
                 ],
@@ -1798,111 +1945,137 @@ class ReactTableTransformerTests(TestCase):
             dimx2_date_str_totalsx2_df, dimensions, []
         )
 
-        self.assertIn("data", result)
-        result["data"] = result["data"][:4]  # shorten the results to make the test easier to read
+        self.assertIn('data', result)
+        result['data'] = result['data'][:4]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Timestamp", "accessor": "$timestamp"},
+                'columns': [
+                    {'Header': 'Timestamp', 'accessor': '$timestamp'},
                     {
-                        "Header": "Votes",
-                        "columns": [
-                            {"Header": "Democrat", "accessor": "$votes.Democrat"},
-                            {"Header": "Independent", "accessor": "$votes.Independent"},
-                            {"Header": "Republican", "accessor": "$votes.Republican"},
+                        'Header': 'Votes',
+                        'columns': [
                             {
-                                "Header": "Totals",
-                                "accessor": "$votes.$totals",
-                                "className": "fireant-totals",
+                                'Header': 'Democrat',
+                                'accessor': '$votes.Democrat',
+                                'path_accessor': ['$votes', 'Democrat'],
+                            },
+                            {
+                                'Header': 'Independent',
+                                'accessor': '$votes.Independent',
+                                'path_accessor': ['$votes', 'Independent'],
+                            },
+                            {
+                                'Header': 'Republican',
+                                'accessor': '$votes.Republican',
+                                'path_accessor': ['$votes', 'Republican'],
+                            },
+                            {
+                                'Header': 'Totals',
+                                'accessor': '$votes.$totals',
+                                'path_accessor': ['$votes', '$totals'],
+                                'className': 'fireant-totals',
                             },
                         ],
                     },
                     {
-                        "Header": "Wins",
-                        "columns": [
-                            {"Header": "Democrat", "accessor": "$wins.Democrat"},
-                            {"Header": "Independent", "accessor": "$wins.Independent"},
-                            {"Header": "Republican", "accessor": "$wins.Republican"},
+                        'Header': 'Wins',
+                        'columns': [
                             {
-                                "Header": "Totals",
-                                "accessor": "$wins.$totals",
-                                "className": "fireant-totals",
+                                'Header': 'Democrat',
+                                'accessor': '$wins.Democrat',
+                                'path_accessor': ['$wins', 'Democrat'],
+                            },
+                            {
+                                'Header': 'Independent',
+                                'accessor': '$wins.Independent',
+                                'path_accessor': ['$wins', 'Independent'],
+                            },
+                            {
+                                'Header': 'Republican',
+                                'accessor': '$wins.Republican',
+                                'path_accessor': ['$wins', 'Republican'],
+                            },
+                            {
+                                'Header': 'Totals',
+                                'accessor': '$wins.$totals',
+                                'path_accessor': ['$wins', '$totals'],
+                                'className': 'fireant-totals',
                             },
                         ],
                     },
                 ],
-                "data": [
+                'data': [
                     {
-                        "$timestamp": {
-                            "display": "1996-01-01",
-                            "raw": "1996-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '1996-01-01',
+                            'raw': '1996-01-01T00:00:00',
                         },
-                        "$votes": {
-                            "$totals": {"display": "15,220,449", "raw": 15220449.0},
-                            "Democrat": {"display": "7,579,518", "raw": 7579518.0},
-                            "Independent": {"display": "1,076,384", "raw": 1076384.0},
-                            "Republican": {"display": "6,564,547", "raw": 6564547.0},
+                        '$votes': {
+                            '$totals': {'display': '15,220,449', 'raw': 15220449.0},
+                            'Democrat': {'display': '7,579,518', 'raw': 7579518.0},
+                            'Independent': {'display': '1,076,384', 'raw': 1076384.0},
+                            'Republican': {'display': '6,564,547', 'raw': 6564547.0},
                         },
-                        "$wins": {
-                            "$totals": {"display": "2", "raw": 2.0},
-                            "Democrat": {"display": "2", "raw": 2.0},
-                            "Independent": {"display": "0", "raw": 0.0},
-                            "Republican": {"display": "0", "raw": 0.0},
+                        '$wins': {
+                            '$totals': {'display': '2', 'raw': 2.0},
+                            'Democrat': {'display': '2', 'raw': 2.0},
+                            'Independent': {'display': '0', 'raw': 0.0},
+                            'Republican': {'display': '0', 'raw': 0.0},
                         },
                     },
                     {
-                        "$timestamp": {
-                            "display": "2000-01-01",
-                            "raw": "2000-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2000-01-01',
+                            'raw': '2000-01-01T00:00:00',
                         },
-                        "$votes": {
-                            "$totals": {"display": "16,662,017", "raw": 16662017.0},
-                            "Democrat": {"display": "8,294,949", "raw": 8294949.0},
-                            "Independent": {"display": "", "raw": None},
-                            "Republican": {"display": "8,367,068", "raw": 8367068.0},
+                        '$votes': {
+                            '$totals': {'display': '16,662,017', 'raw': 16662017.0},
+                            'Democrat': {'display': '8,294,949', 'raw': 8294949.0},
+                            'Independent': {'display': '', 'raw': None},
+                            'Republican': {'display': '8,367,068', 'raw': 8367068.0},
                         },
-                        "$wins": {
-                            "$totals": {"display": "2", "raw": 2.0},
-                            "Democrat": {"display": "0", "raw": 0.0},
-                            "Independent": {"display": "", "raw": None},
-                            "Republican": {"display": "2", "raw": 2.0},
-                        },
-                    },
-                    {
-                        "$timestamp": {
-                            "display": "2004-01-01",
-                            "raw": "2004-01-01T00:00:00",
-                        },
-                        "$votes": {
-                            "$totals": {"display": "19,614,932", "raw": 19614932.0},
-                            "Democrat": {"display": "9,578,189", "raw": 9578189.0},
-                            "Independent": {"display": "", "raw": None},
-                            "Republican": {"display": "10,036,743", "raw": 10036743.0},
-                        },
-                        "$wins": {
-                            "$totals": {"display": "2", "raw": 2.0},
-                            "Democrat": {"display": "0", "raw": 0.0},
-                            "Independent": {"display": "", "raw": None},
-                            "Republican": {"display": "2", "raw": 2.0},
+                        '$wins': {
+                            '$totals': {'display': '2', 'raw': 2.0},
+                            'Democrat': {'display': '0', 'raw': 0.0},
+                            'Independent': {'display': '', 'raw': None},
+                            'Republican': {'display': '2', 'raw': 2.0},
                         },
                     },
                     {
-                        "$timestamp": {
-                            "display": "2008-01-01",
-                            "raw": "2008-01-01T00:00:00",
+                        '$timestamp': {
+                            'display': '2004-01-01',
+                            'raw': '2004-01-01T00:00:00',
                         },
-                        "$votes": {
-                            "$totals": {"display": "21,294,215", "raw": 21294215.0},
-                            "Democrat": {"display": "11,803,106", "raw": 11803106.0},
-                            "Independent": {"display": "", "raw": None},
-                            "Republican": {"display": "9,491,109", "raw": 9491109.0},
+                        '$votes': {
+                            '$totals': {'display': '19,614,932', 'raw': 19614932.0},
+                            'Democrat': {'display': '9,578,189', 'raw': 9578189.0},
+                            'Independent': {'display': '', 'raw': None},
+                            'Republican': {'display': '10,036,743', 'raw': 10036743.0},
                         },
-                        "$wins": {
-                            "$totals": {"display": "2", "raw": 2.0},
-                            "Democrat": {"display": "2", "raw": 2.0},
-                            "Independent": {"display": "", "raw": None},
-                            "Republican": {"display": "0", "raw": 0.0},
+                        '$wins': {
+                            '$totals': {'display': '2', 'raw': 2.0},
+                            'Democrat': {'display': '0', 'raw': 0.0},
+                            'Independent': {'display': '', 'raw': None},
+                            'Republican': {'display': '2', 'raw': 2.0},
+                        },
+                    },
+                    {
+                        '$timestamp': {
+                            'display': '2008-01-01',
+                            'raw': '2008-01-01T00:00:00',
+                        },
+                        '$votes': {
+                            '$totals': {'display': '21,294,215', 'raw': 21294215.0},
+                            'Democrat': {'display': '11,803,106', 'raw': 11803106.0},
+                            'Independent': {'display': '', 'raw': None},
+                            'Republican': {'display': '9,491,109', 'raw': 9491109.0},
+                        },
+                        '$wins': {
+                            '$totals': {'display': '2', 'raw': 2.0},
+                            'Democrat': {'display': '2', 'raw': 2.0},
+                            'Independent': {'display': '', 'raw': None},
+                            'Republican': {'display': '0', 'raw': 0.0},
                         },
                     },
                 ],
@@ -1920,54 +2093,79 @@ class ReactTableTransformerTests(TestCase):
             transpose=True,
         ).transform(dimx2_date_str_totalsx2_df, dimensions, [])
 
-        self.assertIn("data", result)
-        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "", "accessor": "$metrics"},
-                    {"Header": "Party", "accessor": "$political_party"},
-                    {"Header": "1996-01-01", "accessor": "1996-01-01T00:00:00"},
-                    {"Header": "2000-01-01", "accessor": "2000-01-01T00:00:00"},
-                    {"Header": "2004-01-01", "accessor": "2004-01-01T00:00:00"},
-                    {"Header": "2008-01-01", "accessor": "2008-01-01T00:00:00"},
-                    {"Header": "2012-01-01", "accessor": "2012-01-01T00:00:00"},
-                    {"Header": "2016-01-01", "accessor": "2016-01-01T00:00:00"},
+                'columns': [
+                    {'Header': '', 'accessor': '$metrics'},
+                    {'Header': 'Party', 'accessor': '$political_party'},
                     {
-                        "Header": "Totals",
-                        "accessor": "$totals",
-                        "className": "fireant-totals",
+                        'Header': '1996-01-01',
+                        'accessor': '1996-01-01T00:00:00',
+                        'path_accessor': ['1996-01-01T00:00:00'],
+                    },
+                    {
+                        'Header': '2000-01-01',
+                        'accessor': '2000-01-01T00:00:00',
+                        'path_accessor': ['2000-01-01T00:00:00'],
+                    },
+                    {
+                        'Header': '2004-01-01',
+                        'accessor': '2004-01-01T00:00:00',
+                        'path_accessor': ['2004-01-01T00:00:00'],
+                    },
+                    {
+                        'Header': '2008-01-01',
+                        'accessor': '2008-01-01T00:00:00',
+                        'path_accessor': ['2008-01-01T00:00:00'],
+                    },
+                    {
+                        'Header': '2012-01-01',
+                        'accessor': '2012-01-01T00:00:00',
+                        'path_accessor': ['2012-01-01T00:00:00'],
+                    },
+                    {
+                        'Header': '2016-01-01',
+                        'accessor': '2016-01-01T00:00:00',
+                        'path_accessor': ['2016-01-01T00:00:00'],
+                    },
+                    {
+                        'Header': 'Totals',
+                        'accessor': '$totals',
+                        'path_accessor': ['$totals'],
+                        'className': 'fireant-totals',
                     },
                 ],
-                "data": [
+                'data': [
                     {
-                        "$metrics": {"raw": "Wins"},
-                        "$political_party": {
-                            "raw": "Democrat",
-                            "hyperlink": "http://example.com/Democrat",
+                        '$metrics': {'raw': 'Wins'},
+                        '$political_party': {
+                            'raw': 'Democrat',
+                            'hyperlink': 'http://example.com/Democrat',
                         },
-                        "$totals": {"display": "", "raw": None},
-                        "1996-01-01T00:00:00": {"display": "2", "raw": 2.0},
-                        "2000-01-01T00:00:00": {"display": "0", "raw": 0.0},
-                        "2004-01-01T00:00:00": {"display": "0", "raw": 0.0},
-                        "2008-01-01T00:00:00": {"display": "2", "raw": 2.0},
-                        "2012-01-01T00:00:00": {"display": "2", "raw": 2.0},
-                        "2016-01-01T00:00:00": {"display": "0", "raw": 0.0},
+                        '$totals': {'display': '', 'raw': None},
+                        '1996-01-01T00:00:00': {'display': '2', 'raw': 2.0},
+                        '2000-01-01T00:00:00': {'display': '0', 'raw': 0.0},
+                        '2004-01-01T00:00:00': {'display': '0', 'raw': 0.0},
+                        '2008-01-01T00:00:00': {'display': '2', 'raw': 2.0},
+                        '2012-01-01T00:00:00': {'display': '2', 'raw': 2.0},
+                        '2016-01-01T00:00:00': {'display': '0', 'raw': 0.0},
                     },
                     {
-                        "$metrics": {"raw": "Wins"},
-                        "$political_party": {
-                            "raw": "Independent",
-                            "hyperlink": "http://example.com/Independent",
+                        '$metrics': {'raw': 'Wins'},
+                        '$political_party': {
+                            'raw': 'Independent',
+                            'hyperlink': 'http://example.com/Independent',
                         },
-                        "$totals": {"display": "", "raw": None},
-                        "1996-01-01T00:00:00": {"display": "0", "raw": 0.0},
-                        "2000-01-01T00:00:00": {"display": "", "raw": None},
-                        "2004-01-01T00:00:00": {"display": "", "raw": None},
-                        "2008-01-01T00:00:00": {"display": "", "raw": None},
-                        "2012-01-01T00:00:00": {"display": "", "raw": None},
-                        "2016-01-01T00:00:00": {"display": "", "raw": None},
+                        '$totals': {'display': '', 'raw': None},
+                        '1996-01-01T00:00:00': {'display': '0', 'raw': 0.0},
+                        '2000-01-01T00:00:00': {'display': '', 'raw': None},
+                        '2004-01-01T00:00:00': {'display': '', 'raw': None},
+                        '2008-01-01T00:00:00': {'display': '', 'raw': None},
+                        '2012-01-01T00:00:00': {'display': '', 'raw': None},
+                        '2016-01-01T00:00:00': {'display': '', 'raw': None},
                     },
                 ],
             },
@@ -1986,54 +2184,79 @@ class ReactTableTransformerTests(TestCase):
             transpose=True,
         ).transform(dimx2_date_str_totalsx2_df, dimensions, [])
 
-        self.assertIn("data", result)
-        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "", "accessor": "$metrics"},
-                    {"Header": "Party", "accessor": "$political_party"},
-                    {"Header": "1996-01-01", "accessor": "1996-01-01T00:00:00"},
-                    {"Header": "2000-01-01", "accessor": "2000-01-01T00:00:00"},
-                    {"Header": "2004-01-01", "accessor": "2004-01-01T00:00:00"},
-                    {"Header": "2008-01-01", "accessor": "2008-01-01T00:00:00"},
-                    {"Header": "2012-01-01", "accessor": "2012-01-01T00:00:00"},
-                    {"Header": "2016-01-01", "accessor": "2016-01-01T00:00:00"},
+                'columns': [
+                    {'Header': '', 'accessor': '$metrics'},
+                    {'Header': 'Party', 'accessor': '$political_party'},
                     {
-                        "Header": "Totals",
-                        "accessor": "$totals",
-                        "className": "fireant-totals",
+                        'Header': '1996-01-01',
+                        'accessor': '1996-01-01T00:00:00',
+                        'path_accessor': ['1996-01-01T00:00:00'],
+                    },
+                    {
+                        'Header': '2000-01-01',
+                        'accessor': '2000-01-01T00:00:00',
+                        'path_accessor': ['2000-01-01T00:00:00'],
+                    },
+                    {
+                        'Header': '2004-01-01',
+                        'accessor': '2004-01-01T00:00:00',
+                        'path_accessor': ['2004-01-01T00:00:00'],
+                    },
+                    {
+                        'Header': '2008-01-01',
+                        'accessor': '2008-01-01T00:00:00',
+                        'path_accessor': ['2008-01-01T00:00:00'],
+                    },
+                    {
+                        'Header': '2012-01-01',
+                        'accessor': '2012-01-01T00:00:00',
+                        'path_accessor': ['2012-01-01T00:00:00'],
+                    },
+                    {
+                        'Header': '2016-01-01',
+                        'accessor': '2016-01-01T00:00:00',
+                        'path_accessor': ['2016-01-01T00:00:00'],
+                    },
+                    {
+                        'Header': 'Totals',
+                        'accessor': '$totals',
+                        'path_accessor': ['$totals'],
+                        'className': 'fireant-totals',
                     },
                 ],
-                "data": [
+                'data': [
                     {
-                        "$metrics": {"raw": "Wins"},
-                        "$political_party": {
-                            "raw": "Democrat",
-                            "hyperlink": "http://example.com/Democrat",
+                        '$metrics': {'raw': 'Wins'},
+                        '$political_party': {
+                            'raw': 'Democrat',
+                            'hyperlink': 'http://example.com/Democrat',
                         },
-                        "$totals": {"display": "", "raw": None},
-                        "1996-01-01T00:00:00": {"display": "2", "raw": 2.0},
-                        "2000-01-01T00:00:00": {"display": "0", "raw": 0.0},
-                        "2004-01-01T00:00:00": {"display": "0", "raw": 0.0},
-                        "2008-01-01T00:00:00": {"display": "2", "raw": 2.0},
-                        "2012-01-01T00:00:00": {"display": "2", "raw": 2.0},
-                        "2016-01-01T00:00:00": {"display": "0", "raw": 0.0},
+                        '$totals': {'display': '', 'raw': None},
+                        '1996-01-01T00:00:00': {'display': '2', 'raw': 2.0},
+                        '2000-01-01T00:00:00': {'display': '0', 'raw': 0.0},
+                        '2004-01-01T00:00:00': {'display': '0', 'raw': 0.0},
+                        '2008-01-01T00:00:00': {'display': '2', 'raw': 2.0},
+                        '2012-01-01T00:00:00': {'display': '2', 'raw': 2.0},
+                        '2016-01-01T00:00:00': {'display': '0', 'raw': 0.0},
                     },
                     {
-                        "$metrics": {"raw": "Wins"},
-                        "$political_party": {
-                            "raw": "Independent",
-                            "hyperlink": "http://example.com/Independent",
+                        '$metrics': {'raw': 'Wins'},
+                        '$political_party': {
+                            'raw': 'Independent',
+                            'hyperlink': 'http://example.com/Independent',
                         },
-                        "$totals": {"display": "", "raw": None},
-                        "1996-01-01T00:00:00": {"display": "0", "raw": 0.0},
-                        "2000-01-01T00:00:00": {"display": "", "raw": None},
-                        "2004-01-01T00:00:00": {"display": "", "raw": None},
-                        "2008-01-01T00:00:00": {"display": "", "raw": None},
-                        "2012-01-01T00:00:00": {"display": "", "raw": None},
-                        "2016-01-01T00:00:00": {"display": "", "raw": None},
+                        '$totals': {'display': '', 'raw': None},
+                        '1996-01-01T00:00:00': {'display': '0', 'raw': 0.0},
+                        '2000-01-01T00:00:00': {'display': '', 'raw': None},
+                        '2004-01-01T00:00:00': {'display': '', 'raw': None},
+                        '2008-01-01T00:00:00': {'display': '', 'raw': None},
+                        '2012-01-01T00:00:00': {'display': '', 'raw': None},
+                        '2016-01-01T00:00:00': {'display': '', 'raw': None},
                     },
                 ],
             },
@@ -2049,31 +2272,31 @@ class ReactTableHyperlinkTransformerTests(TestCase):
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Party", "accessor": "$political_party"},
-                    {"Header": "Wins", "accessor": "$wins"},
+                'columns': [
+                    {'Header': 'Party', 'accessor': '$political_party'},
+                    {'Header': 'Wins', 'accessor': '$wins', 'path_accessor': ['$wins']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "$political_party": {
-                            "hyperlink": "http://example.com/Democrat",
-                            "raw": "Democrat",
+                        '$political_party': {
+                            'hyperlink': 'http://example.com/Democrat',
+                            'raw': 'Democrat',
                         },
-                        "$wins": {"display": "6", "raw": 6.0},
+                        '$wins': {'display': '6', 'raw': 6.0},
                     },
                     {
-                        "$political_party": {
-                            "hyperlink": "http://example.com/Independent",
-                            "raw": "Independent",
+                        '$political_party': {
+                            'hyperlink': 'http://example.com/Independent',
+                            'raw': 'Independent',
                         },
-                        "$wins": {"display": "0", "raw": 0.0},
+                        '$wins': {'display': '0', 'raw': 0.0},
                     },
                     {
-                        "$political_party": {
-                            "hyperlink": "http://example.com/Republican",
-                            "raw": "Republican",
+                        '$political_party': {
+                            'hyperlink': 'http://example.com/Republican',
+                            'raw': 'Republican',
                         },
-                        "$wins": {"display": "6", "raw": 6.0},
+                        '$wins': {'display': '6', 'raw': 6.0},
                     },
                 ],
             },
@@ -2086,18 +2309,18 @@ class ReactTableHyperlinkTransformerTests(TestCase):
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "", "accessor": "$metrics"},
-                    {"Header": "Democrat", "accessor": "Democrat"},
-                    {"Header": "Independent", "accessor": "Independent"},
-                    {"Header": "Republican", "accessor": "Republican"},
+                'columns': [
+                    {'Header': '', 'accessor': '$metrics'},
+                    {'Header': 'Democrat', 'accessor': 'Democrat', 'path_accessor': ['Democrat']},
+                    {'Header': 'Independent', 'accessor': 'Independent', 'path_accessor': ['Independent']},
+                    {'Header': 'Republican', 'accessor': 'Republican', 'path_accessor': ['Republican']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "$metrics": {"raw": "Wins"},
-                        "Democrat": {"display": "6", "raw": 6},
-                        "Independent": {"display": "0", "raw": 0},
-                        "Republican": {"display": "6", "raw": 6},
+                        '$metrics': {'raw': 'Wins'},
+                        'Democrat': {'display': '6', 'raw': 6},
+                        'Independent': {'display': '0', 'raw': 0},
+                        'Republican': {'display': '6', 'raw': 6},
                     }
                 ],
             },
@@ -2107,29 +2330,29 @@ class ReactTableHyperlinkTransformerTests(TestCase):
     def test_dim_with_hyperlink_depending_on_another_dim_not_included_if_other_dim_is_not_selected(self):
         result = ReactTable(mock_dataset.fields.wins).transform(dimx1_str_df, [mock_dataset.fields.political_party], [])
 
-        self.assertIn("data", result)
-        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Party", "accessor": "$political_party"},
-                    {"Header": "Wins", "accessor": "$wins"},
+                'columns': [
+                    {'Header': 'Party', 'accessor': '$political_party'},
+                    {'Header': 'Wins', 'accessor': '$wins', 'path_accessor': ['$wins']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "$political_party": {
-                            "raw": "Democrat",
-                            "hyperlink": "http://example.com/Democrat",
+                        '$political_party': {
+                            'raw': 'Democrat',
+                            'hyperlink': 'http://example.com/Democrat',
                         },
-                        "$wins": {"display": "6", "raw": 6},
+                        '$wins': {'display': '6', 'raw': 6},
                     },
                     {
-                        "$political_party": {
-                            "raw": "Independent",
-                            "hyperlink": "http://example.com/Independent",
+                        '$political_party': {
+                            'raw': 'Independent',
+                            'hyperlink': 'http://example.com/Independent',
                         },
-                        "$wins": {"display": "0", "raw": 0},
+                        '$wins': {'display': '0', 'raw': 0},
                     },
                 ],
             },
@@ -2141,43 +2364,43 @@ class ReactTableHyperlinkTransformerTests(TestCase):
             dimx2_str_str_df,
             [
                 mock_dataset.fields.political_party,
-                mock_dataset.fields["candidate-name"],
+                mock_dataset.fields['candidate-name'],
             ],
             [],
         )
 
-        self.assertIn("data", result)
-        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Party", "accessor": "$political_party"},
-                    {"Header": "Candidate Name", "accessor": "$candidate-name"},
-                    {"Header": "Wins", "accessor": "$wins"},
+                'columns': [
+                    {'Header': 'Party', 'accessor': '$political_party'},
+                    {'Header': 'Candidate Name', 'accessor': '$candidate-name'},
+                    {'Header': 'Wins', 'accessor': '$wins', 'path_accessor': ['$wins']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "$candidate-name": {
-                            "hyperlink": "http://example.com/Democrat/Al Gore",
-                            "raw": "Al Gore",
+                        '$candidate-name': {
+                            'hyperlink': 'http://example.com/Democrat/Al Gore',
+                            'raw': 'Al Gore',
                         },
-                        "$political_party": {
-                            "raw": "Democrat",
-                            "hyperlink": "http://example.com/Democrat",
+                        '$political_party': {
+                            'raw': 'Democrat',
+                            'hyperlink': 'http://example.com/Democrat',
                         },
-                        "$wins": {"display": "0", "raw": 0},
+                        '$wins': {'display': '0', 'raw': 0},
                     },
                     {
-                        "$candidate-name": {
-                            "hyperlink": "http://example.com/Democrat/Barrack Obama",
-                            "raw": "Barrack Obama",
+                        '$candidate-name': {
+                            'hyperlink': 'http://example.com/Democrat/Barrack Obama',
+                            'raw': 'Barrack Obama',
                         },
-                        "$political_party": {
-                            "raw": "Democrat",
-                            "hyperlink": "http://example.com/Democrat",
+                        '$political_party': {
+                            'raw': 'Democrat',
+                            'hyperlink': 'http://example.com/Democrat',
                         },
-                        "$wins": {"display": "4", "raw": 4},
+                        '$wins': {'display': '4', 'raw': 4},
                     },
                 ],
             },
@@ -2189,34 +2412,34 @@ class ReactTableHyperlinkTransformerTests(TestCase):
             dimx2_str_str_df,
             [
                 mock_dataset.fields.political_party,
-                mock_dataset.fields["candidate-name"],
+                mock_dataset.fields['candidate-name'],
             ],
             [],
         )
 
-        self.assertIn("data", result)
-        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
+        self.assertIn('data', result)
+        result['data'] = result['data'][:2]  # shorten the results to make the test easier to read
 
         self.assertEqual(
             {
-                "columns": [
-                    {"Header": "Candidate Name", "accessor": "$candidate-name"},
-                    {"Header": "Wins", "accessor": "$wins"},
+                'columns': [
+                    {'Header': 'Candidate Name', 'accessor': '$candidate-name'},
+                    {'Header': 'Wins', 'accessor': '$wins', 'path_accessor': ['$wins']},
                 ],
-                "data": [
+                'data': [
                     {
-                        "$candidate-name": {
-                            "hyperlink": "http://example.com/Democrat/Al Gore",
-                            "raw": "Al Gore",
+                        '$candidate-name': {
+                            'hyperlink': 'http://example.com/Democrat/Al Gore',
+                            'raw': 'Al Gore',
                         },
-                        "$wins": {"display": "0", "raw": 0},
+                        '$wins': {'display': '0', 'raw': 0},
                     },
                     {
-                        "$candidate-name": {
-                            "hyperlink": "http://example.com/Democrat/Barrack Obama",
-                            "raw": "Barrack Obama",
+                        '$candidate-name': {
+                            'hyperlink': 'http://example.com/Democrat/Barrack Obama',
+                            'raw': 'Barrack Obama',
                         },
-                        "$wins": {"display": "4", "raw": 4},
+                        '$wins': {'display': '4', 'raw': 4},
                     },
                 ],
             },
@@ -2228,29 +2451,29 @@ class ReactTableReferenceItemFormatTests(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.ref_item_attrs = [
-            "alias",
-            "label",
-            "prefix",
-            "suffix",
-            "thousands",
-            "precision",
-            "data_type",
+            'alias',
+            'label',
+            'prefix',
+            'suffix',
+            'thousands',
+            'precision',
+            'data_type',
         ]
 
     def assert_object_dict(self, obj, exp, attributes=()):
         for attribute in attributes:
-            with self.subTest(attribute + " should be equal"):
+            with self.subTest(attribute + ' should be equal'):
                 self.assertEqual(getattr(obj, attribute), exp[attribute])
 
     def test_base_ref_item(self):
         exp_ref_item = {
-            "alias": "wins_with_style_eoe",
-            "label": "Wins EoE",
-            "prefix": "$",
-            "suffix": None,
-            "thousands": "_",
-            "precision": 0,
-            "data_type": DataType.number,
+            'alias': 'wins_with_style_eoe',
+            'label': 'Wins EoE',
+            'prefix': '$',
+            'suffix': None,
+            'thousands': '_',
+            'precision': 0,
+            'data_type': DataType.number,
         }
 
         ref = ElectionOverElection(mock_dataset.fields.timestamp)
@@ -2260,13 +2483,13 @@ class ReactTableReferenceItemFormatTests(TestCase):
 
     def test_ref_item_with_delta_percentage_formats_prefix_suffix(self):
         exp_ref_item = {
-            "alias": "wins_with_style_eoe_delta_percent",
-            "label": "Wins EoE Δ%",
-            "prefix": None,
-            "suffix": "%",
-            "thousands": "_",
-            "precision": 0,
-            "data_type": DataType.number,
+            'alias': 'wins_with_style_eoe_delta_percent',
+            'label': 'Wins EoE Δ%',
+            'prefix': None,
+            'suffix': '%',
+            'thousands': '_',
+            'precision': 0,
+            'data_type': DataType.number,
         }
 
         ref = ElectionOverElection(mock_dataset.fields.timestamp, delta=True, delta_percent=True)
