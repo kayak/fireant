@@ -1,21 +1,31 @@
 import numpy as np
+
+from typing import Callable, List
 from pypika import functions as fn
 from pypika.queries import QueryBuilder
 
 from fireant import utils
 from fireant.utils import immutable
+from .fields import Field
 from .modifiers import FieldModifier
 
 
 class ReferenceFilter:
-    def __init__(self, metric, operator, value):
+    def __init__(self, metric: Field, operator: str, value: int):
         self.metric = metric
         self.operator = operator
         self.value = value
 
 
 class Reference(FieldModifier):
-    def __init__(self, field, reference_type, delta=False, delta_percent=False, filters=()):
+    def __init__(
+        self,
+        field: Field,
+        reference_type: 'ReferenceType',
+        delta: bool = False,
+        delta_percent: bool = False,
+        filters: List[ReferenceFilter] = (),
+    ):
         super().__init__(field)
 
         self.reference_type = reference_type
@@ -58,14 +68,16 @@ class Reference(FieldModifier):
 
 
 class ReferenceType(object):
-    def __init__(self, alias, label, time_unit: str, interval: int):
+    def __init__(self, alias: str, label: str, time_unit: str, interval: int):
         self.alias = alias
         self.label = label
 
         self.time_unit = time_unit
         self.interval = interval
 
-    def __call__(self, dimension, delta=False, delta_percent=False, filters=()):
+    def __call__(
+        self, dimension, delta: bool = False, delta_percent: bool = False, filters: List[ReferenceFilter] = ()
+    ):
         return Reference(dimension, self, delta=delta, delta_percent=delta_percent, filters=filters)
 
     def __eq__(self, other):
@@ -75,11 +87,17 @@ class ReferenceType(object):
         return hash("reference" + self.alias)
 
 
-DayOverDay = ReferenceType("dod", "DoD", "day", 1)
-WeekOverWeek = ReferenceType("wow", "WoW", "week", 1)
-MonthOverMonth = ReferenceType("mom", "MoM", "month", 1)
-QuarterOverQuarter = ReferenceType("qoq", "QoQ", "quarter", 1)
-YearOverYear = ReferenceType("yoy", "YoY", "year", 1)
+DaysOverDays: Callable[[int], ReferenceType] = lambda interval: ReferenceType("dod", "DoD", "day", interval)
+WeeksOverWeeks: Callable[[int], ReferenceType] = lambda interval: ReferenceType("wow", "WoW", "week", interval)
+MonthsOverMonths: Callable[[int], ReferenceType] = lambda interval: ReferenceType("mom", "MoM", "month", interval)
+QuartersOverQuarters: Callable[[int], ReferenceType] = lambda interval: ReferenceType("qoq", "QoQ", "quarter", interval)
+YearsOverYears: Callable[[int], ReferenceType] = lambda interval: ReferenceType("yoy", "YoY", "year", interval)
+
+DayOverDay = DaysOverDays(interval=1)
+WeekOverWeek = WeeksOverWeeks(interval=1)
+MonthOverMonth = MonthsOverMonths(interval=1)
+QuarterOverQuarter = QuartersOverQuarters(interval=1)
+YearOverYear = YearsOverYears(interval=1)
 
 
 def reference_term(reference: Reference, original_query: QueryBuilder, ref_query: QueryBuilder):

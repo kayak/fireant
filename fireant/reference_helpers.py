@@ -1,8 +1,12 @@
+import pandas as pd
+
+from pypika.terms import Field
+from fireant.dataset.references import Reference
 from fireant.dataset.filters import ComparisonOperator
 from fireant.utils import alias_selector
 
 
-def reference_alias(metric, reference):
+def reference_alias(metric: Field, reference: Reference) -> str:
     """
     Format a metric key for a reference.
 
@@ -17,7 +21,7 @@ def reference_alias(metric, reference):
     return '{}_{}'.format(key, reference.alias)
 
 
-def reference_type_alias(metric, reference):
+def reference_type_alias(metric: Field, reference: Reference) -> str:
     """
     Format a metric key for a subquery selection in case of a reference.
 
@@ -32,7 +36,7 @@ def reference_type_alias(metric, reference):
     return '{}_{}'.format(key, reference.reference_type.alias)
 
 
-def reference_label(metric, reference):
+def reference_label(metric: Field, reference: Reference) -> str:
     """
     Format a metric label for a reference.
 
@@ -47,7 +51,7 @@ def reference_label(metric, reference):
     return '{} {}'.format(label, reference.label)
 
 
-def reference_prefix(metric, reference):
+def reference_prefix(metric: Field, reference: Reference) -> str:
     """
     Return the prefix for a metric displayed for a reference (or no Reference)
 
@@ -59,7 +63,7 @@ def reference_prefix(metric, reference):
     return metric.prefix
 
 
-def reference_suffix(metric, reference):
+def reference_suffix(metric: Field, reference: Reference) -> str:
     """
     Return the suffix for a metric displayed for a reference (or no Reference)
 
@@ -71,7 +75,7 @@ def reference_suffix(metric, reference):
     return metric.suffix
 
 
-def apply_reference_filters(df, reference):
+def apply_reference_filters(df: pd.DataFrame, reference: Reference) -> pd.DataFrame:
     for reference_filter in reference.filters:
         df_column_key = alias_selector(reference_alias(reference_filter.metric, reference))
         if df_column_key in df:
