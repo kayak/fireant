@@ -1,14 +1,18 @@
 import itertools
-import pandas as pd
 
+import pandas as pd
+import numpy as np
+
+from typing import Dict, List, Optional, Tuple
 from datetime import timedelta
 
 from fireant import (
     formats,
     utils,
 )
-from fireant.dataset.fields import DataType
+from fireant.dataset.fields import DataType, Field
 from fireant.dataset.totals import TOTALS_MARKERS
+from fireant.dataset.references import Reference
 from fireant.reference_helpers import (
     reference_alias,
     reference_label,
@@ -16,7 +20,7 @@ from fireant.reference_helpers import (
     reference_suffix,
 )
 from fireant.utils import alias_selector
-from .base import TransformableWidget
+from .base import HideField, TransformableWidget
 from .chart_base import (
     ChartWidget,
     ContinuousAxisSeries,
@@ -66,13 +70,14 @@ class HighCharts(ChartWidget, TransformableWidget):
 
     def __init__(
         self,
-        title=None,
-        colors=None,
-        x_axis_visible=True,
-        tooltip_visible=True,
-        split_dimension=None,
+        title: Optional[str] = None,
+        colors: Optional[List[str]] = None,
+        hide: Optional[List[HideField]] = None,
+        x_axis_visible: bool = True,
+        tooltip_visible: bool = True,
+        split_dimension: Optional[Field] = None,
     ):
-        super(HighCharts, self).__init__()
+        super(HighCharts, self).__init__(hide=hide)
         self.title = title
         self.colors = colors or DEFAULT_COLORS
         self.x_axis_visible = x_axis_visible
@@ -82,7 +87,13 @@ class HighCharts(ChartWidget, TransformableWidget):
     def __repr__(self):
         return ".".join(["HighCharts()"] + [repr(axis) for axis in self.items])
 
-    def transform(self, data_frame, dimensions, references, annotation_frame=None):
+    def transform(
+        self,
+        data_frame: pd.DataFrame,
+        dimensions: List[Field],
+        references: List[Reference],
+        annotation_frame: Optional[pd.DataFrame] = None,
+    ):
         """
         - Main entry point -
 
@@ -103,10 +114,14 @@ class HighCharts(ChartWidget, TransformableWidget):
         """
         result_df = data_frame.copy()
 
-        hide_dimensions = {dimension for dimension in dimensions if dimension.fetch_only}
-        self.hide_data_frame_indexes(result_df, hide_dimensions)
+        hide_aliases = self.hide_aliases(dimensions)
+        self.hide_data_frame_indexes(result_df, hide_aliases)
 
         dimension_map = {alias_selector(dimension.alias): dimension for dimension in dimensions}
+
+        # Nan/None values in the index can break split dimension feature,
+        # because xs method cannot
+        result_df.rename(index={np.nan: formats.BLANK_VALUE}, inplace=True)
 
         render_group = []
         split_dimension = self.split_dimension
@@ -121,7 +136,7 @@ class HighCharts(ChartWidget, TransformableWidget):
             for value in values:
                 render_group.append(
                     [
-                        result_df.xs(value, level=split_dimension_alias, drop_level=False),
+                        result_df.xs(value or '', level=split_dimension_alias, drop_level=False),
                         formats.display_value(value, split_dimension) or value,
                     ]
                 )
@@ -137,22 +152,22 @@ class HighCharts(ChartWidget, TransformableWidget):
                 dimensions,
                 references,
                 annotation_frame=annotation_frame,
-                titleSuffix=titleSuffix,
+                title_suffix=title_suffix,
                 num_charts=num_charts,
             )
-            for chart_df, titleSuffix in render_group
+            for chart_df, title_suffix in render_group
         ]
 
         return charts[0] if num_charts == 1 else charts
 
     def _render_individual_chart(
         self,
-        data_frame,
-        dimensions,
-        references,
-        annotation_frame=None,
-        titleSuffix="",
-        num_charts=1,
+        data_frame: pd.DataFrame,
+        dimensions: List[Field],
+        references: List[Reference],
+        annotation_frame: Optional[pd.DataFrame] = None,
+        title_suffix: str = "",
+        num_charts: int = 1,
     ):
         result_df = data_frame
 
@@ -208,7 +223,7 @@ class HighCharts(ChartWidget, TransformableWidget):
         extra = {}
 
         if num_charts > 1:
-            extra["title"] = {"text": f"{self.title} ({titleSuffix})" if self.title else titleSuffix}
+            extra["title"] = {"text": f"{self.title} ({title_suffix})" if self.title else title_suffix}
             extra["chart"] = {
                 # Height of 240px is the smallest we can have, while still fully displaying the chart menu.
                 "height": 240
@@ -234,7 +249,9 @@ class HighCharts(ChartWidget, TransformableWidget):
             **extra,
         }
 
-    def _values_and_dimension(self, data_frame, dimension_map, dimension_alias=None):
+    def _values_and_dimension(
+        self, data_frame: pd.DataFrame, dimension_map: Dict[str, Field], dimension_alias: Optional[str] = None
+    ):
         is_mi = isinstance(data_frame.index, pd.MultiIndex)
         levels = data_frame.index.levels if is_mi else [data_frame.index]
 
@@ -255,16 +272,18 @@ class HighCharts(ChartWidget, TransformableWidget):
         if first_level is not None and first_level.name is not None:
             dimension_alias = first_level.name
             dimension = dimension_map[dimension_alias]
-            return [value if not pd.isnull(value) else None for value in first_level], dimension
+            return [value for value in first_level], dimension
 
         return [], None
 
-    def _categories(self, data_frame, dimension_map, dimension_alias=None):
+    def _categories(
+        self, data_frame: pd.DataFrame, dimension_map: Dict[str, Field], dimension_alias: Optional[str] = None
+    ) -> List[str]:
         values, dimension = self._values_and_dimension(data_frame, dimension_map, dimension_alias)
 
         return [formats.display_value(value, dimension) or value for value in values]
 
-    def _render_x_axis(self, dimensions, categories):
+    def _render_x_axis(self, dimensions: List[Field], categories: List[str]):
         """
         Renders the xAxis configuration.
 
@@ -285,7 +304,7 @@ class HighCharts(ChartWidget, TransformableWidget):
             "visible": self.x_axis_visible,
         }
 
-    def _render_y_axis(self, axis_idx, color, references):
+    def _render_y_axis(self, axis_idx: int, color: str, references: List[Reference]) -> List[dict]:
         """
         Renders the yAxis configuration.
 
@@ -324,15 +343,15 @@ class HighCharts(ChartWidget, TransformableWidget):
     def _render_series(
         self,
         axis,
-        axis_idx,
-        axis_color,
-        colors,
-        data_frame,
+        axis_idx: int,
+        axis_color: str,
+        colors: List[str],
+        data_frame: pd.DataFrame,
         series_data_frames,
-        dimensions,
-        references,
-        is_timeseries=False,
-    ):
+        dimensions: List[Field],
+        references: List[Reference],
+        is_timeseries: bool = False,
+    ) -> List[dict]:
         """
         Renders the series configuration.
 
@@ -382,14 +401,14 @@ class HighCharts(ChartWidget, TransformableWidget):
     def _render_highcharts_series(
         self,
         series,
-        series_df,
-        references,
-        dimension_label,
-        is_timeseries,
-        symbol,
-        axis_idx,
-        axis_color,
-        series_color,
+        series_df: pd.DataFrame,
+        references: List[Reference],
+        dimension_label: str,
+        is_timeseries: bool,
+        symbol: str,
+        axis_idx: int,
+        axis_color: str,
+        series_color: str,
     ):
         """
 
@@ -415,6 +434,9 @@ class HighCharts(ChartWidget, TransformableWidget):
         for reference, dash_style in zip([None] + references, itertools.cycle(DASH_STYLES)):
             field_alias = utils.alias_selector(reference_alias(series.metric, reference))
             metric_label = reference_label(series.metric, reference)
+
+            if field_alias not in series_df:
+                continue
 
             hc_series = {
                 "type": series.type,
@@ -448,7 +470,7 @@ class HighCharts(ChartWidget, TransformableWidget):
         return results
 
     @staticmethod
-    def _render_category_data(group_df, field_alias, metric):
+    def _render_category_data(group_df: pd.DataFrame, field_alias: str, metric: Field):
         categories = (
             list(group_df.index.levels[0]) if isinstance(group_df.index, pd.MultiIndex) else list(group_df.index)
         )
@@ -465,7 +487,7 @@ class HighCharts(ChartWidget, TransformableWidget):
         return series
 
     @staticmethod
-    def _render_timeseries_data(group_df, metric_alias, metric):
+    def _render_timeseries_data(group_df: pd.DataFrame, metric_alias: str, metric: Field) -> List[Tuple[int, int]]:
         series = []
         for dimension_values, y in group_df[metric_alias].iteritems():
             first_dimension_value = utils.wrap_list(dimension_values)[0]
@@ -486,14 +508,16 @@ class HighCharts(ChartWidget, TransformableWidget):
             )
         return series
 
-    def _render_tooltip(self, metric, reference):
+    def _render_tooltip(self, metric: Field, reference: Reference) -> dict:
         return {
             "valuePrefix": reference_prefix(metric, reference),
             "valueSuffix": reference_suffix(metric, reference),
             "valueDecimals": metric.precision,
         }
 
-    def _render_pie_series(self, metric, reference, data_frame, dimension_fields):
+    def _render_pie_series(
+        self, metric: Field, reference: Reference, data_frame: pd.DataFrame, dimension_fields: List[Field]
+    ) -> dict:
         metric_alias = utils.alias_selector(metric.alias)
 
         if self.split_dimension:
@@ -520,7 +544,7 @@ class HighCharts(ChartWidget, TransformableWidget):
             },
         }
 
-    def _render_annotation(self, annotation_df, x_axis):
+    def _render_annotation(self, annotation_df: pd.DataFrame, x_axis):
         """
         Group data in the annotation data frame and calculate their positions on the x-axis of the main chart.
 
@@ -554,14 +578,14 @@ class HighCharts(ChartWidget, TransformableWidget):
 
         return [annotation]
 
-    def _get_annotation_positions(self, df, dimension_alias, axis):
+    def _get_annotation_positions(self, df: pd.DataFrame, dimension_alias: str, axis):
         if axis["type"] == "datetime":
             return self._get_timeseries_positions(df, dimension_alias)
 
         return self._get_category_positions(df, dimension_alias, axis)
 
     @staticmethod
-    def _group_annotation_df(annotation_df, annotation_field_name):
+    def _group_annotation_df(annotation_df: pd.DataFrame, annotation_field_name: str) -> pd.DataFrame:
         def concatenate_row_values(df):
             df.fillna("None", inplace=True)
             return ", ".join(df)
@@ -571,7 +595,7 @@ class HighCharts(ChartWidget, TransformableWidget):
         )
 
     @staticmethod
-    def _get_timeseries_positions(df, dimension_alias):
+    def _get_timeseries_positions(df: pd.DataFrame, dimension_alias: str):
         timeseries_positions = []
 
         for dimensions, dimension_value in df[dimension_alias].iteritems():
@@ -582,7 +606,7 @@ class HighCharts(ChartWidget, TransformableWidget):
         return timeseries_positions
 
     @staticmethod
-    def _get_category_positions(df, dimension_alias, axis):
+    def _get_category_positions(df: pd.DataFrame, dimension_alias: str, axis) -> List[dict]:
         dimension_positions = []
 
         category_positions = {category: index for index, category in enumerate(axis["categories"])}
@@ -600,7 +624,7 @@ class HighCharts(ChartWidget, TransformableWidget):
         return dimension_positions
 
     @staticmethod
-    def _remove_date_totals(data_frame):
+    def _remove_date_totals(data_frame: pd.DataFrame) -> pd.DataFrame:
         """
         This function filters the totals value for the date/time dimension from the result set. There is no way to
         represent this value on a chart so it is just removed.
@@ -620,7 +644,7 @@ class HighCharts(ChartWidget, TransformableWidget):
         return data_frame
 
     @staticmethod
-    def _group_by_series(data_frame):
+    def _group_by_series(data_frame: pd.DataFrame) -> pd.DataFrame:
         if len(data_frame) == 0 or not isinstance(data_frame.index, pd.MultiIndex):
             return [([], data_frame)]
 
@@ -628,7 +652,7 @@ class HighCharts(ChartWidget, TransformableWidget):
         return data_frame.groupby(level=levels, sort=False)
 
     @staticmethod
-    def _format_dimension_values(dimensions, dimension_values):
+    def _format_dimension_values(dimensions: List[Field], dimension_values: list) -> str:
         return ", ".join(
             str.strip(formats.display_value(value, dimension) or str(value))
             for value, dimension in zip(dimension_values, dimensions)

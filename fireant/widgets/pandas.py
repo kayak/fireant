@@ -1,13 +1,14 @@
+import pandas as pd
+
 from collections import OrderedDict
 from functools import partial
-from typing import Iterable, Union
-
-import pandas as pd
+from typing import Iterable, List, Optional, Tuple, Union
 
 from fireant import formats
 from fireant.dataset.fields import DataType, Field
+from fireant.dataset.references import Reference
 from fireant.utils import alias_selector, wrap_list
-from .base import ReferenceItem, TransformableWidget
+from .base import ReferenceItem, TransformableWidget, HideField
 from fireant.dataset.totals import DATE_TOTALS, NUMBER_TOTALS, TEXT_TOTALS
 from fireant.formats import TOTALS_LABEL, TOTALS_VALUE
 from fireant.reference_helpers import reference_alias
@@ -29,16 +30,15 @@ class Pandas(TransformableWidget):
         self,
         metric: Field,
         *metrics: Iterable[Field],
-        pivot=(),
-        hide=(),
-        transpose=False,
+        pivot: Optional[List[Field]] = (),
+        hide: Optional[List[HideField]] = None,
+        transpose: bool = False,
         sort=None,
-        ascending=None,
-        max_columns=None,
+        ascending: Optional[bool] = None,
+        max_columns: Optional[int] = None,
     ):
-        super(Pandas, self).__init__(metric, *metrics)
+        super(Pandas, self).__init__(metric, *metrics, hide=hide)
         self.pivot = pivot
-        self.hide = hide
         self.transpose = transpose
         self.sort = sort
         self.ascending = ascending
@@ -46,11 +46,11 @@ class Pandas(TransformableWidget):
 
     def transform(
         self,
-        data_frame,
-        dimensions,
-        references,
-        annotation_frame=None,
-        use_raw_values=False,
+        data_frame: pd.DataFrame,
+        dimensions: List[Field],
+        references: List[Reference],
+        annotation_frame: Optional[pd.DataFrame] = None,
+        use_raw_values: bool = False,
     ):
         """
         WRITEME
@@ -97,14 +97,14 @@ class Pandas(TransformableWidget):
 
         result_df = result_df[metric_aliases]
 
-        hide_dimensions = set(self.hide) | {dimension for dimension in dimensions if dimension.fetch_only}
-        self.hide_data_frame_indexes(result_df, hide_dimensions)
-        hide_aliases = {dimension.alias for dimension in hide_dimensions}
+        hide_aliases = self.hide_aliases(dimensions)
 
         if dimensions:
             result_df.index.names = [
                 alias_selector(dimension.alias) for dimension in dimensions if dimension.alias not in hide_aliases
             ]
+
+        self.hide_data_frame_indexes(result_df, hide_aliases)
 
         result_df.columns.name = 'Metrics'
 
@@ -112,7 +112,9 @@ class Pandas(TransformableWidget):
             alias_selector(dimension.alias) for dimension in self.pivot if dimension.alias not in hide_aliases
         ]
         result_df, _, _ = self.pivot_data_frame(result_df, pivot_dimensions, self.transpose)
-        result_df = self.add_formatting(dimensions, list(metric_map.values()), result_df, use_raw_values).fillna(
+
+        metrics = [metric for metric_alias, metric in metric_map.items() if metric_alias not in hide_aliases]
+        result_df = self.add_formatting(dimensions, metrics, result_df, use_raw_values).fillna(
             value=formats.BLANK_VALUE
         )
         return self.transform_df_schema(result_df, field_map)
@@ -135,11 +137,13 @@ class Pandas(TransformableWidget):
         return pd.Index(new_idx, name=idx.name)
 
     @staticmethod
-    def _transform_index_values(idx: list, field_map: dict) -> list:
+    def _transform_index_values(idx: List[str], field_map: dict) -> List[str]:
         return [field_map[item].label if item in field_map else item for item in idx]
 
     @staticmethod
-    def _should_data_frame_be_transformed(data_frame, pivot_dimensions, transpose):
+    def _should_data_frame_be_transformed(
+        data_frame: pd.DataFrame, pivot_dimensions: List[str], transpose: bool
+    ) -> bool:
         if not pivot_dimensions and not transpose:
             return False
 
@@ -149,7 +153,9 @@ class Pandas(TransformableWidget):
 
         return True
 
-    def pivot_data_frame(self, data_frame, pivot_dimensions, transpose):
+    def pivot_data_frame(
+        self, data_frame: pd.DataFrame, pivot_dimensions: List[str], transpose: bool
+    ) -> Tuple[pd.DataFrame, bool, bool]:
         """
         Pivot and transpose the data frame. Dimensions including in the `pivot` arg will be unshifted to columns. If
         `transpose` is True the data frame will be transposed. If there is only index level in the data frame (ie. one
@@ -191,7 +197,7 @@ class Pandas(TransformableWidget):
 
         return self.sort_data_frame(data_frame), is_pivoted, is_transposed
 
-    def sort_data_frame(self, data_frame):
+    def sort_data_frame(self, data_frame: pd.DataFrame):
         if not self.sort or len(data_frame) == 1:
             # If there are no sort arguments or the data frame is a single row, then no need to sort
             return data_frame
@@ -222,7 +228,9 @@ class Pandas(TransformableWidget):
 
         return sorted
 
-    def add_formatting(self, dimensions, items, pivot_df, use_raw_values):
+    def add_formatting(
+        self, dimensions: List[Field], items: List[Field], pivot_df: pd.DataFrame, use_raw_values: bool
+    ) -> pd.DataFrame:
         format_df = pivot_df.copy()
 
         def _get_field_display(item):

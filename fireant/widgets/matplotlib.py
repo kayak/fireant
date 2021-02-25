@@ -1,11 +1,17 @@
 import itertools
 
+import pandas as pd
+
+from typing import List, Optional
+from pypika.terms import Field
+
 from fireant import utils
+from fireant.dataset.references import Reference
 from fireant.reference_helpers import (
     reference_alias,
     reference_label,
 )
-from .base import TransformableWidget
+from .base import TransformableWidget, HideField
 from .chart_base import ChartWidget
 
 MAP_SERIES_TO_PLOT_FUNC = {
@@ -22,17 +28,23 @@ MAP_SERIES_TO_PLOT_FUNC = {
 
 
 class Matplotlib(ChartWidget, TransformableWidget):
-    def __init__(self, title=None):
-        super(Matplotlib, self).__init__()
+    def __init__(self, title: Optional[str] = None, hide: Optional[List[HideField]] = None):
+        super(Matplotlib, self).__init__(hide=hide)
         self.title = title
 
-    def transform(self, data_frame, dimensions, references, annotation_frame=None):
+    def transform(
+        self,
+        data_frame: pd.DataFrame,
+        dimensions: List[Field],
+        references: List[Reference],
+        annotation_frame: Optional[pd.DataFrame] = None,
+    ):
         import matplotlib.pyplot as plt
 
         result_df = data_frame.copy()
 
-        hide_dimensions = {dimension for dimension in dimensions if dimension.fetch_only}
-        self.hide_data_frame_indexes(result_df, hide_dimensions)
+        hide_aliases = self.hide_aliases(dimensions)
+        self.hide_data_frame_indexes(result_df, hide_aliases)
 
         n_axes = len(self.items)
         figsize = (14, 5 * n_axes)
@@ -65,7 +77,7 @@ class Matplotlib(ChartWidget, TransformableWidget):
         return plt_axes
 
     @staticmethod
-    def get_plot_func_for_series_type(pd_series, label, chart_series):
+    def get_plot_func_for_series_type(pd_series: pd.Series, label: str, chart_series):
         pd_series.name = label
         plot = pd_series.plot
         plot_func_name = MAP_SERIES_TO_PLOT_FUNC[type(chart_series)]
