@@ -959,6 +959,221 @@ class HighChartsLineChartTransformerTests(TestCase):
             result,
         )
 
+    def test_hidden_dim_with_single_metric_line_chart(self):
+        result = (
+            HighCharts(
+                title="Time Series with Hidden Dimension and Single Metric",
+                hide=[mock_dataset.fields.political_party],
+            )
+            .axis(self.chart_class(mock_dataset.fields.votes))
+            .transform(
+                dimx2_date_str_df,
+                [mock_dataset.fields.timestamp, mock_dataset.fields.political_party],
+                [],
+            )
+        )
+
+        self.assertEqual(
+            {
+                "title": {"text": "Time Series with Hidden Dimension and Single Metric"},
+                "xAxis": {"type": "datetime", "visible": True},
+                "yAxis": [
+                    {
+                        "id": "0",
+                        "labels": {"style": {"color": None}},
+                        "title": {"text": None},
+                        "visible": True,
+                    },
+                ],
+                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                "legend": {"useHTML": True},
+                "series": [
+                    {
+                        "color": "#DDDF0D",
+                        "dashStyle": "Solid",
+                        "data": [
+                            (820454400000, 7579518),
+                            (820454400000, 1076384),
+                            (820454400000, 6564547),
+                            (946684800000, 8294949),
+                            (946684800000, 8367068),
+                            (1072915200000, 9578189),
+                            (1072915200000, 10036743),
+                            (1199145600000, 11803106),
+                            (1199145600000, 9491109),
+                            (1325376000000, 12424128),
+                            (1325376000000, 8148082),
+                            (1451606400000, 4871678),
+                            (1451606400000, 13438835),
+                        ],
+                        "marker": {"fillColor": "#DDDF0D", "symbol": "circle"},
+                        "name": "Votes",
+                        "stacking": self.stacking,
+                        "tooltip": {
+                            "valueDecimals": None,
+                            "valuePrefix": None,
+                            "valueSuffix": None,
+                        },
+                        "type": self.chart_type,
+                        "yAxis": "0",
+                    },
+                ],
+                "annotations": [],
+                "colors": DEFAULT_COLORS,
+            },
+            result,
+        )
+
+    def test_hidden_metric_with_single_metric_line_chart(self):
+        result = (
+            HighCharts(
+                title="Time Series with Hidden Metric and Single Metric",
+                hide=[mock_dataset.fields.votes],
+            )
+            .axis(self.chart_class(mock_dataset.fields.votes))
+            .transform(
+                dimx2_date_str_ref_df,
+                [mock_dataset.fields.timestamp, mock_dataset.fields.political_party],
+                [ElectionOverElection(mock_dataset.fields.timestamp)],
+            )
+        )
+
+        self.assertEqual(
+            {
+                "title": {"text": "Time Series with Hidden Metric and Single Metric"},
+                "xAxis": {"type": "datetime", "visible": True},
+                "yAxis": [
+                    {
+                        "id": "0",
+                        "labels": {"style": {"color": None}},
+                        "title": {"text": None},
+                        "visible": True,
+                    },
+                ],
+                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                "legend": {"useHTML": True},
+                "series": [
+                    {
+                        "color": "#DDDF0D",
+                        "dashStyle": "Dash",
+                        "data": [
+                            (820454400000, 7579518.0),
+                            (946684800000, 6564547.0),
+                            (1072915200000, 8367068.0),
+                            (1199145600000, 10036743.0),
+                            (1325376000000, 9491109.0),
+                            (1451606400000, 8148082.0),
+                        ],
+                        "marker": {"fillColor": "#DDDF0D", "symbol": "circle"},
+                        "name": "Votes EoE (Republican)",
+                        "stacking": self.stacking,
+                        "tooltip": {
+                            "valueDecimals": None,
+                            "valuePrefix": None,
+                            "valueSuffix": None,
+                        },
+                        "type": self.chart_type,
+                        "yAxis": "0",
+                    },
+                    {
+                        'color': '#55BF3B',
+                        'dashStyle': 'Dash',
+                        'data': [
+                            (946684800000, 1076384.0),
+                            (1072915200000, 8294949.0),
+                            (1199145600000, 9578189.0),
+                            (1325376000000, 11803106.0),
+                            (1451606400000, 12424128.0),
+                        ],
+                        'marker': {'fillColor': '#DDDF0D', 'symbol': 'square'},
+                        'name': 'Votes EoE (Democrat)',
+                        'stacking': self.stacking,
+                        'tooltip': {'valueDecimals': None, 'valuePrefix': None, 'valueSuffix': None},
+                        'type': self.chart_type,
+                        'yAxis': '0',
+                    },
+                ],
+                "annotations": [],
+                "colors": DEFAULT_COLORS,
+            },
+            result,
+        )
+
+    def test_hidden_ref_with_single_metric_line_chart(self):
+        result = (
+            HighCharts(
+                title="Time Series with Hidden Reference and Single Metric",
+                hide=['votes_eoe'],
+            )
+            .axis(self.chart_class(mock_dataset.fields.votes))
+            .transform(
+                dimx2_date_str_ref_df,
+                [mock_dataset.fields.timestamp, mock_dataset.fields.political_party],
+                [ElectionOverElection(mock_dataset.fields.timestamp)],
+            )
+        )
+
+        self.assertEqual(
+            {
+                "title": {"text": "Time Series with Hidden Reference and Single Metric"},
+                "xAxis": {"type": "datetime", "visible": True},
+                "yAxis": [
+                    {
+                        "id": "0",
+                        "labels": {"style": {"color": None}},
+                        "title": {"text": None},
+                        "visible": True,
+                    },
+                ],
+                "tooltip": {"shared": True, "useHTML": True, "enabled": True},
+                "legend": {"useHTML": True},
+                "series": [
+                    {
+                        "color": "#DDDF0D",
+                        "dashStyle": "Solid",
+                        "data": [
+                            (820454400000, 6564547),
+                            (946684800000, 8367068),
+                            (1072915200000, 10036743),
+                            (1199145600000, 9491109),
+                            (1325376000000, 8148082),
+                            (1451606400000, 13438835),
+                        ],
+                        "marker": {"fillColor": "#DDDF0D", "symbol": "circle"},
+                        "name": "Votes (Republican)",
+                        "stacking": self.stacking,
+                        "tooltip": {
+                            "valueDecimals": None,
+                            "valuePrefix": None,
+                            "valueSuffix": None,
+                        },
+                        "type": self.chart_type,
+                        "yAxis": "0",
+                    },
+                    {
+                        'color': '#55BF3B',
+                        'dashStyle': 'Solid',
+                        'data': [
+                            (946684800000, 8294949),
+                            (1072915200000, 9578189),
+                            (1199145600000, 11803106),
+                            (1325376000000, 12424128),
+                            (1451606400000, 4871678),
+                        ],
+                        'marker': {'fillColor': '#DDDF0D', 'symbol': 'square'},
+                        'name': 'Votes (Democrat)',
+                        'stacking': self.stacking,
+                        'tooltip': {'valueDecimals': None, 'valuePrefix': None, 'valueSuffix': None},
+                        'type': self.chart_type,
+                        'yAxis': '0',
+                    },
+                ],
+                "annotations": [],
+                "colors": DEFAULT_COLORS,
+            },
+            result,
+        )
+
     def test_multi_dim_with_totals_line_chart_and_empty_data(self):
         dataframe = (
             pd.DataFrame()

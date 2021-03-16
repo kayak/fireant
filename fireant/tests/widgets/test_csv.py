@@ -117,6 +117,36 @@ class CSVWidgetTests(TestCase):
 
         self.assertEqual(expected.to_csv(**csv_options), result)
 
+    def test_hidden_metric_dimx2_date_str(self):
+        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
+        references = [ElectionOverElection(mock_dataset.fields.timestamp)]
+        result = CSV(mock_dataset.fields.votes, hide=[mock_dataset.fields.votes]).transform(
+            dimx2_date_str_ref_df, dimensions, references
+        )
+
+        expected = dimx2_date_str_ref_df.copy()[[f('votes_eoe')]]
+        expected.index.names = ['Timestamp', 'Party']
+        expected.columns = ['Votes EoE']
+        expected.columns.name = 'Metrics'
+        expected = expected.applymap(format_float_raw)
+
+        self.assertEqual(expected.to_csv(**csv_options), result)
+
+    def test_hidden_ref_dimx2_date_str(self):
+        dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
+        references = [ElectionOverElection(mock_dataset.fields.timestamp)]
+        result = CSV(mock_dataset.fields.votes, hide=['votes_eoe']).transform(
+            dimx2_date_str_ref_df, dimensions, references
+        )
+
+        expected = dimx2_date_str_ref_df.copy()[[f('votes')]]
+        expected.index.names = ['Timestamp', 'Party']
+        expected.columns = ['Votes']
+        expected.columns.name = 'Metrics'
+        expected = expected.applymap(format_float_raw)
+
+        self.assertEqual(expected.to_csv(**csv_options), result)
+
     def test_fetch_only_dimx2_date_str(self):
         dimensions = [mock_dataset.fields.timestamp, mock_dataset.fields.political_party]
         dimensions[1].fetch_only = True

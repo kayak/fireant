@@ -33,7 +33,18 @@ class APITests(TestCase):
                 self.assertIn(element, vars(fireant))
 
     def test_package_exports_references(self):
-        for element in ("DayOverDay", "WeekOverWeek"):
+        for element in (
+            "DayOverDay",
+            "WeekOverWeek",
+            "MonthOverMonth",
+            "QuarterOverQuarter",
+            "YearOverYear",
+            "DaysOverDays",
+            "WeeksOverWeeks",
+            "MonthsOverMonths",
+            "QuartersOverQuarters",
+            "YearsOverYears",
+        ):
             with self.subTest(element):
                 self.assertIn(element, vars(fireant))
 

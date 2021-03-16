@@ -1050,6 +1050,59 @@ class ReactTableTransformerTests(TestCase):
             result,
         )
 
+    def test_dimx2_metricx2_refx2_hide_metrics(self):
+        dimensions = [
+            day(mock_dataset.fields.timestamp),
+            mock_dataset.fields.political_party,
+        ]
+        references = [ElectionOverElection(mock_dataset.fields.timestamp)]
+        result = ReactTable(
+            mock_dataset.fields.votes,
+            mock_dataset.fields.wins,
+            hide=[mock_dataset.fields.votes, mock_dataset.fields.wins],
+        ).transform(dimx2_date_str_ref_df, dimensions, references)
+
+        self.assertIn("data", result)
+        result["data"] = result["data"][:2]  # shorten the results to make the test easier to read
+
+        self.assertEqual(
+            {
+                "columns": [
+                    {"Header": "Timestamp", "accessor": "$timestamp"},
+                    {"Header": "Party", "accessor": "$political_party"},
+                    {"Header": "Votes EoE", "accessor": "$votes_eoe", 'path_accessor': ['$votes_eoe']},
+                    {"Header": "Wins EoE", "accessor": "$wins_eoe", 'path_accessor': ['$wins_eoe']},
+                ],
+                "data": [
+                    {
+                        "$political_party": {
+                            "raw": "Republican",
+                            "hyperlink": "http://example.com/Republican",
+                        },
+                        "$timestamp": {
+                            "display": "1996-01-01",
+                            "raw": "1996-01-01T00:00:00",
+                        },
+                        "$votes_eoe": {"display": "7,579,518", "raw": 7579518.0},
+                        "$wins_eoe": {"display": "2", "raw": 2.0},
+                    },
+                    {
+                        "$political_party": {
+                            "raw": "Democrat",
+                            "hyperlink": "http://example.com/Democrat",
+                        },
+                        "$timestamp": {
+                            "display": "2000-01-01",
+                            "raw": "2000-01-01T00:00:00",
+                        },
+                        "$votes_eoe": {"display": "1,076,384", "raw": 1076384.0},
+                        "$wins_eoe": {"display": "0", "raw": 0.0},
+                    },
+                ],
+            },
+            result,
+        )
+
     def test_dimx2_fetch_only_dim1(self):
         dimensions = [
             day(mock_dataset.fields.timestamp),

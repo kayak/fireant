@@ -1,10 +1,12 @@
 import colorsys
 import re
-from collections import OrderedDict, defaultdict
-from functools import partial
 
 import numpy as np
 import pandas as pd
+
+from collections import OrderedDict, defaultdict
+from functools import partial
+from typing import Dict, List, Optional
 
 from fireant.dataset.fields import (
     DataType,
@@ -26,6 +28,7 @@ from fireant.formats import (
     return_none,
     safe_value,
 )
+from fireant.dataset.references import Reference
 from fireant.reference_helpers import reference_alias
 from fireant.utils import (
     alias_for_alias_selector,
@@ -34,7 +37,7 @@ from fireant.utils import (
     setdeepattr,
     wrap_list,
 )
-from .base import ReferenceItem
+from .base import ReferenceItem, HideField
 from .pandas import F_METRICS_DIMENSION_ALIAS, METRICS_DIMENSION_ALIAS, Pandas, TotalsItem
 
 _display_value = partial(display_value, nan_value="", null_value="")
@@ -60,12 +63,12 @@ def hex_to_hsv(hex_color):
 
 
 class FormattingField:
-    def __init__(self, metric=None, reference=None, operation=None):
+    def __init__(self, metric: Optional[Field] = None, reference: Optional[Reference] = None, operation=None):
         self.metric = metric
         self.reference = reference
         self.operation = operation
 
-    def get_alias(self):
+    def get_alias(self) -> str:
         if self.reference:
             if self.operation:
                 return reference_alias(self.operation, self.reference)
@@ -79,7 +82,7 @@ class FormattingField:
 
 
 class FormattingRule:
-    def __init__(self, field, color, covers_row):
+    def __init__(self, field: Field, color, covers_row):
         self.field = field
         self.color = color
         self.covers_row = covers_row
@@ -107,7 +110,7 @@ class FormattingRule:
 
 
 class FormattingConditionRule(FormattingRule):
-    def __init__(self, field, operator, value, color, covers_row=False):
+    def __init__(self, field: Field, operator, value, color, covers_row=False):
         super().__init__(field, color, covers_row)
         self.operator = operator
         self.value = value
@@ -133,7 +136,7 @@ class FormattingHeatMapRule(FormattingRule):
 
     WHITE = 'FFFFFF'
 
-    def __init__(self, field, color, start_color=None, covers_row=False, reverse_heatmap=False):
+    def __init__(self, field: Field, color, start_color=None, covers_row: bool = False, reverse_heatmap: bool = False):
         super().__init__(field, color, covers_row)
         self.hsv_color = hex_to_hsv(self.color)
         if start_color:
@@ -237,14 +240,14 @@ class ReactTable(Pandas):
 
     def __init__(
         self,
-        metric,
-        *metrics: Field,
-        pivot=(),
-        hide=(),
-        transpose=False,
+        metric: Field,
+        *metrics: List[Field],
+        pivot: Optional[List[Field]] = (),
+        hide: Optional[List[HideField]] = None,
+        transpose: bool = False,
         sort=None,
-        ascending=None,
-        max_columns=None,
+        ascending: Optional[bool] = None,
+        max_columns: Optional[int] = None,
         formatting_rules=(),
     ):
         super(ReactTable, self).__init__(
@@ -269,7 +272,7 @@ class ReactTable(Pandas):
         return "{}({})".format(self.__class__.__name__, ",".join(str(m) for m in self.items))
 
     @staticmethod
-    def map_hyperlink_templates(df, dimensions):
+    def map_hyperlink_templates(df: pd.DataFrame, dimensions: List[Field]) -> Dict[str, str]:
         """
         Creates a mapping for each dimension to it's hyperlink template if it is possible to create the hyperlink
         template for it.
@@ -321,7 +324,7 @@ class ReactTable(Pandas):
         return hyperlink_templates
 
     @staticmethod
-    def format_data_frame(data_frame):
+    def format_data_frame(data_frame: pd.DataFrame) -> pd.DataFrame:
         """
         This function prepares the raw data frame for transformation by formatting dates in the index and removing any
         remaining NaN/NaT values. It also names the column as metrics so that it can be treated like a dimension level.
@@ -336,7 +339,9 @@ class ReactTable(Pandas):
         return data_frame
 
     @staticmethod
-    def transform_index_column_headers(data_frame, field_map, hide_dimension_aliases):
+    def transform_index_column_headers(
+        data_frame: pd.DataFrame, field_map: Dict[str, Field], hide_dimension_aliases: List[str]
+    ) -> List[dict]:
         """
         Convert the un-pivoted dimensions into ReactTable column header definitions.
 
@@ -380,7 +385,9 @@ class ReactTable(Pandas):
         return columns
 
     @staticmethod
-    def transform_data_column_headers(data_frame, field_map):
+    def transform_data_column_headers(
+        data_frame: pd.DataFrame, field_map: Dict[str, Field], hide_metric_aliases: List[str]
+    ) -> List[dict]:
         """
         Convert the metrics into ReactTable column header definitions. This includes any pivoted dimensions, which will
         result in multiple rows of headers.
@@ -390,6 +397,8 @@ class ReactTable(Pandas):
             The result set data frame.
         :param field_map:
             A map to find metrics/operations based on their keys found in the data frame.
+        :param hide_metric_aliases:
+            A set with hide metric aliases.
         :return:
             A list of column header definitions with the following structure.
 
@@ -412,7 +421,7 @@ class ReactTable(Pandas):
             }]
         """
 
-        def get_header(column_value, f_dimension_alias, is_totals):
+        def get_header(column_value, f_dimension_alias: str, is_totals: bool):
             if f_dimension_alias == F_METRICS_DIMENSION_ALIAS or is_totals:
                 item = field_map[column_value]
                 return getattr(item, "label", item.alias)
@@ -448,12 +457,16 @@ class ReactTable(Pandas):
 
             columns = []
             for column_value, group in groups:
+                if column_value in hide_metric_aliases:
+                    continue
+
                 is_totals = column_value in TOTALS_MARKERS | {TOTALS_LABEL}
 
                 # All column definitions have a header
                 column = {"Header": get_header(column_value, f_dimension_alias, is_totals)}
 
                 level_values = previous_level_values + (column_value,)
+
                 if group is not None:
                     # If there is a group, then drop this index level from the group data frame and recurse to build
                     # sub column definitions
@@ -480,7 +493,13 @@ class ReactTable(Pandas):
         return _make_columns(data_frame.columns.to_frame(), dropped_metric_level_name)
 
     @staticmethod
-    def transform_row_index(index_values, field_map, dimension_hyperlink_templates, hide_dimension_aliases, row_colors):
+    def transform_row_index(
+        index_values,
+        field_map: Dict[str, Field],
+        dimension_hyperlink_templates: Dict[str, str],
+        hide_dimension_aliases: List[str],
+        row_colors: List[str],
+    ):
         # Add the index to the row
         row = {}
         for key, value in index_values.items():
@@ -512,7 +531,8 @@ class ReactTable(Pandas):
             row[safe_key] = data
 
         for dimension_alias in hide_dimension_aliases:
-            del row[dimension_alias]
+            if dimension_alias in row:
+                del row[dimension_alias]
 
         return row
 
@@ -525,11 +545,16 @@ class ReactTable(Pandas):
 
         return accessor
 
-    def transform_row_values(self, series, fields, is_transposed, is_pivoted):
+    def transform_row_values(
+        self, series, fields: Dict[str, Field], is_transposed: bool, is_pivoted: bool, hide_aliases: List[str]
+    ):
         row = {}
         row_colors = None
 
         for key, value in series.items():
+            if key in hide_aliases:
+                continue
+
             key = wrap_list(key)
 
             # Get the field for the metric
@@ -565,7 +590,7 @@ class ReactTable(Pandas):
 
         return row, row_colors
 
-    def calculate_min_max(self, df, is_transposed):
+    def calculate_min_max(self, df: pd.DataFrame, is_transposed: bool):
         if not self.min_max_map:
             return
 
@@ -586,13 +611,13 @@ class ReactTable(Pandas):
 
     def transform_data(
         self,
-        data_frame,
-        field_map,
-        hide_aliases,
-        dimension_hyperlink_templates,
-        is_transposed,
-        is_pivoted,
-    ):
+        data_frame: pd.DataFrame,
+        field_map: Dict[str, Field],
+        hide_aliases: List[str],
+        dimension_hyperlink_templates: Dict[str, str],
+        is_transposed: bool,
+        is_pivoted: bool,
+    ) -> List[dict]:
         """
         Builds a list of dicts containing the data for ReactTable. This aligns with the accessors set by
         #transform_dimension_column_headers and #transform_metric_column_headers
@@ -634,7 +659,9 @@ class ReactTable(Pandas):
 
         rows = []
         for index, series in data_frame.iterrows():
-            row_values, row_colors = self.transform_row_values(series, field_map, is_transposed, is_pivoted)
+            row_values, row_colors = self.transform_row_values(
+                series, field_map, is_transposed, is_pivoted, hide_aliases
+            )
 
             index = wrap_list(index)
             # Get a list of values from the index. These can be metrics or dimensions so it checks in the item map if
@@ -655,12 +682,12 @@ class ReactTable(Pandas):
 
     def transform(
         self,
-        data_frame,
-        dimensions,
-        references,
-        annotation_frame=None,
-        use_raw_values=False,
-    ):
+        data_frame: pd.DataFrame,
+        dimensions: List[Field],
+        references: List[Reference],
+        annotation_frame: Optional[pd.DataFrame] = None,
+        use_raw_values: bool = False,
+    ) -> dict:
         """
         Transforms a data frame into a format for ReactTable. This is an object containing attributes `columns` and
         `data` which align with the props in ReactTable with the same name.
@@ -708,11 +735,7 @@ class ReactTable(Pandas):
         }
         metric_aliases = list(metric_map.keys())
 
-        hide_aliases = {alias_selector(dimension.alias) for dimension in self.hide}
-
-        for dimension in dimensions:
-            if dimension.fetch_only:
-                hide_aliases.add(alias_selector(dimension.alias))
+        hide_aliases = self.hide_aliases(dimensions)
 
         pivot_dimensions = [
             alias_selector(dimension.alias)
@@ -723,7 +746,7 @@ class ReactTable(Pandas):
         result_df = self.format_data_frame(result_df[metric_aliases])
         result_df, is_pivoted, is_transposed = self.pivot_data_frame(result_df, pivot_dimensions, self.transpose)
         dimension_columns = self.transform_index_column_headers(result_df, field_map, hide_aliases)
-        metric_columns = self.transform_data_column_headers(result_df, field_map)
+        metric_columns = self.transform_data_column_headers(result_df, field_map, hide_aliases)
 
         data = self.transform_data(
             result_df,
