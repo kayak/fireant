@@ -421,7 +421,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
         with self.subTest("reference query is shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(day,1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 '"political_party" "$political_party",'
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
@@ -447,7 +447,7 @@ class QueryBuilderDimensionTotalsTests(TestCase):
         with self.subTest("reference total query is shifted without the rollup dimension"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(day,1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 "'_FIREANT_ROLLUP_VALUE_' \"$political_party\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
@@ -489,12 +489,12 @@ class QueryBuilderDimensionTotalsTests(TestCase):
         with self.subTest("reference query is shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(day,1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 '"political_party" "$political_party",'
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
-                "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('day',-1,'2018-01-01') "
-                "AND TIMESTAMPADD('day',-1,'2019-01-01') "
+                "WHERE \"timestamp\" BETWEEN TIMESTAMPADD(day,-1,'2018-01-01') "
+                "AND TIMESTAMPADD(day,-1,'2019-01-01') "
                 'GROUP BY "$timestamp","$political_party" '
                 'ORDER BY "$timestamp","$political_party" '
                 'LIMIT 200000',
@@ -518,12 +518,12 @@ class QueryBuilderDimensionTotalsTests(TestCase):
         with self.subTest("reference total query is shifted without the rollup dimension"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(day,1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 "'_FIREANT_ROLLUP_VALUE_' \"$political_party\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
-                "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('day',-1,'2018-01-01') "
-                "AND TIMESTAMPADD('day',-1,'2019-01-01') "
+                "WHERE \"timestamp\" BETWEEN TIMESTAMPADD(day,-1,'2018-01-01') "
+                "AND TIMESTAMPADD(day,-1,'2019-01-01') "
                 'GROUP BY "$timestamp" '
                 'ORDER BY "$timestamp","$political_party" '
                 'LIMIT 200000',

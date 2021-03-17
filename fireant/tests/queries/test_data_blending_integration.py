@@ -713,13 +713,13 @@ class DataSetBlenderIntegrationTests(TestCase):
             '"sq0"."$metric0_dod" "$metric0_dod",'
             '"sq1"."$metric1_dod" "$metric1_dod" '
             "FROM ("
-            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
+            'SELECT TIMESTAMPADD(day,1,"timestamp") "$timestamp",'
             '"metric" "$metric0_dod" '
             'FROM "test0" '
             'GROUP BY "$timestamp"'
             ') "sq0" '
             "LEFT JOIN ("
-            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
+            'SELECT TIMESTAMPADD(day,1,"timestamp") "$timestamp",'
             '"metric" "$metric1_dod" '
             'FROM "test1" '
             'GROUP BY "$timestamp"'
@@ -809,13 +809,13 @@ class DataSetBlenderIntegrationTests(TestCase):
             '"sq0"."$metric0_dod" "$metric0_dod",'
             '"sq1"."$metric1_dod" "$metric1_dod" '
             "FROM ("
-            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
+            'SELECT TIMESTAMPADD(day,1,"timestamp") "$timestamp",'
             'SUM("metric") "$metric0_dod" '
             'FROM "test0" '
             'GROUP BY "$timestamp"'
             ') "sq0" '
             "LEFT JOIN ("
-            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
+            'SELECT TIMESTAMPADD(day,1,"timestamp") "$timestamp",'
             'SUM("metric") "$metric1_dod" '
             'FROM "test1" '
             'GROUP BY "$timestamp"'
@@ -905,13 +905,13 @@ class DataSetBlenderIntegrationTests(TestCase):
             '"sq1"."$metric1_dod" "$metric1_dod",'
             '"sq0"."$metric0_dod" "$metric0_dod" '
             "FROM ("
-            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
+            'SELECT TIMESTAMPADD(day,1,"timestamp") "$timestamp",'
             'SUM("metric") "$metric0_dod" '
             'FROM "test0" '
             'GROUP BY "$timestamp"'
             ') "sq0" '
             "LEFT JOIN ("
-            'SELECT TIMESTAMPADD(\'day\',1,"timestamp") "$timestamp",'
+            'SELECT TIMESTAMPADD(day,1,"timestamp") "$timestamp",'
             'SUM("metric") "$metric1_dod" '
             'FROM "test1" '
             'GROUP BY "$timestamp"'

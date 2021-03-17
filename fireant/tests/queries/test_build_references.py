@@ -65,8 +65,8 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
                 '"political_party" "$political_party",'
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
-                "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('day',-1,'2000-01-01') "
-                "AND TIMESTAMPADD('day',-1,'2000-03-01') "
+                "WHERE \"timestamp\" BETWEEN TIMESTAMPADD(day,-1,'2000-01-01') "
+                "AND TIMESTAMPADD(day,-1,'2000-03-01') "
                 'GROUP BY "$political_party" '
                 'ORDER BY "$political_party" '
                 'LIMIT 200000',
@@ -98,7 +98,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         with self.subTest("reference query is same as base query with reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(day,1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -132,7 +132,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         with self.subTest("reference query is same as base query with reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('week',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(week,1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_wow" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -166,7 +166,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         with self.subTest("reference query is same as base query with reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('week',4,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(week,4,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_mom" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -200,7 +200,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         with self.subTest("reference query is same as base query with reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('week',12,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(week,12,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_qoq" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -234,7 +234,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         with self.subTest("reference query is same as base query with reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('week',52,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(week,52,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_yoy" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -270,7 +270,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         with self.subTest("reference query does not include the metric filter"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(day,1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -304,7 +304,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         with self.subTest("reference query is same as base query with reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('month',1,TRUNC(\"timestamp\",'MM')),'MM') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(month,1,TRUNC(\"timestamp\",'MM')),'MM') \"$timestamp\","
                 'SUM("votes") "$votes_mom" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -338,7 +338,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         with self.subTest("reference query is same as base query with reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('quarter',1,TRUNC(\"timestamp\",'MM')),'MM') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(quarter,1,TRUNC(\"timestamp\",'MM')),'MM') \"$timestamp\","
                 'SUM("votes") "$votes_qoq" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -372,7 +372,7 @@ class QueryBuilderDatetimeReferenceTests(TestCase):
         with self.subTest("reference query is same as base query with reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('year',1,TRUNC(\"timestamp\",'MM')),'MM') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(year,1,TRUNC(\"timestamp\",'MM')),'MM') \"$timestamp\","
                 'SUM("votes") "$votes_yoy" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -411,7 +411,7 @@ class QueryBuilderDatetimeReferenceWithDeltaTests(TestCase):
         with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(day,1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -445,7 +445,7 @@ class QueryBuilderDatetimeReferenceWithDeltaTests(TestCase):
         with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(day,1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -485,7 +485,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
         with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'IW')),'IW') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(day,1,TRUNC(\"timestamp\",'IW')),'IW') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -519,7 +519,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
         with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'IW')),'IW') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(day,1,TRUNC(\"timestamp\",'IW')),'IW') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -553,7 +553,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
         with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'MM')),'MM') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(day,1,TRUNC(\"timestamp\",'MM')),'MM') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -587,7 +587,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
         with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'Q')),'Q') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(day,1,TRUNC(\"timestamp\",'Q')),'Q') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -621,7 +621,7 @@ class QueryBuilderDatetimeReferenceIntervalTests(TestCase):
         with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'Y')),'Y') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(day,1,TRUNC(\"timestamp\",'Y')),'Y') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -661,7 +661,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
         with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(day,1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -673,7 +673,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
         with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('week',52,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(week,52,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_yoy" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -710,7 +710,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
         with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(day,1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -750,7 +750,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
         with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(day,1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -792,7 +792,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
         with self.subTest("second query for all DoD references"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(day,1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -804,7 +804,7 @@ class QueryBuilderDatetimeMultipleReferencesTests(TestCase):
         with self.subTest("third query for all YoY references"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('week',52,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(week,52,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_yoy" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp" '
@@ -845,7 +845,7 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
         with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('week',52,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(week,52,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 '"political_party" "$political_party",'
                 'SUM("votes") "$votes_yoy" '
                 'FROM "politics"."politician" '
@@ -884,7 +884,7 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
         with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('week',52,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(week,52,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 '"candidate_name" "$candidate-name",'
                 'SUM("votes") "$votes_yoy" '
                 'FROM "politics"."politician" '
@@ -921,11 +921,11 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
         with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(day,1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
-                "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('day',-1,'2018-01-01') "
-                "AND TIMESTAMPADD('day',-1,'2018-01-31') "
+                "WHERE \"timestamp\" BETWEEN TIMESTAMPADD(day,-1,'2018-01-01') "
+                "AND TIMESTAMPADD(day,-1,'2018-01-31') "
                 'GROUP BY "$timestamp" '
                 'ORDER BY "$timestamp" '
                 'LIMIT 200000',
@@ -961,10 +961,10 @@ class QueryBuilderDatetimeReferenceMiscellaneousTests(TestCase):
         with self.subTest("reference query is same as base query with filter on reference dimension shifted"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('day',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(day,1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_dod" '
                 'FROM "politics"."politician" '
-                "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('day',-1,'2018-01-01') AND TIMESTAMPADD('day',-1,'2018-01-31') "
+                "WHERE \"timestamp\" BETWEEN TIMESTAMPADD(day,-1,'2018-01-01') AND TIMESTAMPADD(day,-1,'2018-01-31') "
                 "AND \"political_party\" IN ('d') "
                 'GROUP BY "$timestamp" '
                 'ORDER BY "$timestamp" '
@@ -1006,11 +1006,11 @@ class QueryBuilderReferencesWithRollupTests(TestCase):
         with self.subTest("reference query shifts timestamp dimension and date range filter by a week"):
             self.assertEqual(
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('week',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(week,1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("votes") "$votes_wow" '
                 'FROM "politics"."politician" '
-                "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('week',-1,'2018-01-01') "
-                "AND TIMESTAMPADD('week',-1,'2018-01-31') "
+                "WHERE \"timestamp\" BETWEEN TIMESTAMPADD(week,-1,'2018-01-01') "
+                "AND TIMESTAMPADD(week,-1,'2018-01-31') "
                 'GROUP BY "$timestamp" '
                 'ORDER BY "$timestamp" '
                 'LIMIT 200000',
@@ -1037,8 +1037,8 @@ class QueryBuilderReferencesWithRollupTests(TestCase):
                 "'_FIREANT_ROLLUP_VALUE_' \"$timestamp\","
                 'SUM("votes") "$votes_wow" '
                 'FROM "politics"."politician" '
-                "WHERE \"timestamp\" BETWEEN TIMESTAMPADD('week',-1,'2018-01-01') "
-                "AND TIMESTAMPADD('week',-1,'2018-01-31') "
+                "WHERE \"timestamp\" BETWEEN TIMESTAMPADD(week,-1,'2018-01-01') "
+                "AND TIMESTAMPADD(week,-1,'2018-01-31') "
                 'ORDER BY "$timestamp" '
                 'LIMIT 200000',
                 str(reference_rollup),

@@ -367,7 +367,7 @@ class ResultSetTests(TestCase):
         with self.subTest("ref query"):
             self.assertEqual(
                 "SELECT "
-                'TIMESTAMPADD(\'week\',1,"date") "$date",'
+                'TIMESTAMPADD(week,1,"date") "$date",'
                 '"boolean" "$boolean",'
                 "CASE WHEN \"text\"='abc' THEN 'set(text=''abc'')' ELSE 'complement(text=''abc'')' END \"$text\","
                 'SUM("number") "$aggr_number_wow" '

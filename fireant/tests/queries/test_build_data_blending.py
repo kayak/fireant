@@ -523,16 +523,18 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 '"sq1"."$candidate-spend_wow"/"sq0"."$wins_wow" "$candidate-spend-per-wins_wow" '
                 "FROM ("
                 "SELECT "
-                'TRUNC(TIMESTAMPADD(\'week\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
-                'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' ELSE \'complement(candidate_id=12)\' END "$candidate-id",'
+                'TRUNC(TIMESTAMPADD(week,1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
+                'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' '
+                'ELSE \'complement(candidate_id=12)\' END "$candidate-id",'
                 'SUM("is_winner") "$wins_wow" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp","$candidate-id"'
                 ') "sq0" '
                 "LEFT JOIN ("
                 "SELECT "
-                'TRUNC(TIMESTAMPADD(\'week\',1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
-                'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' ELSE \'complement(candidate_id=12)\' END "$candidate-id",'
+                'TRUNC(TIMESTAMPADD(week,1,TRUNC("timestamp",\'DD\')),\'DD\') "$timestamp",'
+                'CASE WHEN "candidate_id"=12 THEN \'set(candidate_id=12)\' '
+                'ELSE \'complement(candidate_id=12)\' END "$candidate-id",'
                 'SUM("candidate_spend") "$candidate-spend_wow" '
                 'FROM "politics"."politician_spend" '
                 'GROUP BY "$timestamp","$candidate-id"'
@@ -826,14 +828,14 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                 '"sq1"."$candidate-spend_wow"/"sq0"."$wins_wow" "$candidate-spend-per-wins_wow" '
                 "FROM ("
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('week',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(week,1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("is_winner") "$wins_wow" '
                 'FROM "politics"."politician" '
                 'GROUP BY "$timestamp"'
                 ') "sq0" '
                 "LEFT JOIN ("
                 "SELECT "
-                "TRUNC(TIMESTAMPADD('week',1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
+                "TRUNC(TIMESTAMPADD(week,1,TRUNC(\"timestamp\",'DD')),'DD') \"$timestamp\","
                 'SUM("candidate_spend") "$candidate-spend_wow" '
                 'FROM "politics"."politician_spend" '
                 'GROUP BY "$timestamp"'

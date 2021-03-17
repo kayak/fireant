@@ -73,32 +73,32 @@ class TestVertica(TestCase):
     def test_date_add_hour(self):
         result = VerticaDatabase().date_add(Field('date'), 'hour', 1)
 
-        self.assertEqual('TIMESTAMPADD(\'hour\',1,"date")', str(result))
+        self.assertEqual('TIMESTAMPADD(hour,1,"date")', str(result))
 
     def test_date_add_day(self):
         result = VerticaDatabase().date_add(Field('date'), 'day', 1)
 
-        self.assertEqual('TIMESTAMPADD(\'day\',1,"date")', str(result))
+        self.assertEqual('TIMESTAMPADD(day,1,"date")', str(result))
 
     def test_date_add_week(self):
         result = VerticaDatabase().date_add(Field('date'), 'week', 1)
 
-        self.assertEqual('TIMESTAMPADD(\'week\',1,"date")', str(result))
+        self.assertEqual('TIMESTAMPADD(week,1,"date")', str(result))
 
     def test_date_add_month(self):
         result = VerticaDatabase().date_add(Field('date'), 'month', 1)
 
-        self.assertEqual('TIMESTAMPADD(\'month\',1,"date")', str(result))
+        self.assertEqual('TIMESTAMPADD(month,1,"date")', str(result))
 
     def test_date_add_quarter(self):
         result = VerticaDatabase().date_add(Field('date'), 'quarter', 1)
 
-        self.assertEqual('TIMESTAMPADD(\'quarter\',1,"date")', str(result))
+        self.assertEqual('TIMESTAMPADD(quarter,1,"date")', str(result))
 
     def test_date_add_year(self):
         result = VerticaDatabase().date_add(Field('date'), 'year', 1)
 
-        self.assertEqual('TIMESTAMPADD(\'year\',1,"date")', str(result))
+        self.assertEqual('TIMESTAMPADD(year,1,"date")', str(result))
 
     # noinspection SqlDialectInspection,SqlNoDataSourceInspection
     @patch.object(VerticaDatabase, 'fetch')
