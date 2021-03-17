@@ -1,4 +1,4 @@
 pandas==1.1.1
-pypika==0.47.7
+pypika==0.48.0
 toposort==1.5
 python-dateutil==2.8.1
