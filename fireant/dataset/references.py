@@ -87,11 +87,30 @@ class ReferenceType(object):
         return hash("reference" + self.alias)
 
 
-DaysOverDays: Callable[[int], ReferenceType] = lambda interval: ReferenceType("dod", "DoD", "day", interval)
-WeeksOverWeeks: Callable[[int], ReferenceType] = lambda interval: ReferenceType("wow", "WoW", "week", interval)
-MonthsOverMonths: Callable[[int], ReferenceType] = lambda interval: ReferenceType("mom", "MoM", "month", interval)
-QuartersOverQuarters: Callable[[int], ReferenceType] = lambda interval: ReferenceType("qoq", "QoQ", "quarter", interval)
-YearsOverYears: Callable[[int], ReferenceType] = lambda interval: ReferenceType("yoy", "YoY", "year", interval)
+def _over_format(identifier: str, interval: int):
+    reference_format = f'{identifier}o{identifier}'
+
+    if interval > 1:
+        reference_format = f'{identifier}o{interval}{identifier}'
+
+    return reference_format
+
+
+DaysOverDays: Callable[[int], ReferenceType] = lambda interval: ReferenceType(
+    _over_format('d', interval), _over_format('D', interval), 'day', interval
+)
+WeeksOverWeeks: Callable[[int], ReferenceType] = lambda interval: ReferenceType(
+    _over_format('w', interval), _over_format('W', interval), 'week', interval
+)
+MonthsOverMonths: Callable[[int], ReferenceType] = lambda interval: ReferenceType(
+    _over_format('m', interval), _over_format('M', interval), 'month', interval
+)
+QuartersOverQuarters: Callable[[int], ReferenceType] = lambda interval: ReferenceType(
+    _over_format('q', interval), _over_format('Q', interval), 'quarter', interval
+)
+YearsOverYears: Callable[[int], ReferenceType] = lambda interval: ReferenceType(
+    _over_format('y', interval), _over_format('Y', interval), 'year', interval
+)
 
 DayOverDay = DaysOverDays(interval=1)
 WeekOverWeek = WeeksOverWeeks(interval=1)
