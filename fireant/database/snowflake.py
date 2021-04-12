@@ -35,7 +35,7 @@ class SnowflakeDatabase(Database):
     # The pypika query class to use for constructing queries
     query_cls = SnowflakeQuery
 
-    DATETIME_INTERVALS = {'hour': 'HH', 'day': 'DD', 'week': 'IW', 'month': 'MM', 'quarter': 'Q', 'year': 'Y'}
+    DATETIME_INTERVALS = {'hour': 'HH', 'day': 'DD', 'week': 'W', 'month': 'MM', 'quarter': 'Q', 'year': 'Y'}
     _private_key = None
 
     def __init__(

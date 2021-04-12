@@ -96,7 +96,7 @@ class TestSnowflake(TestCase):
     def test_trunc_week(self):
         result = SnowflakeDatabase().trunc_date(Field('date'), 'week')
 
-        self.assertEqual('TRUNC("date",\'IW\')', str(result))
+        self.assertEqual('TRUNC("date",\'W\')', str(result))
 
     def test_trunc_quarter(self):
         result = SnowflakeDatabase().trunc_date(Field('date'), 'quarter')
