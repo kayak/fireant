@@ -382,6 +382,8 @@ class ResultSetTests(TestCase):
         for field_alias, fltr in [
             ('text', ds.fields.text.like("%abc%")),
             ('text', ds.fields.text.not_like("%abc%")),
+            ('text', ds.fields.text.like("%abc%", "%cde%")),
+            ('text', ds.fields.text.not_like("%abc%", "%cde%")),
             ('text', ds.fields.text.isin(["abc"])),
             ('text', ds.fields.text.notin(["abc"])),
             ('date', ds.fields.date.between('date1', 'date2')),
@@ -410,3 +412,32 @@ class ResultSetTests(TestCase):
                     "LIMIT 200000",
                     str(queries[0]),
                 )
+
+    def test_deeply_nested_dimension_filter_with_sets(self):
+        field_alias = 'text'
+        fltr = ds.fields.text.like(
+            fn.Concat(
+                fn.Upper(fn.Trim(fn.Concat('%ab', ds.fields.number))),
+                ds.fields.aggr_number,
+                fn.Concat(ds.fields.date.between('date1', 'date2'), 'c%'),
+            )
+        )
+
+        queries = (
+            ds.query.widget(f.Pandas(ds.fields.aggr_number))
+            .dimension(ds.fields[field_alias])
+            .filter(f.ResultSet(fltr, set_label='set_A', complement_label='set_B'))
+            .sql
+        )
+
+        self.assertEqual(len(queries), 1)
+        self.assertEqual(
+            "SELECT "
+            f"CASE WHEN {fltr} THEN 'set_A' ELSE 'set_B' END \"${field_alias}\","
+            'SUM("number") "$aggr_number" '
+            'FROM "test" '
+            f"GROUP BY \"${field_alias}\" "
+            f"ORDER BY \"${field_alias}\" "
+            "LIMIT 200000",
+            str(queries[0]),
+        )

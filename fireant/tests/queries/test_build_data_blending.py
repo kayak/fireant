@@ -1,7 +1,7 @@
 import copy
 from unittest import TestCase
 
-from pypika import Order
+from pypika import Order, functions as fn
 
 import fireant as f
 from fireant.tests.dataset.mocks import (
@@ -585,6 +585,8 @@ class DataSetBlenderQueryBuilderTests(TestCase):
         for field_alias, fltr in [
             ('state', mock_dataset_blender.fields.state.like("%abc%")),
             ('state', mock_dataset_blender.fields.state.not_like("%abc%")),
+            ('state', mock_dataset_blender.fields.state.like("%abc%", "%cde%")),
+            ('state', mock_dataset_blender.fields.state.not_like("%abc%", "%cde%")),
             ('state', mock_dataset_blender.fields.state.isin(["abc"])),
             ('state', mock_dataset_blender.fields.state.notin(["abc"])),
             ('timestamp', mock_dataset_blender.fields.timestamp.between('date1', 'date2')),
@@ -622,6 +624,39 @@ class DataSetBlenderQueryBuilderTests(TestCase):
                     "LIMIT 200000",
                     str(queries[0]),
                 )
+
+    def test_deeply_nested_dimension_filter_with_sets_for_data_blending(self):
+        field_alias = 'state'
+        fltr = mock_dataset_blender.fields.state.like(
+            fn.Concat(
+                fn.Upper(fn.Trim(fn.Concat('%ab', mock_dataset_blender.fields['candidate-id']))),
+                mock_dataset_blender.fields.winner,
+                fn.Concat(mock_dataset_blender.fields.timestamp.between('date1', 'date2'), 'c%'),
+            )
+        )
+        queries = (
+            mock_dataset_blender.query.widget(f.Pandas(mock_dataset_blender.fields['candidate-spend']))
+            .dimension(mock_dataset_blender.fields[field_alias])
+            .filter(f.ResultSet(fltr, set_label='set_A', complement_label='set_B'))
+            .sql
+        )
+
+        self.assertEqual(len(queries), 1)
+        self.assertEqual(
+            "SELECT "
+            f'"sq0"."${field_alias}" "${field_alias}",'
+            '"sq0"."$candidate-spend" "$candidate-spend" '
+            'FROM ('
+            'SELECT '
+            f'CASE WHEN {fltr} THEN \'set_A\' ELSE \'set_B\' END "${field_alias}",'
+            'SUM("candidate_spend") "$candidate-spend" '
+            'FROM "politics"."politician_spend" '
+            f'GROUP BY "${field_alias}"'
+            f') "sq0" '
+            f"ORDER BY \"${field_alias}\" "
+            "LIMIT 200000",
+            str(queries[0]),
+        )
 
     def test_apply_dimension_filter_on_mapped_dimension_field_filters_in_both_nested_query(
         self,
