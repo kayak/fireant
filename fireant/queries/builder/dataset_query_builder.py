@@ -28,10 +28,6 @@ from ..finders import (
     find_share_dimensions,
 )
 from ..pagination import paginate
-from ..sql_transformer import (
-    make_slicer_query,
-    make_slicer_query_with_totals_and_references,
-)
 
 if TYPE_CHECKING:
     from pypika import PyPikaQueryBuilder
@@ -91,8 +87,7 @@ class DataSetQueryBuilder(ReferenceQueryBuilderMixin, WidgetQueryBuilderMixin, Q
         operations = find_operations_for_widgets(self._widgets)
         share_dimensions = find_share_dimensions(dimensions, operations)
 
-        queries = make_slicer_query_with_totals_and_references(
-            database=self.dataset.database,
+        queries = self.dataset.database.make_slicer_query_with_totals_and_references(
             table=self.table,
             joins=self.dataset.joins,
             dimensions=dimensions,
@@ -116,7 +111,6 @@ class DataSetQueryBuilder(ReferenceQueryBuilderMixin, WidgetQueryBuilderMixin, Q
             A list of dict (JSON) objects containing the widget configurations.
         """
         queries = add_hints(self.sql, hint)
-
         operations = find_operations_for_widgets(self._widgets)
         dimensions = self.dimensions
 
@@ -203,8 +197,7 @@ class DataSetQueryBuilder(ReferenceQueryBuilderMixin, WidgetQueryBuilderMixin, Q
 
         annotation_dimensions = [annotation_alignment_field, annotation.field]
 
-        annotation_query = make_slicer_query(
-            database=self.dataset.database,
+        annotation_query = self.dataset.database.make_slicer_query(
             base_table=annotation.table,
             dimensions=annotation_dimensions,
             filters=annotation_alignment_dimension_filters,

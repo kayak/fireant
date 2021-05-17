@@ -12,7 +12,6 @@ from fireant.queries.finders import (
     find_operations_for_widgets,
     find_share_dimensions,
 )
-from fireant.queries.sql_transformer import make_slicer_query_with_totals_and_references
 from fireant.reference_helpers import reference_type_alias
 from fireant.utils import alias_selector, filter_nones, listify, ordered_distinct_list_by_attr
 from fireant.widgets.base import Widget
@@ -187,12 +186,9 @@ def _build_dataset_query(
     dataset_references = map_blender_fields_to_dataset_fields(references, field_map, dataset)
     dataset_share_dimensions = map_blender_fields_to_dataset_fields(share_dimensions, field_map, dataset)
     dataset_metrics = ordered_distinct_list_by_attr(dataset_metrics)
-
-    # TODO: It's possible that we have to adapt/map the operations for @apply_special_cases
     dataset_operations = operations
 
-    return make_slicer_query_with_totals_and_references(
-        database=dataset.database,
+    return dataset.database.make_slicer_query_with_totals_and_references(
         table=dataset.table,
         joins=dataset.joins,
         dimensions=dataset_dimensions,

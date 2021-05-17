@@ -1,30 +1,11 @@
 import copy
-from functools import partial
 
 from fireant.dataset.fields import Field, is_metric_field
-from .field_helper import make_term_for_field
-from .finders import find_field_in_modified_field
+from fireant.queries.finders import find_field_in_modified_field
 
 
-def adapt_for_reference_query(reference_parts, database, dimensions, metrics, filters, references):
-    if reference_parts is None:
-        return dimensions, metrics, filters
-
-    ref_dim, unit, interval = reference_parts
-
-    trunc = database.trunc_date
-    offset_func = partial(database.date_add, date_part=unit, interval=interval)
-    offset_func_inv = partial(database.date_add, date_part=unit, interval=-interval)
-
-    ref_dimensions = _make_reference_dimensions(dimensions, ref_dim, offset_func, trunc)
-    ref_metrics = _make_reference_metrics(metrics, references[0].reference_type.alias)
-    ref_filters = _make_reference_filters(filters, ref_dim, offset_func_inv)
-
-    return ref_dimensions, ref_metrics, ref_filters
-
-
-def _replace_reference_dimension(dimension, offset_func, trunc_date=None):
-    ref_definition = offset_func(make_term_for_field(dimension, trunc_date))
+def _replace_reference_dimension(dimension, offset_func, field_transformer, trunc_date=None):
+    ref_definition = offset_func(field_transformer(dimension, trunc_date))
     field = Field(
         alias=dimension.alias,
         definition=ref_definition,
@@ -38,16 +19,16 @@ def _replace_reference_dimension(dimension, offset_func, trunc_date=None):
     return field
 
 
-def _make_reference_dimensions(dimensions, ref_dimension, offset_func, trunc_date):
+def make_reference_dimensions(dimensions, ref_dimension, offset_func, field_transformer, trunc_date):
     return [
-        _replace_reference_dimension(dimension, offset_func, trunc_date)
+        _replace_reference_dimension(dimension, offset_func, field_transformer, trunc_date)
         if ref_dimension is find_field_in_modified_field(dimension)
         else dimension
         for dimension in dimensions
     ]
 
 
-def _make_reference_metrics(metrics, ref_key):
+def make_reference_metrics(metrics, ref_key):
     return [
         Field(
             "{}_{}".format(metric.alias, ref_key),
@@ -62,7 +43,7 @@ def _make_reference_metrics(metrics, ref_key):
     ]
 
 
-def _make_reference_filters(filters, ref_dimension, offset_func):
+def make_reference_filters(filters, ref_dimension, offset_func):
     """
     Copies and replaces the reference dimension's definition in all of the filters applied to a dataset query.
 

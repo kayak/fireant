@@ -8,7 +8,7 @@ from .test_postgresql import TestPostgreSQL
 
 
 class TestRedshift(TestPostgreSQL):
-    """ Inherits from TestPostgreSQL as Redshift is almost identical to PostgreSQL so the tests are similar """
+    """Inherits from TestPostgreSQL as Redshift is almost identical to PostgreSQL so the tests are similar"""
 
     @classmethod
     def setUpClass(cls):

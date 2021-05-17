@@ -5,9 +5,8 @@ from fireant.utils import (
     alias_for_alias_selector,
     immutable,
 )
-from .query_builder import QueryBuilder, QueryException, add_hints
-from ..execution import fetch_data
-from ..sql_transformer import make_latest_query
+from fireant.queries.builder.query_builder import QueryBuilder, QueryException, add_hints
+from fireant.queries.execution import fetch_data
 
 
 class DimensionLatestQueryBuilder(QueryBuilder):
@@ -32,8 +31,7 @@ class DimensionLatestQueryBuilder(QueryBuilder):
         if not self.dimensions:
             raise QueryException("Must select at least one dimension to query latest values")
 
-        query = make_latest_query(
-            database=self.dataset.database,
+        query = self.dataset.database.make_latest_query(
             base_table=self.table,
             joins=self.dataset.joins,
             dimensions=self.dimensions,
