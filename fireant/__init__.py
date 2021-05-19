@@ -44,4 +44,4 @@ from .dataset.references import (
 from .exceptions import DataSetException
 from .widgets import *
 
-__version__ = "7.8.5"
+__version__ = "7.8.6"
