@@ -6,12 +6,13 @@ from pypika.queries import QueryBuilder
 
 from fireant.database import Database
 from fireant.dataset.fields import DataType, Field
+from fireant.dataset.modifiers import RollupValue
 from fireant.dataset.references import calculate_delta_percent
 from fireant.dataset.totals import get_totals_marker_for_dtype
+from fireant.queries.finders import find_field_in_modified_field, find_totals_dimensions
+from fireant.queries.pandas_workaround import df_subtract
 from fireant.utils import alias_selector, chunks
-from .finders import find_field_in_modified_field, find_totals_dimensions
-from .pandas_workaround import df_subtract
-from ..dataset.modifiers import RollupValue
+
 
 logger = logging.getLogger(__name__)
 

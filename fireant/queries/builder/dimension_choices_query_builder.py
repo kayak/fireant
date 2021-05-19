@@ -8,11 +8,9 @@ from .query_builder import (
     add_hints,
     get_column_names,
 )
-from ..execution import fetch_data
-from ..field_helper import make_term_for_field
-from ..finders import find_joins_for_tables
-from ..sql_transformer import make_slicer_query
-from ...formats import display_value
+from fireant.queries.execution import fetch_data
+from fireant.queries.finders import find_joins_for_tables
+from fireant.formats import display_value
 
 
 class DimensionChoicesQueryBuilder(QueryBuilder):
@@ -76,7 +74,7 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
         """
         dimension_terms = []
         for dimension in self.dimensions:
-            dimension_term = make_term_for_field(dimension, self.dataset.database.trunc_date)
+            dimension_term = self.dataset.database.transform_field_to_query(dimension, self.dataset.database.trunc_date)
             dimension_term = dimension_term.replace_table(dimension_term.table, self.hint_table)
             dimension_terms.append(dimension_term)
 
@@ -95,8 +93,7 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
         filters = self._extract_hint_filters() if self.hint_table else self.filters
 
         query = (
-            make_slicer_query(
-                database=self.dataset.database,
+            self.dataset.database.make_slicer_query(
                 base_table=self.dataset.table,
                 joins=self.dataset.joins,
                 dimensions=dimensions,
