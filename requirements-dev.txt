@@ -8,9 +8,9 @@
 -r requirements-extras-ipython.txt
 
 # Testing / CI
-tox==3.14.3
+tox==3.23.1
 tox-venv==0.4.0
-tox-gh-actions==0.3.0
+tox-gh-actions==2.5.0
 coverage==5.1
 
 # Utilities
@@ -22,4 +22,4 @@ sphinx==2.2.0
 sphinx-rtd-theme==0.4.3
 
 # Formatting
-black==21.5b1
+black==21.5b2

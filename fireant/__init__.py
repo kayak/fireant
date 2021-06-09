@@ -44,4 +44,15 @@ from .dataset.references import (
 from .exceptions import DataSetException
 from .widgets import *
 
+from pypika.terms import Term
+
+
+# Monkey patching PyPika's Term class to use the old hash functionality
+def __hash__(self) -> int:
+    return hash(self.get_sql(with_alias=True))
+
+
+Term.__hash__ = __hash__
+
+
 __version__ = "7.8.6"
