@@ -1,4 +1,4 @@
-pandas==1.1.1
-pypika==0.48.1
-toposort==1.5
+pandas==1.1.5
+pypika==0.48.2
+toposort==1.6
 python-dateutil==2.8.1
