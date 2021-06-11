@@ -55,4 +55,4 @@ def __hash__(self) -> int:
 Term.__hash__ = __hash__
 
 
-__version__ = "7.8.6"
+__version__ = "7.9.0"
