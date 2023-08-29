@@ -14,8 +14,8 @@ class CumulativeOperationTests(TestCase):
     def test_with_empty_dataset_single_dimension(self):
         metric = Field("test", None, label="Test")
         idx = pd.Index([], name="level0")
-        frame = pd.DataFrame([], index=idx, columns=["$test"], dtype=np.float)
-        expected = pd.Series([], index=idx, name="$test", dtype=np.float)
+        frame = pd.DataFrame([], index=idx, columns=["$test"], dtype=float)
+        expected = pd.Series([], index=idx, name="$test", dtype=float)
 
         for op in (CumSum, CumMean, CumProd):
             with self.subTest(op.__name__):
@@ -26,8 +26,8 @@ class CumulativeOperationTests(TestCase):
     def test_with_empty_dataset_multiple_dimensions(self):
         metric = Field("test", None, label="Test")
         mi = pd.MultiIndex.from_product([[], []], names=("level0", "level1"))
-        frame = pd.DataFrame([], index=mi, columns=["$test"], dtype=np.float)
-        expected = pd.Series([], index=mi, name="$test", dtype=np.float)
+        frame = pd.DataFrame([], index=mi, columns=["$test"], dtype=float)
+        expected = pd.Series([], index=mi, name="$test", dtype=float)
 
         for op in (CumSum, CumMean, CumProd):
             with self.subTest(op.__name__):

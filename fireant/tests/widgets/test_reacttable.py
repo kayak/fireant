@@ -12,7 +12,7 @@ from fireant import (
     day,
 )
 from fireant.dataset.filters import ComparisonOperator
-from fireant.tests.database.mock_database import TestDatabase
+from fireant.tests.database.mock_database import MockDatabase
 from fireant.tests.dataset.mocks import (
     CumSum,
     ElectionOverElection,
@@ -42,7 +42,7 @@ from fireant.widgets.reacttable import (
 class FormattingRulesTests(TestCase):
     @classmethod
     def setUpClass(cls):
-        db = TestDatabase()
+        db = MockDatabase()
         t0 = Table('test0')
         cls.dataset = DataSet(
             table=t0,

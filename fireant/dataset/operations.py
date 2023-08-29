@@ -159,7 +159,7 @@ class CumMean(_Cumulative):
         if isinstance(data_frame.index, pd.MultiIndex) and not data_frame.empty:
             levels = self._group_levels(data_frame.index)
 
-            return data_frame[f_metric_alias].groupby(level=levels).apply(self.cummean)
+            return data_frame[f_metric_alias].groupby(level=levels, group_keys=False).apply(self.cummean)
 
         return self.cummean(data_frame[f_metric_alias])
 
@@ -200,7 +200,7 @@ class RollingMean(RollingOperation):
         if isinstance(data_frame.index, pd.MultiIndex):
             levels = self._group_levels(data_frame.index)
 
-            return data_frame[df_alias].groupby(level=levels).apply(self.rolling_mean)
+            return data_frame[df_alias].groupby(level=levels, group_keys=False).apply(self.rolling_mean)
 
         return self.rolling_mean(data_frame[df_alias])
 
@@ -281,16 +281,19 @@ class Share(_BaseOperation):
             if not isinstance(totals, pd.Series):
                 return 100 * group_df / totals
 
+            original_index = group_df.index
+
             n_index_levels = len(totals.index.names)
             extra_level_names = group_df.index.names[n_index_levels:]
             group_df = group_df.reset_index(extra_level_names, drop=True)
             share = 100 * group_df / totals[group_df.index]
-            return pd.Series(share.values, index=group_df.index)
+
+            return pd.Series(share.values, index=original_index)
 
         return (
             data_frame[f_metric_alias]
             .groupby(level=group_levels)
-            .apply(apply_totals)
+            .transform(apply_totals)
             .reorder_levels(order=data_frame.index.names)
             .sort_index()
         )

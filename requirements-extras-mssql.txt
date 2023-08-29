@@ -1,2 +1,2 @@
-Cython==0.29.21
-pymssql==2.1.5
+Cython==3.0.0
+pymssql==2.2.7

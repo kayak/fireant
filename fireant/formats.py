@@ -113,7 +113,7 @@ def json_value(value):
 
 
 def safe_value(value):
-    if value is None or value is "" or pd.isnull(value):
+    if value is None or value == "" or pd.isnull(value):
         return NULL_VALUE
     if isinstance(value, float) and np.isinf(value):
         return "inf"

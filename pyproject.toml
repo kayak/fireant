@@ -1,3 +1,27 @@
+[tool.poetry]
+name = "fireant"
+version = "8.0.0"
+description = ""
+authors = ["Ąžuolas Krušna <akrusna@kayak.com>"]
+readme = "README.rst"
+
+[tool.poetry.dependencies]
+python = "^3.8.0"
+pandas = "^2.0.0"
+pypika = "0.48.2"
+toposort = "1.6"
+vertica-python = "^1.0.0"
+snowflake-connector-python = "^3.0.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+coverage = "^7.3.0"
+watchdog = "^3.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.black]
 line-length = 120
 skip-string-normalization = true

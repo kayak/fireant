@@ -6,7 +6,7 @@ from pypika import Order, functions as fn
 import fireant as f
 from fireant.tests.dataset.mocks import (
     Rollup,
-    TestMySQLDatabase,
+    MockMySQLDatabase,
     mock_dataset_blender,
     mock_staff_dataset,
 )
@@ -89,7 +89,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
         )
 
         # Given all mocks are based on the Vertica database, this is a quick override to avoid a lot of duplicate mocks!
-        blender.dataset.primary_dataset.database = TestMySQLDatabase()
+        blender.dataset.primary_dataset.database = MockMySQLDatabase()
 
         queries = blender.sql
         self.assertEqual(len(queries), 1)

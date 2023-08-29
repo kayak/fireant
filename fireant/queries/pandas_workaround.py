@@ -5,7 +5,7 @@ def _reindex_with_nans(df, idx, fill_value=None):
     missing = pd.DataFrame(index=idx.symmetric_difference(df.index), columns=df.columns)
     if fill_value is not None:
         missing = missing.fillna(fill_value)
-    return df.append(missing).reindex(idx)
+    return pd.concat((df, missing)).reindex(idx)
 
 
 def _reindex_deduplicate(left, right, fill_value=None):

@@ -4,7 +4,7 @@ from pypika import Tables, functions as fn
 
 import fireant as f
 from fireant import DataSet, DataType, Database, Field, ReactTable
-from fireant.tests.database.mock_database import TestDatabase
+from fireant.tests.database.mock_database import MockDatabase
 
 
 class DataSetBlenderIntegrationTests(TestCase):
@@ -635,7 +635,7 @@ class DataSetBlenderIntegrationTests(TestCase):
         )
 
     def test_blended_references(self):
-        db = TestDatabase()
+        db = MockDatabase()
         t0, t1 = Tables("test0", "test1")
         primary_ds = DataSet(
             table=t0,
@@ -730,7 +730,7 @@ class DataSetBlenderIntegrationTests(TestCase):
         )
 
     def test_blended_references_with_order_by_on_metric(self):
-        db = TestDatabase()
+        db = MockDatabase()
         t0, t1 = Tables("test0", "test1")
         primary_ds = DataSet(
             table=t0,
@@ -826,7 +826,7 @@ class DataSetBlenderIntegrationTests(TestCase):
         )
 
     def test_blended_references_with_order_by_on_unused_metric(self):
-        db = TestDatabase()
+        db = MockDatabase()
         t0, t1 = Tables("test0", "test1")
         primary_ds = DataSet(
             table=t0,
@@ -922,7 +922,7 @@ class DataSetBlenderIntegrationTests(TestCase):
         )
 
     def test_optimization_with_complex_blended_metric(self):
-        db = TestDatabase()
+        db = MockDatabase()
         t0, t1 = Tables("test0", "test1")
         primary_ds = DataSet(
             table=t0,
@@ -990,7 +990,7 @@ class DataSetBlenderIntegrationTests(TestCase):
         )
 
     def test_blending_with_only_metric_filter_selected_in_secondary_dataset(self):
-        db = TestDatabase()
+        db = MockDatabase()
         t0, t1 = Tables("test0", "test1")
         primary_ds = DataSet(
             table=t0,
@@ -1061,7 +1061,7 @@ class DataSetBlenderIntegrationTests(TestCase):
         )
 
     def test_blending_with_omit_from_rollup_filter_of_blended_field(self):
-        db = TestDatabase()
+        db = MockDatabase()
         t0, t1 = Tables("test0", "test1")
         primary_ds = DataSet(
             table=t0,
@@ -1153,7 +1153,7 @@ class DataSetBlenderIntegrationTests(TestCase):
         )
 
     def test_blending_with_share_operation_on_primary_metric(self):
-        db = TestDatabase()
+        db = MockDatabase()
         t0, t1 = Tables("test0", "test1")
         primary_ds = DataSet(
             table=t0,
@@ -1215,7 +1215,7 @@ class DataSetBlenderIntegrationTests(TestCase):
         )
 
     def test_blending_with_share_operation_on_secondary_metric(self):
-        db = TestDatabase()
+        db = MockDatabase()
         t0, t1 = Tables("test0", "test1")
         primary_ds = DataSet(
             table=t0,
@@ -1283,7 +1283,7 @@ class DataSetBlenderIntegrationTests(TestCase):
         )
 
     def test_share_on_blended_metric(self):
-        db = TestDatabase()
+        db = MockDatabase()
         t0, t1 = Tables("test0", "test1")
         primary_ds = DataSet(
             table=t0,

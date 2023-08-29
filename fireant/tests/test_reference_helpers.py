@@ -7,13 +7,13 @@ from fireant import DataSet, DataType, Field
 from fireant.dataset.filters import ComparisonOperator
 from fireant.dataset.references import DayOverDay, ReferenceFilter
 from fireant.reference_helpers import apply_reference_filters
-from fireant.tests.database.mock_database import TestDatabase
+from fireant.tests.database.mock_database import MockDatabase
 
 
 class ReferenceFilterTests(TestCase):
     @classmethod
     def setUpClass(cls):
-        db = TestDatabase()
+        db = MockDatabase()
         t0 = Table("test0")
         cls.dataset = DataSet(
             table=t0,
