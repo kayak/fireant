@@ -10,7 +10,7 @@ from fireant import DataSet, DataType, Field, Share
 from fireant.dataset.filters import ComparisonOperator
 from fireant.dataset.references import ReferenceFilter
 from fireant.queries.sets import _make_set_dimension
-from fireant.tests.database.mock_database import TestDatabase
+from fireant.tests.database.mock_database import MockDatabase
 from fireant.tests.dataset.matchers import FieldMatcher, PypikaQueryMatcher
 from fireant.tests.dataset.mocks import mock_category_annotation_dataset, mock_dataset, mock_date_annotation_dataset
 
@@ -91,7 +91,7 @@ class FindShareDimensionsTests(TestCase):
 @patch("fireant.queries.builder.dataset_query_builder.fetch_data", return_value=(100, MagicMock()))
 class QueryBuilderFetchDataTests(TestCase):
     def test_reference_filters_are_applied(self, mock_fetch: Mock, mock_2: Mock, mock_apply_reference_filters: Mock):
-        db = TestDatabase()
+        db = MockDatabase()
         t0 = Table("test0")
         dataset = DataSet(
             table=t0,

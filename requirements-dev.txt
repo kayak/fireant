@@ -11,11 +11,11 @@
 tox==3.23.1
 tox-venv==0.4.0
 tox-gh-actions==2.5.0
-coverage==5.1
+coverage==7.3.0
 
 # Utilities
 bumpversion==0.5.3
-watchdog==0.8.3
+watchdog==3.0.0
 
 # Docs
 sphinx==2.2.0

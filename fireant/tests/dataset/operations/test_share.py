@@ -15,6 +15,8 @@ from fireant.tests.dataset.mocks import (
     dimx2_date_str_totals_df,
     dimx2_date_str_totalsx2_df,
     mock_dataset,
+    dimx2_date_str_totalsx2_share_over_first_series,
+    dimx2_date_str_totalsx2_share_over_second_series,
 )
 from fireant.utils import alias_selector
 
@@ -48,46 +50,18 @@ class ShareTests(TestCase):
         pandas.testing.assert_series_equal(expected, result, rtol=0.5e-3)
 
     def test_apply_to_two_dims_over_first(self):
+        expected = dimx2_date_str_totalsx2_share_over_first_series
+
         share = Share(mock_dataset.fields.votes, over=mock_dataset.fields.timestamp)
         result = share.apply(dimx2_date_str_totalsx2_df, None)
 
-        f_metric_key = alias_selector(mock_dataset.fields.votes.alias)
-
-        metric_series = dimx2_date_str_totalsx2_df[f_metric_key]
-        expected = 100 * metric_series / metric_series.iloc[-1]
         pandas.testing.assert_series_equal(expected, result, rtol=0.5e-3)
 
     def test_apply_to_two_dims_over_second(self):
+        expected = dimx2_date_str_totalsx2_share_over_second_series
+
         share = Share(mock_dataset.fields.votes, over=mock_dataset.fields.political_party)
         result = share.apply(dimx2_date_str_totals_df, None)
-
-        f_metric_key = alias_selector(mock_dataset.fields.votes.alias)
-
-        expected = pd.Series(
-            [
-                49.79,
-                7.07,
-                43.12,
-                100.0,
-                49.78,
-                50.21,
-                100.0,
-                48.83,
-                51.16,
-                100.0,
-                55.42,
-                44.57,
-                100.0,
-                60.39,
-                39.60,
-                100.0,
-                26.60,
-                73.39,
-                100.0,
-            ],
-            name=f_metric_key,
-            index=dimx2_date_str_totals_df.index,
-        )
 
         pandas.testing.assert_series_equal(expected, result, rtol=0.5e-3)
 

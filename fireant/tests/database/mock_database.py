@@ -1,7 +1,7 @@
 from fireant.database.vertica import VerticaDatabase
 
 
-class TestDatabase(VerticaDatabase):
+class MockDatabase(VerticaDatabase):
     # Vertica client that uses the vertica_python driver.
 
     def connect(self):

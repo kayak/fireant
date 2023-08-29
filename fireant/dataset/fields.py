@@ -1,4 +1,4 @@
-from collections import Iterable
+from collections.abc import Iterable
 from enum import Enum
 from functools import wraps
 from numbers import Number

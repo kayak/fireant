@@ -476,7 +476,7 @@ class HighCharts(ChartWidget, TransformableWidget):
         )
 
         series = []
-        for labels, y in group_df[field_alias].iteritems():
+        for labels, y in group_df[field_alias].items():
             label = labels[0] if isinstance(labels, tuple) else labels
             if pd.isnull(label):
                 # ignore nans in index
@@ -489,7 +489,7 @@ class HighCharts(ChartWidget, TransformableWidget):
     @staticmethod
     def _render_timeseries_data(group_df: pd.DataFrame, metric_alias: str, metric: Field) -> List[Tuple[int, int]]:
         series = []
-        for dimension_values, y in group_df[metric_alias].iteritems():
+        for dimension_values, y in group_df[metric_alias].items():
             first_dimension_value = utils.wrap_list(dimension_values)[0]
 
             # Ignore empty result sets where the only row is totals
@@ -525,7 +525,7 @@ class HighCharts(ChartWidget, TransformableWidget):
             data_frame = data_frame.reset_index(alias_selector(self.split_dimension.alias), drop=True)
 
         data = []
-        for dimension_values, y in data_frame[metric_alias].iteritems():
+        for dimension_values, y in data_frame[metric_alias].items():
             dimension_values = utils.wrap_list(dimension_values)
             name = self._format_dimension_values(dimension_fields, dimension_values)
 
@@ -598,7 +598,7 @@ class HighCharts(ChartWidget, TransformableWidget):
     def _get_timeseries_positions(df: pd.DataFrame, dimension_alias: str):
         timeseries_positions = []
 
-        for dimensions, dimension_value in df[dimension_alias].iteritems():
+        for dimensions, dimension_value in df[dimension_alias].items():
             datetime = utils.wrap_list(dimensions)[0]
 
             timeseries_positions.append({"position": formats.date_as_millis(datetime), "label": dimension_value})
@@ -611,7 +611,7 @@ class HighCharts(ChartWidget, TransformableWidget):
 
         category_positions = {category: index for index, category in enumerate(axis["categories"])}
 
-        for dimensions, dimension_value in df[dimension_alias].iteritems():
+        for dimensions, dimension_value in df[dimension_alias].items():
             category_label = utils.wrap_list(dimensions)[0]
 
             dimension_positions.append(

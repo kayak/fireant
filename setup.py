@@ -55,9 +55,9 @@ setup(
     "Included in the Slicer is a Slicer Manager API which exposes methods to render tables and "
     "charts "
     "in a variety of different formats.\n\n"
-    "Fireant is a great compliment to Jupter notebooks using matplotlib and pandas. It can be used "
+    "Fireant is a great compliment to Jupyter notebooks using matplotlib and pandas. It can be used "
     "in "
-    "web projects with Highcharts and React-Table.  It can even just provide a layer of "
+    "web projects with Highcharts and React-Table. It can even just provide a layer of "
     "abstraction "
     "for accessing analytical data akin to ORM libraries in software projects.",
     classifiers=[

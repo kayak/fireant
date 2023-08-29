@@ -1,3 +1,4 @@
+import os
 from collections import OrderedDict
 from datetime import datetime
 from unittest.mock import MagicMock, Mock
@@ -26,7 +27,7 @@ class TestVerticaDatabase(TestDatabaseMixin, VerticaDatabase):
     pass
 
 
-class TestMySQLDatabase(TestDatabaseMixin, MySQLDatabase):
+class MockMySQLDatabase(TestDatabaseMixin, MySQLDatabase):
     pass
 
 
@@ -664,7 +665,7 @@ def totals(data_frame, dimensions, columns):
             index=pd.Index([totals_marker], name=data_frame.index.name),
         )
 
-        return data_frame.append(totals_df)
+        return pd.concat((data_frame, totals_df))
 
     def _totals(df):
         if isinstance(df, pd.Series):
@@ -702,9 +703,9 @@ def totals(data_frame, dimensions, columns):
                 index=pd.MultiIndex.from_tuples([totals_index_values], names=data_frame.index.names),
             )
 
-        totals_df = totals_df.append(level_totals_df) if totals_df is not None else level_totals_df
+        totals_df = pd.concat((totals_df, level_totals_df)) if totals_df is not None else level_totals_df
 
-    return data_frame.append(totals_df).sort_index()
+    return pd.concat((data_frame, totals_df)).sort_index()
 
 
 # Convert all index values to string
@@ -724,8 +725,27 @@ def totals(data_frame, dimensions, columns):
 dimx1_str_totals_df = totals(dimx1_str_df, [f("political_party")], _columns)
 dimx2_date_str_totals_df = totals(dimx2_date_str_df, [f("political_party")], _columns)
 dimx2_date_str_totalsx2_df = totals(dimx2_date_str_df, [f("timestamp"), f("political_party")], _columns)
+
+dimx2_date_str_totalsx2_share_over_first_series = pd.read_csv(
+    os.path.dirname(os.path.realpath(__file__)) + "/mocks/dimx2_date_str_totalsx2_share_over_first_df.csv",
+    index_col=['$timestamp', '$political_party',],
+    parse_dates=['$timestamp'],
+).squeeze()
+
+dimx2_date_str_totalsx2_share_over_second_series = pd.read_csv(
+    os.path.dirname(os.path.realpath(__file__)) + "/mocks/dimx2_date_str_totalsx2_share_over_second_df.csv",
+    index_col=['$timestamp', '$political_party',],
+    parse_dates=['$timestamp'],
+).squeeze()
+
 dimx3_date_str_str_totalsx3_df = totals(
     dimx3_date_str_str_df, [f("timestamp"), f("political_party"), f("state")], _columns
+)
+
+dimx3_date_str_str_totals_df = pd.read_csv(
+    os.path.dirname(os.path.realpath(__file__)) + "/mocks/dimx3_date_str_str_totals_df.csv",
+    index_col=['$timestamp', '$political_party', '$state',],
+    parse_dates=['$timestamp'],
 )
 
 ElectionOverElection = ReferenceType("eoe", "EoE", "year", 4)

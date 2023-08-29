@@ -573,7 +573,7 @@ class PandasTransformerSortTests(TestCase):
 
     def test_use_pandas_default_for_ascending_when_arg_empty_list(self):
         result = Pandas(
-            mock_dataset.fields.votes, pivot=[mock_dataset.fields.political_party], sort=[0, 2], ascending=[]
+            mock_dataset.fields.votes, pivot=[mock_dataset.fields.political_party], sort=[0, 2],
         ).transform(dimx2_date_str_df, [mock_dataset.fields.timestamp, mock_dataset.fields.political_party], [])
 
         expected = dimx2_date_str_df.copy()[[f('votes')]]
@@ -582,7 +582,7 @@ class PandasTransformerSortTests(TestCase):
         expected.columns = ['Democrat', 'Independent', 'Republican']
         expected.columns.names = ['Party']
 
-        expected = expected.reset_index().sort_values(['Timestamp', 'Democrat'], ascending=None).set_index('Timestamp')
+        expected = expected.reset_index().sort_values(['Timestamp', 'Democrat']).set_index('Timestamp')
         expected = expected.applymap(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)

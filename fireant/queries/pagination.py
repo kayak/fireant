@@ -153,6 +153,6 @@ def _group_paginate(data_frame, start=None, end=None, orders=()):
         # Need to include nulls so append them to the end of the sorted data frame
         isnull = _index_isnull(dfx)
 
-        return dfx.loc[index_slice, :].append(dfx[isnull])
+        return pd.concat((dfx.loc[index_slice, :], dfx[isnull]))
 
     return data_frame.sort_values(data_frame.index.names[0], ascending=True).groupby(level=0).apply(_apply_pagination)
