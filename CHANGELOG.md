@@ -1,5 +1,6 @@
 2023 July
 
+
 #### [8.0.0] - 2023-08-29
 - Bump fireant version to 8.0.0
 - Drop support for Python3.7 as pandas v2 does not support it
