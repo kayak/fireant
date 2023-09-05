@@ -1,7 +1,8 @@
 2023 July
 
-#### [7.10.0] - 2023-08-29
-- Bump fireant version to 7.10.0
+
+#### [8.0.0] - 2023-08-29
+- Bump fireant version to 8.0.0
 - Drop support for Python3.7 as pandas v2 does not support it
 - Add Python3.9 support
 - Use the newest `pandas` (2.0.3 in requirements) and add the minimum version 2.0.0 of `pandas` to pyproject.toml

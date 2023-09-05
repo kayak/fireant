@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fireant"
-version = "7.10.0"
+version = "8.0.0"
 description = ""
 authors = ["Ąžuolas Krušna <akrusna@kayak.com>"]
 readme = "README.rst"

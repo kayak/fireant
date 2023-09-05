@@ -195,7 +195,11 @@ class Database(object):
             )
 
             for reference_parts, references in reference_groups_and_none:
-                (dimensions_with_ref, metrics_with_ref, filters_with_ref,) = self.adapt_for_reference_query(
+                (
+                    dimensions_with_ref,
+                    metrics_with_ref,
+                    filters_with_ref,
+                ) = self.adapt_for_reference_query(
                     reference_parts,
                     dimensions_with_totals,
                     metrics,
@@ -301,7 +305,7 @@ class Database(object):
         # In the case that the orders are determined by a field that is not selected as a metric or dimension, then it needs
         # to be added to the query.
         select_aliases = {el.alias for el in query._selects}
-        for (orderby_field, orientation) in orders:
+        for orderby_field, orientation in orders:
             orderby_term = self.transform_field_to_query(orderby_field)
             query = query.orderby(orderby_term, order=orientation)
 

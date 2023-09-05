@@ -82,10 +82,12 @@ class ScrubTotalsTests(TestCase):
             dimx2_date_str_totalsx2_df, [Rollup(mock_dataset.fields.timestamp), mock_dataset.fields.political_party]
         )
 
-        expected = pd.concat([
-            dimx2_date_str_totalsx2_df.loc[(slice(None), slice('Democrat', 'Republican')), :],
-            dimx2_date_str_totalsx2_df.tail(1),
-        ])
+        expected = pd.concat(
+            [
+                dimx2_date_str_totalsx2_df.loc[(slice(None), slice('Democrat', 'Republican')), :],
+                dimx2_date_str_totalsx2_df.tail(1),
+            ]
+        )
 
         pandas.testing.assert_frame_equal(result, expected)
 

@@ -26,6 +26,5 @@ try:
 
             self.assertEqual(1, len(result))
 
-
 except ImportError:
     pass

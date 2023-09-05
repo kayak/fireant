@@ -243,7 +243,7 @@ def _deepcopy_recursive(node):
     if hasattr(node, '_cases'):
         cloned_cases = []
 
-        for (criterion, value) in cloned_node._cases:
+        for criterion, value in cloned_node._cases:
             cloned_cases.append((_deepcopy_recursive(criterion), _deepcopy_recursive(value)))
 
         cloned_node._cases = cloned_cases
@@ -423,7 +423,6 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         # First determine the metrics. If a a metric is requested, and the dataset has it, add it for that dataset.
         # We include metrics used in filters. We also save for each dataset the mapped metrics and filters
         for dataset_index, dataset in enumerate(datasets):
-
             dataset_metrics.append(
                 map_blender_fields_to_dataset_fields(
                     selected_metrics_as_dataset_fields,
@@ -478,7 +477,7 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
         for dimension_dataset_info in dimensions_dataset_info:
             dimension_accounted_for = False
             first_dataset_that_has_the_dimension = None
-            for (dataset_index, mapped_dimension, is_selected_dimension) in dimension_dataset_info:
+            for dataset_index, mapped_dimension, is_selected_dimension in dimension_dataset_info:
                 # If the dataset is already part of the final query, add this dimension
                 if dataset_included_in_final_query[dataset_index]:
                     dimension_accounted_for = True

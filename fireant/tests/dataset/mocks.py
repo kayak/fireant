@@ -728,13 +728,19 @@ dimx2_date_str_totalsx2_df = totals(dimx2_date_str_df, [f("timestamp"), f("polit
 
 dimx2_date_str_totalsx2_share_over_first_series = pd.read_csv(
     os.path.dirname(os.path.realpath(__file__)) + "/mocks/dimx2_date_str_totalsx2_share_over_first_df.csv",
-    index_col=['$timestamp', '$political_party',],
+    index_col=[
+        '$timestamp',
+        '$political_party',
+    ],
     parse_dates=['$timestamp'],
 ).squeeze()
 
 dimx2_date_str_totalsx2_share_over_second_series = pd.read_csv(
     os.path.dirname(os.path.realpath(__file__)) + "/mocks/dimx2_date_str_totalsx2_share_over_second_df.csv",
-    index_col=['$timestamp', '$political_party',],
+    index_col=[
+        '$timestamp',
+        '$political_party',
+    ],
     parse_dates=['$timestamp'],
 ).squeeze()
 
@@ -744,7 +750,11 @@ dimx3_date_str_str_totalsx3_df = totals(
 
 dimx3_date_str_str_totals_df = pd.read_csv(
     os.path.dirname(os.path.realpath(__file__)) + "/mocks/dimx3_date_str_str_totals_df.csv",
-    index_col=['$timestamp', '$political_party', '$state',],
+    index_col=[
+        '$timestamp',
+        '$political_party',
+        '$state',
+    ],
     parse_dates=['$timestamp'],
 )
 
