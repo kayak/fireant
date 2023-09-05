@@ -25,6 +25,7 @@ ds = f.DataSet(
     ],
 )
 
+
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
 class ResultSetTests(TestCase):
     maxDiff = None

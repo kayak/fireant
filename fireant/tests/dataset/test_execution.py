@@ -288,10 +288,12 @@ class ReduceResultSetsWithTotalsTests(TestCase):
         pandas.testing.assert_frame_equal(expected, result)
 
     def test_reduce_single_result_set_with_dimx2_date_str_totals_date(self):
-        expected = pd.concat([
-            dimx2_date_str_totalsx2_df.loc[(slice(None), slice("Democrat", "Republican")), :],
-            dimx2_date_str_totalsx2_df.tail(1),
-        ])
+        expected = pd.concat(
+            [
+                dimx2_date_str_totalsx2_df.loc[(slice(None), slice("Democrat", "Republican")), :],
+                dimx2_date_str_totalsx2_df.tail(1),
+            ]
+        )
 
         raw_df = replace_totals(dimx2_date_str_df)
         totals_df = pd.merge(
@@ -351,10 +353,12 @@ class ReduceResultSetsWithTotalsTests(TestCase):
         pandas.testing.assert_frame_equal(expected, result)
 
     def test_reduce_single_result_set_with_date_str_str_dimensions_str1_totals(self):
-        expected = pd.concat([
-            dimx3_date_str_str_totalsx3_df.loc[(slice(None), slice(None), slice("California", "Texas")), :],
-            dimx3_date_str_str_totalsx3_df.loc[(slice(None), "~~totals"), :].iloc[:-1],
-        ]).sort_index()
+        expected = pd.concat(
+            [
+                dimx3_date_str_str_totalsx3_df.loc[(slice(None), slice(None), slice("California", "Texas")), :],
+                dimx3_date_str_str_totalsx3_df.loc[(slice(None), "~~totals"), :].iloc[:-1],
+            ]
+        ).sort_index()
 
         raw_df = replace_totals(dimx3_date_str_str_df)
         totals_df = raw_df.groupby("$timestamp").sum().reset_index()
@@ -408,18 +412,17 @@ class ReduceResultSetsWithTotalsTests(TestCase):
         nulls_totals[index_names[1]] = "~~totals"
         nulls_totals[index_names[2]] = "~~totals"
 
-        expected = pd.concat([
-            dimx3_date_str_str_totalsx3_df.loc[(slice(None), slice(None), slice("1", "2")), :],
-            dimx3_date_str_str_totalsx3_df.loc[(slice(None), "~~totals"), :].tail(1),
-            nulls.set_index(index_names),
-            nulls_totals.set_index(index_names),
-        ]).sort_index()
+        expected = pd.concat(
+            [
+                dimx3_date_str_str_totalsx3_df.loc[(slice(None), slice(None), slice("1", "2")), :],
+                dimx3_date_str_str_totalsx3_df.loc[(slice(None), "~~totals"), :].tail(1),
+                nulls.set_index(index_names),
+                nulls_totals.set_index(index_names),
+            ]
+        ).sort_index()
 
         raw_df = replace_totals(dimx3_date_str_str_df)
-        raw_df = pd.concat([
-            nulls,
-            raw_df
-        ]).sort_values(["$timestamp", "$political_party", "$state"])
+        raw_df = pd.concat([nulls, raw_df]).sort_values(["$timestamp", "$political_party", "$state"])
 
         totals_df = raw_df.groupby("$timestamp").sum().reset_index()
         null_totals_df = pd.DataFrame([raw_df[raw_df["$timestamp"].isnull()][metrics].sum()])
