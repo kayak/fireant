@@ -1,8 +1,21 @@
-2023 July
+Changelog is organized by the version of this library, commit date and main points of change
 
+-----
+#### [VERSION] - DATE
+- Important fix
+- Important feature
+-----
+
+2023 September
+
+#### [8.0.1] - 2023-09-06
+- Describe all the necessary group dependencies in `pyproject.toml` as none of other than Vertica and Snowflake libraries have been included in the published library
+- Add newly installed libraries to `poetry.lock`
+- Update `pymssql` to 2.2.8
+
+2023 August
 
 #### [8.0.0] - 2023-08-29
-- Bump fireant version to 8.0.0
 - Drop support for Python3.7 as pandas v2 does not support it
 - Add Python3.9 support
 - Use the newest `pandas` (2.0.3 in requirements) and add the minimum version 2.0.0 of `pandas` to pyproject.toml
