@@ -8,6 +8,9 @@ Changelog is organized by the version of this library, commit date and main poin
 
 2023 September
 
+#### [8.0.2] - 2023-09-06
+- Specify extras names and the library dependencies for them under tool.poetry.extras
+
 #### [8.0.1] - 2023-09-06
 - Describe all the necessary group dependencies in `pyproject.toml` as none of other than Vertica and Snowflake libraries have been included in the published library
 - Add newly installed libraries to `poetry.lock`
