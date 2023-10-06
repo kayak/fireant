@@ -8,6 +8,9 @@ Changelog is organized by the version of this library, commit date and main poin
 
 2023 September
 
+#### [8.0.3] - 2023-09-06
+- Specify extras dependencies correctly
+
 #### [8.0.2] - 2023-09-06
 - Specify extras names and the library dependencies for them under tool.poetry.extras
 
