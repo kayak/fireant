@@ -635,11 +635,12 @@ class HighCharts(ChartWidget, TransformableWidget):
         if isinstance(data_frame.index, pd.MultiIndex):
             first_index = data_frame.index.get_level_values(0)
             if isinstance(first_index, pd.DatetimeIndex):
-                index_slice = first_index < TS_UPPER_BOUND
+                index_slice = first_index.tz_localize(None) < TS_UPPER_BOUND
                 return data_frame.loc[index_slice, :]
 
-        elif isinstance(data_frame.index, pd.DatetimeIndex):
-            return data_frame[data_frame.index < TS_UPPER_BOUND]
+        if isinstance(data_frame.index, pd.DatetimeIndex):
+            index_slice = data_frame.index.tz_localize(None) < TS_UPPER_BOUND
+            return data_frame[index_slice]
 
         return data_frame
 

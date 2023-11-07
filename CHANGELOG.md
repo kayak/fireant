@@ -8,6 +8,9 @@ Changelog is organized by the version of this library, commit date and main poin
 
 2023 September
 
+#### [8.0.4] - 2023-11-06
+Make removal of date total when generating highcharts more flexible by localizing the datetime when filtering out the totals. This will work with timezone aware datetimes as well not aware ones. 
+
 #### [8.0.3] - 2023-09-06
 - Specify extras dependencies correctly
 
