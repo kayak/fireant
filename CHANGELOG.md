@@ -6,10 +6,18 @@ Changelog is organized by the version of this library, commit date and main poin
 - Important feature
 -----
 
-2023 September
+2023 December
+
+#### [8.0.5] - 2023-12-18
+- Fix dataframe sort with a pivot with the new pandas v2 API
+- Optimize it by getting rid of `reset_index` and `set_index` method calls when sorting 
+
+2023 November
 
 #### [8.0.4] - 2023-11-06
 Make removal of date total when generating highcharts more flexible by localizing the datetime when filtering out the totals. This will work with timezone aware datetimes as well not aware ones. 
+
+2023 September
 
 #### [8.0.3] - 2023-09-06
 - Specify extras dependencies correctly
