@@ -202,15 +202,15 @@ class Pandas(TransformableWidget):
             # If there are no sort arguments or the data frame is a single row, then no need to sort
             return data_frame
 
-        # reset the index so all columns can be sorted together
-        index_names = data_frame.index.names
-        unsorted = data_frame.reset_index()
-        column_names = list(unsorted.columns)
+        # Get the list of index names and column names to be able to sort them together
+        index_names = list(data_frame.index.names)
+        column_names = list(data_frame.columns)
+        all_sort_columns = index_names + column_names
 
         ascending = self.ascending if self.ascending is not None else True
 
         sort = wrap_list(self.sort)
-        sort_columns = [column_names[column] for column in sort if column < len(column_names)]
+        sort_columns = [all_sort_columns[column] for column in sort if column < len(all_sort_columns)]
 
         if not sort_columns:
             return data_frame
@@ -220,13 +220,13 @@ class Pandas(TransformableWidget):
         if isinstance(ascending, list) and len(ascending) != len(sort_columns):
             ascending = ascending[0] if len(ascending) > 0 else None
 
-        sorted = unsorted.sort_values(sort_columns, ascending=ascending).set_index(index_names)
+        data_frame_sorted = data_frame.sort_values(sort_columns, ascending=ascending)
 
         # Maintain the single metric name
         if hasattr(data_frame, "name"):
-            sorted.name = data_frame.name
+            data_frame_sorted.name = data_frame.name
 
-        return sorted
+        return data_frame_sorted
 
     def add_formatting(
         self, dimensions: List[Field], items: List[Field], pivot_df: pd.DataFrame, use_raw_values: bool
