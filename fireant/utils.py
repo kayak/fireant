@@ -178,7 +178,7 @@ def chunks(l, n):
 
 def ordered_distinct_list(l):
     seen = set()
-    return [x for x in l if not x in seen and not seen.add(x)]
+    return [x for x in l if x not in seen and not seen.add(x)]
 
 
 def ordered_distinct_list_by_attr(l, attr="alias", keep_last=False):

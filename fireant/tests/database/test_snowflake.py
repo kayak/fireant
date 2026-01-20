@@ -1,7 +1,5 @@
-import sys
 from unittest import TestCase
 from unittest.mock import (
-    ANY,
     Mock,
     patch,
 )
@@ -12,7 +10,9 @@ from pypika import Field
 from fireant.database import SnowflakeDatabase
 
 try:
-    import cryptography
+    # Import submodules so they can be patched
+    from cryptography.hazmat.backends import default_backend
+    from cryptography.hazmat.primitives import serialization
 
     HAS_CRYPTOGRAPHY = True
 except ImportError:

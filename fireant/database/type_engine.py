@@ -46,7 +46,7 @@ class TypeEngine:
         :param data_type: The data type string to be split up.
         :return: The raw data type and raw arguments.
         """
-        split_data_type = re.findall('\w+', data_type)
+        split_data_type = re.findall(r'\w+', data_type)
 
         raw_data_type = split_data_type[0] if split_data_type else ''
         raw_arguments = split_data_type[1:] if len(split_data_type) > 1 else []
