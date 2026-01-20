@@ -51,6 +51,9 @@ Changelog is organized by the version of this library, commit date and main poin
 - Snowflake extra is temporarily unavailable on Python 3.14 (upstream `snowflake-connector-python` requires `cffi<2`, which lacks Python 3.14 wheels); Snowflake tests gracefully skip when dependencies are missing
 - Fixed invalid escape sequence in `type_engine.py` (was `SyntaxWarning`, will be error in Python 3.16)
 - Removed dead code from Snowflake database module
+- Configured Ruff to ignore intentional patterns (re-exports in `__init__.py`, star imports in tests)
+- Fixed duplicate test method in `test_build_filters.py`
+- Fixed duplicate import in `test_references.py`
 - Snowflake: Moved `cryptography.hazmat` imports inside method for lazy loading
 - Version now read from package metadata using `importlib.metadata.version()`
 - Fixed `filter_nones()` to use lambda instead of `None.__ne__`

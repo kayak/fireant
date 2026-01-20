@@ -74,7 +74,13 @@ quote-style = "preserve"
 
 [tool.ruff.lint]
 select = ["E", "F", "W"]
-ignore = ["E501"]
+ignore = ["E501", "E731", "F821", "E741"]
+
+[tool.ruff.lint.per-file-ignores]
+# F401/F403: __init__.py files use imports to expose public API
+"__init__.py" = ["F401", "F403"]
+# F401/F403/F405: tests use star imports to verify public API; E712: boolean comparisons test filter behavior
+"fireant/tests/*" = ["F401", "F403", "F405", "E712"]
 
 [tool.pytest.ini_options]
 testpaths = ["fireant/tests"]

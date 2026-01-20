@@ -1,4 +1,3 @@
-from fireant.dataset.references import DayOverDay
 from unittest import TestCase
 
 from fireant import (

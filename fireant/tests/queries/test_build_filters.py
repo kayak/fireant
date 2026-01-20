@@ -443,10 +443,6 @@ class FilterTextFieldTests(TestCase):
         with self.assertRaises(DataSetFilterException):
             ds.fields.text < "a"
 
-    def test_lt_expr_raises_exception(self):
-        with self.assertRaises(DataSetFilterException):
-            ds.fields.text <= "a"
-
     def test_le_expr_raises_exception(self):
         with self.assertRaises(DataSetFilterException):
             ds.fields.text <= "a"
