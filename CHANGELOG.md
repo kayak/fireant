@@ -43,8 +43,11 @@ Changelog is organized by the version of this library, commit date and main poin
 
 **Other Changes**
 
+- Added pre-commit configuration with Ruff hooks for linting and formatting
 - Relaxed `pandas` dependency: `==2.0.3` (pinned) → `>=2.0.0`
 - Relaxed `toposort` dependency: `==1.6` (pinned) → `>=1.6,<2`
+- Updated `psycopg2-binary` dependency: `>=2.9.0` → `>=2.9.11` (adds Python 3.14 support)
+- Updated minimum Python version: `>=3.8` → `>=3.9` (required by psycopg2-binary 2.9.11 and pandas 2.x)
 - Snowflake: Moved `cryptography.hazmat` imports inside method for lazy loading
 - Version now read from package metadata using `importlib.metadata.version()`
 - Fixed `filter_nones()` to use lambda instead of `None.__ne__`

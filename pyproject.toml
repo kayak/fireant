@@ -10,7 +10,7 @@ authors = [
 maintainers = [
     {name = "Ąžuolas Krušna", email = "akrusna@kayak.com"}
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 keywords = [
     "fireant",
     "python",
@@ -41,8 +41,8 @@ Repository = "https://github.com/kayak/fireant"
 
 [project.optional-dependencies]
 mysql = ["pymysql>=1.0.0,<2"]
-postgresql = ["psycopg2-binary>=2.9.0,<3"]
-redshift = ["psycopg2-binary>=2.9.0,<3"]
+postgresql = ["psycopg2-binary>=2.9.11,<3"]
+redshift = ["psycopg2-binary>=2.9.11,<3"]
 mssql = ["cython>=3.0.0,<4", "pymssql>=2.2.0,<3"]
 snowflake = ["snowflake-connector-python>=3.0.0,<4"]
 vertica = ["vertica-python>=1.0.0,<2"]
