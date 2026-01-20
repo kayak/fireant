@@ -31,7 +31,7 @@ keywords = [
 dependencies = [
     "pandas>=2.0.0",
     "pypika>=0.50.0,<1.0.0",
-    "toposort==1.6",
+    "toposort>=1.6,<2",
 ]
 
 [project.urls]

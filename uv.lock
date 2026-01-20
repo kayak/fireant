@@ -1085,7 +1085,7 @@ requires-dist = [
     { name = "pymysql", marker = "extra == 'mysql'", specifier = ">=1.0.0,<2" },
     { name = "pypika", specifier = ">=0.50.0,<1.0.0" },
     { name = "snowflake-connector-python", marker = "extra == 'snowflake'", specifier = ">=3.0.0,<4" },
-    { name = "toposort", specifier = "==1.6" },
+    { name = "toposort", specifier = ">=1.6,<2" },
     { name = "vertica-python", marker = "extra == 'vertica'", specifier = ">=1.0.0,<2" },
 ]
 provides-extras = ["mysql", "postgresql", "redshift", "mssql", "snowflake", "vertica", "ipython"]

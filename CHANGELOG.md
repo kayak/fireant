@@ -43,6 +43,8 @@ Changelog is organized by the version of this library, commit date and main poin
 
 **Other Changes**
 
+- Relaxed `pandas` dependency: `==2.0.3` (pinned) → `>=2.0.0`
+- Relaxed `toposort` dependency: `==1.6` (pinned) → `>=1.6,<2`
 - Snowflake: Moved `cryptography.hazmat` imports inside method for lazy loading
 - Version now read from package metadata using `importlib.metadata.version()`
 - Fixed `filter_nones()` to use lambda instead of `None.__ne__`
