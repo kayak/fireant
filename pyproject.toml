@@ -44,7 +44,7 @@ mysql = ["pymysql>=1.0.0,<2"]
 postgresql = ["psycopg2-binary>=2.9.11,<3"]
 redshift = ["psycopg2-binary>=2.9.11,<3"]
 mssql = ["cython>=3.0.0,<4", "pymssql>=2.2.0,<3"]
-snowflake = ["snowflake-connector-python>=3.0.0,<4"]
+snowflake = ["snowflake-connector-python>=3.0.0,<5"]
 vertica = ["vertica-python>=1.0.0,<2"]
 ipython = ["matplotlib>=3.1.0,<4", "ipython>=7.11,<9"]
 
