@@ -23,7 +23,7 @@ Changelog is organized by the version of this library, commit date and main poin
 
 - New unified `ci.yml` workflow replaces `black.yml` and `pythonpackage.yml`
   - Updated to GitHub Actions v5 (checkout@v5, setup-uv@v5)
-  - Expanded test matrix: Python 3.8, 3.9, 3.10, 3.11, 3.12, 3.13, 3.14
+  - Expanded test matrix: Python 3.9, 3.10, 3.11, 3.12, 3.13, 3.14
   - Coverage reporting runs on Python 3.13
 - New `release.yml` workflow for automated PyPI publishing using OIDC trusted publishing
 - Switched linting from Black to Ruff (same 120 char line length, quote style preserved)
@@ -47,7 +47,7 @@ Changelog is organized by the version of this library, commit date and main poin
 - Relaxed `pandas` dependency: `==2.0.3` (pinned) → `>=2.0.0`
 - Relaxed `toposort` dependency: `==1.6` (pinned) → `>=1.6,<2`
 - Updated `psycopg2-binary` dependency: `>=2.9.0` → `>=2.9.11` (adds Python 3.14 support)
-- Updated minimum Python version: `>=3.8` → `>=3.9` (required by psycopg2-binary 2.9.11 and pandas 2.x)
+- Dropped Python 3.8 support; minimum Python version is now `>=3.9` (required by psycopg2-binary 2.9.11 and pandas 2.x)
 - Snowflake: Moved `cryptography.hazmat` imports inside method for lazy loading
 - Version now read from package metadata using `importlib.metadata.version()`
 - Fixed `filter_nones()` to use lambda instead of `None.__ne__`
