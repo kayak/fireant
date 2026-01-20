@@ -117,9 +117,10 @@ def _replace_rollup_constants_for_totals_markers(data_frame, dtypes):
     data_frame.reset_index(inplace=True)
 
     for dimension_key, dtype in dtypes.items():
-        data_frame[dimension_key] = data_frame[dimension_key].replace(
-            RollupValue.CONSTANT, get_totals_marker_for_dtype(dtype)
-        )
+        with pd.option_context('future.no_silent_downcasting', True):
+            data_frame[dimension_key] = data_frame[dimension_key].replace(
+                RollupValue.CONSTANT, get_totals_marker_for_dtype(dtype)
+            )
 
     return data_frame.set_index(index_names)
 

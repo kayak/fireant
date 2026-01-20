@@ -47,8 +47,9 @@ class TestSnowflake(TestCase):
             warehouse=None,
         )
 
-    @patch('fireant.database.snowflake.serialization')
-    def test_connect_with_pkey(self, mock_serialization):
+    @patch('cryptography.hazmat.primitives.serialization')
+    @patch('cryptography.hazmat.backends.default_backend')
+    def test_connect_with_pkey(self, mock_default_backend, mock_serialization):
         mock_snowflake = Mock(name='mock_snowflake')
         mock_connector = mock_snowflake.connector
         mock_pkey = mock_serialization.load_pem_private_key.return_value = Mock(name='pkey')
@@ -70,7 +71,9 @@ class TestSnowflake(TestCase):
             self.assertEqual('OK', result)
 
         with self.subTest('connects with credentials'):
-            mock_serialization.load_pem_private_key.assert_called_once_with(b'abcdefg', b'1234', backend=ANY)
+            mock_serialization.load_pem_private_key.assert_called_once_with(
+                b'abcdefg', b'1234', backend=mock_default_backend.return_value
+            )
 
         with self.subTest('connects with credentials'):
             mock_connector.connect.assert_called_once_with(

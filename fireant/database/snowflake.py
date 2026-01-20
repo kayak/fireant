@@ -1,5 +1,3 @@
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization
 from pypika import (
     Parameter,
     Table,
@@ -88,6 +86,9 @@ class SnowflakeDatabase(Database):
     def _load_private_key_data(self):
         if self.private_key_data is None:
             return None
+
+        from cryptography.hazmat.backends import default_backend
+        from cryptography.hazmat.primitives import serialization
 
         private_key_password = None if self.private_key_password is None else self.private_key_password.encode()
 

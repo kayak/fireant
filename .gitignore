@@ -72,3 +72,5 @@ target/
 .venv/
 venv/
 ENV/
+
+.claude/settings*.json

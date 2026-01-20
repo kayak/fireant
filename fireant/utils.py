@@ -281,4 +281,4 @@ def listify(func):
 
 
 def filter_nones(iterable):
-    return filter(None.__ne__, iterable)
+    return filter(lambda x: x is not None, iterable)

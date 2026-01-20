@@ -6,6 +6,49 @@ Changelog is organized by the version of this library, commit date and main poin
 - Important feature
 -----
 
+2025 January
+
+#### [8.1.0] - 2025-01-20
+
+**Build System Migration: Poetry → uv + Hatch**
+
+- Rewrote `pyproject.toml` using PEP 621 standard format
+- Replaced Poetry's `poetry.lock` with `uv.lock`
+- Switched build backend from `poetry.core.masonry.api` to `hatchling.build`
+- Removed legacy configuration files: `setup.py`, `setup.cfg`, `tox.ini`, `.coveragerc`
+- Removed individual requirements files (`requirements.txt`, `requirements-dev.txt`, `requirements-extras-*.txt`)
+- Consolidated all configuration (coverage, pytest, linting) into `pyproject.toml`
+
+**CI/CD Improvements**
+
+- New unified `ci.yml` workflow replaces `black.yml` and `pythonpackage.yml`
+  - Updated to GitHub Actions v5 (checkout@v5, setup-uv@v5)
+  - Expanded test matrix: Python 3.8, 3.9, 3.10, 3.11, 3.12, 3.13, 3.14
+  - Coverage reporting runs on Python 3.13
+- New `release.yml` workflow for automated PyPI publishing using OIDC trusted publishing
+- Switched linting from Black to Ruff (same 120 char line length, quote style preserved)
+
+**Pandas 2.x Compatibility Fixes**
+
+- Fixed deprecated `DataFrame.applymap()` → `DataFrame.map()` throughout codebase
+- Added `future.no_silent_downcasting` option context to avoid FutureWarnings
+- Fixed `groupby()` level parameter to use scalar when single level
+- Added `infer_objects(copy=False)` after fillna for proper dtype inference
+- Convert DataFrame to object dtype before applying string formatting in pandas widget
+
+**PyPika Compatibility**
+
+- Updated pypika dependency: `0.48.2` (pinned) → `>=0.50.0,<1.0.0`
+- Fixed test assertions for PyPika's NULL keyword formatting change
+
+**Other Changes**
+
+- Snowflake: Moved `cryptography.hazmat` imports inside method for lazy loading
+- Version now read from package metadata using `importlib.metadata.version()`
+- Fixed `filter_nones()` to use lambda instead of `None.__ne__`
+- Added `CLAUDE.md` with project overview and development commands
+- Removed test API documentation files from docs
+
 2023 December
 
 #### [8.0.5] - 2023-12-18

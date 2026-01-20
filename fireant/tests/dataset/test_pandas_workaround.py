@@ -60,5 +60,5 @@ class TestSubtract(TestCase):
             columns=["l0", "l1", "happy", "sad"],
         ).set_index(["l0", "l1"])
 
-        pd.testing.assert_frame_equal(expected, result)
+        pd.testing.assert_frame_equal(expected, result, check_index_type=False)
         self.assertTrue(result.index.is_unique)

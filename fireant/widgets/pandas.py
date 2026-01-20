@@ -243,25 +243,23 @@ class Pandas(TransformableWidget):
             )
 
         if self.transpose or not self.transpose and len(dimensions) == len(self.pivot) > 0:
+            # Convert to object dtype to allow string values from formatting
+            format_df = format_df.astype(object)
             for item in items:
                 field_display = _get_field_display(item)
                 alias = alias_selector(items[0].alias)
-                format_df.loc[alias] = format_df.loc[alias].apply(field_display)
+                format_df.loc[alias] = format_df.loc[alias].map(field_display)
 
             return format_df
 
         if self.pivot and len(items) == 1:
             field_display = _get_field_display(items[0])
-            format_df = format_df.applymap(field_display)
+            format_df = format_df.map(field_display)
             return format_df
 
         for item in items:
             key = alias_selector(item.alias)
             field_display = _get_field_display(item)
-            format_df[key] = (
-                format_df[key].apply(field_display)
-                if isinstance(format_df[key], pd.Series)
-                else format_df[key].applymap(field_display)
-            )
+            format_df[key] = format_df[key].map(field_display)
 
         return format_df
