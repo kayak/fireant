@@ -52,6 +52,7 @@ Changelog is organized by the version of this library, commit date and main poin
 - Fixed invalid escape sequence in `type_engine.py` (was `SyntaxWarning`, will be error in Python 3.16)
 - Removed dead code from Snowflake database module
 - Configured Ruff to ignore intentional patterns (re-exports in `__init__.py`, star imports in tests)
+- Applied Ruff formatting to codebase
 - Fixed duplicate test method in `test_build_filters.py`
 - Fixed duplicate import in `test_references.py`
 - Snowflake: Moved `cryptography.hazmat` imports inside method for lazy loading

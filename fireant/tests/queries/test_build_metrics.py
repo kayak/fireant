@@ -14,7 +14,7 @@ class QueryBuilderMetricTests(TestCase):
         self.assertEqual(len(queries), 1)
 
         self.assertEqual(
-            'SELECT ' 'SUM("votes") "$votes" ' 'FROM "politics"."politician" ' 'ORDER BY 1 ' 'LIMIT 200000',
+            'SELECT SUM("votes") "$votes" FROM "politics"."politician" ORDER BY 1 LIMIT 200000',
             str(queries[0]),
         )
 
@@ -58,7 +58,7 @@ class QueryBuilderMetricTests(TestCase):
         self.assertEqual(len(queries), 1)
 
         self.assertEqual(
-            'SELECT ' 'SUM("votes") "$votes" ' 'FROM "politics"."politician" ' 'ORDER BY 1 ' 'LIMIT 200000',
+            'SELECT SUM("votes") "$votes" FROM "politics"."politician" ORDER BY 1 LIMIT 200000',
             str(queries[0]),
         )
 

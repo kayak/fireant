@@ -372,7 +372,7 @@ class DataSetBlenderQueryBuilderTests(TestCase):
             '"sq0"."$timestamp" "$timestamp",'
             'CASE WHEN "sq1"."$candidate-spend"/"sq0"."$wins">1000 THEN \'set(sq1.$candidate-spend/sq0.$wins>1000)\' '
             'ELSE \'complement(sq1.$candidate-spend/sq0.$wins>1000)\' '
-            'END \"$set(sq1.$candidate-spend/sq0.$wins>1000)\",'
+            'END "$set(sq1.$candidate-spend/sq0.$wins>1000)",'
             '"sq1"."$candidate-spend"/"sq0"."$wins" "$candidate-spend-per-wins" '
             "FROM ("
             "SELECT "

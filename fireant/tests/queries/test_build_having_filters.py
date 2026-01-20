@@ -18,12 +18,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual(len(queries), 1)
 
         self.assertEqual(
-            'SELECT '
-            'SUM("votes") "$votes" '
-            'FROM "politics"."politician" '
-            'HAVING SUM("votes")=5 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            'SELECT SUM("votes") "$votes" FROM "politics"."politician" HAVING SUM("votes")=5 ORDER BY 1 LIMIT 200000',
             str(queries[0]),
         )
 
@@ -37,12 +32,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual(len(queries), 1)
 
         self.assertEqual(
-            'SELECT '
-            'SUM("votes") "$votes" '
-            'FROM "politics"."politician" '
-            'HAVING SUM("votes")=5 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            'SELECT SUM("votes") "$votes" FROM "politics"."politician" HAVING SUM("votes")=5 ORDER BY 1 LIMIT 200000',
             str(queries[0]),
         )
 
@@ -56,12 +46,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual(len(queries), 1)
 
         self.assertEqual(
-            'SELECT '
-            'SUM("votes") "$votes" '
-            'FROM "politics"."politician" '
-            'HAVING SUM("votes")<>5 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            'SELECT SUM("votes") "$votes" FROM "politics"."politician" HAVING SUM("votes")<>5 ORDER BY 1 LIMIT 200000',
             str(queries[0]),
         )
 
@@ -75,12 +60,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual(len(queries), 1)
 
         self.assertEqual(
-            'SELECT '
-            'SUM("votes") "$votes" '
-            'FROM "politics"."politician" '
-            'HAVING SUM("votes")<>5 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            'SELECT SUM("votes") "$votes" FROM "politics"."politician" HAVING SUM("votes")<>5 ORDER BY 1 LIMIT 200000',
             str(queries[0]),
         )
 
@@ -92,12 +72,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual(len(queries), 1)
 
         self.assertEqual(
-            'SELECT '
-            'SUM("votes") "$votes" '
-            'FROM "politics"."politician" '
-            'HAVING SUM("votes")>5 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            'SELECT SUM("votes") "$votes" FROM "politics"."politician" HAVING SUM("votes")>5 ORDER BY 1 LIMIT 200000',
             str(queries[0]),
         )
 
@@ -109,12 +84,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual(len(queries), 1)
 
         self.assertEqual(
-            'SELECT '
-            'SUM("votes") "$votes" '
-            'FROM "politics"."politician" '
-            'HAVING SUM("votes")>5 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            'SELECT SUM("votes") "$votes" FROM "politics"."politician" HAVING SUM("votes")>5 ORDER BY 1 LIMIT 200000',
             str(queries[0]),
         )
 
@@ -128,12 +98,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual(len(queries), 1)
 
         self.assertEqual(
-            'SELECT '
-            'SUM("votes") "$votes" '
-            'FROM "politics"."politician" '
-            'HAVING SUM("votes")>=5 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            'SELECT SUM("votes") "$votes" FROM "politics"."politician" HAVING SUM("votes")>=5 ORDER BY 1 LIMIT 200000',
             str(queries[0]),
         )
 
@@ -147,12 +112,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual(len(queries), 1)
 
         self.assertEqual(
-            'SELECT '
-            'SUM("votes") "$votes" '
-            'FROM "politics"."politician" '
-            'HAVING SUM("votes")>=5 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            'SELECT SUM("votes") "$votes" FROM "politics"."politician" HAVING SUM("votes")>=5 ORDER BY 1 LIMIT 200000',
             str(queries[0]),
         )
 
@@ -164,12 +124,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual(len(queries), 1)
 
         self.assertEqual(
-            'SELECT '
-            'SUM("votes") "$votes" '
-            'FROM "politics"."politician" '
-            'HAVING SUM("votes")<5 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            'SELECT SUM("votes") "$votes" FROM "politics"."politician" HAVING SUM("votes")<5 ORDER BY 1 LIMIT 200000',
             str(queries[0]),
         )
 
@@ -181,12 +136,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual(len(queries), 1)
 
         self.assertEqual(
-            'SELECT '
-            'SUM("votes") "$votes" '
-            'FROM "politics"."politician" '
-            'HAVING SUM("votes")<5 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            'SELECT SUM("votes") "$votes" FROM "politics"."politician" HAVING SUM("votes")<5 ORDER BY 1 LIMIT 200000',
             str(queries[0]),
         )
 
@@ -200,12 +150,7 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual(len(queries), 1)
 
         self.assertEqual(
-            'SELECT '
-            'SUM("votes") "$votes" '
-            'FROM "politics"."politician" '
-            'HAVING SUM("votes")<=5 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            'SELECT SUM("votes") "$votes" FROM "politics"."politician" HAVING SUM("votes")<=5 ORDER BY 1 LIMIT 200000',
             str(queries[0]),
         )
 
@@ -219,11 +164,6 @@ class QueryBuilderMetricFilterTests(TestCase):
         self.assertEqual(len(queries), 1)
 
         self.assertEqual(
-            'SELECT '
-            'SUM("votes") "$votes" '
-            'FROM "politics"."politician" '
-            'HAVING SUM("votes")<=5 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            'SELECT SUM("votes") "$votes" FROM "politics"."politician" HAVING SUM("votes")<=5 ORDER BY 1 LIMIT 200000',
             str(queries[0]),
         )

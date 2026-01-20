@@ -3835,7 +3835,7 @@ class HighChartsLineChartAnnotationTransformerTests(TestCase):
                         "labels": [
                             {
                                 "point": {"x": 820454400000, "xAxis": 0},
-                                "text": "Bill Clinton, Bob Dole, Ross Perot, " "Bill Clinton, Bob Dole, Ross Perot",
+                                "text": "Bill Clinton, Bob Dole, Ross Perot, Bill Clinton, Bob Dole, Ross Perot",
                             },
                             {
                                 "point": {"x": 946684800000, "xAxis": 0},
@@ -3843,19 +3843,19 @@ class HighChartsLineChartAnnotationTransformerTests(TestCase):
                             },
                             {
                                 "point": {"x": 1072915200000, "xAxis": 0},
-                                "text": "George Bush, John Kerry, George Bush, " "John Kerry",
+                                "text": "George Bush, John Kerry, George Bush, John Kerry",
                             },
                             {
                                 "point": {"x": 1199145600000, "xAxis": 0},
-                                "text": "Barrack Obama, John McCain, Barrack " "Obama, John McCain",
+                                "text": "Barrack Obama, John McCain, Barrack Obama, John McCain",
                             },
                             {
                                 "point": {"x": 1325376000000, "xAxis": 0},
-                                "text": "Barrack Obama, Mitt Romney, Barrack " "Obama, Mitt Romney",
+                                "text": "Barrack Obama, Mitt Romney, Barrack Obama, Mitt Romney",
                             },
                             {
                                 "point": {"x": 1451606400000, "xAxis": 0},
-                                "text": "Donald Trump, Hillary Clinton, Donald " "Trump, Hillary Clinton",
+                                "text": "Donald Trump, Hillary Clinton, Donald Trump, Hillary Clinton",
                             },
                         ]
                     }
@@ -3957,7 +3957,7 @@ class HighChartsLineChartAnnotationTransformerTests(TestCase):
                         "labels": [
                             {
                                 "point": {"x": 820454400000, "xAxis": 0},
-                                "text": "Bill Clinton, Bob Dole, Ross Perot, " "Bill Clinton, Bob Dole, Ross Perot",
+                                "text": "Bill Clinton, Bob Dole, Ross Perot, Bill Clinton, Bob Dole, Ross Perot",
                             },
                             {
                                 "point": {"x": 946684800000, "xAxis": 0},
@@ -3965,19 +3965,19 @@ class HighChartsLineChartAnnotationTransformerTests(TestCase):
                             },
                             {
                                 "point": {"x": 1072915200000, "xAxis": 0},
-                                "text": "George Bush, John Kerry, George Bush, " "John Kerry",
+                                "text": "George Bush, John Kerry, George Bush, John Kerry",
                             },
                             {
                                 "point": {"x": 1199145600000, "xAxis": 0},
-                                "text": "Barrack Obama, John McCain, Barrack " "Obama, John McCain",
+                                "text": "Barrack Obama, John McCain, Barrack Obama, John McCain",
                             },
                             {
                                 "point": {"x": 1325376000000, "xAxis": 0},
-                                "text": "Barrack Obama, Mitt Romney, Barrack " "Obama, Mitt Romney",
+                                "text": "Barrack Obama, Mitt Romney, Barrack Obama, Mitt Romney",
                             },
                             {
                                 "point": {"x": 1451606400000, "xAxis": 0},
-                                "text": "Donald Trump, Hillary Clinton, Donald " "Trump, Hillary Clinton",
+                                "text": "Donald Trump, Hillary Clinton, Donald Trump, Hillary Clinton",
                             },
                         ]
                     }
