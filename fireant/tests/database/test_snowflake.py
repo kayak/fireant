@@ -1,3 +1,4 @@
+import sys
 from unittest import TestCase
 from unittest.mock import (
     ANY,
@@ -5,9 +6,17 @@ from unittest.mock import (
     patch,
 )
 
+import pytest
 from pypika import Field
 
 from fireant.database import SnowflakeDatabase
+
+try:
+    import cryptography
+
+    HAS_CRYPTOGRAPHY = True
+except ImportError:
+    HAS_CRYPTOGRAPHY = False
 
 
 class TestSnowflake(TestCase):
@@ -47,6 +56,7 @@ class TestSnowflake(TestCase):
             warehouse=None,
         )
 
+    @pytest.mark.skipif(not HAS_CRYPTOGRAPHY, reason="cryptography not installed")
     @patch('cryptography.hazmat.primitives.serialization')
     @patch('cryptography.hazmat.backends.default_backend')
     def test_connect_with_pkey(self, mock_default_backend, mock_serialization):
