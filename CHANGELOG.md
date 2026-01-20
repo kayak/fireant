@@ -6,6 +6,14 @@ Changelog is organized by the version of this library, commit date and main poin
 - Important feature
 -----
 
+#### [Unreleased]
+
+**Dependencies**
+
+- Updated `snowflake-connector-python` dependency: `>=3.0.0,<4` → `>=3.0.0,<5` (allows v4.x)
+
+-----
+
 2025 January
 
 #### [8.1.0] - 2025-01-20
