@@ -35,7 +35,13 @@ jobs:
           enable-cache: true
 
       - name: Install dependencies
-        run: uv sync --group dev --extra mysql --extra postgresql --extra snowflake --extra vertica --extra ipython
+        run: |
+          if [ "${{ matrix.python-version }}" = "3.14" ]; then
+            # Skip snowflake extra on Python 3.14 (snowflake-connector-python requires cffi<2, which lacks Python 3.14 wheels)
+            uv sync --group dev --extra mysql --extra postgresql --extra vertica --extra ipython
+          else
+            uv sync --group dev --extra mysql --extra postgresql --extra snowflake --extra vertica --extra ipython
+          fi
 
       - name: Run test suite
         run: uv run pytest

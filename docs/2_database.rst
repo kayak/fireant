@@ -83,6 +83,23 @@ Amazon Redshift
         password='password123',
     )
 
+Snowflake
+
+.. code-block:: python
+
+    from fireant.database import SnowflakeDatabase
+
+    database = SnowflakeDatabase(
+        user='user',
+        password='password123',
+        account='your_account',
+        database='testdb',
+        warehouse='your_warehouse',
+    )
+
+.. note::
+    The Snowflake connector is not available on Python 3.14 due to an upstream dependency issue.
+
 Using a different Database
 --------------------------
 

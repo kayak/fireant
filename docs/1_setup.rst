@@ -26,6 +26,16 @@ By default, |Brand| does not include any database drivers. You can optionally in
     # Amazon Redshift
     pip install fireant[redshift]
 
+    # Snowflake
+    pip install fireant[snowflake]
+
+    # Microsoft SQL Server (requires FreeTDS)
+    pip install fireant[mssql]
+
+.. note::
+    The Snowflake extra is not available on Python 3.14 due to an upstream dependency issue
+    (``snowflake-connector-python`` requires ``cffi<2``, which lacks Python 3.14 support).
+
 Transformer add-ons
 -------------------
 

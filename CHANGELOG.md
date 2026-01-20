@@ -48,10 +48,13 @@ Changelog is organized by the version of this library, commit date and main poin
 - Relaxed `toposort` dependency: `==1.6` (pinned) → `>=1.6,<2`
 - Updated `psycopg2-binary` dependency: `>=2.9.0` → `>=2.9.11` (adds Python 3.14 support)
 - Dropped Python 3.8 support; minimum Python version is now `>=3.9` (required by psycopg2-binary 2.9.11 and pandas 2.x)
+- Snowflake extra is temporarily unavailable on Python 3.14 (upstream `snowflake-connector-python` requires `cffi<2`, which lacks Python 3.14 wheels)
 - Snowflake: Moved `cryptography.hazmat` imports inside method for lazy loading
 - Version now read from package metadata using `importlib.metadata.version()`
 - Fixed `filter_nones()` to use lambda instead of `None.__ne__`
 - Added `CLAUDE.md` with project overview and development commands
+- Added Snowflake and MSSQL database extras to setup documentation
+- Added Snowflake database configuration example to documentation
 - Removed test API documentation files from docs
 
 2023 December
