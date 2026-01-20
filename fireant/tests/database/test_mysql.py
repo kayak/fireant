@@ -154,7 +154,7 @@ class TestMySQLDatabase(TestCase):
         MySQLDatabase().create_temporary_table_from_columns('abc', columns)
 
         mock_execute.assert_called_once_with(
-            'CREATE TEMPORARY TABLE "abc" ("a" varchar,"b" varchar(100))', connection=None
+            'CREATE TEMPORARY TABLE `abc` (`a` varchar,`b` varchar(100))', connection=None
         )
 
     @patch.object(MySQLDatabase, 'execute')
@@ -164,7 +164,7 @@ class TestMySQLDatabase(TestCase):
         MySQLDatabase().create_temporary_table_from_select('def', query)
 
         mock_execute.assert_called_once_with(
-            'CREATE TEMPORARY TABLE "def" AS (SELECT * FROM "abc")',
+            'CREATE TEMPORARY TABLE `def` AS (SELECT * FROM `abc`)',
             connection=None,
         )
 

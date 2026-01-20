@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v5
+      - name: Run ruff check
+        run: uvx ruff check fireant
+      - name: Run ruff format check
+        run: uvx ruff format --check fireant
+
+  test:
+    name: Tests on Python ${{ matrix.python-version }}
+    runs-on: ubuntu-slim
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+
+      - name: Install dependencies
+        run: |
+          if [ "${{ matrix.python-version }}" = "3.14" ]; then
+            # Skip snowflake extra on Python 3.14 (snowflake-connector-python requires cffi<2, which lacks Python 3.14 wheels)
+            uv sync --group dev --extra mysql --extra postgresql --extra vertica --extra ipython
+          else
+            uv sync --group dev --extra mysql --extra postgresql --extra snowflake --extra vertica --extra ipython
+          fi
+
+      - name: Run test suite
+        run: uv run pytest
+
+      - name: Run coverage
+        if: matrix.python-version == '3.13'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+        run: |
+          uv pip install coveralls
+          uv run coverage run -m pytest
+          uv run coverage xml
+          uv run coveralls --service=github || true

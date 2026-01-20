@@ -52,7 +52,7 @@ class PandasTransformerTests(TestCase):
         expected = dimx0_metricx1_df.copy()[[f('votes')]]
         expected.columns = ['Votes']
         expected.columns.name = 'Metrics'
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -62,7 +62,7 @@ class PandasTransformerTests(TestCase):
         expected = dimx0_metricx2_df.copy()[[f('votes'), f('wins')]]
         expected.columns = ['Votes', 'Wins']
         expected.columns.name = 'Metrics'
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -72,7 +72,7 @@ class PandasTransformerTests(TestCase):
         expected = dimx0_metricx2_df.copy()[[f('wins'), f('votes')]]
         expected.columns = ['Wins', 'Votes']
         expected.columns.name = 'Metrics'
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -83,7 +83,7 @@ class PandasTransformerTests(TestCase):
         expected.index.names = ['Timestamp']
         expected.columns = ['Wins']
         expected.columns.name = 'Metrics'
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -96,7 +96,7 @@ class PandasTransformerTests(TestCase):
         expected.index.names = ['Timestamp']
         expected.columns = ['CumSum(Votes)']
         expected.columns.name = 'Metrics'
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -107,7 +107,7 @@ class PandasTransformerTests(TestCase):
         expected.index = pd.Index(['Democrat', 'Independent', 'Republican'], name='Party')
         expected.columns = ['Wins']
         expected.columns.name = 'Metrics'
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -118,7 +118,7 @@ class PandasTransformerTests(TestCase):
         expected.index.names = ['Candidate ID']
         expected.columns = ['Wins']
         expected.columns.name = 'Metrics'
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -130,7 +130,7 @@ class PandasTransformerTests(TestCase):
         expected.index.names = ['Timestamp', 'Party']
         expected.columns = ['Wins']
         expected.columns.name = 'Metrics'
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -144,7 +144,7 @@ class PandasTransformerTests(TestCase):
         expected.columns = ['Wins']
         expected.columns.name = 'Metrics'
         expected = expected.transpose()
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -158,7 +158,7 @@ class PandasTransformerTests(TestCase):
         expected.columns = ['Wins']
         expected.columns.name = 'Metrics'
         expected = expected.transpose()
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -172,7 +172,7 @@ class PandasTransformerTests(TestCase):
         expected.index.names = ['Timestamp']
         expected.columns = ['Democrat', 'Independent', 'Republican']
         expected.columns.names = ['Party']
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -187,7 +187,7 @@ class PandasTransformerTests(TestCase):
         expected.index.names = ['Timestamp']
         expected.columns = ['Wins']
         expected.columns.name = 'Metrics'
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -202,7 +202,7 @@ class PandasTransformerTests(TestCase):
         expected.index.names = ['Timestamp', 'Party']
         expected.columns = ['Votes EoE']
         expected.columns.name = 'Metrics'
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -217,7 +217,7 @@ class PandasTransformerTests(TestCase):
         expected.index.names = ['Timestamp', 'Party']
         expected.columns = ['Votes']
         expected.columns.name = 'Metrics'
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -232,7 +232,7 @@ class PandasTransformerTests(TestCase):
         expected.index.names = ['Timestamp']
         expected.columns = ['Wins']
         expected.columns.name = 'Metrics'
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -245,7 +245,7 @@ class PandasTransformerTests(TestCase):
         expected.index.names = ['Timestamp', 'Party']
         expected.columns = ['Votes', 'Votes EoE']
         expected.columns.name = 'Metrics'
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -271,7 +271,7 @@ class PandasTransformerTests(TestCase):
 
     def test_nan_in_metrics(self):
         cat_dim_df_with_nan = dimx1_str_df.copy()
-        cat_dim_df_with_nan['$wins'] = cat_dim_df_with_nan['$wins'].apply(float)
+        cat_dim_df_with_nan['$wins'] = cat_dim_df_with_nan['$wins'].astype(float)
         cat_dim_df_with_nan.iloc[2, 1] = np.nan
 
         result = Pandas(mock_dataset.fields.wins).transform(
@@ -282,13 +282,13 @@ class PandasTransformerTests(TestCase):
         expected.index = pd.Index(['Democrat', 'Independent', 'Republican'], name='Party')
         expected.columns = ['Wins']
         expected.columns.name = 'Metrics'
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
     def test_inf_in_metrics(self):
         cat_dim_df_with_nan = dimx1_str_df.copy()
-        cat_dim_df_with_nan['$wins'] = cat_dim_df_with_nan['$wins'].apply(float)
+        cat_dim_df_with_nan['$wins'] = cat_dim_df_with_nan['$wins'].astype(float)
         cat_dim_df_with_nan.iloc[2, 1] = np.inf
 
         result = Pandas(mock_dataset.fields.wins).transform(
@@ -299,13 +299,13 @@ class PandasTransformerTests(TestCase):
         expected.index = pd.Index(['Democrat', 'Independent', 'Republican'], name='Party')
         expected.columns = ['Wins']
         expected.columns.name = 'Metrics'
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
     def test_neginf_in_metrics(self):
         cat_dim_df_with_nan = dimx1_str_df.copy()
-        cat_dim_df_with_nan['$wins'] = cat_dim_df_with_nan['$wins'].apply(float)
+        cat_dim_df_with_nan['$wins'] = cat_dim_df_with_nan['$wins'].astype(float)
         cat_dim_df_with_nan.iloc[2, 1] = np.inf
 
         result = Pandas(mock_dataset.fields.wins).transform(
@@ -316,13 +316,13 @@ class PandasTransformerTests(TestCase):
         expected.index = pd.Index(['Democrat', 'Independent', 'Republican'], name='Party')
         expected.columns = ['Wins']
         expected.columns.name = 'Metrics'
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
     def test_inf_in_metrics_with_precision_zero(self):
         cat_dim_df_with_nan = dimx1_str_df.copy()
-        cat_dim_df_with_nan['$wins'] = cat_dim_df_with_nan['$wins'].apply(float)
+        cat_dim_df_with_nan['$wins'] = cat_dim_df_with_nan['$wins'].astype(float)
         cat_dim_df_with_nan.iloc[2, 1] = np.inf
 
         mock_modified_dataset = copy.deepcopy(mock_dataset)
@@ -353,7 +353,7 @@ class PandasTransformerSortTests(TestCase):
         expected.columns.name = 'Metrics'
 
         expected = expected.sort_index()
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -368,7 +368,7 @@ class PandasTransformerSortTests(TestCase):
         expected.columns.name = 'Metrics'
 
         expected = expected.sort_index(ascending=False)
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -383,7 +383,7 @@ class PandasTransformerSortTests(TestCase):
         expected.columns.name = 'Metrics'
 
         expected = expected.sort_values(['Wins'])
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -398,7 +398,7 @@ class PandasTransformerSortTests(TestCase):
         expected.columns.name = 'Metrics'
 
         expected = expected.sort_values(['Wins'], ascending=False)
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -415,7 +415,7 @@ class PandasTransformerSortTests(TestCase):
         expected = (
             expected.reset_index().sort_values(['Timestamp', 'Wins'], ascending=[True, False]).set_index('Timestamp')
         )
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -431,7 +431,7 @@ class PandasTransformerSortTests(TestCase):
         expected.columns.names = ['Party']
 
         expected = expected.sort_index()
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -447,7 +447,7 @@ class PandasTransformerSortTests(TestCase):
         expected.columns.names = ['Party']
 
         expected = expected.sort_index(ascending=False)
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -463,7 +463,7 @@ class PandasTransformerSortTests(TestCase):
         expected.columns.names = ['Party']
 
         expected = expected.reset_index().sort_values(['Democrat']).set_index('Timestamp')
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -479,7 +479,7 @@ class PandasTransformerSortTests(TestCase):
         expected.columns.names = ['Party']
 
         expected = expected.reset_index().sort_values(['Democrat'], ascending=False).set_index('Timestamp')
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -495,7 +495,7 @@ class PandasTransformerSortTests(TestCase):
         expected.columns.names = ['Party']
 
         expected = expected.reset_index().sort_values(['Democrat'], ascending=True).set_index('Timestamp')
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -515,7 +515,7 @@ class PandasTransformerSortTests(TestCase):
             names=['Metrics', 'Timestamp'],
         )
 
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -531,7 +531,7 @@ class PandasTransformerSortTests(TestCase):
         expected.columns.names = ['Party']
 
         expected = expected.reset_index().sort_values(['Democrat'], ascending=False).set_index('Timestamp')
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -551,7 +551,7 @@ class PandasTransformerSortTests(TestCase):
             .sort_values(['Timestamp', 'Democrat'], ascending=[True, False])
             .set_index('Timestamp')
         )
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -567,7 +567,7 @@ class PandasTransformerSortTests(TestCase):
         expected.columns.names = ['Party']
 
         expected = expected.reset_index().sort_values(['Timestamp', 'Democrat'], ascending=True).set_index('Timestamp')
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -585,7 +585,7 @@ class PandasTransformerSortTests(TestCase):
         expected.columns.names = ['Party']
 
         expected = expected.reset_index().sort_values(['Timestamp', 'Democrat']).set_index('Timestamp')
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -600,7 +600,7 @@ class PandasTransformerSortTests(TestCase):
         expected.columns.name = 'Metrics'
 
         expected = expected.reset_index().sort_values(['Timestamp']).set_index(['Timestamp', 'Party'])
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -615,7 +615,7 @@ class PandasTransformerSortTests(TestCase):
         expected.columns.name = 'Metrics'
 
         expected = expected.reset_index().sort_values(['Timestamp'], ascending=True).set_index(['Timestamp', 'Party'])
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -630,7 +630,7 @@ class PandasTransformerSortTests(TestCase):
         expected.columns.name = 'Metrics'
 
         expected = expected.reset_index().sort_values(['Party'], ascending=[False]).set_index(['Timestamp', 'Party'])
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -649,7 +649,7 @@ class PandasTransformerSortTests(TestCase):
             .sort_values(['Timestamp', 'Wins'], ascending=[False, True])
             .set_index(['Timestamp', 'Party'])
         )
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -660,7 +660,7 @@ class PandasTransformerSortTests(TestCase):
         expected.index.names = ['Timestamp']
         expected.columns = ['Wins']
         expected.columns.name = 'Metrics'
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -673,7 +673,7 @@ class PandasTransformerSortTests(TestCase):
         expected.index.names = ['Timestamp']
         expected.columns = ['Wins']
         expected.columns.name = 'Metrics'
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 
@@ -684,7 +684,7 @@ class PandasTransformerSortTests(TestCase):
         expected.index.names = ['Timestamp']
         expected.columns = ['Wins']
         expected.columns.name = 'Metrics'
-        expected = expected.applymap(format_float)
+        expected = expected.map(format_float)
 
         pandas.testing.assert_frame_equal(expected, result)
 

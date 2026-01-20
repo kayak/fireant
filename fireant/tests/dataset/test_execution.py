@@ -49,7 +49,8 @@ def replace_totals(data_frame):
     raw = data_frame.reset_index()
     for name in index_names:
         marker = get_totals_marker_for_dtype(raw[name].dtype)
-        raw[name].replace(marker, np.nan, inplace=True)
+        with pd.option_context('future.no_silent_downcasting', True):
+            raw[name] = raw[name].replace(marker, np.nan)
 
     return raw
 

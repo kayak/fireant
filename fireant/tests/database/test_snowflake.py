@@ -1,3 +1,4 @@
+import sys
 from unittest import TestCase
 from unittest.mock import (
     ANY,
@@ -5,9 +6,17 @@ from unittest.mock import (
     patch,
 )
 
+import pytest
 from pypika import Field
 
 from fireant.database import SnowflakeDatabase
+
+try:
+    import cryptography
+
+    HAS_CRYPTOGRAPHY = True
+except ImportError:
+    HAS_CRYPTOGRAPHY = False
 
 
 class TestSnowflake(TestCase):
@@ -47,8 +56,10 @@ class TestSnowflake(TestCase):
             warehouse=None,
         )
 
-    @patch('fireant.database.snowflake.serialization')
-    def test_connect_with_pkey(self, mock_serialization):
+    @pytest.mark.skipif(not HAS_CRYPTOGRAPHY, reason="cryptography not installed")
+    @patch('cryptography.hazmat.primitives.serialization')
+    @patch('cryptography.hazmat.backends.default_backend')
+    def test_connect_with_pkey(self, mock_default_backend, mock_serialization):
         mock_snowflake = Mock(name='mock_snowflake')
         mock_connector = mock_snowflake.connector
         mock_pkey = mock_serialization.load_pem_private_key.return_value = Mock(name='pkey')
@@ -70,7 +81,9 @@ class TestSnowflake(TestCase):
             self.assertEqual('OK', result)
 
         with self.subTest('connects with credentials'):
-            mock_serialization.load_pem_private_key.assert_called_once_with(b'abcdefg', b'1234', backend=ANY)
+            mock_serialization.load_pem_private_key.assert_called_once_with(
+                b'abcdefg', b'1234', backend=mock_default_backend.return_value
+            )
 
         with self.subTest('connects with credentials'):
             mock_connector.connect.assert_called_once_with(

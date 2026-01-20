@@ -1,3 +1,5 @@
+from importlib.metadata import version
+
 from .database import *
 from .dataset.data_blending import DataSetBlender
 from .dataset.fields import (
@@ -55,4 +57,4 @@ def __hash__(self) -> int:
 Term.__hash__ = __hash__
 
 
-__version__ = "8.0.5"
+__version__ = version("fireant")

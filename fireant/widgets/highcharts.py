@@ -650,7 +650,9 @@ class HighCharts(ChartWidget, TransformableWidget):
             return [([], data_frame)]
 
         levels = data_frame.index.names[1:]
-        return data_frame.groupby(level=levels, sort=False)
+        # Use scalar level instead of list when there's only one level to avoid FutureWarning
+        level_param = levels[0] if len(levels) == 1 else list(levels)
+        return data_frame.groupby(level=level_param, sort=False)
 
     @staticmethod
     def _format_dimension_values(dimensions: List[Field], dimension_values: list) -> str:

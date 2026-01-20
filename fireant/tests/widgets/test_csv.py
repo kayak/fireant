@@ -32,7 +32,7 @@ class CSVWidgetTests(TestCase):
 
         expected = dimx0_metricx1_df.copy()[[f('votes')]]
         expected.columns = ['Votes']
-        expected = expected.applymap(format_float_raw)
+        expected = expected.map(format_float_raw)
 
         self.assertEqual(expected.to_csv(**csv_options), result)
 
@@ -41,7 +41,7 @@ class CSVWidgetTests(TestCase):
 
         expected = dimx0_metricx2_df.copy()[[f('votes'), f('wins')]]
         expected.columns = ['Votes', 'Wins']
-        expected = expected.applymap(format_float_raw)
+        expected = expected.map(format_float_raw)
 
         self.assertEqual(expected.to_csv(**csv_options), result)
 
@@ -50,7 +50,7 @@ class CSVWidgetTests(TestCase):
 
         expected = dimx0_metricx2_df.copy()[[f('wins'), f('votes')]]
         expected.columns = ['Wins', 'Votes']
-        expected = expected.applymap(format_float_raw)
+        expected = expected.map(format_float_raw)
 
         self.assertEqual(expected.to_csv(**csv_options), result)
 
@@ -60,7 +60,7 @@ class CSVWidgetTests(TestCase):
         expected = dimx1_date_df.copy()[[f('wins')]]
         expected.index.names = ['Timestamp']
         expected.columns = ['Wins']
-        expected = expected.applymap(format_float_raw)
+        expected = expected.map(format_float_raw)
 
         self.assertEqual(expected.to_csv(**csv_options), result)
 
@@ -71,7 +71,7 @@ class CSVWidgetTests(TestCase):
         expected = dimx1_date_operation_df.copy()[[f('cumsum(votes)')]]
         expected.index.names = ['Timestamp']
         expected.columns = ['CumSum(Votes)']
-        expected = expected.applymap(format_float_raw)
+        expected = expected.map(format_float_raw)
 
         self.assertEqual(expected.to_csv(**csv_options), result)
 
@@ -128,7 +128,7 @@ class CSVWidgetTests(TestCase):
         expected.index.names = ['Timestamp', 'Party']
         expected.columns = ['Votes EoE']
         expected.columns.name = 'Metrics'
-        expected = expected.applymap(format_float_raw)
+        expected = expected.map(format_float_raw)
 
         self.assertEqual(expected.to_csv(**csv_options), result)
 
@@ -143,7 +143,7 @@ class CSVWidgetTests(TestCase):
         expected.index.names = ['Timestamp', 'Party']
         expected.columns = ['Votes']
         expected.columns.name = 'Metrics'
-        expected = expected.applymap(format_float_raw)
+        expected = expected.map(format_float_raw)
 
         self.assertEqual(expected.to_csv(**csv_options), result)
 
@@ -183,7 +183,7 @@ class CSVWidgetTests(TestCase):
         expected = expected.unstack(level=[1])
         expected.index.names = ['Timestamp']
         expected.columns = ['Democrat', 'Independent', 'Republican']
-        expected = expected.applymap(format_float_raw)
+        expected = expected.map(format_float_raw)
 
         self.assertEqual(expected.to_csv(**csv_options), result)
 
@@ -197,7 +197,7 @@ class CSVWidgetTests(TestCase):
         expected = expected.unstack(level=1)
         expected.index.names = ['Timestamp']
         expected.columns = list(range(1, 12))
-        expected = expected.applymap(format_float_raw)
+        expected = expected.map(format_float_raw)
 
         self.assertEqual(expected.to_csv(**csv_options), result)
 
@@ -209,7 +209,7 @@ class CSVWidgetTests(TestCase):
         expected = dimx2_date_str_ref_df.copy()[[f('votes'), f('votes_eoe')]]
         expected.index.names = ['Timestamp', 'Party']
         expected.columns = ['Votes', 'Votes EoE']
-        expected = expected.applymap(format_float_raw)
+        expected = expected.map(format_float_raw)
 
         self.assertEqual(expected.to_csv(**csv_options), result)
 
@@ -223,6 +223,6 @@ class CSVWidgetTests(TestCase):
         expected = dimx2_date_str_ref_df.copy()[[f('votes'), f('votes_eoe'), f('wins'), f('wins_eoe')]]
         expected.index.names = ['Timestamp', 'Party']
         expected.columns = ['Votes', 'Votes EoE', 'Wins', 'Wins EoE']
-        expected = expected.applymap(format_float_raw)
+        expected = expected.map(format_float_raw)
 
         self.assertEqual(expected.to_csv(**csv_options), result)

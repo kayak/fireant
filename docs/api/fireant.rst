@@ -15,7 +15,6 @@ Subpackages
    fireant.dataset
    fireant.middleware
    fireant.queries
-   fireant.tests
    fireant.widgets
 
 Submodules
@@ -41,14 +40,6 @@ fireant.reference\_helpers module
 ---------------------------------
 
 .. automodule:: fireant.reference_helpers
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-fireant.settings module
------------------------
-
-.. automodule:: fireant.settings
    :members:
    :undoc-members:
    :show-inheritance:

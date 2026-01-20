@@ -224,7 +224,7 @@ class ResultSetTests(TestCase):
         self.assertEqual(len(queries), 1)
         self.assertEqual(
             "SELECT "
-            "CASE WHEN \"text\"='abc' THEN 'Text is ABC' ELSE NULL END "
+            "CASE WHEN \"text\"='abc' THEN 'Text is ABC' ELSE null END "
             "\"$text\","
             'SUM("number") "$aggr_number" '
             'FROM "test" '
@@ -302,7 +302,7 @@ class ResultSetTests(TestCase):
         self.assertEqual(len(queries), 1)
         self.assertEqual(
             "SELECT "
-            "CASE WHEN \"text\"='abc' THEN NULL ELSE 'Text is NOT ABC' END "
+            "CASE WHEN \"text\"='abc' THEN null ELSE 'Text is NOT ABC' END "
             "\"$text\","
             'SUM("number") "$aggr_number" '
             'FROM "test" '

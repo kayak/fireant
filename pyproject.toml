@@ -1,92 +1,93 @@
-[tool.poetry]
+[project]
 name = "fireant"
-version = "8.0.5"
-description = ""
-authors = ["Ąžuolas Krušna <akrusna@kayak.com>"]
+version = "8.1.0"
+description = "Data analysis tool for quickly building charts, tables, reports, and dashboards"
 readme = "README.rst"
+license = "Apache-2.0"
+authors = [
+    {name = "KAYAK, GmbH", email = "bandit@kayak.com"}
+]
+maintainers = [
+    {name = "Ąžuolas Krušna", email = "akrusna@kayak.com"}
+]
+requires-python = ">=3.9"
+keywords = [
+    "fireant",
+    "python",
+    "query",
+    "builder",
+    "querybuilder",
+    "sql",
+    "mysql",
+    "postgres",
+    "mssql",
+    "vertica",
+    "analytics",
+    "bi",
+    "data",
+    "science",
+    "pandas",
+]
+dependencies = [
+    "pandas>=2.0.0",
+    "pypika>=0.50.0,<1.0.0",
+    "toposort>=1.6,<2",
+]
 
-[tool.poetry.dependencies]
-python = "^3.8.0"
-pandas = "^2.0.0"
-pypika = "0.48.2"
-toposort = "1.6"
+[project.urls]
+Homepage = "https://github.com/kayak/fireant"
+Documentation = "https://fireant.readthedocs.io"
+Repository = "https://github.com/kayak/fireant"
 
-pymysql = {version = "1.0.2", optional = true}
-cython = {version = "3.0.0", optional = true}
-pymssql = {version = "2.2.8", optional = true}
-psycopg2-binary = {version = "2.9.6", optional = true}
-snowflake-connector-python = {version = "^3.0.0", optional = true}
-vertica-python = {version = "^1.0.0", optional = true}
-matplotlib = {version = ">=3.1.0", optional = true}
-ipython = {version = ">=7.11", optional = true}
+[project.optional-dependencies]
+mysql = ["pymysql>=1.0.0,<2"]
+postgresql = ["psycopg2-binary>=2.9.11,<3"]
+redshift = ["psycopg2-binary>=2.9.11,<3"]
+mssql = ["cython>=3.0.0,<4", "pymssql>=2.2.0,<3"]
+snowflake = ["snowflake-connector-python>=3.0.0,<4"]
+vertica = ["vertica-python>=1.0.0,<2"]
+ipython = ["matplotlib>=3.1.0,<4", "ipython>=7.11,<9"]
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.4.0"
-coverage = "7.3.0"
-watchdog = "3.0.0"
-tox = "==3.23.1"
-tox-venv = "0.4.0"
-tox-gh-actions = "2.5.0"
-bumpversion = "0.5.3"
-sphinx = "2.2.0"
-sphinx-rtd-theme = "0.4.3"
-black = "^23.9.1"
-
-[tool.poetry.group.postgresql.dependencies]
-psycopg2-binary = "2.9.6"
-
-[tool.poetry.group.mysql.dependencies]
-pymysql = "1.0.2"
-
-[tool.poetry.group.mssql.dependencies]
-cython = "3.0.0"
-pymssql = "2.2.8"
-
-[tool.poetry.group.redshift.dependencies]
-psycopg2-binary = "2.9.6"
-
-[tool.poetry.group.snowflake.dependencies]
-snowflake-connector-python = "^3.0.0"
-
-[tool.poetry.group.vertica.dependencies]
-vertica-python = "^1.0.0"
-
-[tool.poetry.group.ipython.dependencies]
-matplotlib = ">=3.1.0"
-ipython = ">=7.11"
-
-[tool.poetry.extras]
-ipython=["matplotlib", "ipython"]
-vertica=["vertica-python"]
-snowflake=["snowflake-connector-python"]
-redshift=["psycopg2-binary"]
-postgresql=["psycopg2-binary"]
-mysql=["pymysql"]
-mssql=["cython", "pymssql"]
+[dependency-groups]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "coverage==7.3.0",
+    "watchdog==3.0.0",
+    "sphinx>=7.0.0",
+    "sphinx-rtd-theme>=2.0.0",
+    "ruff>=0.9.0",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.black]
+[tool.hatch.build.targets.wheel]
+packages = ["fireant"]
+
+[tool.ruff]
 line-length = 120
-skip-string-normalization = true
-target-version = ['py36', 'py37', 'py38']
-exclude = '''
-(
-  /(
-      \.eggs         # exclude a few common directories in the
-    | \.git          # root of the project
-    | \.hg
-    | \.mypy_cache
-    | \.tox
-    | \.venv
-    | _build
-    | buck-out
-    | build
-    | dist
-    | docs
-  )/
-  | setup.py
-)
-'''
+
+[tool.ruff.format]
+quote-style = "preserve"
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["fireant/tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.coverage.run]
+source = ["fireant"]
+omit = ["*/tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+]
