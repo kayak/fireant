@@ -536,7 +536,7 @@ class HighCharts(ChartWidget, TransformableWidget):
             "type": "pie",
             "data": data,
             "tooltip": {
-                "pointFormat": '<span style="color:{point.color}">\u25CF</span> {series.name}: '
+                "pointFormat": '<span style="color:{point.color}">\u25cf</span> {series.name}: '
                 "<b>{point.y} ({point.percentage:.1f}%)</b><br/>",
                 "valueDecimals": metric.precision,
                 "valuePrefix": reference_prefix(metric, reference),

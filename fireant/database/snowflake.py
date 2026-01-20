@@ -8,11 +8,6 @@ from pypika.dialects import SnowflakeQuery
 
 from .base import Database
 
-try:
-    from snowflake import connector as snowflake
-except:
-    pass
-
 IGNORED_SCHEMAS = {'INFORMATION_SCHEMA'}
 
 

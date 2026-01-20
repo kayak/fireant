@@ -519,17 +519,17 @@ class DataSetBlenderQueryBuilder(DataSetQueryBuilder):
                 filtered_field_maps.append(field_maps[dataset_index])
 
         """
-        A dataset query can yield one or more sql queries, depending on how many types of references or dimensions 
+        A dataset query can yield one or more sql queries, depending on how many types of references or dimensions
         with totals are selected. A blended dataset query must yield the same number and types of sql queries, but each
-        blended together. The individual dataset queries built above will always yield the same number of sql queries, 
+        blended together. The individual dataset queries built above will always yield the same number of sql queries,
         so here those lists of sql queries are zipped.
-        
+
                base   ref  totals ref+totals
-        ds1 | ds1_a  ds1_b  ds1_c   ds1_d  
-        ds2 | ds2_a  ds2_b  ds2_c   ds2_d  
-        
+        ds1 | ds1_a  ds1_b  ds1_c   ds1_d
+        ds2 | ds2_a  ds2_b  ds2_c   ds2_d
+
         More concretely, using the diagram above as a reference, a dataset query with 1 reference and 1 totals dimension
-        would yield 4 sql queries. With data blending with 1 reference and 1 totals dimension, 4 sql queries must also 
+        would yield 4 sql queries. With data blending with 1 reference and 1 totals dimension, 4 sql queries must also
         be produced.  The following lines convert the list of rows of the table in the diagram to a list of columns.
         Each set of queries in a column are then reduced to a single data blending sql query.
         """

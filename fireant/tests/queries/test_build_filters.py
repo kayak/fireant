@@ -41,12 +41,7 @@ class FilterDateFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            "WHERE \"date\"='2019-03-06' "
-            'ORDER BY 1 '
-            "LIMIT 200000",
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" WHERE \"date\"='2019-03-06' ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -55,12 +50,7 @@ class FilterDateFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            "WHERE \"date\"='2019-03-06' "
-            'ORDER BY 1 '
-            "LIMIT 200000",
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" WHERE \"date\"='2019-03-06' ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -119,12 +109,7 @@ class FilterDateFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            "WHERE \"date\">'2019-03-06' "
-            'ORDER BY 1 '
-            "LIMIT 200000",
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" WHERE \"date\">'2019-03-06' ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -147,12 +132,7 @@ class FilterDateFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            "WHERE \"date\"<'2019-03-06' "
-            'ORDER BY 1 '
-            "LIMIT 200000",
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" WHERE \"date\"<'2019-03-06' ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -252,12 +232,7 @@ class FilterDateFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            "WHERE \"date\"='2019-03-06' "
-            'ORDER BY 1 '
-            "LIMIT 200000",
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" WHERE \"date\"='2019-03-06' ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -271,12 +246,7 @@ class FilterDateFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            'HAVING SUM("number")>10 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" HAVING SUM(\"number\")>10 ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -297,7 +267,7 @@ class FilterNumberFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT " 'SUM("number") "$aggr_number" ' 'FROM "test" ' 'WHERE "number"=1.0 ' 'ORDER BY 1 ' 'LIMIT 200000',
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" WHERE \"number\"=1.0 ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -306,7 +276,7 @@ class FilterNumberFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT " 'SUM("number") "$aggr_number" ' 'FROM "test" ' 'WHERE "number"<>5 ' 'ORDER BY 1 ' 'LIMIT 200000',
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" WHERE \"number\"<>5 ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -315,7 +285,7 @@ class FilterNumberFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            'SELECT SUM("number") "$aggr_number" FROM "test" ' 'WHERE "number">5 ORDER BY 1 LIMIT 200000',
+            'SELECT SUM("number") "$aggr_number" FROM "test" WHERE "number">5 ORDER BY 1 LIMIT 200000',
             str(queries[0]),
         )
 
@@ -324,7 +294,7 @@ class FilterNumberFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT " 'SUM("number") "$aggr_number" ' 'FROM "test" ' 'WHERE "number">=5 ' 'ORDER BY 1 ' 'LIMIT 200000',
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" WHERE \"number\">=5 ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -342,7 +312,7 @@ class FilterNumberFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT " 'SUM("number") "$aggr_number" ' 'FROM "test" ' 'WHERE "number"<=5 ' 'ORDER BY 1 ' 'LIMIT 200000',
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" WHERE \"number\"<=5 ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -351,12 +321,7 @@ class FilterNumberFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            'WHERE "number" IN (5,7) '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" WHERE \"number\" IN (5,7) ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -408,12 +373,7 @@ class FilterTextFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            "WHERE \"text\"='abc' "
-            'ORDER BY 1 '
-            "LIMIT 200000",
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" WHERE \"text\"='abc' ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -422,12 +382,7 @@ class FilterTextFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            "WHERE \"text\"<>'abc' "
-            'ORDER BY 1 '
-            "LIMIT 200000",
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" WHERE \"text\"<>'abc' ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -442,10 +397,6 @@ class FilterTextFieldTests(TestCase):
     def test_lt_expr_raises_exception(self):
         with self.assertRaises(DataSetFilterException):
             ds.fields.text < "a"
-
-    def test_lt_expr_raises_exception(self):
-        with self.assertRaises(DataSetFilterException):
-            ds.fields.text <= "a"
 
     def test_le_expr_raises_exception(self):
         with self.assertRaises(DataSetFilterException):
@@ -519,12 +470,7 @@ class FilterBooleanFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            'WHERE "boolean"=true '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" WHERE \"boolean\"=true ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -533,12 +479,7 @@ class FilterBooleanFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            'WHERE "boolean"=false '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" WHERE \"boolean\"=false ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -547,7 +488,7 @@ class FilterBooleanFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT " 'SUM("number") "$aggr_number" ' 'FROM "test" ' 'WHERE "boolean"=1 ' 'ORDER BY 1 ' 'LIMIT 200000',
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" WHERE \"boolean\"=1 ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -556,7 +497,7 @@ class FilterBooleanFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT " 'SUM("number") "$aggr_number" ' 'FROM "test" ' 'WHERE "boolean"=0 ' 'ORDER BY 1 ' 'LIMIT 200000',
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" WHERE \"boolean\"=0 ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -602,12 +543,7 @@ class FilterBooleanFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            'WHERE NOT "boolean" '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" WHERE NOT \"boolean\" ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -619,12 +555,7 @@ class FilterAggregateNumberFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            'HAVING SUM("number")=1 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" HAVING SUM(\"number\")=1 ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -633,12 +564,7 @@ class FilterAggregateNumberFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            'HAVING SUM("number")=1.0 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" HAVING SUM(\"number\")=1.0 ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -647,12 +573,7 @@ class FilterAggregateNumberFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            'HAVING SUM("number")<>5 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" HAVING SUM(\"number\")<>5 ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -661,12 +582,7 @@ class FilterAggregateNumberFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            'HAVING SUM("number")>5 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" HAVING SUM(\"number\")>5 ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -675,12 +591,7 @@ class FilterAggregateNumberFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            'HAVING SUM("number")>=5 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" HAVING SUM(\"number\")>=5 ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -689,12 +600,7 @@ class FilterAggregateNumberFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            'HAVING SUM("number")<5 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" HAVING SUM(\"number\")<5 ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
@@ -703,12 +609,7 @@ class FilterAggregateNumberFieldTests(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertEqual(
-            "SELECT "
-            'SUM("number") "$aggr_number" '
-            'FROM "test" '
-            'HAVING SUM("number")<=5 '
-            'ORDER BY 1 '
-            'LIMIT 200000',
+            "SELECT SUM(\"number\") \"$aggr_number\" FROM \"test\" HAVING SUM(\"number\")<=5 ORDER BY 1 LIMIT 200000",
             str(queries[0]),
         )
 
