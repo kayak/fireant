@@ -106,7 +106,7 @@ def find_metrics_for_widgets(widgets):
 def find_operations_for_widgets(widgets):
     """
     :return:
-        an ordered, distinct list of metrics used in all widgets as part of this query.
+        an ordered, distinct list of operations used in all widgets as part of this query.
     """
     return ordered_distinct_list_by_attr([operation for widget in widgets for operation in widget.operations])
 
@@ -149,7 +149,7 @@ def find_totals_dimensions(dimensions, share_dimensions):
     :param dimensions:
     :param share_dimensions:
     :return:
-        an list of all dimension field in the list argument `dimensions` which have the `Rollup` modifier applied to
+        a list of all dimension fields in the list argument `dimensions` which have the `Rollup` modifier applied to
         them or are used as a basis for a share metric.
     """
     share_dimension_aliases = {d.alias for d in share_dimensions}
@@ -220,12 +220,12 @@ def find_and_group_references_for_dimensions(dimensions, references):
 
     def get_dimension_time_unit_and_interval(reference):
         defaults = (reference.time_unit, 1)
-        time_unit, interval_muliplier = (
+        time_unit, interval_multiplier = (
             interval_weekdays.get(reference.time_unit, defaults) if align_weekdays else defaults
         )
 
         field = find_field_in_modified_field(reference.field)
-        return field, time_unit, interval_muliplier * reference.interval
+        return field, time_unit, interval_multiplier * reference.interval
 
     distinct_references = ordered_distinct_list(references)
     return groupby(distinct_references, get_dimension_time_unit_and_interval)
