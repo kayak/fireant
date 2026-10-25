@@ -126,7 +126,7 @@ class DataSetBlender:
 
     def blend(self, other):
         """
-        Returns a Data Set blender which enables to execute queries on multiple data sets and combine them.
+        Returns a Data Set blender which enables executing queries on multiple data sets and combining them.
         """
         return DataSetBlenderBuilder(self, other)
 

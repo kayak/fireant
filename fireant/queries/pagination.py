@@ -28,7 +28,7 @@ def paginate(data_frame, widgets, orders=(), limit=None, offset=None):
         An iterable of widgets that the sort is being applied for.
     :param orders:
         An iterable of (<Dimension/Metric>, pypika.Order)
-     :param limit:
+    :param limit:
         A limit of the number of data points/series
     :param offset:
         A offset of the number of data points/series

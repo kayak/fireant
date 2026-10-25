@@ -95,7 +95,7 @@ def reduce_result_set(
             merged_df = pd.merge(
                 merged_df, reference_df, how="left", left_index=True, right_index=True, suffixes=('', '_delete')
             )
-            # Drop duplicate columns from the merge (indicate by suffix _delete)
+            # Drop duplicate columns from the merge (indicated by suffix _delete)
             merged_df.drop(merged_df.filter(regex='_delete$').columns.tolist(), axis=1, inplace=True)
 
         # If there are rolled up dimensions in this result set then replace the NaNs for that dimension value with a

@@ -67,7 +67,7 @@ class DimensionChoicesQueryBuilder(QueryBuilder):
 
     def _make_terms_for_hint_dimensions(self):
         """
-        Makes a list pypika terms using the hint table instead of their original table.
+        Makes a list of pypika terms using the hint table instead of their original table.
 
         :return:
             A list of pypika terms.
